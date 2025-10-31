@@ -299,6 +299,7 @@ AUTO TRAIN / AUTO FIGHT
 - train tick grants xp and
 =========================== */
 let trainTimer = null, fightTimer = null;
+window._autoFightOn = !!window._autoFightOn;
 function startAutoTrain() {
     if (trainTimer) clearInterval(trainTimer);
     trainTimer = setInterval(() => {
@@ -316,12 +317,49 @@ function startAutoTrain() {
 function stopAutoTrain() { if (trainTimer) clearInterval(trainTimer); trainTimer = null; }
 
 function startAutoFight() {
-    if (fightTimer) clearInterval(fightTimer);
+    window._autoFightOn = true;
+    try { $('autoFight').innerText = 'Tắt auto chiến'; } catch {}
+    updateAutoFightLoop();
+}
+function stopAutoFight(force = true) {
+    if (fightTimer) {
+        clearInterval(fightTimer);
+        fightTimer = null;
+    }
+    if (force) {
+        window._autoFightOn = false;
+        try { $('autoFight').innerText = 'Bật auto chiến'; } catch {}
+    }
+}
+function updateAutoFightLoop() {
+    if (!window._autoFightOn) {
+        if (fightTimer) {
+            clearInterval(fightTimer);
+            fightTimer = null;
+        }
+        return;
+    }
+    if (!state.currentEnemy) {
+        if (fightTimer) {
+            clearInterval(fightTimer);
+            fightTimer = null;
+        }
+        return;
+    }
+    if (fightTimer) return;
     fightTimer = setInterval(() => {
+        if (!window._autoFightOn) {
+            stopAutoFight();
+            return;
+        }
+        if (!state.currentEnemy) {
+            stopAutoFight(false);
+            return;
+        }
         pvpAttackOrLocal();
     }, 2400);
 }
-function stopAutoFight() { if (fightTimer) clearInterval(fightTimer); fightTimer = null; }
+window.updateAutoFightLoop = updateAutoFightLoop;
 
 /* ===========================
    RENDERING UI
@@ -337,6 +375,7 @@ function renderAll() {
     renderCurrentEnemy();
     renderRootTable();
     checkLongevity();
+    updateAutoFightLoop();
 }
 
 function recalculateStats() {
