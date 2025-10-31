@@ -312,9 +312,13 @@ function updateBattleInfo(dmgData, enemy = false) {
 
 // ===== PvP MATCHMAKING + TURN SYNC (client) =====
 (function initPvpGlobals() {
+    const envMatchUrl = (typeof process !== 'undefined' && process.env && process.env.MATCH_WS_URL)
+        ? process.env.MATCH_WS_URL
+        : 'ws://localhost:8080';
+
     if (!('matchWS' in window)) window.matchWS = null;
     if (!('matchConnected' in window)) window.matchConnected = false;
-    if (!('MATCH_WS_URL' in window)) window.MATCH_WS_URL = 'wss://cultivationserver.onrender.com';
+    if (!('MATCH_WS_URL' in window)) window.MATCH_WS_URL = envMatchUrl;
     if (!('_findingMatch' in window)) window._findingMatch = false; // finding toggle
 })();
 const matchURL = window.MATCH_WS_URL;
