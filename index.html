@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tu Tiên Hồng Hoang Chi Giới</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- 🧙‍♂️ Màn nhập tên khởi đầu -->
+        <div id="start-screen">
+            <h1 style="font-size: 2.2em; margin-bottom: 1em;">Tu Tiên Hồng Hoang Chi Giới</h1>
+            <p style="margin-bottom: 0.5em; font-style: italic;">Nhập danh xưng của ngươi để bước vào con đường tu
+                đạo...</p>
+            <input id="playerNameInput" type="text" maxlength="20" placeholder="Ví dụ: Thiên Đạo đại nhân"
+                style="padding: 0.5em 1em; font-size: 1.1em; border-radius: 6px; border: none; text-align: center; width: 260px;">
+            <button id="startBtn" style="margin-top: 1em; padding: 0.6em 1.2em; font-size: 1em; border-radius: 8px;
+                 background: #7b5633; color: #fff; border: none; cursor: pointer;">
+                Bắt đầu tu luyện
+            </button>
+        </div>
+
+        <header>
+            <h1>Tu Tiên Hồng Hoang Chi Giới</h1>
+            <div class="small">V1.0</div>
+        </header>
+
+        <div class="topline" id="statsTop"></div>
+
+        <div class="controls">
+            <button id="toggleAuto" class="primary">Bắt đầu tu luyện auto</button>
+            <button id="autoFight">Bật auto chiến</button>
+            <button id="explore">Đi kỳ ngộ</button>
+            <button id="fightNow">Tấn công</button>
+            <button id="runBtn">Chạy (−15% tu vi)</button>
+            <button id="findMatch">Tìm đối thủ PvP</button>
+            <button id="saveBtn">Lưu</button>
+            <button id="loadBtn">Tải</button>
+            <button id="toggleXpLog">Tắt log tu vi</button>
+            <button id="openShop">Mở cửa hàng</button>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="panel">
+                    <strong>Nhật ký tu luyện</strong>
+                    <div class="log" id="log"></div>
+                </div>
+
+                <div class="panel" style="margin-top:12px">
+                    <strong>Kho đồ & Hỗn nguyên</strong>
+                    <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
+                    <div class="items" id="inventory"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="panel">
+                    <strong>Chiến đấu</strong>
+                    <div class="small">Kẻ thù hiện tại:</div>
+                    <div id="currentEnemy" class="enemy-box">Không có</div>
+                    <div style="margin-top:8px" id="battleInfo" class="small"></div>
+                </div>
+
+                <div class="panel" style="margin-top:12px">
+                    <strong>Hệ cảnh giới & Linh căn</strong>
+                    <div id="realms"></div>
+                    <div id="rootTable" class="small" style="margin-top:8px"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="js/base/cultivation.js"></script>
+    <script src="js/exploring/shop.js"></script>
+    <script src="js/combat/enemy.js"></script>
+    <script src="js/combat/bonus.js"></script>
+    <script src="js/combat/dmgCalculate.js"></script>
+    <script src="js/combat/fight.js"></script>
+    <script src="js/exploring/explore.js"></script>
+    <script src="js/exploring/saint.js"></script>
+    <script src="js/base/core.js"></script>
+</body>
+
+</html>
