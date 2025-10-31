@@ -61,6 +61,28 @@ const ENEMY_TEMPLATES = [
 ];
 
 
+function buildEnemyFromTemplate(template, realmIndex, realmStage, ferocity = 1, elements, rootRank) {
+    const baseStats = {
+        power: Math.max(1, template.baseStr || template.basePower || 10),
+        hp: Math.max(1, template.baseHp || template.baseHealth || 80),
+        def: Math.max(1, template.baseDef || template.baseGuard || 5)
+    };
+
+    const profile = (typeof computeCultivationProfile === 'function')
+        ? computeCultivationProfile(baseStats, realmIndex, realmStage, {
+            rootRank,
+            elementCount: elements?.length || 1,
+            elements
+        })
+        : baseStats;
+
+    return {
+        str: Math.max(4, Math.floor(profile.power * ferocity)),
+        hp: Math.max(30, Math.floor(profile.hp * ferocity)),
+        def: Math.max(3, Math.floor(profile.def * Math.max(0.6, Math.sqrt(ferocity))))
+    };
+}
+
 function spawnEnemyWithRules() {
     let diff = 0;
     const r = Math.random();
@@ -88,22 +110,42 @@ function spawnEnemyWithRules() {
     else if (tierRoll < 0.15) { tier = 'Tinh anh'; mult = 2; }
     else { tier = 'Thường'; mult = 1.2; }
 
-    const enemy = scaleEnemy(template, targetRealm, mult, realmStage);
-    enemy.tier = tier;
+    const rootRank = getRootRankForRealm(targetRealm);
+    const elements = randomHybridElements(targetRealm, false);
+    const stats = buildEnemyFromTemplate(template, targetRealm, realmStage, mult, elements, rootRank);
 
-    enemy.elements = randomHybridElements(targetRealm, false);
-    enemy.rootRank = getRootRankForRealm(targetRealm);
+    const enemy = {
+        name: template.name,
+        tier,
+        realmIndex: targetRealm,
+        realmStage,
+        baseTemplate: template,
+        elements,
+        rootRank,
+        str: stats.str,
+        def: stats.def,
+        hp: stats.hp,
+        maxHp: stats.hp,
+        xp: Math.max(20, Math.floor(template.baseXp * (1 + targetRealm * 0.35) * mult)),
+        gold: Math.max(10, Math.floor((template.gold || 10) * (1 + targetRealm * 0.3) * mult)),
+        rewardMult: mult,
+        baseFerocity: mult
+    };
 
     if (tier !== 'Thường') {
         enemy.weaponBonus = Math.floor(20 + Math.random() * 40);
         enemy.armorBonus = Math.floor(15 + Math.random() * 35);
-        enemy.str = Math.floor(enemy.str * (1 + (enemy.weaponBonus || 0) / 100));
-        enemy.def = Math.floor(enemy.def * (1 + (enemy.armorBonus || 0) / 100));
-        enemy.hp = Math.floor(enemy.hp * (1 + (enemy.armorBonus || 0) / 100));
+        enemy.str = Math.floor(enemy.str * (1 + enemy.weaponBonus / 100));
+        enemy.def = Math.floor(enemy.def * (1 + enemy.armorBonus / 120));
+        enemy.hp = Math.floor(enemy.hp * (1 + enemy.armorBonus / 110));
         enemy.maxHp = enemy.hp;
     }
 
-    // 🧠 Cập nhật vào state
+    if (typeof syncEnemyToRealm === 'function') {
+        syncEnemyToRealm(enemy, { ferocity: mult, elementCount: elements.length, rootRank });
+        enemy.hp = enemy.maxHp;
+    }
+
     state.currentEnemy = enemy;
     log(`⚔️ Gặp ${enemy.name} (${tier}) — ${REALMS[targetRealm]} (${STAGES[realmStage]})
                     🌿 Linh căn: ${enemy.elements?.map(colorizeElement).join(' ') || 'Vô căn'} (${ROOT_RANKS[enemy.rootRank || 0]})
@@ -360,16 +402,41 @@ function spawnEnemyPoolForRealm(realmIndex) {
     const templates = [ENEMY_TEMPLATES[0], ENEMY_TEMPLATES[1], ENEMY_TEMPLATES[2]];
     templates.forEach((t, i) => {
         const rIndex = Math.min(REALMS.length - 1, Math.max(0, realmIndex + (i - 1)));
-        const e = scaleEnemy(t, rIndex, 1 + i * 0.15, randomRealmStage());
-        e.realmIndex = rIndex;
-        // Đồng bộ chọn hệ với logic spawn chính
-        e.elements = randomHybridElements(rIndex, false);
+        const stage = randomRealmStage();
+        const rootRank = getRootRankForRealm(rIndex);
+        const elems = randomHybridElements(rIndex, false);
+        const stats = buildEnemyFromTemplate(t, rIndex, stage, 1 + i * 0.15, elems, rootRank);
+
+        const e = {
+            name: t.name,
+            tier: 'Thường',
+            realmIndex: rIndex,
+            realmStage: stage,
+            baseTemplate: t,
+            elements: elems,
+            rootRank,
+            str: stats.str,
+            def: stats.def,
+            hp: stats.hp,
+            maxHp: stats.hp,
+            xp: Math.max(20, Math.floor(t.baseXp * (1 + rIndex * 0.35))),
+            gold: Math.max(10, Math.floor((t.gold || 10) * (1 + rIndex * 0.3)))
+        };
+
+        if (typeof syncEnemyToRealm === 'function') {
+            syncEnemyToRealm(e, { ferocity: 1 + i * 0.15, elementCount: elems.length, rootRank });
+            e.hp = e.maxHp;
+        }
         pool.push(e);
     });
     if (realmIndex > 10) {
         const e = scaleEnemy(ENEMY_TEMPLATES[3], Math.min(REALMS.length - 1, realmIndex), 1.2, ENEMY_TEMPLATES[3].realmStage);
         e.realmIndex = Math.min(REALMS.length - 1, realmIndex);
         e.elements = randomHybridElements(e.realmIndex, false);
+        if (typeof syncEnemyToRealm === 'function') {
+            syncEnemyToRealm(e, { ferocity: 1.2 });
+            e.hp = e.maxHp;
+        }
         pool.push(e);
     }
     return pool;
@@ -392,31 +459,31 @@ function getHeavenScale(realmIndex = 0, stage = 0, rootRank = 0) {
  Add a helper so older/other code calling createCultivator(...) won't fail.
  It returns an enemy-like cultivator object scaled by realm/stage/root and multiplier.
 */
-function createCultivator(template, realmIndex = 0, mult = 1, realmStage = 0, elements = [],baseRootRank = null) {
+function createCultivator(template, realmIndex = 0, mult = 1, realmStage = 0, elements = [], baseRootRank = null) {
 	// ensure helper functions exist
-	const rootRank = baseRootRank != null ? baseRootRank :typeof getRootRankForRealm === 'function' ? getRootRankForRealm(realmIndex) : (template?.rootRank || 0);
-	const heavenScale = (typeof getHeavenScale === 'function'
-		? getHeavenScale(realmIndex, realmStage, rootRank)
-		: (1)) * mult * 0.015;
+	const chosenElements = elements.length ? elements : (typeof randomHybridElements === 'function' ? randomHybridElements(realmIndex, false) : (template?.elements || []));
+	const rootRank = baseRootRank != null ? baseRootRank : (typeof getRootRankForRealm === 'function' ? getRootRankForRealm(realmIndex) : (template?.rootRank || 0));
+	const stats = buildEnemyFromTemplate(template || {}, realmIndex, realmStage, Math.max(0.6, mult), chosenElements, rootRank);
 
-	const e = {
+	const enemy = {
 		name: template?.name || 'Quái Vật',
 		tier: 'Thường',
 		realmIndex,
 		realmStage,
 		baseTemplate: template || {},
-		elements: elements.length ? elements : (typeof randomHybridElements === 'function') ? randomHybridElements(realmIndex, false) : (template?.elements || []),
+		elements: chosenElements,
 		rootRank,
+		str: stats.str,
+		def: stats.def,
+		hp: stats.hp,
+		maxHp: stats.hp,
+		xp: Math.max(20, Math.floor((template?.baseXp || 10) * (1 + realmIndex * 0.35) * mult)),
+		gold: Math.max(10, Math.floor(((template?.gold) || 10) * (1 + realmIndex * 0.3) * mult))
 	};
 
-	// base coefficients — tuned to produce balanced numbers
-	e.str = Math.max(1, Math.floor((template?.baseStr || 10) * 10 * heavenScale));
-	e.hp  = Math.max(1, Math.floor((template?.baseHp || 50) * 25 * heavenScale));
-	e.def = Math.max(0, Math.floor((template?.baseDef || 5) * 8 * heavenScale));
-
-	e.maxHp = e.hp;
-	e.xp = Math.floor((template?.baseXp || 10) * (1 + realmIndex * 0.6));
-	e.gold = Math.floor(((template?.gold) || 10) * (1 + realmIndex * 0.4));
-
-	return e;
+	if (typeof syncEnemyToRealm === 'function') {
+		syncEnemyToRealm(enemy, { ferocity: mult, elementCount: chosenElements.length, rootRank });
+		enemy.hp = enemy.maxHp;
+	}
+	return enemy;
 }

@@ -4,6 +4,7 @@
 function attackTurn() {
     if (!state.currentEnemy) { log('Không có kẻ thù để tấn công.'); return; }
     recalculateStats();
+    if (typeof syncEnemyToRealm === 'function') syncEnemyToRealm(state.currentEnemy);
 
     if (!window._battleActive) {
         window._battleActive = true;

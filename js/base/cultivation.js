@@ -56,55 +56,9 @@ function getNeed(realmIndex = state.realmIndex, stage = state.realmStage) {
 
 
 
-/* nhỏ tăng khi lên stage */
-function smallStageGain(isForce = false) {
-    const realm = state.realmIndex || 0;
-    const newStage = state.realmStage || 0;
-    const prevStage = Math.max(0, newStage - 1);
-    const rootRank = state.root?.rank || 0;
-
-    const prevScale = (typeof getHeavenScale === 'function') ? getHeavenScale(realm, prevStage, rootRank) : 1;
-    const newScale = (typeof getHeavenScale === 'function') ? getHeavenScale(realm, newStage, rootRank) : 1;
-    const delta = Math.max(1, newScale - prevScale);
-
-    // Hệ số tăng kiểm soát — đủ lớn để cảm nhận, không bùng nổ
-    const powerGain = Math.max(1, Math.floor(delta * 0.06) + 4 + realm * 2);
-    const hpGain    = Math.max(5, Math.floor(delta * 0.45) + 30 + realm * 12);
-    const defGain   = Math.max(1, Math.floor(delta * 0.025) + 2 + realm);
-
-    state.power   += powerGain;
-    state.maxHp   += hpGain;
-    state.defense += defGain;
-
-    const bonusHp = (typeof getEquippedHp === 'function') ? getEquippedHp() : 0;
-    state.totalMaxHp = state.maxHp + bonusHp;
-    state.hp = state.totalMaxHp;
-    normalizeVitals();
-
-    if (isForce) {
-        const lostAge = Math.floor(20 + realm * 8);
-        const lostHp = Math.floor(state.hp * 0.15);
-        state.maxAge = Math.max(1, state.maxAge - lostAge);
-        state.hp = Math.max(1, state.hp - lostHp);
-        log(`💢 ${state.name || 'Ngươi'} cưỡng ép lĩnh ngộ tiểu cảnh — hao tổn ${lostAge} năm tuổi thọ, mất ${lostHp} HP!`);
-    }
-
-    const stageNames = ["Sơ Kỳ", "Trung Kỳ", "Hậu Kỳ", "Đại Viên Mãn"];
-    const stageName = stageNames[newStage] || "Không rõ";
-
-    log(`💫 Ngươi lĩnh ngộ ${stageName} tiểu cảnh!`);
-    log(`⚔️ Công lực tăng +${powerGain}`);
-    log(`💖 HP tăng +${hpGain}`);
-    log(`🪨 Phòng ngự tăng +${defGain}`);
-
-    if (newStage === 3) {
-        log(`🌕 Đại Viên Mãn! Chuẩn bị đột phá đại cảnh.`);
-    }
-}
-
 /* ===========================
-  XP / GAIN / RENDER
-  =========================== */
+   XP / GAIN / RENDER
+   =========================== */
 let showXpLog = true;
 
 function gainXP(n) {
@@ -177,17 +131,21 @@ function attemptMajorBreakthrough(isForce = false) {
 
     if (isSuccess) {
         const prevScale = (typeof getHeavenScale === 'function') ? getHeavenScale(prevRealm, 3, rootRank) : 1;
-
         state.realmIndex = Math.min(REALMS.length - 1, state.realmIndex + 1);
         state.realmStage = 0;
 
         const newScale = (typeof getHeavenScale === 'function') ? getHeavenScale(state.realmIndex, 0, rootRank) : 1;
-        const delta = Math.max(1, newScale - prevScale);
-
-        // Hệ số tăng đại cảnh — lớn nhưng kiểm soát
-        const powInc = Math.max(3, Math.floor(delta * 0.35) + 30 + prevRealm * 25);
-        const hpInc  = Math.max(20, Math.floor(delta * 2.2) + 200 + prevRealm * 140);
-        const defInc = Math.max(2, Math.floor(delta * 0.12) + 6 + prevRealm * 8);
+        const gain = calculateMajorGain({
+            prevRealm,
+            newRealm: state.realmIndex,
+            prevScale,
+            newScale,
+            rootRank,
+            elementCount
+        });
+        const powInc = gain.powInc;
+        const hpInc = gain.hpInc;
+        const defInc = gain.defInc;
 
         state.power   += powInc;
         state.maxHp   += hpInc;
@@ -204,11 +162,19 @@ function attemptMajorBreakthrough(isForce = false) {
         log(`⚔️ Công lực +${powInc}, 💖 HP +${hpInc}, 🪨 Phòng ngự +${defInc}`);
         log(`📿 Linh căn: ${ROOT_RANKS[rootRank]} (${((rankBonus) * 100).toFixed(1)}%), căn ${elementCount} (${((hybridBonus) * 100).toFixed(1)}%)`);
         const newRealm = state.realmIndex;
-        const baseBoost = 0.18 + newRealm * 0.03;
+        const baseBoost = 0.22 + newRealm * 0.05;
         const rankBoost = rootRank * 0.02;
         const hybridBoost = Math.max(0, elementCount - 1) * 0.018;
         const scaleBoost = Math.min(0.35, Math.log10(Math.max(10, newScale)) * 0.015);
-        const cultivateMult = 1 + baseBoost + rankBoost + hybridBoost + scaleBoost;
+        const hoaThanIndex = 4;
+        const postTransformBoost = (hoaThanIndex >= 0 && newRealm > hoaThanIndex)
+            ? Math.min(0.55, (newRealm - hoaThanIndex) * 0.08 + Math.log2(Math.max(2, newRealm - hoaThanIndex + 1)) * 0.04)
+            : 0;
+        const prevNeed = getNeed(prevRealm, 3);
+        const nextNeed = getNeed(state.realmIndex, 0);
+        const needRatio = Math.max(1, nextNeed / Math.max(1, prevNeed));
+        const demandBoost = Math.min(1.4, Math.log10(Math.max(10, needRatio)) * 0.6);
+        const cultivateMult = 1 + baseBoost + rankBoost + hybridBoost + scaleBoost + postTransformBoost + demandBoost;
         state.cultivateBoost = (state.cultivateBoost || 1.0) * cultivateMult;
         const totalBoostPct = ((state.cultivateBoost - 1) * 100).toFixed(1);
         log(`🌠 Đạo cơ thăng hoa — tốc độ tu luyện nhân ${cultivateMult.toFixed(2)} (tổng +${totalBoostPct}%).`);
@@ -279,4 +245,122 @@ function normalizeVitals() {
     const nextHp = Math.round(state.hp || 0);
     state.hp = Math.min(state.totalMaxHp, Math.max(0, nextHp));
 }
-if (typeof window !== 'undefined') window.normalizeVitals = normalizeVitals;
+
+function calculateStageGain(realm, fromStage = 0, toStage = 0, rootRank = 0) {
+    const start = Math.max(0, Math.min(3, fromStage));
+    const end = Math.max(start, Math.min(3, toStage));
+    let powInc = 0, hpInc = 0, defInc = 0;
+
+    for (let stage = start + 1; stage <= end; stage++) {
+        const prevScale = (typeof getHeavenScale === 'function') ? getHeavenScale(realm, stage - 1, rootRank) : 1;
+        const newScale = (typeof getHeavenScale === 'function') ? getHeavenScale(realm, stage, rootRank) : prevScale;
+        const delta = Math.max(1, newScale - prevScale);
+
+        powInc += Math.max(1, Math.floor(delta * 0.06) + 4 + realm * 2);
+        hpInc  += Math.max(5, Math.floor(delta * 0.45) + 30 + realm * 12);
+        defInc += Math.max(1, Math.floor(delta * 0.025) + 2 + realm);
+    }
+
+    return { powInc, hpInc, defInc };
+}
+
+function smallStageGain(isForce = false) {
+    const realm = state.realmIndex || 0;
+    const newStage = state.realmStage || 0;
+    const prevStage = Math.max(0, newStage - 1);
+    const rootRank = state.root?.rank || 0;
+
+    const gain = calculateStageGain(realm, prevStage, newStage, rootRank);
+
+    state.power   += gain.powInc;
+    state.maxHp   += gain.hpInc;
+    state.defense += gain.defInc;
+
+    const bonusHp = (typeof getEquippedHp === 'function') ? getEquippedHp() : 0;
+    state.totalMaxHp = state.maxHp + bonusHp;
+    state.hp = state.totalMaxHp;
+    normalizeVitals();
+
+    if (isForce) {
+        const lostAge = Math.floor(20 + realm * 8);
+        const lostHp = Math.floor(state.hp * 0.15);
+        state.maxAge = Math.max(1, state.maxAge - lostAge);
+        state.hp = Math.max(1, state.hp - lostHp);
+        log(`💢 ${state.name || 'Ngươi'} cưỡng ép lĩnh ngộ tiểu cảnh — hao tổn ${lostAge} năm tuổi thọ, mất ${lostHp} HP!`);
+    }
+
+    const stageNames = ["Sơ Kỳ", "Trung Kỳ", "Hậu Kỳ", "Đại Viên Mãn"];
+    const stageName = stageNames[newStage] || "Không rõ";
+
+    log(`💫 Ngươi lĩnh ngộ ${stageName} tiểu cảnh!`);
+    log(`⚔️ Công lực tăng +${gain.powInc}`);
+    log(`💖 HP tăng +${gain.hpInc}`);
+    log(`🪨 Phòng ngự tăng +${gain.defInc}`);
+
+    if (newStage === 3) {
+        log(`🌕 Đại Viên Mãn! Chuẩn bị đột phá đại cảnh.`);
+    }
+}
+
+/* ===========================
+   EXPERIMENTAL: ENEMY SPAWNING
+   =========================== */
+function spawnEnemy(realm, stage, isMini = false) {
+    const basePower = 100;
+    const powerMult = 1.2;
+
+    // Thực thể địch cơ bản
+    let enemy = {
+        name: "Kẻ Thù",
+        realmIndex: realm,
+        realmStage: stage,
+        maxHp: 0,
+        hp: 0,
+        defense: 0,
+        power: 0,
+        level: 0,
+        exp: 0,
+        drop: [],
+        isBoss: false,
+        isMiniBoss: isMini || false,
+        elements: [],
+        rank: 0,
+        skills: [],
+        ai: "aggressive",
+        lootTable: "default",
+        traits: [],
+        cooldown: 0,
+        nextSpawn: 0
+    };
+
+    // Tăng cường sức mạnh theo cảnh giới
+    const tierBoost = Math.pow(powerMult, realm);
+    enemy.power = Math.floor(basePower * tierBoost);
+    enemy.maxHp = Math.floor(100 * tierBoost);
+    enemy.defense = Math.floor(10 * tierBoost);
+
+    // Gán cấp độ và điểm kinh nghiệm
+    enemy.level = realm + stage * 0.1;
+    enemy.exp = Math.floor(50 * tierBoost);
+
+    // Thiết lập tên và thuộc tính ngẫu nhiên
+    enemy.name = `${getRandomPrefix()} ${enemy.name}`;
+    enemy.traits.push(getRandomTrait());
+
+    return enemy;
+}
+
+function getRandomPrefix() {
+    const prefixes = ["Ác Quỷ", "Bóng Tối", "Hắc Ám", "Ma Vương", "Yêu Tinh", "Thần Chết"];
+    return prefixes[Math.floor(Math.random() * prefixes.length)];
+}
+
+function getRandomTrait() {
+    const traits = ["Nhanh Nhẹn", "Mạnh Mẽ", "Bền Bỉ", "Thông Minh", "Khéo Léo", "Tà Ác"];
+    return traits[Math.floor(Math.random() * traits.length)];
+}
+if (typeof window !== 'undefined') {
+    window.normalizeVitals = normalizeVitals;
+    window.calculateStageGain = window.calculateStageGain || calculateStageGain;
+    window.calculateMajorGain = calculateMajorGain;
+}

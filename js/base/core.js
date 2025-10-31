@@ -372,10 +372,131 @@ function renderAll() {
         renderEnemyList();
     }
     renderShop();
+    if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy);
     renderCurrentEnemy();
     renderRootTable();
     checkLongevity();
     updateAutoFightLoop();
+}
+
+const BASE_REALM_PROFILE = { power: 15, hp: 120, def: 5 };
+
+function computeCultivationProfile(baseStats, realmIndex = 0, realmStage = 0, opts = {}) {
+    const stats = {
+        power: Math.max(1, baseStats?.power ?? BASE_REALM_PROFILE.power),
+        hp: Math.max(1, baseStats?.hp ?? BASE_REALM_PROFILE.hp),
+        def: Math.max(1, baseStats?.def ?? BASE_REALM_PROFILE.def)
+    };
+    const rank = Math.max(0, opts.rootRank ?? 0);
+    const elementCount = Math.max(1, opts.elementCount || (opts.elements?.length ?? 1));
+
+    if (typeof calculateMajorGain === 'function') {
+        for (let realm = 0; realm < realmIndex; realm++) {
+            const gain = calculateMajorGain({
+                prevRealm: realm,
+                newRealm: realm + 1,
+                prevScale: sampleRealmScale(realm, 3, rank),
+                newScale: sampleRealmScale(realm + 1, 0, rank),
+                rootRank: rank,
+                elementCount
+            });
+            stats.power += gain.powInc;
+            stats.hp += gain.hpInc;
+            stats.def += gain.defInc;
+        }
+    }
+
+    if (typeof calculateStageGain === 'function' && realmStage > 0) {
+        const stageGain = calculateStageGain(realmIndex, 0, realmStage, rank);
+        stats.power += stageGain.powInc;
+        stats.hp += stageGain.hpInc;
+        stats.def += stageGain.defInc;
+    }
+
+    return {
+        power: Math.max(1, Math.floor(stats.power)),
+        hp: Math.max(1, Math.floor(stats.hp)),
+        def: Math.max(1, Math.floor(stats.def))
+    };
+}
+
+function sampleRealmScale(realm, stage, rank) {
+    if (typeof getHeavenScale === 'function') {
+        const v = getHeavenScale(realm, stage, rank);
+        if (Number.isFinite(v) && v > 0) return v;
+    }
+    return 1 + realm * 0.8 + stage * 0.3 + rank * 0.12;
+}
+
+function getRealmProfile(realmIndex = 0, opts = {}) {
+    return computeCultivationProfile(BASE_REALM_PROFILE, realmIndex, 0, opts);
+}
+
+function syncEnemyToRealm(enemy, override) {
+    if (!enemy) return enemy;
+
+    if (enemy.__basePower == null) enemy.__basePower = Math.max(1, enemy.str || enemy.baseStr || BASE_REALM_PROFILE.power);
+    if (enemy.__baseHp == null) enemy.__baseHp = Math.max(1, enemy.maxHp || enemy.hp || BASE_REALM_PROFILE.hp);
+    if (enemy.__baseDef == null) enemy.__baseDef = Math.max(1, enemy.def || enemy.baseDef || BASE_REALM_PROFILE.def);
+
+    const rank = override?.rootRank ?? enemy.rootRank ?? 2;
+    const elementCount = override?.elementCount ?? (enemy.elements?.length || 1);
+    const profile = getRealmProfile(enemy.realmIndex || 0, { rootRank: rank, elementCount });
+    const baseProfile = getRealmProfile(0, { rootRank: rank, elementCount });
+
+    const powRatio = profile.power / Math.max(1, baseProfile.power);
+    const hpRatio = profile.hp / Math.max(1, baseProfile.hp);
+    const defRatio = profile.def / Math.max(1, baseProfile.def);
+
+    const stageFactor = 1 + Math.max(0, enemy.realmStage || 0) * 0.35;
+    const ferocity = Math.max(1, override?.ferocity ?? enemy.baseFerocity ?? enemy.ferocity ?? 1);
+    enemy.ferocity = ferocity;
+
+    enemy.str = Math.max(4, Math.floor(enemy.__basePower * powRatio * stageFactor * ferocity));
+    enemy.maxHp = Math.max(30, Math.floor(enemy.__baseHp * hpRatio * stageFactor * ferocity));
+    enemy.def = Math.max(3, Math.floor(enemy.__baseDef * defRatio * stageFactor));
+    enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp || enemy.maxHp));
+
+    const playerState = (typeof state !== 'undefined') ? state : null;
+    const playerPower = Math.max(4, playerState ? (playerState.totalPower || playerState.power || 4) : profile.power);
+    const playerHp = Math.max(30, playerState ? (playerState.totalMaxHp || playerState.maxHp || 30) : profile.hp);
+    const playerDef = Math.max(3, playerState ? (playerState.totalDef || playerState.defense || 3) : profile.def);
+    const playerRealm = playerState?.realmIndex ?? 0;
+    const realmGap = (enemy.realmIndex ?? playerRealm) - playerRealm;
+
+    const powerCapBase = realmGap >= 0
+        ? 2.2 + realmGap * 0.65
+        : Math.max(1.35, 2.2 + realmGap * 0.55);
+    const hpCapBase = realmGap >= 0
+        ? 3.2 + realmGap * 1.1
+        : Math.max(1.6, 3.2 + realmGap * 0.8);
+    const defCapBase = realmGap >= 0
+        ? 2.0 + realmGap * 0.45
+        : Math.max(1.25, 2.0 + realmGap * 0.35);
+
+    const powerCap = powerCapBase * ferocity;
+    const hpCap = hpCapBase * Math.max(1, ferocity * 0.9);
+    const defCap = defCapBase * Math.max(1, Math.pow(ferocity, 0.6));
+
+    enemy.str = Math.max(4, Math.min(enemy.str, Math.floor(playerPower * powerCap)));
+    enemy.maxHp = Math.max(30, Math.min(enemy.maxHp, Math.floor(playerHp * hpCap)));
+    enemy.totalMaxHp = enemy.maxHp;
+    enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp));
+    enemy.def = Math.max(3, Math.min(enemy.def, Math.floor(playerDef * defCap)));
+
+    const rewardPowerRatio = enemy.str / Math.max(1, playerPower);
+    const rewardHpRatio = enemy.maxHp / Math.max(1, playerHp);
+    const rewardDefRatio = enemy.def / Math.max(1, playerDef);
+    const rewardBase = Math.max(rewardPowerRatio * 0.7, rewardHpRatio * 0.25, rewardDefRatio * 0.4) * Math.max(1, ferocity * 0.85);
+
+    enemy.rewardMult = Math.max(enemy.rewardMult || ferocity, rewardBase);
+    return enemy;
+}
+
+if (typeof window !== 'undefined') {
+    window.getRealmProfile = window.getRealmProfile || getRealmProfile;
+    window.syncEnemyToRealm = syncEnemyToRealm;
+    window.computeCultivationProfile = window.computeCultivationProfile || computeCultivationProfile;
 }
 
 function recalculateStats() {
@@ -812,3 +933,24 @@ if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModa
 initStarter();
 renderAll();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
+(function patchEnemyFactories() {
+    if (typeof window === 'undefined') return;
+    if (typeof window.createCultivator === 'function' && !window.__syncEnemyCreate) {
+        const original = window.createCultivator;
+        window.__syncEnemyCreate = true;
+        window.createCultivator = function (...args) {
+            const enemy = original.apply(this, args);
+            try { syncEnemyToRealm(enemy); } catch { }
+            return enemy;
+        };
+    }
+    if (typeof window.spawnEnemyWithRules === 'function' && !window.__syncSpawnEnemy) {
+        const originalSpawn = window.spawnEnemyWithRules;
+        window.__syncSpawnEnemy = true;
+        window.spawnEnemyWithRules = function (...args) {
+            const result = originalSpawn.apply(this, args);
+            try { if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy); } catch { }
+            return result;
+        };
+    }
+})();
