@@ -33,11 +33,11 @@ if (!indexPath) {
 }
 
 /**
- * Sinh chuỗi version theo thời gian thực thi — định dạng YYYYmmDDHHMMss
+ * Sinh chuỗi version theo thời gian thực thi — định dạng YYYYmmDDHHMMss + 6 ký tự random
  */
 function resolveVersion() {
     const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
+    const pad = (n, len = 2) => String(n).padStart(len, '0');
 
     const year = now.getFullYear();
     const month = pad(now.getMonth() + 1);
@@ -46,7 +46,10 @@ function resolveVersion() {
     const minute = pad(now.getMinutes());
     const second = pad(now.getSeconds());
 
-    return `${year}${month}${day}${hour}${minute}${second}`;
+    // Sinh chuỗi random gồm 6 ký tự (chữ + số)
+    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    return `${year}${month}${day}_${hour}${minute}${second}_${randomStr}`;
 }
 
 /**
@@ -58,6 +61,7 @@ function updateIndex(version) {
     if (html !== updated) {
         fs.writeFileSync(indexPath, updated);
         console.log(`✨ Game version updated to ${version}`);
+        console.log(`⚙️  Build time: ${new Date().toLocaleString('vi-VN')}`);
     } else {
         console.log('⚪ Game version unchanged.');
     }
