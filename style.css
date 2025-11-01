@@ -118,6 +118,28 @@
     to { opacity: 1; }
 }
 
+#start-screen.fade-out {
+    animation: fadeOut 0.6s forwards;
+}
+
+#introNarration {
+    margin-top: 1.5em;
+    max-width: 420px;
+    min-height: 160px;
+    color: #c6efff;
+    font-size: 1rem;
+    line-height: 1.5;
+    text-shadow: 0 0 12px rgba(120, 255, 255, 0.3);
+}
+
+#introNarration .line {
+    margin: 0.35em 0;
+    white-space: pre-wrap;
+}
+
+@keyframes fadeOut {
+    to { opacity: 0; }
+}
 
 body {
     margin: 0;
@@ -383,18 +405,4 @@ footer {
 #inventoryPagination {
     text-align: center;
     margin-top: 8px;
-}
-
-/* 🌑 Màn hình khởi đầu */
-#start-screen {
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    font-family: 'serif';
-    color: #e5d7b2;
 }

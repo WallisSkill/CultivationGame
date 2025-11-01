@@ -144,6 +144,7 @@ window.addEventListener("load", () => {
         window.state = window.state || {};
         state.name = saved;
         startScreen.style.display = "none";
+        startScreen.dataset.closed = "1";
         announceRootStory(true);
         return;
     }
@@ -160,11 +161,12 @@ window.addEventListener("load", () => {
         localStorage.setItem("playerName", val);
 
         state.__rootStoryShown = false;
-        startScreen.style.opacity = 0;
-        setTimeout(() => {
-            startScreen.style.display = "none";
-            announceRootStory(true);
-        }, 600);
+        btn.disabled = true;
+        const script = buildRootStoryScript();
+        announceRootStory(true, script);
+        playIntroNarration(script).then(() => {
+            setTimeout(() => fadeOutStartScreen(), 5000);
+        });
     });
 });
 
@@ -826,13 +828,10 @@ function initStarter() {
     state.__rootStoryShown = false;
 }
 
-function announceRootStory(force = false) {
-    if (!force && state.__rootStoryShown) return;
-
+function buildRootStoryScript() {
     const elements = state.root?.elements || [];
     const rank = state.root?.rank ?? 0;
     const rankName = ROOT_RANKS[rank] || "Vô Danh";
-    const elementIcons = elements.length ? elements.map(colorizeElement).join(' ') : 'Vô căn';
     const tierName = [
         'Nhất Linh Căn (Tạp Tử)',
         'Song Linh Căn',
@@ -840,62 +839,97 @@ function announceRootStory(force = false) {
         'Tứ Linh Căn',
         'Ngũ Linh Căn — Hỗn Nguyên Thể 🌌'
     ][Math.max(0, elements.length - 1)] || "Vô Linh Căn";
+    const elementSummary = elements.length ? elements.join(' ') : 'Vô căn';
 
-    state.__rootStoryShown = true;
+    const script = [
+        "====================================",
+        "🌠 Thiên Đạo khởi chuyển — Linh căn hiển thế!",
+        "====================================",
+        `🌠 【Linh Căn Hiện Thế】${tierName}`,
+        `→ Linh căn: ${elementSummary}`,
+        "",
+        `🔮 【Phẩm Chất Hiện Thế】${rankName}`
+    ];
 
-    log("\n====================================");
-    log("🌠 Thiên Đạo khởi chuyển — Linh căn hiển thế!");
-    log("====================================");
-    log(`🌠 【Linh Căn Hiện Thế】${tierName}`);
-    log(`→ Linh căn: ${elementIcons}`);
-    log(`\n🔮 【Phẩm Chất Hiện Thế】${rankName}`);
-    if (rank >= 9) log('☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục!');
-    else if (rank === 8) log('🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không!');
-    else if (rank === 7) log('🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động!');
-    else if (rank === 6) log('⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc!');
-    else if (rank === 5) log('🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng.');
-    else if (rank === 4) log('🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh.');
-    else if (rank === 3) log('💎 Thượng phẩm hiển linh — khí tức thuần chính.');
-    else if (rank === 2) log('🌿 Trung phẩm phát mạch — đạo vận sơ khai.');
-    else if (rank === 1) log('🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài.');
-    else log('🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ.');
+    if (rank >= 9) script.push('☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục!');
+    else if (rank === 8) script.push('🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không!');
+    else if (rank === 7) script.push('🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động!');
+    else if (rank === 6) script.push('⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc!');
+    else if (rank === 5) script.push('🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng.');
+    else if (rank === 4) script.push('🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh.');
+    else if (rank === 3) script.push('💎 Thượng phẩm hiển linh — khí tức thuần chính.');
+    else if (rank === 2) script.push('🌿 Trung phẩm phát mạch — đạo vận sơ khai.');
+    else if (rank === 1) script.push('🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài.');
+    else script.push('🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ.');
 
     if (elements.length >= 5 && rank >= 9) {
-        log("\n☯️ [Thiên Địa Dị Tượng] — Ngũ hành nghịch chuyển, vạn vật run rẩy!");
-        log("🌌 Một Hỗn Độn Chi Thể nghịch thiên xuất thế!");
+        script.push("", "☯️ [Thiên Địa Dị Tượng] — Ngũ hành nghịch chuyển, vạn vật run rẩy!", "🌌 Một Hỗn Độn Chi Thể nghịch thiên xuất thế!");
     } else if (elements.length >= 4 && rank >= 8) {
-        log("\n⚡ [Thiên Cơ Giao Động] — Tiên linh hiện thế, đạo vận khuếch tán!");
+        script.push("", "⚡ [Thiên Cơ Giao Động] — Tiên linh hiện thế, đạo vận khuếch tán!");
     } else if (elements.length >= 3 && rank >= 6) {
-        log("\n✨ [Thiên Khải Linh Vân] — Khí tức vững mạnh, linh vận cường hóa!");
+        script.push("", "✨ [Thiên Khải Linh Vân] — Khí tức vững mạnh, linh vận cường hóa!");
     } else if (rank <= 1) {
-        log("\n🍂 [Phàm Thai Mỏng Manh] — Linh khí yếu ớt, đạo lộ chông gai...");
+        script.push("", "🍂 [Phàm Thai Mỏng Manh] — Linh khí yếu ớt, đạo lộ chông gai...");
     }
 
+    script.push("", `💠 Linh căn và phẩm chất đã định, ${state.name} bước vào đạo lộ tu hành!`, "====================================");
+    return script;
+}
+
+function announceRootStory(force = false, script) {
+    if (!force && state.__rootStoryShown) return;
+    state.__rootStoryShown = true;
     recalculateStats();
-    log("\n💠 Linh căn và phẩm chất đã định, ngươi bước vào đạo lộ tu hành!");
-    log("====================================\n");
 }
 
+function playIntroNarration(script = buildRootStoryScript()) {
+    const container = document.getElementById('introNarration');
+    if (!container) return Promise.resolve();
+    container.innerHTML = '';
+    let lineIndex = 0;
 
-function renderRootTable() {
-    const el = $('rootTable');
-    if (!el) return;
-    const playerRoot = state.root || { elements: [], rank: 0 };
-    const attackerRealm = state.realmIndex || 0;
-    const rankName = ROOT_RANKS[playerRoot.rank] || 'Phế Phẩm';
-    const elementList = playerRoot.elements.length
-        ? playerRoot.elements.map(colorizeElement).join(' ')
-        : 'Vô căn';
-    let html = `<div class="small">Linh căn hiện tại: ${elementList} (${colorizeWithMap(rankName)})</div>`;
-    html += `<div class="small" style="margin-top:6px;">Tương quan với đơn linh căn cùng phẩm chất:</div>`;
-    ELEMENTS.forEach(element => {
-        const bonus = (typeof calcElementBonus === 'function')
-            ? calcElementBonus(playerRoot.elements, [element], attackerRealm, attackerRealm)
-            : 0;
-        html += `<div class="small">• ${elementList} vs ${colorizeElement(element)} ⇒ ${bonus.toFixed(1)}%</div>`;
+    return new Promise(resolve => {
+        const typeLine = () => {
+            if (lineIndex >= script.length) {
+                resolve();
+                return;
+            }
+            const text = script[lineIndex++];
+            if (!text) {
+                const emptyLine = document.createElement('div');
+                emptyLine.className = 'line';
+                emptyLine.innerHTML = '&nbsp;';
+                container.appendChild(emptyLine);
+                setTimeout(typeLine, 150);
+                return;
+            }
+            const lineEl = document.createElement('div');
+            lineEl.className = 'line';
+            container.appendChild(lineEl);
+            let charIndex = 0;
+            const interval = setInterval(() => {
+                if (charIndex >= text.length) {
+                    clearInterval(interval);
+                    setTimeout(typeLine, 180);
+                    return;
+                }
+                lineEl.textContent += text.charAt(charIndex++);
+            }, 35);
+        };
+        typeLine();
     });
-    el.innerHTML = html;
 }
+
+function fadeOutStartScreen() {
+    const screen = document.getElementById('start-screen');
+    if (!screen || screen.dataset.closed === '1') return;
+    screen.dataset.closed = '1';
+    screen.classList.add('fade-out');
+    setTimeout(() => {
+        screen.style.display = 'none';
+    }, 650);
+}
+
 
 /* ===========================
     SAVE / LOAD
@@ -961,3 +995,21 @@ setGameVersionLabel();
 initStarter();
 renderAllImmediate();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
+function renderRootTable() {
+    const el = $('rootTable');
+    if (!el) return;
+    const playerRoot = state.root || { elements: [], rank: 0 };
+    const rankName = ROOT_RANKS[playerRoot.rank] || 'Phế Phẩm';
+    const elements = playerRoot.elements.length
+        ? playerRoot.elements.map(colorizeElement).join(' ')
+        : 'Vô căn';
+    let html = `<div class="small">Linh căn hiện tại: ${elements} (${colorizeWithMap(rankName)})</div>`;
+    html += `<div class="small" style="margin-top:6px;">Tương quan với đơn linh căn cùng phẩm chất:</div>`;
+    ELEMENTS.forEach(element => {
+        const bonus = (typeof calcElementBonus === 'function')
+            ? calcElementBonus(playerRoot.elements, [element], state.realmIndex || 0, state.realmIndex || 0)
+            : 0;
+        html += `<div class="small">• ${elements} vs ${colorizeElement(element)} ⇒ ${bonus.toFixed(1)}%</div>`;
+    });
+    el.innerHTML = html;
+}
