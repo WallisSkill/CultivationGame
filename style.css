@@ -112,10 +112,9 @@ button:hover {
 }
 
 button.primary {
-    background: linear-gradient(90deg, #0b8a5b, #24d398);
     color: #fff;
     border: none;
-    box-shadow: 0 0 10px rgba(36, 211, 152, 0.4);
+    box-shadow: 0 0 10px rgba(228, 238, 235, 0.4);
 }
 
 .grid {
