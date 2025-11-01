@@ -123,10 +123,18 @@ function mysteryGood() {
     if (Math.random() < 0.02) {
         const elems = randomHybridElements(state.realmIndex, true);
         const rank = Math.min(6, 3 + Math.floor(state.realmIndex / 5));
-        addItemToInventory({ name: `Hỗn Nguyên ${elems.join('+')} ${ROOT_RANKS[rank]}`, type: 'root', elements: elems, rank, desc: 'Hỗn nguyên linh căn hiếm' });
+        addItemToInventory({ 
+            name: `Hỗn Nguyên ${elems.join('+')} ${ROOT_RANKS[rank]}`, 
+            type: 'root', 
+            elements: elems, 
+            rank, 
+            desc: 'Hỗn nguyên linh căn hiếm' 
+        });
         log('Kỳ ngộ hiếm: tìm thấy Linh Căn Hỗn Nguyên!');
     }
-    renderAll();
+    
+    // 🆕 Chỉ render inventory, không cần full render
+    renderInventory();
 }
 
 function mysteryBad() {

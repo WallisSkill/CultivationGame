@@ -580,6 +580,212 @@ footer {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
+/* 🔮 Skill Display Styles - Unified with other panels */
+.panel-skills {
+    background: rgba(15, 23, 36, 0.25);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
+    padding: 12px;
+}
+
+.panel-skills h3 {
+    margin: 0 0 12px 0;
+    color: #ffffff;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+.skill-section {
+    margin-bottom: 10px;
+    color: #e6f2ea;
+    font-weight: 600;
+    font-size: 0.9em;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 📚 Grid 2 cột cho skill list */
+.skill-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.skill-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.skill-item.equipped {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.08);
+}
+
+.skill-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-1px);
+}
+
+.skill-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 8px;
+}
+
+.skill-name {
+    font-weight: 600;
+    color: #e6f2ea;
+    font-size: 0.9em;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.skill-level {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    color: #9aa6b2;
+    white-space: nowrap;
+}
+
+.skill-type {
+    color: #9aa6b2;
+    margin-bottom: 4px;
+    font-size: 0.8em;
+}
+
+.skill-desc {
+    color: #9aa6b2;
+    margin-bottom: 4px;
+    line-height: 1.35;
+    font-size: 0.85em;
+}
+
+.skill-effect {
+    color: #e6f2ea;
+    margin-bottom: 4px;
+    font-size: 0.8em;
+}
+
+.skill-progress {
+    color: #9aa6b2;
+    margin-bottom: 8px;
+    font-size: 0.75em;
+}
+
+.skill-toggle-btn {
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(123, 228, 163, 0.12);
+    border: 1px solid rgba(123, 228, 163, 0.25);
+    color: #a6ffd1;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.8em;
+    margin-top: auto;
+}
+
+.skill-toggle-btn:hover {
+    background: rgba(123, 228, 163, 0.2);
+    transform: translateY(-1px);
+}
+
+/* ⚡ Active Skills Grid - 2 cột */
+.active-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.active-skill-btn {
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.85em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.skill-btn-name {
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.skill-btn-cd {
+    font-size: 0.75em;
+    opacity: 0.8;
+}
+
+.active-skill-btn.ready {
+    background: linear-gradient(120deg, #1cb573, #20d697);
+    border: 1px solid rgba(123, 228, 163, 0.4);
+    color: #052016;
+    box-shadow: 0 0 12px rgba(123, 228, 163, 0.3);
+}
+
+.active-skill-btn.ready:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(123, 228, 163, 0.5);
+}
+
+.active-skill-btn.cooldown {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #9aa6b2;
+    cursor: not-allowed;
+}
+
+/* 💫 Passive Buffs */
+.passive-buffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.buff-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.buff-name {
+    color: #e6f2ea;
+    font-weight: 600;
+    font-size: 0.8em;
+}
+
+.buff-duration {
+    color: #9aa6b2;
+    font-size: 0.75em;
+}
+
+/* 📱 Mobile Responsive */
 @media (max-width: 768px) {
     body {
         background-color: #03070f;
@@ -646,6 +852,7 @@ footer {
         gap: 12px;
     }
 
+    /* 🆕 Buttons trong controls - màu giống panel */
     .controls {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -659,6 +866,19 @@ footer {
         margin: 0;
         padding: 8px 6px;
         font-size: 0.84rem;
+        background: rgba(15, 23, 36, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #e6f2ea;
+    }
+
+    .controls button:hover {
+        background: rgba(15, 23, 36, 0.7);
+    }
+
+    .controls button.primary {
+        background: linear-gradient(120deg, #1cb573, #20d697);
+        border: 1px solid rgba(123, 228, 163, 0.3);
+        color: #052016;
     }
 
     .topline .stat {
@@ -702,122 +922,6 @@ footer {
         box-shadow: inset 0 0 12px rgba(123, 228, 163, 0.12);
         backdrop-filter: blur(6px);
         transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .controls {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
-        margin-top: 12px;
-    }
-
-    .controls button {
-        width: 100%;
-        margin: 0;
-        padding: 12px 10px;
-        font-size: 0.95rem;
-    }
-
-    .items {
-        gap: 10px;
-    }
-
-    #inventoryItems {
-        grid-template-columns: 1fr;
-    }
-
-    #inventoryItems .item {
-        padding: 10px;
-        border-radius: 10px;
-    }
-
-    #inventoryItems .item b {
-        font-size: 0.9rem;
-    }
-
-    .inv-buttons {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 5px;
-    }
-
-    .inv-buttons button {
-        flex: 1 1 auto;
-        min-width: 0;
-        margin: 0;
-        padding: 7px 0;
-        font-size: 0.8rem;
-    }
-
-    #currentEnemy,
-    #battleInfo,
-    #rootTable {
-        font-size: 0.84rem;
-    }
-
-    #introNarration {
-        max-width: 100%;
-        min-height: 140px;
-        font-size: 0.95rem;
-        max-height: 220px;
-        overflow-y: auto;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-
-    #introNarration::-webkit-scrollbar { display: none; }
-
-    #playerNameInput {
-        width: 100%;
-    }
-
-    .grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    .controls {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 6px;
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    .controls button {
-        width: 100%;
-        margin: 0;
-        padding: 8px 6px;
-        font-size: 0.84rem;
-    }
-
-    .topline .stat {
-        min-width: 0;
-        flex: 1 1 100%;
-    }
-
-    #inventoryFilter {
-        display: grid;
-        gap: 10px;
-    }
-
-    #inventoryFilter button {
-        width: 100%;
-        margin: 0;
-    }
-
-    .controls {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
-        margin-top: 12px;
-    }
-
-    .controls button {
-        width: 100%;
-        margin: 0;
-        padding: 12px 10px;
-        font-size: 0.95rem;
     }
 
     .items {
@@ -893,5 +997,80 @@ footer {
     #confirmLayer .confirm-actions button {
         padding: 9px 0;
         font-size: 0.88rem;
+    }
+
+    /* 🆕 Skill panel mobile styles */
+    .panel-skills h3 {
+        font-size: 0.95em;
+    }
+    
+    .skill-grid {
+        gap: 8px;
+    }
+    
+    .skill-item {
+        padding: 8px;
+        background: rgba(15, 23, 36, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .skill-item.equipped {
+        background: rgba(15, 23, 36, 0.7);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+    
+    .skill-name {
+        font-size: 0.85em;
+    }
+    
+    .skill-level {
+        font-size: 0.7em;
+        padding: 2px 5px;
+    }
+    
+    .skill-type,
+    .skill-desc,
+    .skill-effect,
+    .skill-progress {
+        font-size: 0.75em;
+    }
+    
+    .skill-toggle-btn {
+        font-size: 0.75em;
+        padding: 5px 8px;
+    }
+    
+    .active-skills-grid {
+        gap: 6px;
+    }
+    
+    .active-skill-btn {
+        padding: 8px 6px;
+        font-size: 0.8em;
+    }
+    
+    .skill-btn-name {
+        font-size: 0.85em;
+    }
+    
+    .skill-btn-cd {
+        font-size: 0.7em;
+    }
+    
+    .passive-buffs {
+        gap: 6px;
+    }
+    
+    .buff-item {
+        padding: 5px 8px;
+        background: rgba(15, 23, 36, 0.5);
+    }
+    
+    .buff-name {
+        font-size: 0.75em;
+    }
+    
+    .buff-duration {
+        font-size: 0.7em;
     }
 }

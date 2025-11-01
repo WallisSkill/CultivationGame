@@ -159,7 +159,7 @@ function getRealmMultiplier(attackerRealm, defenderRealm) {
 
 //ELEMENT
 function applyElementalBuffs(player, enemy) {
-    const verbose = !!window._elementalDebug;
+    const verbose = !window._elementalDebug;
     const logSection = (msg) => { if (verbose) log(msg); };
 
     const playerRank = player.root?.rank || 0;

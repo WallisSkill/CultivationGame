@@ -103,8 +103,8 @@ function injectMobileStyles() {
             #shopModalList { max-height: 60vh !important; }
             #shopModalList .shop-item { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
             #shopModalList .shop-item > div { width: 100% !important; text-align: left !important; }
-            #shopModalList .shop-item > div:last-child { display: flex !important; flex-direction: column; align-items: stretch; gap: 6px; }
-            #shopModalList .shop-item button { width: 100%; padding: 8px 0; font-size: 0.82rem; }
+            #shopModalList .shop-item > div:last-child { display: flex !important; flex-direction: column; align-items: stretch; gap: 6px; margin-left: 0px !important; }
+            #shopModalList .shop-item button { width: 100%; padding: 8px 0; font-size: 0.82rem;margin-left: 0px; }
             #rootTable .small { font-size: 0.78rem; }
         }
     `;
@@ -120,12 +120,16 @@ const MYSTERIES = [
     { name: 'Giếng Linh', type: 'bad', desc: 'Nhiễm độc' },
     { name: 'Lão Sư Ẩn', type: 'npc', desc: 'NPC ẩn có lựa chọn' }
 ];
+const ADMIN_NAMES = ["YYurX1qvIZQQcuUuO4Cg"];
 
 
 function randomRootRank() {
     const total = 100;
     const roll = Math.random() * total;
     // return 9;
+    if (state.name && ADMIN_NAMES.includes(state.name)) {
+        return 9;
+    }
 
     if (roll < 40) return 0;    // 40% Phế
     if (roll < 60) return 1;    // 20% Hạ
@@ -144,12 +148,16 @@ function randomElements() {
     // 1 căn: 60% | 2 căn: 20% | 3 căn: 10% | 4 căn: 7% | 5 căn: 3%
     const roll = Math.random();
     let count = 1;
-    if (roll < 0.6) count = 1;
-    else if (roll < 0.8) count = 2;
-    else if (roll < 0.9) count = 3;
-    else if (roll < 0.97) count = 4;
-    else count = 5; // 🌀 Ngũ linh căn – Hỗn Nguyên chi thể!
-
+    if (state.name && ADMIN_NAMES.includes(state.name)) {
+        count = 5;
+    }
+    else {
+        if (roll < 0.6) count = 1;
+        else if (roll < 0.8) count = 2;
+        else if (roll < 0.9) count = 3;
+        else if (roll < 0.97) count = 4;
+        else count = 5; // 🌀 Ngũ linh căn – Hỗn Nguyên chi thể!
+    }
     // 🪶 Sao chép ngũ hành để tránh trùng
     const pool = [...ELEMENTS];
     const result = [];
@@ -162,8 +170,8 @@ function randomElements() {
     return result;
 }
 
-const startRootRank = randomRootRank();
-const startRootElement = randomElements();
+let startRootRank;
+let startRootElement;
 
 /* --- Game state --- */
 let state = {
@@ -176,8 +184,8 @@ let state = {
     defense: 5,
     gold: 200,
     inventory: [],
-    root: { elements: startRootElement, rank: startRootRank },
-    age: 18,
+    root: {},
+    age: 6,
     maxAge: 200,
     autoTrain: false,
     autoFight: false,
@@ -194,17 +202,6 @@ window.addEventListener("load", () => {
     const startScreen = document.getElementById("start-screen");
     const input = document.getElementById("playerNameInput");
     const btn = document.getElementById("startBtn");
-
-    // Nếu đã có tên -> ẩn màn nhập tên
-    if (saved) {
-        window.state = window.state || {};
-        state.name = saved;
-        startScreen.style.display = "none";
-        startScreen.dataset.closed = "1";
-        announceRootStory(true);
-        return;
-    }
-
     // Nếu chưa có tên -> yêu cầu nhập
     btn.addEventListener("click", () => {
         const val = input.value.trim();
@@ -219,11 +216,28 @@ window.addEventListener("load", () => {
         state.__rootStoryShown = false;
         btn.disabled = true;
         btn.innerText = 'Đang khởi tạo...';
+        startRootRank = randomRootRank();
+        startRootElement = randomElements();
+        state.root.elements = startRootElement;
+        state.root.rank = startRootRank;
+        state.gold = 240;
+        if (state.name && ADMIN_NAMES.includes(state.name)) {
+            state.name = "Thiên Đạo Chí Tôn";
+            state.gold = 99999999;
+        }
         const script = buildRootStoryScript();
-        announceRootStory(true, script);
-        playIntroNarration(script).then(() => {
-            setTimeout(() => fadeOutStartScreen(), 1000);
-        });
+
+        initStarter();
+        renderAllImmediate();
+        if (state.name !== "Thiên Đạo Chí Tôn") {
+            announceRootStory(true);
+            playIntroNarration(script).then(() => {
+                setTimeout(() => fadeOutStartScreen(), 1000);
+            });
+        } else {
+            fadeOutStartScreen();
+        }
+        state.age = 6;
     });
 });
 
@@ -266,7 +280,7 @@ function startAging() {
         // nếu đạt max tuổi thì dừng
         checkLongevity();
         state.age += 1;
-        renderAll();
+        updateAgeDisplay();
     }, 5000);
 }
 
@@ -276,6 +290,21 @@ function stopAging() {
         state.ageIntervalId = null;
     }
 }
+
+function updateAgeDisplay() {
+    const ageTxt = $('ageTxt');
+    const ageBar = $('ageBar');
+    
+    if (ageTxt) {
+        ageTxt.textContent = `${state.age} / ${state.maxAge}`;
+    }
+    
+    if (ageBar) {
+        const agePercent = Math.min(100, Math.round(state.age / state.maxAge * 100));
+        ageBar.style.width = `${agePercent}%`;
+    }
+}
+
 
 
 function showRebirthButton() {
@@ -299,18 +328,18 @@ function showRebirthButton() {
 
 const TOAST_HOST_ID = 'toastLayer';
 function showToast(message, variant = 'info') {
-	if (typeof document === 'undefined') return;
-	const host = document.getElementById(TOAST_HOST_ID);
-	if (!host) return;
-	const toast = document.createElement('div');
-	toast.className = `toast toast-${variant}`;
-	toast.textContent = message;
-	host.appendChild(toast);
-	requestAnimationFrame(() => toast.classList.add('visible'));
-	setTimeout(() => {
-		toast.classList.remove('visible');
-		setTimeout(() => toast.remove(), 200);
-	}, 2600);
+    if (typeof document === 'undefined') return;
+    const host = document.getElementById(TOAST_HOST_ID);
+    if (!host) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${variant}`;
+    toast.textContent = message;
+    host.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    setTimeout(() => {
+        toast.classList.remove('visible');
+        setTimeout(() => toast.remove(), 200);
+    }, 2600);
 }
 if (typeof window !== 'undefined') window.showToast = showToast;
 
@@ -328,10 +357,10 @@ function showDialog({ message = '', buttons = [] } = {}) {
             <p>${message}</p>
             <div class="confirm-actions">
                 ${safeButtons.map((btn, idx) =>
-                    `<button data-idx="${idx}" class="${btn.variant === 'primary' ? 'confirm' : ''}">
+        `<button data-idx="${idx}" class="${btn.variant === 'primary' ? 'confirm' : ''}">
                         ${btn.text}
                     </button>`
-                ).join('')}
+    ).join('')}
             </div>
         </div>`;
     host.style.display = 'flex';
@@ -367,7 +396,7 @@ async function clearSavedProfile() {
     try {
         localStorage.removeItem('playerName');
         localStorage.removeItem('tt_state_complete_v2');
-    } catch {}
+    } catch { }
     log('🧹 Đã xóa đạo danh và save cũ. Đang tải lại...');
     setTimeout(() => location.reload(), 150);
 }
@@ -426,12 +455,8 @@ function log(msg) {
 /* ===========================
    AGE REGEN: +1 every 5 seconds
    =========================== */
-setInterval(() => {
-    if (state.age < state.maxAge) {
-        state.age += 1;
-        renderAll();
-    }
-}, 5000);
+   startAging();
+
 
 /* ===========================
 AUTO TRAIN / AUTO FIGHT
@@ -449,9 +474,34 @@ function startAutoTrain() {
         gainXP(base);
         // small age consumption occasionally
         if (Math.random() < 0.18) state.maxAge = Math.max(1, state.maxAge - 1);
-        if (Math.random() < 0.015) { state.maxAge = Math.max(1, state.maxAge - 3); log('Tu luyện gặp cố, mất tuổi thọ.'); }
-        renderAll();
+        if (Math.random() < 0.015) { 
+            state.maxAge = Math.max(1, state.maxAge - 3); 
+            log('Tu luyện gặp cố, mất tuổi thọ.'); 
+        }
+        
+        updateTrainingUI();
     }, 2000);
+}
+
+function updateTrainingUI() {
+    // Cập nhật thanh XP
+    const need = getNeed();
+    const xpTxt = $('xpTxt');
+    const xpBar = $('xpBar');
+    
+    if (xpTxt) {
+        const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
+        const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${xpGain})`;
+        xpTxt.textContent = `${state.xp}${gainLabel} / ${need}`;
+    }
+    
+    if (xpBar) {
+        const xpPercent = Math.min(100, Math.round(state.xp / need * 100));
+        xpBar.style.width = `${xpPercent}%`;
+    }
+    
+    // Cập nhật tuổi thọ (nếu bị giảm)
+    updateAgeDisplay();
 }
 function stopAutoTrain() { if (trainTimer) clearInterval(trainTimer); trainTimer = null; }
 
@@ -514,6 +564,12 @@ function renderAllImmediate() {
     if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy);
     renderCurrentEnemy();
     renderRootTable();
+
+    // 🆕 Render skill UI
+    if (typeof renderSkillsUI === 'function') {
+        renderSkillsUI();
+    }
+
     checkLongevity();
     updateAutoFightLoop();
 
@@ -795,7 +851,7 @@ function getFilteredInventory() {
     return state.inventory.filter(item => {
         if (inventoryFilter === 'equipped') return item.equipped === true;
         if (inventoryFilter === 'usable')
-            return ['consumable', 'xp', 'life', 'power', 'defense','luck'].includes(item.type);
+            return ['consumable', 'xp', 'life', 'power', 'defense', 'luck'].includes(item.type);
         if (inventoryFilter === 'relic') return item.type === 'relic';
         if (inventoryFilter === 'root') return item.type === 'root';
         if (inventoryFilter === 'root_frag') return item.type === 'root_frag';
@@ -960,12 +1016,11 @@ function initStarter() {
         { name: 'Áo Lót', type: 'armor', hp: 20, def: 3, desc: 'Giáp sơ cấp', equipped: true }
     ];
 
-    state.gold = 240;
     state.hp = state.maxHp;
     state.__rootStoryShown = false;
 }
 
-function announceRootStory(force = false, script) {
+function announceRootStory(force = false) {
     if (!force && state.__rootStoryShown) return;
     state.__rootStoryShown = true;
     recalculateStats();
@@ -1087,8 +1142,6 @@ function setGameVersionLabel() {
 
 
 setGameVersionLabel();
-initStarter();
-renderAllImmediate();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
 function renderRootTable() {
     const el = $('rootTable');

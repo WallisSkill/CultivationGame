@@ -16,7 +16,17 @@ const SHOP_ITEMS = [
     { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: 45, cost: 320 },
     { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: 55, cost: 340 },
     { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560 },
-    { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, desc: 'Tăng khí vận lâu dài' }
+    { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, desc: 'Tăng khí vận lâu dài' },
+    { id: 'manual_iron_body', name: 'Công Pháp Huyền Thiết', type: 'manual', skillId: 'iron_body', cost: 540, desc: 'Học kỹ năng tăng phòng thủ' },
+    { id: 'manual_dragon', name: 'Chân Giải Long Nha Trảm', type: 'manual', skillId: 'dragon_roar', cost: 820, desc: 'Học tuyệt kỹ bộc phát sát thương' },
+    { id: 'manual_wind', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, desc: 'Học thân pháp gia tăng né tránh' },
+    { id: 'manual_crimson', name: 'Chiếu Nguyệt Đồ Quyết', type: 'manual', skillId: 'crimson_edge', cost: 940, desc: 'Học kỹ năng tăng chí mạng' },
+    { id: 'manual_lotus', name: 'Liên Tâm Dưỡng Sinh Kinh', type: 'manual', skillId: 'lotus_rebirth', cost: 760, desc: 'Học công pháp hồi phục khí huyết' },
+    
+    // 🔥 THÊM SKILL CHỦ ĐỘNG
+    { id: 'manual_thuong_thanh', name: '⚡ Thượng Thanh Trảm Quyết', type: 'manual', skillId: 'thuong_thanh_tram', cost: 1200, desc: 'Học chiêu thức sát thương 300% ATK (CD 2)' },
+    { id: 'manual_thien_ma', name: '🌪️ Thiên Ma Chuyển Pháp', type: 'manual', skillId: 'thien_ma_chuyen', cost: 1500, desc: 'Học chiêu xoáy 200% ATK + 15% HP địch (CD 3)' },
+    { id: 'manual_huyet_kiem', name: '🩸 Cửu Thiên Huyết Kiếm Phổ', type: 'manual', skillId: 'cuu_thien_huyet_kiem', cost: 1800, desc: 'Học chiêu hút máu 250% ATK + 30% lifesteal (CD 3)' }
 ];
 
 function addItemToInventory(it) {
@@ -28,20 +38,34 @@ function addItemToInventory(it) {
 function useItem(index) {
     const it = state.inventory[index];
     if (!it) return;
-    if (it.type === 'xp') { gainXP(Math.floor(it.value * (1 + state.realmIndex * 0.2))); log(`Dùng ${it.name}, tăng tu vi.`); }
+    
+    let needsFullRender = false;
+    
     if (it.type === 'xp') {
         gainXP(Math.floor(it.value * (1 + state.realmIndex * 0.2)));
         log(`📘 Dùng ${it.name}, tăng tu vi.`);
+        // gainXP đã tự update UI
     }
 
     else if (it.type === 'power') {
         state.power += it.value;
         log(`💪 Dùng ${it.name}, sức mạnh +${it.value}.`);
+        needsFullRender = true;
     }
 
     else if (it.type === 'life') {
         state.maxAge += it.value;
         log(`🩸 Dùng ${it.name}, tuổi thọ +${it.value}.`);
+        
+        // 🆕 Chỉ cập nhật age display
+        const ageEl = document.getElementById('ageTxt');
+        if (ageEl) ageEl.textContent = `${state.age} / ${state.maxAge}`;
+        
+        const ageBarEl = document.getElementById('ageBar');
+        if (ageBarEl) {
+            const percent = Math.min(100, Math.round(state.age / state.maxAge * 100));
+            ageBarEl.style.width = `${percent}%`;
+        }
     }
     else if (it.type === 'luck') {
         state.luckBonus = (state.luckBonus || 0) + it.value;
@@ -50,21 +74,36 @@ function useItem(index) {
     else if (it.type === 'defense') {
         state.defense += it.value;
         log(`🛡️ Dùng ${it.name}, phòng thủ vĩnh viễn +${it.value}.`);
+        needsFullRender = true;
     }
 
     else if (it.type === 'consumable' && it.heal) {
         state.hp = Math.min(state.maxHp, state.hp + it.heal);
         log(`🧪 Dùng ${it.name}, hồi ${it.heal} HP.`);
+        
+        // 🆕 Chỉ cập nhật HP bar
+        const hpEl = document.getElementById('hpTxt');
+        const hpBarEl = document.getElementById('hpBar');
+        const bonusHp = typeof getEquippedHp === 'function' ? getEquippedHp() : 0;
+        const totalMaxHp = state.maxHp + bonusHp;
+        
+        if (hpEl) hpEl.textContent = `${Math.floor(state.hp)} / ${totalMaxHp}`;
+        if (hpBarEl) {
+            const percent = Math.round(state.hp / totalMaxHp * 100);
+            hpBarEl.style.width = `${percent}%`;
+        }
     }
 
     else if (it.type === 'weapon') {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
+        needsFullRender = true;
     }
 
     else if (it.type === 'armor') {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã mặc' : 'đã tháo'}`);
+        needsFullRender = true;
     }
 
     else if (it.type === 'root_frag') {
@@ -114,9 +153,27 @@ function useItem(index) {
         return;
     }
 
+    else if (it.type === 'manual' && it.skillId) {
+        const success = learnSkill(it.skillId, it.name);
+        if (!success) {
+            renderAll();
+            return;
+        }
+        log(`🧠 Ngươi ngộ ra công pháp ${SKILL_LIBRARY?.[it.skillId]?.name || it.name}.`);
+        needsFullRender = true;
+    }
+
     // consume non-equipment items
-    if (it.type !== 'weapon' && it.type !== 'armor' && it.type !== 'root_frag' && it.type !== 'root') state.inventory.splice(index, 1);
-    renderAll();
+    if (it.type !== 'weapon' && it.type !== 'armor' && it.type !== 'root_frag' && it.type !== 'root') {
+        state.inventory.splice(index, 1);
+    }
+    
+    // 🆕 Chỉ render khi thực sự cần
+    if (needsFullRender) {
+        renderAll();
+    } else {
+        renderInventory(); // chỉ render inventory
+    }
 }
 
 let rootCombineSelection = []; // các linh căn đang được chọn để hợp
@@ -245,7 +302,8 @@ function buyItem(id) {
         heal: si.heal,
         value: si.value,
         effect: si.effect,
-        uses: si.uses
+        uses: si.uses,
+        skillId: si.skillId
     };
 
     addItemToInventory(obj);
@@ -306,6 +364,14 @@ function renderShop() {
                     return `Tuổi thọ +${enhanced.value}`;
                 case 'luck':
                     return `May mắn +${(enhanced.value * 100).toFixed(1)}%`;
+                case 'manual':
+                    // 🆕 Hiển thị chi tiết skill
+                    const skillDef = window.SKILL_LIBRARY?.[si.skillId];
+                    if (skillDef) {
+                        const skillType = skillDef.type === 'active' ? '⚡ Chủ động' : '💫 Bị động';
+                        return `${skillType} — ${skillDef.description || si.desc || 'Kỹ năng mới'}`;
+                    }
+                    return si.desc || 'Công pháp mới';
                 default:
                     return si.desc || 'Vật phẩm đặc biệt';
             }
@@ -315,13 +381,13 @@ function renderShop() {
         row.className = 'shop-item';
         row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,0.05);';
         row.innerHTML = `
-            <div>
+            <div style="flex:1;">
                 <div style="font-weight:600;color:#a6ffd1;">${si.name}</div>
-                <div class="small" style="margin-top:4px;">${desc}</div>
+                <div class="small" style="margin-top:4px;line-height:1.4;">${desc}</div>
             </div>
-            <div style="text-align:right;">
+            <div style="text-align:right;margin-left:12px;">
                 <div class="small" style="color:#ffd166;">${price.toLocaleString()} vàng</div>
-                <button onclick="buyItem('${si.id}')" style="margin-top:6px;">Mua</button>
+                <button onclick="buyItem('${si.id}')" style="margin-top:6px;white-space:nowrap;">Mua</button>
             </div>
         `;
         listEl.appendChild(row);

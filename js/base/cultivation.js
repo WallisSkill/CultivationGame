@@ -200,7 +200,7 @@ function checkRealmProgress() {
         if (state.realmStage < 3) {
             state.realmStage++;
             smallStageGain();
-            log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmIndex]}`);
+            log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}`);
             continue;
         } else {
             attemptMajorBreakthrough();
