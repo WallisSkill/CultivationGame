@@ -152,7 +152,7 @@ body {
 /* 💫 Khung chính .app — ánh liquid, mờ nhẹ, giữ nền hiện rõ */
 .app {
     max-width: 1555px;
-    margin: 18px auto;
+    margin: 0px auto;
     padding: 18px;
     border-radius: 14px;
 

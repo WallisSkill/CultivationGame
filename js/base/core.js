@@ -162,10 +162,11 @@ window.addEventListener("load", () => {
 
         state.__rootStoryShown = false;
         btn.disabled = true;
+        btn.innerText = 'Đang khởi tạo...';
         const script = buildRootStoryScript();
         announceRootStory(true, script);
         playIntroNarration(script).then(() => {
-            setTimeout(() => fadeOutStartScreen(), 5000);
+            setTimeout(() => fadeOutStartScreen(), 1000);
         });
     });
 });
