@@ -3,12 +3,12 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 function locateGitDir(startDir) {
-    let currentDir = startDir;
-    while (currentDir !== path.dirname(currentDir)) {
-        if (fs.existsSync(path.join(currentDir, '.git'))) {
-            return currentDir;
-        }
-        currentDir = path.dirname(currentDir);
+    let dir = path.resolve(startDir);
+    const { root } = path.parse(dir);
+    while (true) {
+        if (fs.existsSync(path.join(dir, '.git'))) return dir;
+        if (dir === root) break;
+        dir = path.dirname(dir);
     }
     return null;
 }
@@ -19,7 +19,7 @@ const gitDir =
     locateGitDir(path.resolve(__dirname, '..')) ||
     locateGitDir(path.resolve(__dirname, '..', 'basegame'));
 
-const repoRoot = gitDir ? path.dirname(gitDir) : path.resolve(__dirname, '..');
+const repoRoot = gitDir || path.resolve(__dirname, '..');
 const indexPathCandidates = [
     path.join(repoRoot, 'basegame', 'index.html'),
     path.join(repoRoot, 'index.html')
