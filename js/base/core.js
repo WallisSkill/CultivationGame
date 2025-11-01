@@ -144,6 +144,7 @@ window.addEventListener("load", () => {
         window.state = window.state || {};
         state.name = saved;
         startScreen.style.display = "none";
+        announceRootStory(true);
         return;
     }
 
@@ -158,9 +159,12 @@ window.addEventListener("load", () => {
         state.name = val;
         localStorage.setItem("playerName", val);
 
-        // Ẩn màn nhập tên, khởi động game
+        state.__rootStoryShown = false;
         startScreen.style.opacity = 0;
-        setTimeout(() => startScreen.style.display = "none", 600);
+        setTimeout(() => {
+            startScreen.style.display = "none";
+            announceRootStory(true);
+        }, 600);
     });
 });
 
@@ -819,19 +823,16 @@ function initStarter() {
 
     state.gold = 240;
     state.hp = state.maxHp;
+    state.__rootStoryShown = false;
+}
 
-    log("\n====================================");
-    log("🌠 Thiên Đạo khởi chuyển — Linh căn hiển thế!");
-    log("====================================");
+function announceRootStory(force = false) {
+    if (!force && state.__rootStoryShown) return;
 
-    // 📜 Lấy linh căn và phẩm chất hiện có
     const elements = state.root?.elements || [];
     const rank = state.root?.rank ?? 0;
     const rankName = ROOT_RANKS[rank] || "Vô Danh";
-
-    // 🌿 Hiển thị linh căn
-    const elementIcons = elements.map(colorizeElement).join(' ');
-
+    const elementIcons = elements.length ? elements.map(colorizeElement).join(' ') : 'Vô căn';
     const tierName = [
         'Nhất Linh Căn (Tạp Tử)',
         'Song Linh Căn',
@@ -840,35 +841,25 @@ function initStarter() {
         'Ngũ Linh Căn — Hỗn Nguyên Thể 🌌'
     ][Math.max(0, elements.length - 1)] || "Vô Linh Căn";
 
+    state.__rootStoryShown = true;
+
+    log("\n====================================");
+    log("🌠 Thiên Đạo khởi chuyển — Linh căn hiển thế!");
+    log("====================================");
     log(`🌠 【Linh Căn Hiện Thế】${tierName}`);
     log(`→ Linh căn: ${elementIcons}`);
-
-    // 🔮 Hiển thị phẩm chất
     log(`\n🔮 【Phẩm Chất Hiện Thế】${rankName}`);
+    if (rank >= 9) log('☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục!');
+    else if (rank === 8) log('🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không!');
+    else if (rank === 7) log('🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động!');
+    else if (rank === 6) log('⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc!');
+    else if (rank === 5) log('🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng.');
+    else if (rank === 4) log('🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh.');
+    else if (rank === 3) log('💎 Thượng phẩm hiển linh — khí tức thuần chính.');
+    else if (rank === 2) log('🌿 Trung phẩm phát mạch — đạo vận sơ khai.');
+    else if (rank === 1) log('🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài.');
+    else log('🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ.');
 
-    if (rank >= 9) {
-        log('☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục!');
-    } else if (rank === 8) {
-        log('🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không!');
-    } else if (rank === 7) {
-        log('🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động!');
-    } else if (rank === 6) {
-        log('⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc!');
-    } else if (rank === 5) {
-        log('🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng.');
-    } else if (rank === 4) {
-        log('🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh.');
-    } else if (rank === 3) {
-        log('💎 Thượng phẩm hiển linh — khí tức thuần chính.');
-    } else if (rank === 2) {
-        log('🌿 Trung phẩm phát mạch — đạo vận sơ khai.');
-    } else if (rank === 1) {
-        log('🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài.');
-    } else {
-        log('🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ.');
-    }
-
-    // ☯️ Dị tượng đặc biệt khi đạt đỉnh
     if (elements.length >= 5 && rank >= 9) {
         log("\n☯️ [Thiên Địa Dị Tượng] — Ngũ hành nghịch chuyển, vạn vật run rẩy!");
         log("🌌 Một Hỗn Độn Chi Thể nghịch thiên xuất thế!");
@@ -880,7 +871,6 @@ function initStarter() {
         log("\n🍂 [Phàm Thai Mỏng Manh] — Linh khí yếu ớt, đạo lộ chông gai...");
     }
 
-    // ❤️ Kết thúc khai đạo
     recalculateStats();
     log("\n💠 Linh căn và phẩm chất đã định, ngươi bước vào đạo lộ tu hành!");
     log("====================================\n");
@@ -960,9 +950,12 @@ const shopBtn = $('openShop');
 if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModal();
 
 function setGameVersionLabel() {
+    const version = document.body.getAttribute('data-game-version');
     const el = document.getElementById('gameVersion');
-    if (el) el.textContent = `v${GAME_VERSION}`;
+    if (el && version) el.textContent = `v${version}`;
+    
 }
+
 
 setGameVersionLabel();
 initStarter();

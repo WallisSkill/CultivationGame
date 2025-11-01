@@ -29,6 +29,7 @@
     margin-bottom: 1em;
     background: linear-gradient(90deg, #9dfcff, #7bfac2, #aaffee);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 20px rgba(100, 255, 220, 0.3);
     animation: glowTitle 4s ease-in-out infinite alternate;
