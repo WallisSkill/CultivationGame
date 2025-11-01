@@ -674,7 +674,7 @@ footer {
     #inventoryFilter>div:first-child {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 6px;
+        gap: 0px;
         overflow-x: auto;
         padding-bottom: 4px;
         -webkit-overflow-scrolling: touch;
@@ -799,15 +799,6 @@ footer {
     #inventoryFilter {
         display: grid;
         gap: 10px;
-    }
-
-    #inventoryFilter>div:first-child {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 6px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        -webkit-overflow-scrolling: touch;
     }
 
     #inventoryFilter button {

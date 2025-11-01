@@ -85,10 +85,10 @@ function injectMobileStyles() {
             .panel-realm { order: 3; }
             #currentEnemy, #battleInfo, #rootTable { font-size: 0.82rem; }
             #inventory { margin-top: 12px; }
-            #inventoryFilter { display: flex; flex-direction: column; gap: 6px; }
-            #inventoryFilter .inventory-filter-row { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
-            #inventoryFilter label { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
-            #inventoryFilter select { width: 100%; padding: 6px 10px; border-radius: 8px; font-size: 0.82rem; }
+            #inventoryFilter { display: flex; flex-direction: column; gap: 0px; }
+            #inventoryFilter .inventory-filter-row { display: flex; flex-direction: column; gap: 0px; align-items: stretch; }
+            #inventoryFilter label { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; align-content: center; }
+            #inventoryFilter select { width: 100%; padding: 0px 10px; border-radius: 8px; font-size: 0.82rem; }
             #inventoryFilter .equip-all-btn { width: 100%; padding: 8px 0; font-size: 0.82rem; border-radius: 8px; }
             .equip-all-btn { width: 100%; }
             #inventoryItems .item { padding: 10px; margin-bottom: 10px; border-radius: 12px; background: rgba(15, 23, 36, 0.6); }
