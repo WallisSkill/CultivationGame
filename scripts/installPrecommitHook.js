@@ -1,41 +1,55 @@
 const fs = require('fs');
 const path = require('path');
 
-function locateGitDir(startDir) {
-	const seen = new Set();
-	let dir = path.resolve(startDir);
-	const { root } = path.parse(dir);
-	while (!seen.has(dir)) {
-		seen.add(dir);
-		const candidate = path.join(dir, '.git');
-		if (fs.existsSync(candidate)) return candidate;
-		if (dir === root) break;
-		dir = path.dirname(dir);
+function locateGitRoot(startDir) {
+	const dir = path.resolve(startDir);
+
+	if (fs.existsSync(path.join(dir, '.git'))) {
+		return dir;
 	}
-	return null;
+
+	const parentDir = path.dirname(dir);
+	if (parentDir === dir) {
+		return null;
+	}
+
+	return locateGitRoot(parentDir);
 }
 
-const gitDir =
-	locateGitDir(process.cwd()) ||
-	locateGitDir(__dirname) ||
-	locateGitDir(path.resolve(__dirname, '..')) ||
-	locateGitDir(path.resolve(__dirname, '..', 'basegame'));
+const gitRoot =
+	locateGitRoot(process.cwd()) ||
+	locateGitRoot(__dirname) ||
+	locateGitRoot(path.resolve(__dirname, '..')) ||
+	locateGitRoot(path.resolve(__dirname, '..', 'basegame'));
 
-if (!gitDir) {
-	throw new Error('Không thấy thư mục .git/hooks — chạy script trong repo sau khi init git.');
-}
+if (!gitRoot) throw new Error('Không thấy thư mục .git/hooks — hãy chạy sau khi init git.');
+const hooksDir = path.join(gitRoot, '.git', 'hooks');
 
-const repoRoot = path.dirname(gitDir);
-const indexPath = fs.existsSync(path.join(repoRoot, 'basegame', 'index.html'))
-	? 'basegame/index.html'
-	: 'index.html';
+const updateScriptRel = path.relative(gitRoot, path.join(__dirname, 'updateVersion.js')).split(path.sep).join('/');
+const indexRel = fs.existsSync(path.join(gitRoot, 'basegame', 'index.html')) ? 'basegame/index.html' : 'index.html';
 
-const hookPath = path.join(gitDir, 'hooks', 'pre-commit');
-const hook = `#!/bin/sh
-node scripts/updateVersion.js || exit 1
-git add ${indexPath}
+const postCommit = `#!/bin/sh
+set -e
+
+if [ "$SKIP_VERSION_UPDATE" = "1" ]; then
+    exit 0
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+node "$REPO_ROOT/${updateScriptRel}"
+
+if git diff --quiet -- "${indexRel}"; then
+    exit 0
+fi
+
+git add "${indexRel}"
+SKIP_VERSION_UPDATE=1 git commit --amend --no-edit >/dev/null
+
+echo "✔️ Version tag refreshed to $(git rev-parse --short HEAD)"
 `;
 
-fs.writeFileSync(hookPath, hook, { encoding: 'utf8' });
-fs.chmodSync(hookPath, 0o755);
-console.log('✔️ Đã cài hook pre-commit. Mỗi lần commit sẽ cập nhật version tự động.');
+fs.writeFileSync(path.join(hooksDir, 'post-commit'), postCommit, 'utf8');
+fs.chmodSync(path.join(hooksDir, 'post-commit'), 0o755);
+console.log('✔️ Đã cài post-commit hook — mỗi lần commit sẽ cập nhật version rồi amend lại.');

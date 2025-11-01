@@ -5,6 +5,119 @@
     --accent: #7be4a3;
 }
 
+#start-screen {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.8) 0%, rgba(5, 10, 20, 0.95) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    font-family: 'Cinzel Decorative', serif;
+    color: #e0f9ff;
+    text-align: center;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+/* ✨ Tiêu đề */
+#start-screen h1 {
+    font-size: 2.6em;
+    letter-spacing: 1.5px;
+    margin-bottom: 1em;
+    background: linear-gradient(90deg, #9dfcff, #7bfac2, #aaffee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(100, 255, 220, 0.3);
+    animation: glowTitle 4s ease-in-out infinite alternate;
+}
+
+/* 📜 Mô tả */
+#start-screen p {
+    margin-bottom: 0.8em;
+    font-style: italic;
+    font-size: 1.1em;
+    color: #b5d8d6;
+    text-shadow: 0 0 8px rgba(120, 255, 255, 0.2);
+}
+
+/* 🪶 Ô nhập tên */
+#playerNameInput {
+    padding: 0.6em 1.2em;
+    font-size: 1.2em;
+    border-radius: 10px;
+    border: none;
+    text-align: center;
+    width: 280px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e6f2ea;
+    outline: none;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+    transition: all 0.3s;
+}
+
+#playerNameInput::placeholder {
+    color: rgba(220, 240, 235, 0.4);
+    font-style: italic;
+}
+
+#playerNameInput:focus {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(100, 255, 200, 0.3);
+}
+
+/* ⚡ Nút bắt đầu */
+#startBtn {
+    margin-top: 1.5em;
+    padding: 0.8em 2em;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 1px;
+
+    background: linear-gradient(120deg, #1cb573, #21e3a3, #169d73);
+    background-size: 200% 200%;
+    animation: liquidFlow 3s ease infinite;
+
+    box-shadow:
+        0 0 15px rgba(60, 255, 180, 0.4),
+        inset 0 0 10px rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+#startBtn:hover {
+    transform: scale(1.05);
+    box-shadow:
+        0 0 25px rgba(60, 255, 180, 0.7),
+        inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* 🌊 Animation liquid chuyển động */
+@keyframes liquidFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ✨ Tiêu đề phát sáng nhẹ */
+@keyframes glowTitle {
+    from { text-shadow: 0 0 12px rgba(100, 255, 200, 0.3); }
+    to { text-shadow: 0 0 25px rgba(150, 255, 255, 0.6); }
+}
+
+/* 🫧 Fade in tổng thể */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+
 body {
     margin: 0;
     font-family: Inter, Arial, Helvetica, sans-serif;
