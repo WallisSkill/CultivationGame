@@ -442,25 +442,43 @@ function encounterRandomSaint(source = 'unknown') {
     }
     const saint = SAINTS[Math.floor(Math.random() * SAINTS.length)];
     log(`🕯️ ${saint.name} giáng thế!`);
+
+    const bless = () => {
+        const blessed = typeof window.callSaintOnTalk === 'function'
+            ? window.callSaintOnTalk(saint)
+            : (saint.onTalk?.(), true);
+        if (!blessed) log('🙏 Thánh Nhân chỉ mỉm cười, cơ duyên lần này khép lại.');
+        if (typeof renderAll === 'function') renderAll();
+    };
+    const battle = () => startSaintChallenge(saint, source);
+
+    if (typeof showDialog === 'function') {
+        showDialog({
+            message: `${saint.name} hạ phàm, đại nhân chọn con đường nào?`,
+            buttons: [
+                { text: 'Thỉnh giáo', value: 'bless', variant: 'primary' },
+                { text: 'Thách đấu', value: 'battle' },
+                { text: 'Rời đi', value: 'leave' }
+            ]
+        }).then(choice => {
+            if (choice === 'battle') battle();
+            else if (choice === 'leave') log('🙏 Ngươi khom người hành lễ, Thánh Nhân mỉm cười rồi rời đi.');
+            else bless();
+        });
+        return true;
+    }
+
     const choice = parseInt(prompt(
         `${saint.name} hạ phàm, đại nhân chọn con đường nào?\n` +
         `1) Thỉnh giáo — nhận ban phúc\n` +
         `2) Thách đấu — luận đạo bằng kiếm`
     ) || '1', 10);
-
     if (choice === 2) {
-        startSaintChallenge(saint, source);
+        battle();
         return true;
     }
-
-    const blessed = typeof window.callSaintOnTalk === 'function'
-        ? window.callSaintOnTalk(saint)
-        : (saint.onTalk?.(), true);
-    if (!blessed) {
-        log('🙏 Thánh Nhân chỉ mỉm cười, cơ duyên lần này khép lại.');
-    }
-    if (typeof renderAll === 'function') renderAll();
-    return blessed;
+    bless();
+    return true;
 }
 
 function startSaintChallenge(saint, source = 'unknown') {

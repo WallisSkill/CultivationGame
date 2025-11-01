@@ -209,7 +209,7 @@ window.addEventListener("load", () => {
     btn.addEventListener("click", () => {
         const val = input.value.trim();
         if (!val) {
-            alert("Ngươi chưa khai báo đạo danh!");
+            showToast('Ngươi chưa khai báo đạo danh!', 'warn');
             return;
         }
         window.state = window.state || {};
@@ -297,12 +297,77 @@ function showRebirthButton() {
     document.querySelector('.app').appendChild(container);
 }
 
-function clearSavedProfile() {
-    if (!confirm('Xóa đạo danh đã lưu và tải lại trò chơi?')) return;
+const TOAST_HOST_ID = 'toastLayer';
+function showToast(message, variant = 'info') {
+	if (typeof document === 'undefined') return;
+	const host = document.getElementById(TOAST_HOST_ID);
+	if (!host) return;
+	const toast = document.createElement('div');
+	toast.className = `toast toast-${variant}`;
+	toast.textContent = message;
+	host.appendChild(toast);
+	requestAnimationFrame(() => toast.classList.add('visible'));
+	setTimeout(() => {
+		toast.classList.remove('visible');
+		setTimeout(() => toast.remove(), 200);
+	}, 2600);
+}
+if (typeof window !== 'undefined') window.showToast = showToast;
+
+const CONFIRM_HOST_ID = 'confirmLayer';
+function showDialog({ message = '', buttons = [] } = {}) {
+    if (typeof document === 'undefined') {
+        const primary = buttons.find(btn => btn.variant === 'primary') ?? buttons[0];
+        return Promise.resolve(primary?.value ?? null);
+    }
+    const host = document.getElementById(CONFIRM_HOST_ID);
+    if (!host) return Promise.resolve(null);
+    const safeButtons = buttons.length ? buttons : [{ text: 'OK', value: true, variant: 'primary' }];
+    host.innerHTML = `
+        <div class="confirm-box">
+            <p>${message}</p>
+            <div class="confirm-actions">
+                ${safeButtons.map((btn, idx) =>
+                    `<button data-idx="${idx}" class="${btn.variant === 'primary' ? 'confirm' : ''}">
+                        ${btn.text}
+                    </button>`
+                ).join('')}
+            </div>
+        </div>`;
+    host.style.display = 'flex';
+    return new Promise(resolve => {
+        const teardown = (value) => {
+            host.style.display = 'none';
+            host.innerHTML = '';
+            resolve(value);
+        };
+        safeButtons.forEach((btn, idx) => {
+            const el = host.querySelector(`button[data-idx="${idx}"]`);
+            if (el) el.onclick = () => teardown(btn.value ?? idx);
+        });
+        host.onclick = (ev) => { if (ev.target === host) teardown(null); };
+    });
+}
+if (typeof window !== 'undefined') window.showDialog = showDialog;
+
+function showConfirm(message, options) {
+    const { confirmText = 'Đồng ý', cancelText = 'Hủy bỏ' } = options || {};
+    return showDialog({
+        message,
+        buttons: [
+            { text: cancelText, value: false },
+            { text: confirmText, value: true, variant: 'primary' }
+        ]
+    });
+}
+
+async function clearSavedProfile() {
+    const ok = await showConfirm('Xóa đạo danh đã lưu và tải lại trò chơi?');
+    if (!ok) return;
     try {
         localStorage.removeItem('playerName');
         localStorage.removeItem('tt_state_complete_v2');
-    } catch { }
+    } catch {}
     log('🧹 Đã xóa đạo danh và save cũ. Đang tải lại...');
     setTimeout(() => location.reload(), 150);
 }

@@ -24,7 +24,7 @@ function exploreOriginalImpl() {
     const luck = state.luckBonus || 0;
     const mysteryChance = Math.min(0.45, 0.1 + luck);
 
-    const saintChance = Math.min(0.12, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
+    const saintChance = Math.min(0.4, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
     if (Math.random() < saintChance && typeof window.encounterRandomSaint === 'function') {
         log('🌠 Thiên tượng dị thường — một vị Thánh Nhân hạ phàm giữa kỳ ngộ!');
         window.encounterRandomSaint('explore');
@@ -147,122 +147,154 @@ function mysteryBad() {
     renderAll();
 }
 
-function mysteryNpc(m) {
-    if (state.npcInteractionLock) { log('Đang tương tác NPC. Hoàn tất rồi mới gặp NPC khác.'); return; }
-    state.npcInteractionLock = true;
-    const choices = ['Xin chỉ điểm', 'Giao dịch', 'Thách đấu', 'Từ chối'];
-    const pick = prompt(`${m.name} xuất hiện. Chọn 1-${choices.length}:\n1) ${choices[0]}\n2) ${choices[1]}\n3) ${choices[2]}\n4) ${choices[3]}`);
-    const c = parseInt(pick);
-    if (c === 1) {
-        if (Math.random() < 0.7) {
-            const xp = Math.floor(120 + state.realmIndex * 60);
-            gainXP(xp); log('NPC chỉ điểm: tu vi tăng!');
-        } else {
-            const p = Math.floor(8 + state.realmIndex * 3);
-            state.power += p; log('NPC truyền công, sức mạnh tăng!');
-        }
-    } else if (c === 2) {
-        const cost = Math.floor(80 + state.realmIndex * 30);
-        if (state.gold >= cost) {
-            state.gold -= cost;
-            addItemToInventory({ name: 'Bảo Vật Giao Dịch', type: 'power', value: Math.floor(10 + state.realmIndex * 5), desc: 'Tăng sức mạnh' });
-            log('Giao dịch thành công với NPC.');
-        } else log('Không đủ vàng để giao dịch.');
-    } else if (c === 3) {
-        // 🌠 Danh sách các loại NPC khác nhau
-        const npcTemplates = [
-            {
-                name: 'Kiếm Tu Hỏa Vân',
-                elements: ['Hỏa'],
-                rootRank: 3, // Thượng Phẩm
-                style: 'tấn công mạnh, phòng yếu',
-                strMul: 1.4, hpMul: 0.8, defMul: 0.7
-            },
-            {
-                name: 'Thổ Giáp Hộ Pháp',
-                elements: ['Thổ'],
-                rootRank: 3,
-                style: 'phòng thủ cao',
-                strMul: 0.9, hpMul: 1.3, defMul: 1.6
-            },
-            {
-                name: 'Song Linh Nữ Tiên',
-                elements: ['Thủy', 'Mộc'],
-                rootRank: 3, // Thiên Phẩm
-                style: 'linh hoạt, công thủ hài hòa',
-                strMul: 1.2, hpMul: 1.1, defMul: 1.0
-            },
-            {
-                name: 'Mộc Ảnh Đạo Nhân',
-                elements: ['Mộc'],
-                rootRank: 2,
-                style: 'đánh độc, khó chịu',
-                strMul: 1.0, hpMul: 1.0, defMul: 0.9
-            },
-            {
-                name: 'Hỏa Thần Chi Linh',
-                elements: ['Hỏa', 'Thổ'],
-                rootRank: 3,
-                style: 'Phẩm chất cực cao, công siêu khủng',
-                strMul: 1.6, hpMul: 1.0, defMul: 0.8
-            },
-        ];
+async function mysteryNpc(m) {
+	if (state.npcInteractionLock) {
+		log('Đang tương tác NPC. Hoàn tất rồi mới gặp NPC khác.');
+		return;
+	}
+	state.npcInteractionLock = true;
+	try {
+		let choice = null;
+		if (typeof showDialog === 'function') {
+			choice = await showDialog({
+				message: `${m.name} xuất hiện. Đại nhân lựa chọn con đường nào?`,
+				buttons: [
+					{ text: 'Xin chỉ điểm', value: 1, variant: 'primary' },
+					{ text: 'Giao dịch', value: 2 },
+					{ text: 'Thách đấu', value: 3 },
+					{ text: 'Từ chối', value: 4 }
+				]
+			});
+		}
+		if (!choice) {
+			const pick = prompt(
+				`${m.name} xuất hiện. Chọn 1-4:\n` +
+				`1) Xin chỉ điểm\n2) Giao dịch\n3) Thách đấu\n4) Từ chối`
+			);
+			choice = parseInt(pick, 10) || 4;
+		}
 
-        // 🎲 Random chọn 1 NPC để thách đấu
-        const chosenTemplate = npcTemplates[Math.floor(Math.random() * npcTemplates.length)];
+		if (choice === 1) {
+			if (Math.random() < 0.7) {
+				const xp = Math.floor(120 + state.realmIndex * 60);
+				gainXP(xp);
+				log('NPC chỉ điểm: tu vi tăng!');
+			} else {
+				const p = Math.floor(8 + state.realmIndex * 3);
+				state.power += p;
+				log('NPC truyền công, sức mạnh tăng!');
+			}
+		} else if (choice === 2) {
+			const cost = Math.floor(80 + state.realmIndex * 30);
+			if (state.gold >= cost) {
+				state.gold -= cost;
+				addItemToInventory({
+					name: 'Bảo Vật Giao Dịch',
+					type: 'power',
+					value: Math.floor(10 + state.realmIndex * 5),
+					desc: 'Tăng sức mạnh'
+				});
+				log('Giao dịch thành công với NPC.');
+			} else {
+				log('Không đủ vàng để giao dịch.');
+			}
+		} else if (choice === 3) {
+			// 🌠 Danh sách các loại NPC khác nhau
+			const npcTemplates = [
+				{
+					name: 'Kiếm Tu Hỏa Vân',
+					elements: ['Hỏa'],
+					rootRank: 3, // Thượng Phẩm
+					style: 'tấn công mạnh, phòng yếu',
+					strMul: 1.4, hpMul: 0.8, defMul: 0.7
+				},
+				{
+					name: 'Thổ Giáp Hộ Pháp',
+					elements: ['Thổ'],
+					rootRank: 3,
+					style: 'phòng thủ cao',
+					strMul: 0.9, hpMul: 1.3, defMul: 1.6
+				},
+				{
+					name: 'Song Linh Nữ Tiên',
+					elements: ['Thủy', 'Mộc'],
+					rootRank: 3, // Thiên Phẩm
+					style: 'linh hoạt, công thủ hài hòa',
+					strMul: 1.2, hpMul: 1.1, defMul: 1.0
+				},
+				{
+					name: 'Mộc Ảnh Đạo Nhân',
+					elements: ['Mộc'],
+					rootRank: 2,
+					style: 'đánh độc, khó chịu',
+					strMul: 1.0, hpMul: 1.0, defMul: 0.9
+				},
+				{
+					name: 'Hỏa Thần Chi Linh',
+					elements: ['Hỏa', 'Thổ'],
+					rootRank: 3,
+					style: 'Phẩm chất cực cao, công siêu khủng',
+					strMul: 1.6, hpMul: 1.0, defMul: 0.8
+				},
+			];
 
-        // ⚖️ Cảnh giới NPC có thể thấp hơn hoặc cao hơn 1 bậc người chơi
-        const realmOffset = Math.floor(Math.random() * 3) - 1; // -1, 0 hoặc +1
-        const npcRealmIndex = Math.max(0, Math.min(REALMS.length - 1, state.realmIndex + realmOffset));
+			// 🎲 Random chọn 1 NPC để thách đấu
+			const chosenTemplate = npcTemplates[Math.floor(Math.random() * npcTemplates.length)];
 
-        // 🔮 Hệ số sức mạnh dựa theo người chơi
-        const playerFactor = Math.max(1.0, (state.totalPower + state.totalDef) / 900);
-        const realmGap = npcRealmIndex - state.realmIndex;
+			// ⚖️ Cảnh giới NPC có thể thấp hơn hoặc cao hơn 1 bậc người chơi
+			const realmOffset = Math.floor(Math.random() * 3) - 1; // -1, 0 hoặc +1
+			const npcRealmIndex = Math.max(0, Math.min(REALMS.length - 1, state.realmIndex + realmOffset));
 
-        const realmFactor = 1 + realmGap * 0.25;
+			// 🔮 Hệ số sức mạnh dựa theo người chơi
+			const playerFactor = Math.max(1.0, (state.totalPower + state.totalDef) / 900);
+			const realmGap = npcRealmIndex - state.realmIndex;
 
-        const randomVar = 0.85 + Math.random() * 0.25;
+			const realmFactor = 1 + realmGap * 0.25;
 
-        const powerScale = 0.8;   // sức mạnh gốc giảm còn 80%
-        const hpScale = 0.85;     // máu gốc giảm còn 85%
-        const defScale = 0.8;     // phòng thủ gốc giảm còn 80%
+			const randomVar = 0.85 + Math.random() * 0.25;
 
-        const npcEnemy = {
-            name: chosenTemplate.name,
-            realmIndex: npcRealmIndex,
-            tier: "Bình thường",
-            realmStage: Math.floor(Math.random() * 4),
+			const powerScale = 0.8;   // sức mạnh gốc giảm còn 80%
+			const hpScale = 0.85;     // máu gốc giảm còn 85%
+			const defScale = 0.8;     // phòng thủ gốc giảm còn 80%
 
-            str: Math.floor(state.totalPower * chosenTemplate.strMul * realmFactor * randomVar * powerScale),
+			const npcEnemy = {
+				name: chosenTemplate.name,
+				realmIndex: npcRealmIndex,
+				tier: "Bình thường",
+				realmStage: Math.floor(Math.random() * 4),
 
-            hp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
-            maxHp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
+				str: Math.floor(state.totalPower * chosenTemplate.strMul * realmFactor * randomVar * powerScale),
 
-            def: Math.floor(state.totalDef * chosenTemplate.defMul * realmFactor * randomVar * defScale),
+				hp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
+				maxHp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
 
-            xp: Math.floor(80 * (1 + npcRealmIndex * 0.3) * chosenTemplate.rootRank),
-            gold: Math.floor(40 * (1 + npcRealmIndex * 0.25) * chosenTemplate.rootRank),
+				def: Math.floor(state.totalDef * chosenTemplate.defMul * realmFactor * randomVar * defScale),
 
-            elements: chosenTemplate.elements,
-            rootRank: chosenTemplate.rootRank,
-            baseTemplate: ENEMY_TEMPLATES[0],
-            style: chosenTemplate.style
-        };
+				xp: Math.floor(80 * (1 + npcRealmIndex * 0.3) * chosenTemplate.rootRank),
+				gold: Math.floor(40 * (1 + npcRealmIndex * 0.25) * chosenTemplate.rootRank),
+
+				elements: chosenTemplate.elements,
+				rootRank: chosenTemplate.rootRank,
+				baseTemplate: ENEMY_TEMPLATES[0],
+				style: chosenTemplate.style
+			};
 
 
-        state.currentEnemy = npcEnemy;
+			state.currentEnemy = npcEnemy;
 
-        // ✨ Hiển thị thông tin ra log
-        log(`🌌 ${npcEnemy.name} (${REALMS[npcEnemy.realmIndex]}) xuất hiện!`);
-        log(`💠 Linh căn: ${npcEnemy.elements.join('+')} — ${ROOT_RANKS[npcEnemy.rootRank]} (${npcEnemy.style})`);
-        log(`⚔️ HP: ${npcEnemy.hp}, ATK: ${npcEnemy.str}, DEF: ${npcEnemy.def}`);
-    }
+			// ✨ Hiển thị thông tin ra log
+			log(`🌌 ${npcEnemy.name} (${REALMS[npcEnemy.realmIndex]}) xuất hiện!`);
+			log(`💠 Linh căn: ${npcEnemy.elements.join('+')} — ${ROOT_RANKS[npcEnemy.rootRank]} (${npcEnemy.style})`);
+			log(`⚔️ HP: ${npcEnemy.hp}, ATK: ${npcEnemy.str}, DEF: ${npcEnemy.def}`);
+		}
 
-    else {
-        log('NPC thất vọng, bỏ đi.');
-    }
-    setTimeout(() => state.npcInteractionLock = false, 2400);
-    renderAll();
+		else {
+			log('NPC thất vọng, bỏ đi.');
+		}
+	} finally {
+		setTimeout(() => (state.npcInteractionLock = false), 2400);
+		renderAll();
+	}
 }
 
 /* expose functions for inline buttons */

@@ -7,80 +7,80 @@ function buildRootStoryScript() {
         'Song Linh Căn — Âm Dương giao cảm',
         'Tam Linh Căn — Tam khí tương sinh',
         'Tứ Linh Căn — Tứ tượng hỗ ứng',
-        'Ngũ Linh Căn — Hỗn Nguyên Thể 🌌'
+        'Ngũ Linh Căn — Hỗn Nguyên Thể'
     ][Math.max(0, elements.length - 1)] || "Vô Linh Căn";
     const elementSummary = elements.length ? elements.join(' ') : 'Vô căn';
     const { origin, fate } = getOriginAndFate(elements, rank);
 
     const script = [
-        "📜 【Thân Thế Nhân Vật】",
+        "📜 【Thân Thế Nhân Vật】📜",
         `   ${origin}`,
         "",
-        "☯️ 【Thiên Mệnh Chi Đạo】",
+        "☯️ 【Thiên Mệnh Chi Đạo】☯️",
         `   ${fate}`,
         "",
-        "====================================",
-        "🌠 【Thiên Cơ Chuyển Động】 — Linh căn khai mở, đạo vận giáng thế!",
+        "===================================================",
+        "🌠 【Thiên Cơ Chuyển Động】 — Linh căn khai mở, đạo vận giáng thế! 🌠",
         "Một luồng quang mang từ cửu thiên trút xuống, linh khí khắp hư không sôi trào...",
         "Ngươi đứng giữa hư vô, thân ảnh nhỏ bé mà thiên địa đều chú mục!",
-        "====================================",
-        `🌠 【Linh Căn Hiện Thế】${tierName}`,
+        "===================================================",
+        `🌠 【Linh Căn Hiện Thế】${tierName} 🌠`,
         `→ Ngũ hành hiển lộ: ${elementSummary}`,
         "",
-        `🔮 【Phẩm Chất Hiện Thế】${rankName}`
+        `🔮 【Phẩm Chất Hiện Thế】${rankName} 🔮`
     ];
 
     // phẩm chất
     if (rank >= 9) {
         script.push(
-            "☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục!",
+            "☯️ Hỗn Độn chi vận hiện thế — thiên địa rung chuyển, vạn vật quỳ phục! ☯️",
             "Ánh sáng từ tam thiên đại đạo hội tụ, linh hồn ngươi như hòa cùng vũ trụ!",
             "Một tia Hỗn Độn khí lưu quanh thân, hóa thành đồ án Thái Cực chấn động càn khôn!"
         );
     } else if (rank === 8) {
         script.push(
-            "🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không!",
+            "🌌 Tiên Thiên linh vận bùng nổ — đạo khí dâng trào khắp hư không! 🌌",
             "Trên cao mây tan, nhật nguyệt song chiếu, tiếng đạo ca vang vọng cửu thiên.",
             "Thiên địa tán thưởng, vạn vật cúi đầu — thân mang Tiên Cốt chi mạch!"
         );
     } else if (rank === 7) {
         script.push(
-            "🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động!",
+            "🔥 Hậu Thiên thần vận ngưng tụ — thiên cơ lay động! 🔥",
             "Tứ tượng quanh thân, linh lực xoay chuyển, tỏa ra đạo vận ngũ sắc."
         );
     } else if (rank === 6) {
         script.push(
-            "⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc!",
+            "⚡ Thiên phẩm linh quang giáng thế — vạn linh thất sắc! ⚡",
             "Ánh sáng như ngân hà rơi, từng sợi linh khí tựu lại nơi huyệt mạch."
         );
     } else if (rank === 5) {
         script.push(
-            "🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng.",
+            "🌋 Địa phẩm linh khí dao động — đất trời cộng hưởng. 🌋",
             "Đại địa truyền âm, linh mạch khẽ rung, đạo cơ đã mở."
         );
     } else if (rank === 4) {
         script.push(
-            "🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh.",
+            "🌙 Huyền phẩm hiện đạo — ánh trăng phủ mạch linh. 🌙",
             "Khí tức quanh thân ngươi dần ổn định, tâm cảnh tĩnh lặng như nước hồ thu."
         );
     } else if (rank === 3) {
         script.push(
-            "💎 Thượng phẩm hiển linh — khí tức thuần chính.",
+            "💎 Thượng phẩm hiển linh — khí tức thuần chính. 💎",
             "Thiên ý thuận, đạo vận hiền hòa, linh căn sáng rực một góc hư không."
         );
     } else if (rank === 2) {
         script.push(
-            "🌿 Trung phẩm phát mạch — đạo vận sơ khai.",
+            "🌿 Trung phẩm phát mạch — đạo vận sơ khai. 🌿",
             "Một tia linh quang chập chờn trong đan điền, đạo lộ mới chỉ manh nha."
         );
     } else if (rank === 1) {
         script.push(
-            "🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài.",
+            "🍂 Hạ phẩm linh căn yếu ớt, như đom đóm giữa đêm dài. 🍂",
             "Tuy nhỏ bé, song trong u tối vẫn le lói một tia hy vọng."
         );
     } else {
         script.push(
-            "🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ.",
+            "🥄 Phế phẩm — linh căn tan loãng, đạo tâm khó tụ. 🥄",
             "Trời không ưu đãi, đạo lộ hiểm trở, nhưng chỉ có kẻ nghịch thiên mới lập đại đạo!"
         );
     }
@@ -89,36 +89,36 @@ function buildRootStoryScript() {
     if (elements.length >= 5 && rank >= 9) {
         script.push(
             "",
-            "☯️ 【Thiên Địa Dị Tượng】— Ngũ hành nghịch chuyển, vạn vật run rẩy!",
-            "🌌 Một Hỗn Độn Chi Thể nghịch thiên xuất thế, vạn đạo quỳ phục, nhật nguyệt đảo huyền!",
+            "☯️ 【Thiên Địa Dị Tượng】— Ngũ hành nghịch chuyển, vạn vật run rẩy! ☯️",
+            "🌌 Một Hỗn Độn Chi Thể nghịch thiên xuất thế, vạn đạo quỳ phục, nhật nguyệt đảo huyền! 🌌",
             "Từ trong khí hỗn độn, ngươi nghe thấy tiếng thì thầm của Đại Đạo: ‘Ngươi chính là kẻ được chọn…’"
         );
     } else if (elements.length >= 4 && rank >= 8) {
         script.push(
             "",
-            "⚡ 【Thiên Cơ Giao Động】— Tiên linh hiện thế, đạo vận khuếch tán!",
+            "⚡ 【Thiên Cơ Giao Động】— Tiên linh hiện thế, đạo vận khuếch tán! ⚡",
             "Trời rơi mưa linh, đất tỏa hào quang, đạo văn cổ xưa chầm chậm xoay quanh thân ngươi."
         );
     } else if (elements.length >= 3 && rank >= 6) {
         script.push(
             "",
-            "✨ 【Thiên Khải Linh Vân】— Khí tức vững mạnh, linh vận cường hóa!",
+            "✨ 【Thiên Khải Linh Vân】— Khí tức vững mạnh, linh vận cường hóa! ✨",
             "Mây tụ đỉnh đầu, tựa rồng cuộn quanh thân, đạo ý sơ hiển."
         );
     } else if (rank <= 1) {
         script.push(
             "",
-            "🍂 【Phàm Thai Mỏng Manh】— Linh khí yếu ớt, đạo lộ chông gai...",
+            "🍂 【Phàm Thai Mỏng Manh】— Linh khí yếu ớt, đạo lộ chông gai... 🍂",
             "Song chỉ cần tâm ngươi không diệt, đạo vẫn còn một tia sinh cơ."
         );
     }
 
     script.push(
         "",
-        `💠 Linh căn và phẩm chất đã định, ${state.name} bước vào đạo lộ tu hành...`,
+        `💠 Linh căn và phẩm chất đã định, ${state.name} bước vào đạo lộ tu hành... 💠`,
         "Từ giây phút này, từng hơi thở đều hòa cùng thiên địa, từng bước đi đều khắc lên vận mệnh!",
-        "✨ Thiên địa tịch mịch — Đạo lộ khai mở!",
-        "===================================="
+        "✨ Thiên địa tịch mịch — Đạo lộ khai mở! ✨",
+        "==================================================="
     );
 
     return script;
