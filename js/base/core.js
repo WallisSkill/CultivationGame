@@ -56,6 +56,62 @@ function colorizeWithMap(text = '') {
     );
 }
 
+const MOBILE_STYLE_ID = 'mobile-compact-style';
+function injectMobileStyles() {
+    if (typeof document === 'undefined' || document.getElementById(MOBILE_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = MOBILE_STYLE_ID;
+    style.textContent = `
+        @media (max-width: 768px) {
+            body { font-size: 13px; line-height: 1.4; }
+            .app { padding: 10px; gap: 12px; }
+            header h1 { font-size: 1.35rem; margin-bottom: 6px; }
+            .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .controls button { font-size: 0.78rem; padding: 8px 6px; border-radius: 8px; }
+            #statsTop { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            #statsTop .stat { padding: 8px 10px; border-radius: 10px; background: rgba(15, 23, 36, 0.78); }
+            #statsTop .stat b { font-size: 0.85rem; }
+            #statsTop .stat .badge { font-size: 0.7rem; padding: 2px 6px; }
+            #statsTop .stat .bar { height: 6px; }
+            #statsTop .stat.name-box { grid-column: span 2; }
+            #log { max-height: 42vh; font-size: 0.8rem; overflow-y: auto; }
+            #log div { margin-bottom: 4px; }
+            .grid { display: flex; flex-direction: column; gap: 12px; }
+            .grid > div { display: contents; }
+            .panel { margin-bottom: 12px; }
+            .panel-combat { order: 0; }
+            .panel-log { order: 1; }
+            .panel-inventory { order: 2; }
+            .panel-realm { order: 3; }
+            #currentEnemy, #battleInfo, #rootTable { font-size: 0.82rem; }
+            #inventory { margin-top: 12px; }
+            #inventoryFilter { display: flex; flex-direction: column; gap: 6px; }
+            #inventoryFilter .inventory-filter-row { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+            #inventoryFilter label { font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+            #inventoryFilter select { width: 100%; padding: 6px 10px; border-radius: 8px; font-size: 0.82rem; }
+            #inventoryFilter .equip-all-btn { width: 100%; padding: 8px 0; font-size: 0.82rem; border-radius: 8px; }
+            .equip-all-btn { width: 100%; }
+            #inventoryItems .item { padding: 10px; margin-bottom: 10px; border-radius: 12px; background: rgba(15, 23, 36, 0.6); }
+            #inventoryItems .item b { font-size: 0.9rem; }
+            #inventoryItems .item .small { font-size: 0.78rem; }
+            .inv-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 8px; }
+            .inv-buttons button { font-size: 0.78rem; padding: 8px 6px; border-radius: 8px; }
+            .inv-buttons button:nth-child(n+3) { grid-column: span 2; }
+            #inventoryPagination { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 0.78rem; margin-top: 6px; }
+            #inventoryPagination button { padding: 6px 12px; font-size: 0.78rem; }
+            #shopModal > div { max-width: 360px !important; width: 100% !important; padding: 14px 16px !important; }
+            #shopModalList { max-height: 60vh !important; }
+            #shopModalList .shop-item { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+            #shopModalList .shop-item > div { width: 100% !important; text-align: left !important; }
+            #shopModalList .shop-item > div:last-child { display: flex !important; flex-direction: column; align-items: stretch; gap: 6px; }
+            #shopModalList .shop-item button { width: 100%; padding: 8px 0; font-size: 0.82rem; }
+            #rootTable .small { font-size: 0.78rem; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+injectMobileStyles();
+
 /* --- Mysteries / NPC --- */
 const MYSTERIES = [
     { name: 'Vườn Linh Thảo', type: 'good', desc: 'Tìm dược liệu hiếm' },
@@ -239,6 +295,16 @@ function showRebirthButton() {
 
     container.appendChild(btn);
     document.querySelector('.app').appendChild(container);
+}
+
+function clearSavedProfile() {
+    if (!confirm('Xóa đạo danh đã lưu và tải lại trò chơi?')) return;
+    try {
+        localStorage.removeItem('playerName');
+        localStorage.removeItem('tt_state_complete_v2');
+    } catch {}
+    log('🧹 Đã xóa đạo danh và save cũ. Đang tải lại...');
+    setTimeout(() => location.reload(), 150);
 }
 
 function rebirth() {
@@ -676,7 +742,6 @@ function renderInventory() {
     const el = $('inventory');
     if (!el) return;
 
-    // Dọn cũ, dựng khung bố cục
     el.innerHTML = `
                 <div id="inventoryFilter" style="margin-bottom:8px"></div>
                 <div id="inventoryItems"></div>
@@ -687,21 +752,26 @@ function renderInventory() {
     const listEl = $('inventoryItems');
     const pageEl = $('inventoryPagination');
 
-    // 🧭 Bộ lọc + nút mặc tất cả
     filterEl.innerHTML = `
-                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
-                    <div style="display:flex; gap:6px;">
-                        <button onclick="setInventoryFilter('all')">Tất cả</button>
-                        <button onclick="setInventoryFilter('equipped')">Đang mặc</button>
-                        <button onclick="setInventoryFilter('equipment')">Trang bị</button>
-                        <button onclick="setInventoryFilter('usable')">Dùng được</button>
-                        <button onclick="setInventoryFilter('relic')">Thánh vật</button>
-                        <button onclick="setInventoryFilter('root')">Linh căn</button>
-                        <button onclick="setInventoryFilter('root_frag')">Mảnh linh căn</button>
-                    </div>
-                    <button style="margin-left:auto;" onclick="equipAll()">🧤 Mặc tất cả</button>
+                <div class="inventory-filter-row">
+                    <label for="inventoryFilterSelect">Bộ lọc</label>
+                    <select id="inventoryFilterSelect">
+                        <option value="all">Tất cả</option>
+                        <option value="equipped">Đang mặc</option>
+                        <option value="equipment">Trang bị</option>
+                        <option value="usable">Dùng được</option>
+                        <option value="relic">Thánh vật</option>
+                        <option value="root">Linh căn</option>
+                        <option value="root_frag">Mảnh linh căn</option>
+                    </select>
                 </div>
+                <button class="equip-all-btn" onclick="equipAll()">🧤 Mặc tất cả</button>
             `;
+    const filterSelect = document.getElementById('inventoryFilterSelect');
+    if (filterSelect) {
+        filterSelect.value = inventoryFilter;
+        filterSelect.onchange = (ev) => setInventoryFilter(ev.target.value);
+    }
 
     const filtered = getFilteredInventory();
     if (!filtered.length) {
@@ -983,6 +1053,9 @@ $('loadBtn').onclick = () => loadProgress();
 $('toggleXpLog').onclick = () => turnLogCultivation();
 const shopBtn = $('openShop');
 if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModal();
+const clearBtn = $('clearStorage');
+if (clearBtn) clearBtn.onclick = () => clearSavedProfile();
+
 
 function setGameVersionLabel() {
     const version = document.body.getAttribute('data-game-version');

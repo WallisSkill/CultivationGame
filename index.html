@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body data-game-version="b868cc3">
+<body data-game-version="a843f05">
     <div class="app">
         <!-- 🧙‍♂️ Màn nhập tên khởi đầu -->
         <div id="start-screen">
@@ -42,16 +42,17 @@
             <button id="loadBtn">Tải</button>
             <button id="toggleXpLog">Tắt log tu vi</button>
             <button id="openShop">Mở cửa hàng</button>
+            <button id="clearStorage">Bắt đầu lại</button>
         </div>
 
         <div class="grid">
             <div>
-                <div class="panel">
+                <div class="panel panel-log">
                     <strong>Nhật ký tu luyện</strong>
                     <div class="log" id="log"></div>
                 </div>
 
-                <div class="panel" style="margin-top:12px">
+                <div class="panel panel-inventory" style="margin-top:12px">
                     <strong>Kho đồ & Hỗn nguyên</strong>
                     <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
                     <div class="items" id="inventory"></div>
@@ -59,14 +60,14 @@
             </div>
 
             <div>
-                <div class="panel">
+                <div class="panel panel-combat">
                     <strong>Chiến đấu</strong>
                     <div class="small">Kẻ thù hiện tại:</div>
                     <div id="currentEnemy" class="enemy-box">Không có</div>
                     <div style="margin-top:8px" id="battleInfo" class="small"></div>
                 </div>
 
-                <div class="panel" style="margin-top:12px">
+                <div class="panel panel-realm" style="margin-top:12px">
                     <strong>Hệ cảnh giới & Linh căn</strong>
                     <div id="realms"></div>
                     <div id="rootTable" class="small" style="margin-top:8px"></div>
