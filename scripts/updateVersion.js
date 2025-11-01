@@ -47,7 +47,10 @@ function resolveVersion() {
     const second = pad(now.getSeconds());
 
     // Sinh chuỗi random gồm 6 ký tự (chữ + số)
-    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const randomStr = Array.from({ length: 6 }, () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        return chars.charAt(Math.floor(Math.random() * chars.length));
+    }).join('');
 
     return `${year}${month}${day}_${hour}${minute}${second}_${randomStr}`;
 }
