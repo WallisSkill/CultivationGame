@@ -30,15 +30,6 @@ if (!indexPath) {
     throw new Error('Không tìm thấy index.html để cập nhật.');
 }
 
-function readPackageVersion() {
-    try {
-        const pkgPath = path.join(repoRoot, 'package.json');
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-        return pkg.version || '1.0.0';
-    } catch {
-        return '1.0.0';
-    }
-}
 
 function git(cmd) {
     if (!gitDir) return '';
@@ -46,14 +37,12 @@ function git(cmd) {
 }
 
 function resolveVersion() {
-    const base = readPackageVersion();
-    let commitCount = '0';
-    let shortSha = 'dev';
     try {
-        commitCount = git('rev-list --count HEAD');
-        shortSha = git('rev-parse --short HEAD');
-    } catch {}
-    return `${base}.${commitCount}-${shortSha}`;
+        const hash = git('rev-parse --short HEAD');
+        return hash || 'dev';
+    } catch {
+        return 'dev';
+    }
 }
 
 function updateIndex(version) {
