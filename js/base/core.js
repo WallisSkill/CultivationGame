@@ -10,6 +10,7 @@ const REALMS = [
     'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao'
 ];
 const STAGES = ['Sơ Kỳ', 'Trung Kỳ', 'Hậu Kỳ', 'Đại Viên Mãn'];
+const GAME_VERSION = '1.0.0';
 
 function colorizeElement(el) {
     switch (el) {
@@ -921,7 +922,7 @@ function loadProgress() {
     log('Tải tiến trình thành công.');
     renderAll();
 }
-function turnLogCultiavation() {
+function turnLogCultivation() {
     showXpLog = !showXpLog;
 
     const btn = document.getElementById('toggleXpLog');
@@ -954,10 +955,16 @@ $('runBtn').onclick = () => runFromBattle();
 $('findMatch').onclick = () => { if (window.findMatchPvP) window.findMatchPvP(); };
 $('saveBtn').onclick = () => saveProgress();
 $('loadBtn').onclick = () => loadProgress();
-$('toggleXpLog').onclick = () => turnLogCultiavation();
+$('toggleXpLog').onclick = () => turnLogCultivation();
 const shopBtn = $('openShop');
 if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModal();
 
+function setGameVersionLabel() {
+    const el = document.getElementById('gameVersion');
+    if (el) el.textContent = `v${GAME_VERSION}`;
+}
+
+setGameVersionLabel();
 initStarter();
 renderAllImmediate();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
