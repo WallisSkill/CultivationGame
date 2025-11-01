@@ -159,6 +159,9 @@ function getRealmMultiplier(attackerRealm, defenderRealm) {
 
 //ELEMENT
 function applyElementalBuffs(player, enemy) {
+    const verbose = !!window._elementalDebug;
+    const logSection = (msg) => { if (verbose) log(msg); };
+
     const playerRank = player.root?.rank || 0;
     const enemyRank = enemy.rootRank || 0;
     const playerRealm = player.realmIndex || 0;
@@ -172,21 +175,21 @@ function applyElementalBuffs(player, enemy) {
     const playerResist = calcElementResist(playerRank, playerRealm, playerStage);
     const enemyResist = calcElementResist(enemyRank, enemyRealm, enemyStage);
 
-    log(`\n==============================`);
-    log(`[Ngũ Hành Đạo Vận — Người Chơi]`);
-    log(`==============================`);
-    const playerBuff = applyElementalEffect(player, enemy, playerFactor, enemyResist, true);
-    log(`==============================`);
-    log(`[Kết thúc đạo vận người chơi]`);
-    log(`==============================\n`);
+    logSection(`\n==============================`);
+    logSection(`[Ngũ Hành Đạo Vận — Người Chơi]`);
+    logSection(`==============================`);
+    const playerBuff = applyElementalEffect(player, enemy, playerFactor, enemyResist, true, verbose);
+    logSection(`==============================`);
+    logSection(`[Kết thúc đạo vận người chơi]`);
+    logSection(`==============================\n`);
 
-    log(`\n==============================`);
-    log(`[Ngũ Hành Đạo Vận — ${enemy.name}]`);
-    log(`==============================`);
-    const enemyBuff = applyElementalEffect(enemy, player, enemyFactor, playerResist, false);
-    log(`==============================`);
-    log(`[Kết thúc đạo vận ${enemy.name}]`);
-    log(`==============================\n`);
+    logSection(`\n==============================`);
+    logSection(`[Ngũ Hành Đạo Vận — ${enemy.name}]`);
+    logSection(`==============================`);
+    const enemyBuff = applyElementalEffect(enemy, player, enemyFactor, playerResist, false, verbose);
+    logSection(`==============================`);
+    logSection(`[Kết thúc đạo vận ${enemy.name}]`);
+    logSection(`==============================\n`);
 
     return { playerBuff, enemyBuff };
 }
@@ -196,16 +199,17 @@ function applyElementalBuffs(player, enemy) {
   - Mộc: luôn hồi >=10% maxHP + thêm theo phẩm chất và cảnh giới.
   - Kim/Thổ/Hỏa/Thủy: tăng theo log10(1+factor) và realm multiplier; giảm đồng nhất bởi kháng và chênh cảnh giới.
 */
-function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
+function applyElementalEffect(actor, target, factor, resist, isPlayer = false, verbose = false) {
+    const logMsg = verbose ? (msg) => log(msg) : () => {};
     const buff = { atk: 1, def: 1, skip: false, burn: 0 };
     const elements = actor.elements || actor.root?.elements || [];
     const name = isPlayer ? 'Ngươi' : (actor?.name || 'Địch thủ');
 
     const r = Number(resist) || 0;
     const realmDiff = (actor.realmIndex ?? 0) - (target.realmIndex ?? 0);
-    if(actor.realmIndex < 3) {
-        log(`⚠️ ${name} cảnh giới quá thấp, không thể vận hành ngũ hành.`);
-        log(`${name} phải đạt cảnh giới Nguyên Anh mới có được hiệu ứng ngũ hành.`);
+    if (actor.realmIndex < 3) {
+        logMsg(`⚠️ ${name} cảnh giới quá thấp, không thể vận hành ngũ hành.`);
+        logMsg(`${name} phải đạt cảnh giới Nguyên Anh mới có được hiệu ứng ngũ hành.`);
         return buff;
     }
 
@@ -236,7 +240,7 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
         const healAmount = Math.max(1, Math.floor(trueMaxHp * healPercent));
         actor.hp = Math.min(trueMaxHp, (actor.hp ?? 0) + healAmount);
 
-        log(`🌿 ${name} vận Mộc — Hồi ${fmtVal(healAmount)} HP (${(healPercent * 100).toFixed(2)}%).`);
+        logMsg(`🌿 ${name} vận Mộc — Hồi ${fmtVal(healAmount)} HP (${(healPercent * 100).toFixed(2)}%).`);
     }
 
     // Các hệ còn lại: tăng theo cảnh giới và được boost khi rank >= Thiên Phẩm
@@ -246,7 +250,7 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
         const atkPct = 0.06 * basePct + 0.01 * (actor.realmStage || 0);
         if (atkPct > 0) {
             buff.atk += atkPct;
-            log(`⚔️ ${name} vận Kim — Tấn công +${(atkPct * 100).toFixed(2)}%.`);
+            logMsg(`⚔️ ${name} vận Kim — Tấn công +${(atkPct * 100).toFixed(2)}%.`);
         }
     }
 
@@ -254,7 +258,7 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
         const defPct = 0.06 * basePct + 0.008 * (actor.realmStage || 0);
         if (defPct > 0) {
             buff.def += defPct;
-            log(`🪨 ${name} vận Thổ — Phòng thủ +${(defPct * 100).toFixed(2)}%.`);
+            logMsg(`🪨 ${name} vận Thổ — Phòng thủ +${(defPct * 100).toFixed(2)}%.`);
         }
     }
 
@@ -262,7 +266,7 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
         const burnPct = Math.max(0, 0.05 * basePct + 0.005 * (actor.realmStage || 0));
         if (burnPct > 0) {
             buff.burn = burnPct;
-            log(`🔥 ${name} vận Hỏa — Thiêu đốt +${(burnPct * 100).toFixed(2)}% sát thương.`);
+            logMsg(`🔥 ${name} vận Hỏa — Thiêu đốt +${(burnPct * 100).toFixed(2)}% sát thương.`);
         }
     }
 
@@ -271,7 +275,7 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false) {
         if (realmDiff > 0) dodge *= (1 + realmDiff * 0.05);
         if (dodge > 0) {
             const shown = Math.min(0.9, dodge);
-            log(`💧 ${name} vận Thủy — Né tránh ${(shown * 100).toFixed(2)}%.`);
+            logMsg(`💧 ${name} vận Thủy — Né tránh ${(shown * 100).toFixed(2)}%.`);
             if (Math.random() < shown) buff.skip = true;
         }
     }

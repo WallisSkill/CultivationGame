@@ -2,81 +2,139 @@
     --bg: #071020;
     --panel: #0f1724;
     --muted: #9aa6b2;
-    --accent: #7be4a3
+    --accent: #7be4a3;
 }
 
 body {
     margin: 0;
     font-family: Inter, Arial, Helvetica, sans-serif;
-    background: linear-gradient(180deg, #071020, #081628);
-    color: #e6f2ea
+    background: url("background/wallpaper.jpg") center/cover fixed no-repeat;
+    background-color: #03070f;
+    color: #e6f2ea;
 }
 
+/* 💫 Khung chính .app — ánh liquid, mờ nhẹ, giữ nền hiện rõ */
 .app {
     max-width: 1555px;
     margin: 18px auto;
     padding: 18px;
-    border-radius: 12px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6)
+    border-radius: 14px;
+
+    background: rgba(10, 20, 30, 0.25);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.6),
+        inset 0 0 15px rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 header {
     display: flex;
     align-items: center;
-    gap: 12px
+    gap: 12px;
 }
 
 h1 {
     margin: 0;
-    color: #a6ffd1
+    color: #7bfac2;
+    text-shadow: 0 0 8px rgba(123, 250, 194, 0.4);
 }
 
 .topline {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 10px
+    margin-top: 10px;
 }
 
+/* 🌙 Ô stat liquid nhẹ */
 .stat {
-    background: var(--panel);
+    background: rgba(15, 23, 36, 0.35);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
     padding: 8px;
-    border-radius: 8px;
-    min-width: 150px
+    border-radius: 10px;
+    min-width: 150px;
+    transition: 0.3s;
 }
 
+.stat:hover {
+    background: rgba(20, 30, 45, 0.45);
+    box-shadow: 0 0 20px rgba(120, 255, 200, 0.12);
+}
+
+/* ✨ Badge mềm và trong */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #c9f6ff;
+    margin-left: 6px;
+    font-weight: 600;
+    font-size: 12.5px;
+    line-height: 1.2em;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    transition: 0.2s;
+}
+
+.badge:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 10px rgba(100, 255, 255, 0.2);
+}
+
+/* ⚙️ Các khối chính */
 .controls {
-    margin-top: 8px
+    margin-top: 8px;
 }
 
 button {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.06);
     padding: 8px 10px;
     border-radius: 8px;
     color: inherit;
     cursor: pointer;
-    margin: 4px
+    margin: 4px;
+    transition: 0.25s;
+}
+
+button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
 }
 
 button.primary {
-    background: linear-gradient(90deg, #164b2b, #1f8a55);
-    border: 0
+    background: linear-gradient(90deg, #0b8a5b, #24d398);
+    color: #fff;
+    border: none;
+    box-shadow: 0 0 10px rgba(36, 211, 152, 0.4);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: 1fr 420px;
+    grid-template-columns: 1fr 320px;
     gap: 12px;
-    margin-top: 12px
+    margin-top: 12px;
 }
 
+/* 💠 Panel liquid */
 .panel {
-    background: var(--panel);
-    padding: 12px;
+    background: rgba(15, 23, 36, 0.25);
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
     border-radius: 10px;
-    min-height: 120px
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
+    padding: 12px;
+    min-height: 120px;
 }
 
 .log {
@@ -85,20 +143,25 @@ button.primary {
     padding: 8px;
     border-radius: 8px;
     background: linear-gradient(180deg, rgba(0, 0, 0, 0.15), transparent);
-    font-size: 13px
+    font-size: 13px;
 }
 
 .items {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap
+    flex-wrap: wrap;
 }
 
 .item {
     background: rgba(255, 255, 255, 0.03);
     padding: 6px;
     border-radius: 8px;
-    cursor: pointer
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.item:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .shop-item {
@@ -108,57 +171,49 @@ button.primary {
     padding: 6px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.02);
-    margin-bottom: 6px
+    margin-bottom: 6px;
 }
 
 .enemy-box {
     background: rgba(255, 255, 255, 0.02);
     padding: 8px;
     border-radius: 6px;
-    margin-bottom: 8px
+    margin-bottom: 8px;
 }
 
 .small {
     font-size: 12px;
-    color: var(--muted)
+    color: var(--muted);
 }
 
+/* ⚡ Thanh năng lượng */
 .bar {
     height: 10px;
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.06);
     overflow: hidden;
-    margin-top: 6px
+    margin-top: 6px;
 }
 
-.bar>i {
+.bar > i {
     display: block;
     height: 100%;
-    background: linear-gradient(90deg, #7be4a3, #5bc08e)
-}
-
-.badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.03);
-    margin-left: 6px
+    background: linear-gradient(90deg, #7be4a3, #5bc08e);
 }
 
 footer {
     margin-top: 12px;
     font-size: 12px;
-    color: var(--muted)
+    color: var(--muted);
 }
 
-/* Gốc inventory vẫn là khối dọc */
+/* 🧭 Inventory */
 #inventory {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* Bộ lọc */
 #inventoryFilter {
     display: flex;
     flex-wrap: wrap;
@@ -166,7 +221,6 @@ footer {
     margin-bottom: 6px;
 }
 
-/* Danh sách vật phẩm — chia 2 cột */
 #inventoryItems {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -174,7 +228,6 @@ footer {
     width: 100%;
 }
 
-/* Mỗi vật phẩm */
 #inventoryItems .item {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -189,7 +242,6 @@ footer {
     transform: translateY(-1px);
 }
 
-/* Nút thao tác */
 .inv-buttons {
     display: flex;
     gap: 6px;
@@ -215,20 +267,12 @@ footer {
     background: rgba(255, 255, 255, 0.15);
 }
 
-/* Phân trang căn giữa */
 #inventoryPagination {
     text-align: center;
     margin-top: 8px;
 }
 
-.grid {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    /* 💠 Giảm cột phải (Nhật ký) từ 420px → 320px */
-    gap: 12px;
-    margin-top: 12px;
-}
-
+/* 🌑 Màn hình khởi đầu */
 #start-screen {
     position: fixed;
     inset: 0;
@@ -240,4 +284,4 @@ footer {
     z-index: 9999;
     font-family: 'serif';
     color: #e5d7b2;
-    }
+}

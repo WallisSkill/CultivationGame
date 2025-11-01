@@ -200,7 +200,7 @@ function checkRealmProgress() {
         if (state.realmStage < 3) {
             state.realmStage++;
             smallStageGain();
-            log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}`);
+            log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmIndex]}`);
             continue;
         } else {
             attemptMajorBreakthrough();
@@ -363,4 +363,46 @@ if (typeof window !== 'undefined') {
     window.normalizeVitals = normalizeVitals;
     window.calculateStageGain = window.calculateStageGain || calculateStageGain;
     window.calculateMajorGain = calculateMajorGain;
+}
+
+function calculateMajorGain(params = {}) {
+    const prevRealm = Math.max(0, params.prevRealm ?? 0);
+    const newRealm = Math.max(prevRealm + 1, params.newRealm ?? (prevRealm + 1));
+    const rootRank = Math.max(0, params.rootRank ?? 0);
+    const elementCount = Math.max(1, params.elementCount ?? 1);
+    const prevScale = Math.max(1, params.prevScale ?? 1);
+    const newScale = Math.max(prevScale, params.newScale ?? prevScale);
+    const delta = Math.max(1, newScale - prevScale);
+
+    const basePow = Math.floor(delta * 0.35) + 30 + prevRealm * 25;
+    const baseHp  = Math.floor(delta * 2.2) + 200 + prevRealm * 140;
+    const baseDef = Math.floor(delta * 0.12) + 6 + prevRealm * 8;
+
+    const prevNeed = getNeed(prevRealm, 3);
+    const nextNeed = getNeed(newRealm, 0);
+    const needRatio = Math.max(1, nextNeed / Math.max(1, prevNeed));
+
+    const growthMult = Math.max(2.2, Math.pow(needRatio, 0.32));
+    const realmStepBoost = Math.max(1.2, 0.45 * (newRealm + 1));
+
+    const powMult = growthMult * realmStepBoost;
+    const hpMult = Math.max(powMult * 1.05, growthMult * 1.3 * realmStepBoost);
+    const defMult = Math.max(powMult * 0.9, growthMult * 0.95 * realmStepBoost);
+
+    const powInc = Math.max(12, Math.floor(basePow * powMult));
+    const hpInc  = Math.max(160, Math.floor(baseHp * hpMult));
+    const defInc = Math.max(8, Math.floor(baseDef * defMult));
+
+    const baseBoost = 0.22 + newRealm * 0.05;
+    const rankBoost = rootRank * 0.02;
+    const hybridBoost = Math.max(0, elementCount - 1) * 0.018;
+    const scaleBoost = Math.min(0.35, Math.log10(Math.max(10, newScale)) * 0.015);
+    const hoaThanIndex = 4;
+    const postTransformBoost = (hoaThanIndex >= 0 && newRealm > hoaThanIndex)
+        ? Math.min(0.55, (newRealm - hoaThanIndex) * 0.08 + Math.log2(Math.max(2, newRealm - hoaThanIndex + 1)) * 0.04)
+        : 0;
+    const demandBoost = Math.min(1.4, Math.log10(Math.max(10, needRatio)) * 0.6);
+    const cultivateMult = 1 + baseBoost + rankBoost + hybridBoost + scaleBoost + postTransformBoost + demandBoost;
+
+    return { powInc, hpInc, defInc, cultivateMult, needRatio, growthMult, realmStepBoost };
 }

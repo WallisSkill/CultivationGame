@@ -364,10 +364,10 @@ window.updateAutoFightLoop = updateAutoFightLoop;
 /* ===========================
    RENDERING UI
    =========================== */
-function renderAll() {
+let _renderAllQueued = false;
+function renderAllImmediate() {
     renderTopStats();
     renderInventory();
-    // Nếu panel enemyList đã bị xóa, đừng gọi
     if (document.getElementById('enemyList') && typeof renderEnemyList === 'function') {
         renderEnemyList();
     }
@@ -377,7 +377,35 @@ function renderAll() {
     renderRootTable();
     checkLongevity();
     updateAutoFightLoop();
+
+    const wasActive = !!window._battleActive;
+    if (state.currentEnemy) {
+        if (!wasActive) {
+            window._battleActive = true;
+            if (window.stopAutoTrainingHard) window.stopAutoTrainingHard();
+            if (window._findingMatch) {
+                window._findingMatch = false;
+                const b = $('findMatch'); if (b) b.innerText = 'Tìm đối thủ PvP';
+                if (typeof wsSend === 'function') wsSend({ type: 'cancel_find' });
+            }
+        }
+    } else if (wasActive) {
+        window._battleActive = false;
+    }
 }
+
+function renderAll() {
+    if (_renderAllQueued) return;
+    _renderAllQueued = true;
+    const scheduler = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+        ? window.requestAnimationFrame.bind(window)
+        : (cb) => setTimeout(cb, 16);
+    scheduler(() => {
+        _renderAllQueued = false;
+        renderAllImmediate();
+    });
+}
+if (typeof window !== 'undefined') window.renderAllImmediate = renderAllImmediate;
 
 const BASE_REALM_PROFILE = { power: 15, hp: 120, def: 5 };
 
@@ -931,26 +959,5 @@ const shopBtn = $('openShop');
 if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModal();
 
 initStarter();
-renderAll();
+renderAllImmediate();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
-(function patchEnemyFactories() {
-    if (typeof window === 'undefined') return;
-    if (typeof window.createCultivator === 'function' && !window.__syncEnemyCreate) {
-        const original = window.createCultivator;
-        window.__syncEnemyCreate = true;
-        window.createCultivator = function (...args) {
-            const enemy = original.apply(this, args);
-            try { syncEnemyToRealm(enemy); } catch { }
-            return enemy;
-        };
-    }
-    if (typeof window.spawnEnemyWithRules === 'function' && !window.__syncSpawnEnemy) {
-        const originalSpawn = window.spawnEnemyWithRules;
-        window.__syncSpawnEnemy = true;
-        window.spawnEnemyWithRules = function (...args) {
-            const result = originalSpawn.apply(this, args);
-            try { if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy); } catch { }
-            return result;
-        };
-    }
-})();
