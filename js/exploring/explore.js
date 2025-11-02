@@ -314,11 +314,11 @@ async function mysteryNpc(m) {
 				baseTemplate: ENEMY_TEMPLATES[0],
 				style: chosenTemplate.style
 			};
-
-
+			window._battleActive = true;
 			state.currentEnemy = npcEnemy;
 			activatePassiveSkills();
-
+			
+		
 			// ✨ Hiển thị thông tin ra log
 			log(`🌌 ${npcEnemy.name} (${REALMS[npcEnemy.realmIndex]}) xuất hiện!`);
 			log(`💠 Linh căn: ${npcEnemy.elements.join('+')} — ${ROOT_RANKS[npcEnemy.rootRank]} (${npcEnemy.style})`);

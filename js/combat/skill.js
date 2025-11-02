@@ -332,17 +332,73 @@ function getActivePassiveBuffs() {
 }
 
 // 🆕 Format skill effect cho display
-function formatSkillEffect(effect) {
-    const parts = [];
-    if (effect.damageMultiplier) parts.push(`${(effect.damageMultiplier * 100).toFixed(0)}% ATK`);
-    if (effect.percentHpDamage) parts.push(`${(effect.percentHpDamage * 100).toFixed(0)}% HP địch`);
-    if (effect.lifesteal) parts.push(`Hút ${(effect.lifesteal * 100).toFixed(0)}% HP`);
-    if (effect.atkPercent) parts.push(`+${(effect.atkPercent * 100).toFixed(0)}% ATK`);
-    if (effect.defPercent) parts.push(`+${(effect.defPercent * 100).toFixed(0)}% DEF`);
-    if (effect.dodgeChance) parts.push(`${(effect.dodgeChance * 100).toFixed(0)}% Né`);
-    if (effect.critChance) parts.push(`${(effect.critChance * 100).toFixed(0)}% Chí mạng`);
-    if (effect.healPercent) parts.push(`+${(effect.healPercent * 100).toFixed(1)}% HP/lượt`);
-    return parts.join(', ');
+function formatSkillEffect(skillId) {
+    const def = SKILL_LIBRARY[skillId];
+    if (!def) return '';
+
+    const level = (state.skills?.learned?.[skillId] || 1);
+    const effect = getSkillEffect(skillId);
+    if (!effect) return def.description || '';
+
+    let parts = [];
+
+    // Active skill effects
+    if (def.type === 'active') {
+        if (effect.damageMultiplier) {
+            parts.push(`💥 ${(effect.damageMultiplier * 100).toFixed(0)}% ATK`);
+        }
+        if (effect.percentHpDamage) {
+            parts.push(`🌪️ +${(effect.percentHpDamage * 100).toFixed(0)}% HP địch`);
+        }
+        if (effect.lifesteal) {
+            parts.push(`🩸 Hút ${(effect.lifesteal * 100).toFixed(0)}% máu`);
+        }
+        if (effect.cooldown) {
+            parts.push(`⏳ CD ${effect.cooldown} lượt`);
+        }
+
+        // Passive buffs từ active skill
+        let passiveParts = [];
+        if (effect.atkPercent) {
+            passiveParts.push(`⚔️ +${(effect.atkPercent * 100).toFixed(0)}% ATK`);
+        }
+        if (effect.defPercent) {
+            passiveParts.push(`🛡️ +${(effect.defPercent * 100).toFixed(0)}% DEF`);
+        }
+        if (passiveParts.length > 0) {
+            parts.push(`\n📿 Bị động: ${passiveParts.join(', ')}`);
+        }
+    }
+
+    // Passive skill effects
+    if (def.type === 'passive') {
+        if (effect.atkPercent) {
+            parts.push(`⚔️ +${(effect.atkPercent * 100).toFixed(0)}% ATK`);
+        }
+        if (effect.defPercent) {
+            parts.push(`🛡️ +${(effect.defPercent * 100).toFixed(0)}% DEF`);
+        }
+        if (effect.maxHpPercent) {
+            parts.push(`❤️ +${(effect.maxHpPercent * 100).toFixed(0)}% HP`);
+        }
+        if (effect.dodgeChance) {
+            parts.push(`💨 +${(effect.dodgeChance * 100).toFixed(0)}% né`);
+        }
+        if (effect.critChance) {
+            parts.push(`💥 +${(effect.critChance * 100).toFixed(0)}% chí mạng`);
+        }
+        if (effect.critBonus) {
+            parts.push(`💢 +${(effect.critBonus * 100).toFixed(0)}% sát thương chí mạng`);
+        }
+        if (effect.burstBonus) {
+            parts.push(`🔥 +${(effect.burstBonus * 100).toFixed(0)}% bộc phát`);
+        }
+        if (effect.healPercent) {
+            parts.push(`🌸 Hồi ${(effect.healPercent * 100).toFixed(1)}% HP/lượt`);
+        }
+    }
+
+    return parts.length > 0 ? parts.join(' | ') : def.description || '';
 }
 
 // 🎨 Render toàn bộ skill UI

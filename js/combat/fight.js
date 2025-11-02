@@ -4,40 +4,68 @@
 
 // 🆕 Hàm áp dụng passive skill buffs vào stats
 function applyPassiveSkillBuffs() {
-    if (typeof ensureSkillsState !== 'function') return { atkBonus: 0, defBonus: 0, dodgeChance: 0, critChance: 0, critBonus: 0, burstBonus: 0, healPercent: 0, healFlat: 0 };
-
     ensureSkillsState();
-    let atkBonus = 0, defBonus = 0, dodgeChance = 0, critChance = 0, critBonus = 0, burstBonus = 0, healPercent = 0, healFlat = 0;
-
     const equipped = state.skills?.equipped || [];
-    const runtime = state.skillRuntime?.active || [];
 
-    // Duyệt qua các passive skill đang active trong runtime
-    for (let buff of runtime) {
-        const effect = buff.effect;
-        if (!effect) continue;
+    let totalAtkPercent = 0;
+    let totalDefPercent = 0;
+    let totalMaxHpPercent = 0;
+    let totalDodgeChance = 0;
+    let totalCritChance = 0;
+    let totalCritBonus = 0;
+    let totalBurstBonus = 0;
+    let totalHealPercent = 0;
+    let totalHealFlat = 0;
 
-        // Giảm duration mỗi lượt
-        if (buff.remainingTurns > 0) buff.remainingTurns--;
+    let atkBonus = 0;
+    let defBonus = 0;
 
-        if (buff.remainingTurns === 0) continue;
+    equipped.forEach(skillId => {
+        const def = SKILL_LIBRARY[skillId];
+        if (!def) return;
 
-        // Áp dụng buffs
-        if (effect.atkPercent) atkBonus += state.totalPower * effect.atkPercent;
-        if (effect.defFlat) defBonus += effect.defFlat;
-        if (effect.defPercent) defBonus += state.totalDef * effect.defPercent;
-        if (effect.dodgeChance) dodgeChance += effect.dodgeChance;
-        if (effect.critChance) critChance += effect.critChance;
-        if (effect.critBonus) critBonus += effect.critBonus;
-        if (effect.burstPercent) burstBonus += effect.burstPercent;
-        if (effect.healPercent) healPercent += effect.healPercent;
-        if (effect.healFlat) healFlat += effect.healFlat;
+        const effect = getSkillEffect(skillId);
+        if (!effect) return;
+
+        // ✅ Tổng hợp TẤT CẢ buff
+        if (effect.atkPercent) totalAtkPercent += effect.atkPercent;
+        if (effect.defPercent) totalDefPercent += effect.defPercent;
+        if (effect.maxHpPercent) totalMaxHpPercent += effect.maxHpPercent;
+        if (effect.dodgeChance) totalDodgeChance += effect.dodgeChance;
+        if (effect.critChance) totalCritChance += effect.critChance;
+        if (effect.critBonus) totalCritBonus += effect.critBonus;
+        if (effect.burstBonus) totalBurstBonus += effect.burstBonus;
+        if (effect.healPercent) totalHealPercent += effect.healPercent;
+        if (effect.healFlat) totalHealFlat += effect.healFlat;
+    });
+
+    // Tính toán buff
+    if (totalAtkPercent > 0) {
+        atkBonus = Math.floor(state.power * totalAtkPercent);
+        state.totalPower = state.power + atkBonus;
     }
 
-    // Xóa buff hết hạn
-    state.skillRuntime.active = runtime.filter(b => b.remainingTurns !== 0);
+    if (totalDefPercent > 0) {
+        defBonus = Math.floor(state.defense * totalDefPercent);
+        state.totalDef = state.defense + defBonus;
+    }
 
-    return { atkBonus, defBonus, dodgeChance, critChance, critBonus, burstBonus, healPercent, healFlat };
+    if (totalMaxHpPercent > 0) {
+        const hpBonus = Math.floor(state.maxHp * totalMaxHpPercent);
+        state.totalMaxHp = state.maxHp + hpBonus;
+    }
+
+    // ✅ Return ĐẦY ĐỦ tất cả buffs
+    return {
+        atkBonus,
+        defBonus,
+        dodgeChance: totalDodgeChance,
+        critChance: totalCritChance,
+        critBonus: totalCritBonus,
+        burstBonus: totalBurstBonus,
+        healPercent: totalHealPercent,
+        healFlat: totalHealFlat
+    };
 }
 
 // 🆕 Kích hoạt passive skills khi bắt đầu combat
@@ -63,7 +91,7 @@ function activatePassiveSkills() {
         state.skillRuntime.active.push({
             skillId,
             effect,
-            remainingTurns: effect.duration 
+            remainingTurns: effect.duration
         });
 
         log(`✨ ${def.name} kích hoạt (${effect.duration} lượt)!`);
@@ -199,10 +227,12 @@ function useActiveSkillPvP(skillId) {
     let totalDamage = 0;
     let detail = { elePercent: 0, rankFactor: 1, realmFactor: 1, final: 0 };
 
+    // ✅ Tính damage với khắc chế ngũ hành, phẩm chất, cảnh giới
     if (effect.damageMultiplier) {
         const baseAtk = state.totalPower || state.power;
         const baseDef = enemy.def || 0;
 
+        // ✅ Dùng computeDamage để có khắc chế ngũ hành, phẩm chất, cảnh giới
         if (typeof computeDamage === 'function') {
             detail = computeDamage(
                 baseAtk,
@@ -239,24 +269,24 @@ function useActiveSkillPvP(skillId) {
         log(`🌪️ Xoáy linh khí — thêm ${Math.floor(hpDmg)} sát thương từ HP địch!`);
     }
 
-    // 🆕 Passive defense boost
-    if (effect.defPercent) {
-        const defBonus = Math.floor((state.totalDef || state.defense) * effect.defPercent);
-        log(`🛡️ ${def.name} bị động: +${defBonus} phòng thủ`);
-    }
-
-    // Lifesteal (chỉ local)
+    // ✅ Lifesteal (hút máu)
+    let healedHp = 0;
     if (effect.lifesteal && totalDamage > 0) {
-        const heal = Math.floor(totalDamage * effect.lifesteal);
-        state.hp = Math.min(state.totalMaxHp, state.hp + heal);
-        log(`🩸 Hấp huyết — hồi phục ${heal} HP!`);
+        healedHp = Math.floor(totalDamage * effect.lifesteal);
+        state.hp = Math.min(state.totalMaxHp, state.hp + healedHp);
+        log(`🩸 Hấp huyết — hồi phục ${healedHp} HP!`);
     }
 
-     // Additional ATK bonus
+    // ✅ Passive ATK boost (hiển thị)
     if (effect.atkPercent) {
-        const atkBonus = state.totalPower * effect.atkPercent;
-        totalDamage += atkBonus;
-        log(`${def.name} bị động: — thêm ${fmtVal(atkBonus)} sát thương từ công lực!`);
+        const atkBonus = Math.floor((state.power || 10) * effect.atkPercent);
+        log(`⚔️ ${def.name} bị động: +${atkBonus} ATK (${(effect.atkPercent * 100).toFixed(0)}%)`);
+    }
+
+    // ✅ Passive DEF boost (hiển thị)
+    if (effect.defPercent) {
+        const defBonus = Math.floor((state.defense || 5) * effect.defPercent);
+        log(`🛡️ ${def.name} bị động: +${defBonus} DEF (${(effect.defPercent * 100).toFixed(0)}%)`);
     }
 
     // Apply damage
@@ -269,7 +299,7 @@ function useActiveSkillPvP(skillId) {
     markSkillUsed();
     gainSkillMastery(skillId, 3);
 
-    // Gửi cho đối thủ
+    // ✅ Gửi cho đối thủ (gửi TOÀN BỘ data)
     if (pvpSession.opponentId && pvpSession.sessionId) {
         wsSend({
             type: 'pvp_relay',
@@ -280,12 +310,20 @@ function useActiveSkillPvP(skillId) {
                 skillId,
                 skillName: def.name,
                 damage: Math.floor(totalDamage),
-                detail
+                heal: healedHp,
+                detail,
+                effects: {
+                    damageMultiplier: effect.damageMultiplier,
+                    percentHpDamage: effect.percentHpDamage,
+                    lifesteal: effect.lifesteal,
+                    atkPercent: effect.atkPercent,
+                    defPercent: effect.defPercent
+                }
             }
         });
     }
 
-    pvpSession.myTurn = false;
+    // pvpSession.myTurn = false;
 
     // Kiểm tra thắng
     if (enemy.hp <= 0) {
@@ -908,48 +946,75 @@ function onMatchMessage(ev) {
                 break;
             }
             case 'attack': {
-                // Structured payload from attacker side
-                const miss = !!msg.data?.miss;
-                const baseDmg = Math.max(0, Math.floor(msg.data?.damage || 0));
-                const burnExtra = Math.max(0, Math.floor(msg.data?.burn || 0));
-                const total = Math.max(0, baseDmg + burnExtra);
+                const dmg = Math.max(0, Math.floor(msg.data?.damage || 0));
+                const burn = Math.max(0, Math.floor(msg.data?.burn || 0));
+                const wasDodge = msg.data?.miss || false;
+                const detail = msg.data?.detail || {};
+                const skillEffects = msg.data?.skillEffects || {};
 
-                // Build snapshots only for logging (no RNG here)
-                const attacker = {
-                    str: state.currentEnemy?.str || 10,
-                    def: state.currentEnemy?.def || 0,
-                    realmIndex: state.currentEnemy?.realmIndex || 0,
-                    realmStage: state.currentEnemy?.realmStage || 0,
-                    rootRank: state.currentEnemy?.rootRank || 0,
-                    elements: state.currentEnemy?.elements || []
-                };
-                const defender = {
-                    str: state.power || 10,
-                    def: state.defense || 5,
-                    realmIndex: state.realmIndex || 0,
-                    realmStage: state.realmStage || 0,
-                    rootRank: state.root?.rank || 0,
-                    elements: state.root?.elements || []
-                };
+                // 🆕 Áp dụng dodge từ passive skill của mình
+                const mySkillBuffs = typeof applyPassiveSkillBuffs === 'function' ? applyPassiveSkillBuffs() : {};
+                const myDodged = Math.random() < (mySkillBuffs.dodgeChance || 0);
 
-                // Use provided detail if exists, otherwise recompute for log only
-                const det = (msg.data?.detail && typeof msg.data.detail === 'object')
-                    ? msg.data.detail
-                    : pvpComputeDetail(attacker, defender);
-
-                if (!miss) {
-                    state.hp = Math.max(0, state.hp - total);
+                if (myDodged) {
+                    log('⚡ Ảnh Phong Bộ — Ngươi né tránh đòn tấn công!');
+                    pvpSession.myTurn = true;
+                    renderAll();
+                    return;
                 }
-                const name = state.currentEnemy?.name || 'Đối thủ';
-                pvpLogHit(`${name}`, total, det, burnExtra, miss);
 
-                if (state.hp <= 0 && !miss) {
-                    log(`${name} tung sát thương quyết định lên người ngươi!`);
+                const name = state.currentEnemy?.name || 'Đối thủ';
+
+                if (wasDodge) {
+                    log(`💧 ${name} né tránh đòn đánh của ngươi!`);
+                } else {
+                    const total = dmg + burn;
+                    state.hp = Math.max(0, state.hp - total);
+
+                    // ✅ Hiển thị thông tin chi tiết
+                    log(`💥 ${name} đánh ngươi gây ${total} sát thương.`);
+
+                    if (detail.elePercent || detail.rankFactor || detail.realmFactor) {
+                        log(`   (Khắc chế ${detail.elePercent?.toFixed(1) || 0}%, Phẩm chất x${detail.rankFactor?.toFixed(2) || 1}, Cảnh giới x${detail.realmFactor?.toFixed(2) || 1})`);
+                    }
+
+                    // 🆕 Hiển thị skill effects của đối thủ
+                    if (skillEffects.isCrit) {
+                        log(`💥 Đối thủ kích hoạt Huyết Nguyệt Trảm — Chí mạng!`);
+                    }
+                    if (skillEffects.hasBurst) {
+                        log(`🐉 Đối thủ kích hoạt Long Nha Phá Thiên — Bộc phát!`);
+                    }
+                    if (burn > 0) {
+                        log(`🔥 Hỏa diễm thiêu đốt thêm ${burn} sát thương!`);
+                    }
+                }
+
+                // 🆕 Hồi máu sau khi bị đánh (Lotus Rebirth)
+                if (mySkillBuffs.healPercent > 0 || mySkillBuffs.healFlat > 0) {
+                    const heal = Math.floor(state.totalMaxHp * mySkillBuffs.healPercent + mySkillBuffs.healFlat);
+                    state.hp = Math.min(state.totalMaxHp, state.hp + heal);
+                    log(`🌸 Liên Tâm Hồi Mệnh — hồi phục ${heal} HP.`);
+                }
+
+                if (state.hp <= 0) {
                     log('💀 Ngươi bại trận trong PvP.');
-                    wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'win' } });
+                    wsSend({
+                        type: 'pvp_relay',
+                        to: pvpSession.opponentId,
+                        sessionId: pvpSession.sessionId,
+                        kind: 'end',
+                        data: { result: 'win' }
+                    });
                     endPvPSession();
                 } else {
                     pvpSession.myTurn = true;
+
+                    // 🆕 Giảm cooldown sau khi bị đánh
+                    if (typeof reduceAllCooldowns === 'function') {
+                        reduceAllCooldowns();
+                    }
+
                     renderAll();
                 }
                 break;
@@ -957,17 +1022,48 @@ function onMatchMessage(ev) {
             case 'skill': {
                 const skillDmg = Math.max(0, Math.floor(msg.data?.damage || 0));
                 const skillName = msg.data?.skillName || 'Chiêu thức';
+                const healAmount = msg.data?.heal || 0;
+                const detail = msg.data?.detail || {};
+                const effects = msg.data?.effects || {};
 
                 state.hp = Math.max(0, state.hp - skillDmg);
+
                 const name = state.currentEnemy?.name || 'Đối thủ';
+
                 log(`💥 ${name} tung ${skillName} — gây ${skillDmg} sát thương!`);
+
+                if (detail.elePercent || detail.rankFactor || detail.realmFactor) {
+                    log(`   (Khắc chế ${detail.elePercent?.toFixed(1) || 0}%, Phẩm chất x${detail.rankFactor?.toFixed(2) || 1}, Cảnh giới x${detail.realmFactor?.toFixed(2) || 1})`);
+                }
+
+                if (effects.percentHpDamage) {
+                    const hpDmgPart = Math.floor(state.totalMaxHp * effects.percentHpDamage);
+                    log(`🌪️ Xoáy linh khí — gây thêm ${hpDmgPart} sát thương từ HP!`);
+                }
+
+                if (healAmount > 0) {
+                    log(`🩸 ${name} hút ${healAmount} HP!`);
+                }
+
+                if (effects.atkPercent) {
+                    log(`⚔️ ${skillName} bị động: Đối thủ nhận +${(effects.atkPercent * 100).toFixed(0)}% ATK`);
+                }
+                if (effects.defPercent) {
+                    log(`🛡️ ${skillName} bị động: Đối thủ nhận +${(effects.defPercent * 100).toFixed(0)}% DEF`);
+                }
 
                 if (state.hp <= 0) {
                     log('💀 Ngươi bại trận trong PvP.');
-                    wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'win' } });
+                    wsSend({
+                        type: 'pvp_relay',
+                        to: pvpSession.opponentId,
+                        sessionId: pvpSession.sessionId,
+                        kind: 'end',
+                        data: { result: 'win' }
+                    });
                     endPvPSession();
                 } else {
-                    pvpSession.myTurn = true;
+                    pvpSession.myTurn = false;
                     renderAll();
                 }
                 break;
@@ -1052,11 +1148,11 @@ function pvpAttackOrLocal() {
     // 🆕 Áp dụng passive skill buffs
     const skillBuffs = applyPassiveSkillBuffs();
 
-    // Build snapshots
+    // Build snapshots với buff từ cả passive skill và active skill
     const me = {
         name: state.name || 'Ngươi',
-        str: (state.totalPower || state.power || 10) + skillBuffs.atkBonus, // 🆕 Thêm ATK bonus
-        def: (state.totalDef || state.defense || 5) + skillBuffs.defBonus, // 🆕 Thêm DEF bonus
+        str: (state.totalPower || state.power || 10) + skillBuffs.atkBonus,
+        def: (state.totalDef || state.defense || 5) + skillBuffs.defBonus,
         realmIndex: state.realmIndex || 0,
         realmStage: state.realmStage || 0,
         rootRank: state.root?.rank || 0,
@@ -1072,28 +1168,45 @@ function pvpAttackOrLocal() {
         elements: state.currentEnemy?.elements || []
     };
 
-    // Apply elemental buffs like attackTurn(): includes logs and side effects (heal, etc.)
+    // ⚡ Apply elemental buffs như attackTurn()
     let playerBuff = { atk: 1, def: 1, skip: false, burn: 0 };
     let enemyBuff = { atk: 1, def: 1, skip: false, burn: 0 };
     if (typeof applyElementalBuffs === 'function') {
         try {
             const buffs = applyElementalBuffs(
-                { name: me.name, realmIndex: me.realmIndex, realmStage: me.realmStage, root: { rank: me.rootRank, elements: me.elements }, elements: me.elements, totalMaxHp: state.totalMaxHp, maxHp: state.maxHp, hp: state.hp },
-                { name: opp.name, realmIndex: opp.realmIndex, realmStage: opp.realmStage, rootRank: opp.rootRank, elements: opp.elements, maxHp: state.currentEnemy?.maxHp, hp: state.currentEnemy?.hp }
+                {
+                    name: me.name,
+                    realmIndex: me.realmIndex,
+                    realmStage: me.realmStage,
+                    root: { rank: me.rootRank, elements: me.elements },
+                    elements: me.elements,
+                    totalMaxHp: state.totalMaxHp,
+                    maxHp: state.maxHp,
+                    hp: state.hp
+                },
+                {
+                    name: opp.name,
+                    realmIndex: opp.realmIndex,
+                    realmStage: opp.realmStage,
+                    rootRank: opp.rootRank,
+                    elements: opp.elements,
+                    maxHp: state.currentEnemy?.maxHp,
+                    hp: state.currentEnemy?.hp
+                }
             );
             playerBuff = buffs.playerBuff || playerBuff;
             enemyBuff = buffs.enemyBuff || enemyBuff;
         } catch { }
     }
 
-    // 🆕 Hồi máu từ Lotus Rebirth
+    // 🆕 Hồi máu từ Lotus Rebirth (mỗi lượt)
     if (skillBuffs.healPercent > 0 || skillBuffs.healFlat > 0) {
         const heal = Math.floor(state.totalMaxHp * skillBuffs.healPercent + skillBuffs.healFlat);
         state.hp = Math.min(state.totalMaxHp, state.hp + heal);
         log(`🌸 Liên Tâm Hồi Mệnh — hồi phục ${heal} HP.`);
     }
 
-    // 🆕 Kiểm tra dodge từ skill
+    // 🆕 Kiểm tra dodge từ skill (Wind Step)
     const skillDodged = Math.random() < skillBuffs.dodgeChance;
     if (skillDodged) {
         log('⚡ Ảnh Phong Bộ — Ngươi né tránh phản kích!');
@@ -1107,22 +1220,39 @@ function pvpAttackOrLocal() {
     let burnExtra = 0;
     let detail = { final: 0, elementFactor: 1, rankFactor: 1, realmFactor: 1, elePercent: 0 };
 
+    const isCrit = false;
     if (!wasDodge) {
-        // Compute damage using current buffs
+        // ✅ Tính damage ĐÚNG với elemental buffs
         const att = {
-            str: Math.floor((me.str || 10) * (playerBuff.atk || 1)),
-            elements: me.elements, rootRank: me.rootRank,
-            realmIndex: me.realmIndex, realmStage: me.realmStage
+            str: Math.floor(me.str * playerBuff.atk),
+            elements: me.elements,
+            rootRank: me.rootRank,
+            realmIndex: me.realmIndex,
+            realmStage: me.realmStage
         };
         const def = {
-            def: Math.floor((opp.def || 0) * (enemyBuff.def || 1)),
-            elements: opp.elements, rootRank: opp.rootRank,
-            realmIndex: opp.realmIndex, realmStage: opp.realmStage
+            def: Math.floor(opp.def * enemyBuff.def),
+            elements: opp.elements,
+            rootRank: opp.rootRank,
+            realmIndex: opp.realmIndex,
+            realmStage: opp.realmStage
         };
-        detail = pvpComputeDetail(att, def);
-        baseDamage = Math.max(1, Math.floor(detail.final || 1));
 
-        // 🆕 Critical hit từ skill
+        if (typeof computeDamage === 'function') {
+            detail = computeDamage(
+                att.str,
+                att.elements, att.rootRank, att.realmIndex, att.realmStage,
+                def.def,
+                def.elements, def.rootRank, def.realmIndex, def.realmStage,
+                false
+            );
+            baseDamage = Math.max(1, Math.floor(detail.final || 1));
+        } else {
+            detail = pvpComputeDetail(att, def);
+            baseDamage = Math.max(1, Math.floor(detail.final || 1));
+        }
+
+        // 🆕 Critical hit từ Crimson Edge
         const isCrit = Math.random() < skillBuffs.critChance;
         if (isCrit) {
             const critDmg = Math.floor(baseDamage * (1 + skillBuffs.critBonus));
@@ -1130,15 +1260,17 @@ function pvpAttackOrLocal() {
             baseDamage = critDmg;
         }
 
-        // 🆕 Burst damage bonus
+        // 🆕 Burst damage bonus từ Dragon Roar
         if (skillBuffs.burstBonus > 0) {
             const burstDmg = Math.floor(baseDamage * skillBuffs.burstBonus);
             baseDamage += burstDmg;
             log(`🐉 Long Nha Phá Thiên — bùng nổ thêm ${burstDmg} sát thương!`);
         }
 
-        // Burn adds extra damage proportional to damage (like attackTurn burn percent)
-        if (playerBuff.burn) burnExtra = Math.max(1, Math.floor(baseDamage * playerBuff.burn));
+        // ✅ Burn damage từ elemental buff
+        if (playerBuff.burn) {
+            burnExtra = Math.max(1, Math.floor(baseDamage * playerBuff.burn));
+        }
 
         // 🆕 Tăng skill mastery mỗi đòn đánh
         const equipped = state.skills?.equipped || [];
@@ -1155,9 +1287,19 @@ function pvpAttackOrLocal() {
     if (!wasDodge) {
         state.currentEnemy.hp = Math.max(0, (state.currentEnemy.hp || 0) - total);
     }
-    pvpLogHit('🗡️ Ngươi', total, detail, burnExtra, wasDodge);
 
-    // Send structured payload so opponent mirrors effects without RNG
+    // ✅ Hiển thị log với đầy đủ thông tin
+    if (!wasDodge) {
+        log(`⚔️ Ngươi đánh ${state.currentEnemy.name} gây ${total} sát thương.`);
+        log(`   (Khắc chế ${detail.elePercent?.toFixed(1) || 0}%, Phẩm chất x${detail.rankFactor?.toFixed(2) || 1}, Cảnh giới x${detail.realmFactor?.toFixed(2) || 1})`);
+        if (burnExtra > 0) {
+            log(`🔥 Hỏa diễm thiêu đốt thêm ${burnExtra} sát thương!`);
+        }
+    } else {
+        log(`💧 ${state.currentEnemy.name} né tránh đòn đánh của ngươi!`);
+    }
+
+    // ✅ Send structured payload với đầy đủ skill effects
     if (pvpSession.opponentId && pvpSession.sessionId) {
         wsSend({
             type: 'pvp_relay',
@@ -1168,7 +1310,15 @@ function pvpAttackOrLocal() {
                 miss: wasDodge,
                 damage: baseDamage,
                 burn: burnExtra,
-                detail
+                detail,
+                // 🆕 Gửi thông tin về skill effects
+                skillEffects: {
+                    isCrit: isCrit,
+                    hasBurst: skillBuffs.burstBonus > 0,
+                    dodgeChance: skillBuffs.dodgeChance,
+                    healPercent: skillBuffs.healPercent,
+                    healFlat: skillBuffs.healFlat
+                }
             }
         });
     }
