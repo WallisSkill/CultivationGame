@@ -20,7 +20,7 @@ function applyPassiveSkillBuffs() {
         // Giảm duration mỗi lượt
         if (buff.remainingTurns > 0) buff.remainingTurns--;
 
-        if (buff.remainingTurns <= 0) continue;
+        if (buff.remainingTurns === 0) continue;
 
         // Áp dụng buffs
         if (effect.atkPercent) atkBonus += state.totalPower * effect.atkPercent;
@@ -35,7 +35,7 @@ function applyPassiveSkillBuffs() {
     }
 
     // Xóa buff hết hạn
-    state.skillRuntime.active = runtime.filter(b => b.remainingTurns > 0);
+    state.skillRuntime.active = runtime.filter(b => b.remainingTurns !== 0);
 
     return { atkBonus, defBonus, dodgeChance, critChance, critBonus, burstBonus, healPercent, healFlat };
 }
@@ -56,7 +56,6 @@ function activatePassiveSkills() {
 
     for (let skillId of equipped) {
         const def = window.SKILL_LIBRARY?.[skillId];
-        if (!def || def.type !== 'passive') continue;
 
         const effect = getSkillEffect(skillId);
         if (!effect || !effect.duration) continue;
@@ -64,7 +63,7 @@ function activatePassiveSkills() {
         state.skillRuntime.active.push({
             skillId,
             effect,
-            remainingTurns: effect.duration
+            remainingTurns: effect.duration 
         });
 
         log(`✨ ${def.name} kích hoạt (${effect.duration} lượt)!`);
@@ -94,25 +93,56 @@ function useActiveSkill(skillId) {
     }
 
     const enemy = state.currentEnemy;
-    let totalDamage = 0;
 
-    // Tính damage dựa vào effect
+    let totalDamage = 0;
+    let detail = { elePercent: 0, rankFactor: 1, realmFactor: 1, final: 0 };
+
+    // ✅ Tính damage với khắc chế ngũ hành, phẩm chất, cảnh giới
     if (effect.damageMultiplier) {
-        const baseDmg = state.totalPower * effect.damageMultiplier;
-        totalDamage += baseDmg;
-        log(`⚡ ${def.name} khai phóng — gây ${fmtVal(baseDmg)} sát thương!`);
+        const baseAtk = state.totalPower;
+        const baseDef = enemy.def;
+
+        // ✅ Dùng computeDamage để có khắc chế ngũ hành, phẩm chất, cảnh giới
+        if (typeof computeDamage === 'function') {
+            detail = computeDamage(
+                baseAtk,
+                state.root?.elements || [],
+                state.root?.rank || 0,
+                state.realmIndex || 0,
+                state.realmStage || 0,
+                baseDef,
+                enemy.elements || [],
+                enemy.rootRank || 0,
+                enemy.realmIndex || 0,
+                enemy.realmStage || 0,
+                false
+            );
+
+            // ✅ Nhân với skill multiplier
+            const skillDmg = detail.final * effect.damageMultiplier;
+            totalDamage += skillDmg;
+
+            log(`⚡ ${def.name} khai phóng — gây ${fmtVal(skillDmg)} sát thương!`);
+            log(`   (Khắc chế ${detail.elePercent?.toFixed(1) || 0}%, Phẩm chất x${detail.rankFactor?.toFixed(2) || 1}, Cảnh giới x${detail.realmFactor?.toFixed(2) || 1})`);
+        } else {
+            // Fallback
+            const skillDmg = baseAtk * effect.damageMultiplier;
+            totalDamage += skillDmg;
+            log(`⚡ ${def.name} khai phóng — gây ${fmtVal(skillDmg)} sát thương!`);
+        }
     }
 
+    // ✅ % HP damage
     if (effect.percentHpDamage) {
         const hpDmg = enemy.maxHp * effect.percentHpDamage;
         totalDamage += hpDmg;
         log(`🌪️ Xoáy linh khí — thêm ${fmtVal(hpDmg)} sát thương từ HP địch!`);
     }
 
-    // 🆕 Áp dụng passive defense từ active skill (như Thượng Thanh Trảm)
-    if (effect.passiveDefPercent) {
-        const defBonus = Math.floor(state.totalDef * effect.passiveDefPercent);
-        log(`🛡️ ${def.name} bị động: +${fmtVal(defBonus)} phòng thủ (${(effect.passiveDefPercent * 100).toFixed(0)}%)`);
+    // 🆕 Passive defense boost
+    if (effect.defPercent) {
+        const defBonus = Math.floor(state.totalDef * effect.defPercent);
+        log(`🛡️ ${def.name} bị động: +${fmtVal(defBonus)} phòng thủ (${(effect.defPercent * 100).toFixed(0)}%)`);
     }
 
     enemy.hp = Math.max(0, enemy.hp - totalDamage);
@@ -122,6 +152,13 @@ function useActiveSkill(skillId) {
         const heal = Math.floor(totalDamage * effect.lifesteal);
         state.hp = Math.min(state.totalMaxHp, state.hp + heal);
         log(`🩸 Hấp huyết — hồi phục ${fmtVal(heal)} HP!`);
+    }
+
+    // Additional ATK bonus
+    if (effect.atkPercent) {
+        const atkBonus = state.totalPower * effect.atkPercent;
+        totalDamage += atkBonus;
+        log(`${def.name} bị động: — thêm ${fmtVal(atkBonus)} sát thương từ công lực!`);
     }
 
     // Set cooldown
@@ -160,14 +197,42 @@ function useActiveSkillPvP(skillId) {
     if (!enemy) return false;
 
     let totalDamage = 0;
+    let detail = { elePercent: 0, rankFactor: 1, realmFactor: 1, final: 0 };
 
-    // Tính damage
     if (effect.damageMultiplier) {
-        const baseDmg = (state.totalPower || state.power) * effect.damageMultiplier;
-        totalDamage += baseDmg;
-        log(`⚡ ${def.name} khai phóng — gây ${Math.floor(baseDmg)} sát thương!`);
+        const baseAtk = state.totalPower || state.power;
+        const baseDef = enemy.def || 0;
+
+        if (typeof computeDamage === 'function') {
+            detail = computeDamage(
+                baseAtk,
+                state.root?.elements || [],
+                state.root?.rank || 0,
+                state.realmIndex || 0,
+                state.realmStage || 0,
+                baseDef,
+                enemy.elements || [],
+                enemy.rootRank || 0,
+                enemy.realmIndex || 0,
+                enemy.realmStage || 0,
+                false
+            );
+
+            // ✅ Nhân với skill multiplier
+            const skillDmg = detail.final * effect.damageMultiplier;
+            totalDamage += skillDmg;
+
+            log(`⚡ ${def.name} khai phóng — gây ${Math.floor(skillDmg)} sát thương!`);
+            log(`   (Khắc chế ${detail.elePercent?.toFixed(1) || 0}%, Phẩm chất x${detail.rankFactor?.toFixed(2) || 1}, Cảnh giới x${detail.realmFactor?.toFixed(2) || 1})`);
+        } else {
+            // Fallback
+            const skillDmg = baseAtk * effect.damageMultiplier;
+            totalDamage += skillDmg;
+            log(`⚡ ${def.name} khai phóng — gây ${Math.floor(skillDmg)} sát thương!`);
+        }
     }
 
+    // ✅ % HP damage
     if (effect.percentHpDamage) {
         const hpDmg = enemy.maxHp * effect.percentHpDamage;
         totalDamage += hpDmg;
@@ -175,8 +240,8 @@ function useActiveSkillPvP(skillId) {
     }
 
     // 🆕 Passive defense boost
-    if (effect.passiveDefPercent) {
-        const defBonus = Math.floor((state.totalDef || state.defense) * effect.passiveDefPercent);
+    if (effect.defPercent) {
+        const defBonus = Math.floor((state.totalDef || state.defense) * effect.defPercent);
         log(`🛡️ ${def.name} bị động: +${defBonus} phòng thủ`);
     }
 
@@ -185,6 +250,13 @@ function useActiveSkillPvP(skillId) {
         const heal = Math.floor(totalDamage * effect.lifesteal);
         state.hp = Math.min(state.totalMaxHp, state.hp + heal);
         log(`🩸 Hấp huyết — hồi phục ${heal} HP!`);
+    }
+
+     // Additional ATK bonus
+    if (effect.atkPercent) {
+        const atkBonus = state.totalPower * effect.atkPercent;
+        totalDamage += atkBonus;
+        log(`${def.name} bị động: — thêm ${fmtVal(atkBonus)} sát thương từ công lực!`);
     }
 
     // Apply damage
@@ -207,7 +279,8 @@ function useActiveSkillPvP(skillId) {
             data: {
                 skillId,
                 skillName: def.name,
-                damage: Math.floor(totalDamage)
+                damage: Math.floor(totalDamage),
+                detail
             }
         });
     }
@@ -243,7 +316,6 @@ function attackTurn() {
         window._battleActive = true;
         if (window.stopAutoTrainingHard) window.stopAutoTrainingHard();
         // Kích hoạt passive skills khi bắt đầu combat
-        activatePassiveSkills();
     }
 
     const enemy = state.currentEnemy;
@@ -739,6 +811,7 @@ function attachPvPOpponent(opp) {
     if (window.stopAutoTrainingHard) window.stopAutoTrainingHard();
 
     state.currentEnemy = e;
+    activatePassiveSkills();
     renderAll();
 }
 
@@ -974,7 +1047,6 @@ function pvpAttackOrLocal() {
     if (!window._battleActive) {
         window._battleActive = true;
         if (window.stopAutoTrainingHard) window.stopAutoTrainingHard();
-        activatePassiveSkills();
     }
 
     // 🆕 Áp dụng passive skill buffs

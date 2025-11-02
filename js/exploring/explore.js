@@ -62,6 +62,7 @@ function exploreOriginalImpl() {
 	}
 	else {
 		window._battleActive = true;
+		activatePassiveSkills();
 		spawnEnemyWithRules();
 	}
 }
@@ -316,6 +317,7 @@ async function mysteryNpc(m) {
 
 
 			state.currentEnemy = npcEnemy;
+			activatePassiveSkills();
 
 			// ✨ Hiển thị thông tin ra log
 			log(`🌌 ${npcEnemy.name} (${REALMS[npcEnemy.realmIndex]}) xuất hiện!`);

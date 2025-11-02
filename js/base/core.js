@@ -195,7 +195,8 @@ let state = {
     luckBonus: 0,
     specialTicks: [],
     lastXpGain: 0,
-    skillUsedThisTurn: false
+    skillUsedThisTurn: false,
+    learnedSkillFromSaint: false
 };
 
 window.addEventListener("load", () => {
@@ -872,6 +873,7 @@ function getFilteredInventory() {
         if (inventoryFilter === 'relic') return item.type === 'relic';
         if (inventoryFilter === 'root') return item.type === 'root';
         if (inventoryFilter === 'root_frag') return item.type === 'root_frag';
+        if (inventoryFilter === 'manual') return item.type === 'manual';
         return true;
     });
 }
@@ -897,6 +899,7 @@ function renderInventory() {
                         <option value="all">Tất cả</option>
                         <option value="equipped">Đang mặc</option>
                         <option value="equipment">Trang bị</option>
+                        <option value="manual">Công pháp</option>
                         <option value="usable">Dùng được</option>
                         <option value="relic">Thánh vật</option>
                         <option value="root">Linh căn</option>

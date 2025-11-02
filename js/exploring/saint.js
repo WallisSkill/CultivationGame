@@ -30,7 +30,7 @@ const SAINTS = [
                     log("🎁 Đạo vận tương sinh — nhận được Thái Cực Đồ!");
                 }
             }
-            if (Math.random() < 0.4 && !state.skills?.learned?.thuong_thanh_tram) {
+            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.thuong_thanh_tram) {
                 addItemToInventory({
                     name: '⚡ Thượng Thanh Trảm Pháp',
                     type: 'manual',
@@ -38,6 +38,7 @@ const SAINTS = [
                     desc: 'Chân truyền Thái Thanh — Tấn công cực mạnh gây 550% ATK, CD 2 round, bị động thêm 15% DEF'
                 });
                 log("⚡ Thái Thanh truyền thụ Thượng Thanh Trảm Pháp!");
+                state.learnedSkillFromSaint = true;
             }
 
             // 🌈 Tăng thêm chút phúc vận
@@ -65,7 +66,7 @@ const SAINTS = [
                     log("🎁 Linh kiếm tự sinh — nhận được Tru Tiên Kiếm!");
                 }
             }
-            if (Math.random() < 0.4 && !state.skills?.learned?.thong_thien_van_kiem) {
+            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.thong_thien_van_kiem) {
                 addItemToInventory({
                     name: '🌪️ Thông Thiên Vạn Kiếm',
                     type: 'manual',
@@ -73,6 +74,7 @@ const SAINTS = [
                     desc: 'Chân truyền Thông Thiên — Xoáy sát thương 300% ATK + 15% HP địch, cooldown 3 round, bị động tăng 20% ATK'
                 });
                 log("⚡ Thông Thiên truyền thụ Thông Thiên Vạn Kiếm!");
+                state.learnedSkillFromSaint = true;
             }
         },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
@@ -103,6 +105,16 @@ const SAINTS = [
                     log("🎁 Ngọc như ý tự hiện — nhận được Tam Bảo Ngọc Như Ý!");
                 }
 
+            }
+
+            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.nguyen_thuy_hon_don) {
+                addItemToInventory({
+                    name: '🌌 Nguyên Thủy Hỗn Độn Chưởng Pháp',
+                    type: 'manual',
+                    skillId: 'nguyen_thuy_hon_don',
+                    desc: 'Chân truyền Nguyên Thủy — 450% ATK + 12% HP địch + 40% lifesteal (CD 4)'
+                });
+                log("🌌 Nguyên Thủy truyền thụ Hỗn Độn Chưởng Pháp!");
             }
         }
         ,
@@ -146,27 +158,33 @@ const SAINTS = [
                     // Đã đủ 5 căn
                     logMsg = "🌈 Nữ Oa mỉm cười — Linh căn của ngươi đã đạt cực hạn Hỗn Nguyên, không thể mở thêm.";
                     const up = Math.random() < 0.2 ? 2 : 1;
-                    const oldRank = ROOT_RANKS[state.root.rank];
-                    state.root.rank = Math.min(7, state.root.rank + up);
-                    const newRank = ROOT_RANKS[state.root.rank];
-                    cultivateInc += up * 0.08; // mỗi bậc tăng +8% tốc độ tu luyện
-                    logMsg = `🌸 Nữ Oa ân điển — Phẩm chất linh căn tăng ${up} bậc: ${oldRank} → ${newRank}!`;
+                    if (state.root.rank < 7) {
+                        // 🌸 Nâng Phẩm chất linh căn
+                        const oldRank = ROOT_RANKS[state.root.rank];
+                        state.root.rank = Math.min(7, state.root.rank + up);
+                        const newRank = ROOT_RANKS[state.root.rank];
+                        logMsg = `🌸 Nữ Oa ân điển — Phẩm chất linh căn tăng ${up} bậc: ${oldRank} → ${newRank}!`;
+                    }
+                    else {
+                        logMsg = "🌈 Nữ Oa mỉm cười — Phẩm chất Linh căn của ngươi đã đạt cực hạn có thể tác động của thánh nhân.";
+                    }
+                    cultivateInc += up * 0.08;
                 }
             }
             else {
-                if(state.root.rank < 7) {
+                const up = Math.random() < 0.2 ? 2 : 1;
+                if (state.root.rank < 7) {
                     // 🌸 Nâng Phẩm chất linh căn
-                    const up = Math.random() < 0.2 ? 2 : 1;
                     const oldRank = ROOT_RANKS[state.root.rank];
                     state.root.rank = Math.min(7, state.root.rank + up);
                     const newRank = ROOT_RANKS[state.root.rank];
                     logMsg = `🌸 Nữ Oa ân điển — Phẩm chất linh căn tăng ${up} bậc: ${oldRank} → ${newRank}!`;
                 }
-                else{
+                else {
                     logMsg = "🌈 Nữ Oa mỉm cười — Phẩm chất Linh căn của ngươi đã đạt cực hạn có thể tác động của thánh nhân.";
                 }
                 cultivateInc += up * 0.08; // mỗi bậc tăng +8% tốc độ tu luyện
-        
+
             }
 
             // 💮 Thêm tốc độ tu luyện (vĩnh viễn)
@@ -518,7 +536,7 @@ function startSaintChallenge(saint, source = 'unknown') {
     };
 
     const enemy = (typeof createCultivator === 'function')
-        ? createCultivator(template, realmIndex, mult, saint.realmStage || 0, saint.elements,8)
+        ? createCultivator(template, realmIndex, mult, saint.realmStage || 0, saint.elements, 8)
         : {
             name: template.name,
             tier: 'Thánh Chiến',
@@ -542,7 +560,7 @@ function startSaintChallenge(saint, source = 'unknown') {
         log(`${saint.name} tăng gấp ${multiply} lần sức mạnh nhưng giảm ${multiply} lần phòng ngự!`);
         enemy.tier = "Phẫn Nộ";
     }
-    else if (diff > 1){ 
+    else if (diff > 1) {
         log(`⚔️ ${saint.name} nhìn ngươi bằng ánh mắt khinh miệt.`);
         log(`⚔️ ${saint.name} nói: "Một phàm nhân cũng đòi đọ sức với Thánh Nhân!"`);
         multiply = 2;
@@ -551,7 +569,7 @@ function startSaintChallenge(saint, source = 'unknown') {
         log(`${saint.name} tăng gấp ${multiply} lần sức mạnh nhưng giảm ${multiply} lần phòng ngự!`);
         enemy.tier = "Khinh miệt";
     }
-    else{ 
+    else {
         log(`⚔️ ${saint.name} mở mắt nhìn ngươi.`);
         log(`⚔️ ${saint.name} nói: "Ngươi dũng cảm đòi thách đấu với ta, ta sẽ cho ngươi thấy sức mạnh của Thánh Nhân!"`);
         enemy.tier = "Bình thường";

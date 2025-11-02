@@ -5,37 +5,61 @@ const SKILL_LIBRARY = {
         id: 'thuong_thanh_tram',
         name: '⚡ Thượng Thanh Trảm',
         type: 'active',
-        description: 'Tấn công cực mạnh gây 550% ATK, cooldown 2 round,bị động thêm 15% DEF',
+        description: 'Tấn công 420% ATK, cooldown 2 round. Bị động: +50% DEF (mạnh nhất về phòng thủ)',
         maxLevel: 10,
         cooldown: 2,
         getEffect(level) {
             return {
-                damageMultiplier: 5.5 + (level - 1) * 0.3,
+                duration: -1,
+                damageMultiplier: 4.2 + (level - 1) * 0.25,
                 cooldown: Math.max(1, 2 - Math.floor(level / 3)),
-                defPercent: 0.15 + (level - 1) * 0.2
+                defPercent: 0.50 + (level - 1) * 0.05
             };
         },
         xp(level) { return 80 + (level - 1) * 60; }
     },
 
+    // 🌪️ THÔNG THIÊN VẠN KIẾM - SÁT THƯƠNG CAO NHẤT
     thong_thien_van_kiem: {
         id: 'thong_thien_van_kiem',
         name: '🌪️ Thông Thiên Vạn Kiếm',
         type: 'active',
-        description: 'Xoáy sát thương 300% ATK + 15% HP địch, cooldown 3 round, bị động tăng 20% ATK',
+        description: 'Xoáy sát thương 650% ATK + 20% HP địch, cooldown 3 round. Bị động: +45% ATK (mạnh nhất về công kích)',
         maxLevel: 6,
         cooldown: 3,
         getEffect(level) {
             return {
-                damageMultiplier: 3.0 + (level - 1) * 0.2,
-                percentHpDamage: 0.15 + (level - 1) * 0.02,
+                duration: -1,
+                damageMultiplier: 6.5 + (level - 1) * 0.5,
+                percentHpDamage: 0.20 + (level - 1) * 0.05,
                 cooldown: Math.max(2, 3 - Math.floor(level / 4)),
-                atkPercent: 0.2 + (level - 1) * 0.15,
+                atkPercent: 0.45 + (level - 1) * 0.03,
             };
         },
         xp(level) { return 90 + (level - 1) * 70; }
     },
 
+    // 🌌 NGUYÊN THỦY HỖN ĐỘN - ĐIỀU HÒA (balanced)
+    nguyen_thuy_hon_don: {
+        id: 'nguyen_thuy_hon_don',
+        name: '🌌 Nguyên Thủy Hỗn Độn Chưởng',
+        type: 'active',
+        description: 'Chưởng pháp tối thượng điều hòa: 450% ATK + 12% HP địch + hút 40% máu, CD 4 round. Bị động: +25% ATK, +25% DEF',
+        maxLevel: 12,
+        cooldown: 4,
+        getEffect(level) {
+            return {
+                duration: -1,
+                damageMultiplier: 4.5 + (level - 1) * 0.3,
+                percentHpDamage: 0.12 + (level - 1) * 0.015,
+                lifesteal: 0.40 + (level - 1) * 0.02,
+                cooldown: Math.max(2, 4 - Math.floor(level / 4)),
+                atkPercent: 0.25 + (level - 1) * 0.02,
+                defPercent: 0.25 + (level - 1) * 0.02
+            };
+        },
+        xp(level) { return 200 + (level - 1) * 150; }
+    },
     cuu_thien_huyet_kiem: {
         id: 'cuu_thien_huyet_kiem',
         name: '🩸 Cửu Thiên Huyết Kiếm',
@@ -401,7 +425,7 @@ function renderSkillsUI() {
             html += '</div>';
         }
     }
-    
+
     // 💫 Passive buffs đang hoạt động
     const buffs = getActivePassiveBuffs();
     if (buffs.length > 0) {
@@ -412,7 +436,7 @@ function renderSkillsUI() {
             html += `
                 <div class="buff-item">
                     <span class="buff-name">${buff.name}</span>
-                    <span class="buff-duration">${buff.remainingTurns} lượt</span>
+                    <span class="buff-duration">${buff.remainingTurns !== -1 ? buff.remainingTurns + ' lượt' : 'Vĩnh viễn'}</span>
                 </div>
             `;
         });
@@ -424,13 +448,13 @@ function renderSkillsUI() {
 }
 
 function resetAllCooldowns() {
-        initSkillCooldowns();
-        for (let id in state.skillCooldowns) {
-            state.skillCooldowns[id] = 0;
-        }
-        state.skillUsedThisTurn = false;
-        log('✨ Công pháp đã hồi phục hoàn toàn.');
+    initSkillCooldowns();
+    for (let id in state.skillCooldowns) {
+        state.skillCooldowns[id] = 0;
     }
+    state.skillUsedThisTurn = false;
+    log('✨ Công pháp đã hồi phục hoàn toàn.');
+}
 
 // 🔄 Tự động render khi skill thay đổi
 if (typeof window !== 'undefined') {
