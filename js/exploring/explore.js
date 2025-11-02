@@ -204,7 +204,7 @@ async function mysteryNpc(m) {
 				});
 				log('Giao dịch thành công với NPC.');
 			} else {
-				log('Không đủ vàng để giao dịch.');
+				log('Không đủ linh thạch để giao dịch.');
 			}
 		} else if (choice === 3) {
 			// 🌠 Danh sách các loại NPC khác nhau

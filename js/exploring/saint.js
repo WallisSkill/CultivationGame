@@ -15,7 +15,7 @@ const SAINTS = [
             // 💰 Tài vận vô biên
             const goldGain = Math.floor(10000 + Math.random() * 20000 * (1 + state.realmIndex * 0.2));
             state.gold += goldGain;
-            log(`💰 Thái Thanh mở kho Linh Bảo — Ngươi nhận được ${goldGain.toLocaleString()} vàng!`);
+            log(`💰 Thái Thanh mở kho Linh Bảo — Ngươi nhận được ${goldGain.toLocaleString()} linh thạch!`);
 
             // ✨ Có cơ hội ban thêm pháp bảo
             if (Math.random() < 0.3 + state.luckBonus) {

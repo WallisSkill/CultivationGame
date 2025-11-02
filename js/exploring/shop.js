@@ -286,7 +286,7 @@ function buyItem(id) {
 
     const price = si.price;
     if (state.gold < price) {
-        log(`Không đủ vàng (${price}).`);
+        log(`Không đủ linh thạch (${price}).`);
         return;
     }
 
@@ -307,7 +307,7 @@ function buyItem(id) {
     };
 
     addItemToInventory(obj);
-    log(`🛒 Mua thành công: ${si.name} — Giá ${price.toLocaleString()} vàng.`);
+    log(`🛒 Mua thành công: ${si.name} — Giá ${price.toLocaleString()} linh thạch.`);
 }
 
 window.RENDERED_SHOP_LIST = [];
@@ -386,7 +386,7 @@ function renderShop() {
                 <div class="small" style="margin-top:4px;line-height:1.4;">${desc}</div>
             </div>
             <div style="text-align:right;margin-left:12px;">
-                <div class="small" style="color:#ffd166;">${price.toLocaleString()} vàng</div>
+                <div class="small" style="color:#ffd166;">${price.toLocaleString()} linh thạch</div>
                 <button onclick="buyItem('${si.id}')" style="margin-top:6px;white-space:nowrap;">Mua</button>
             </div>
         `;

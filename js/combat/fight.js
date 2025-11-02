@@ -377,7 +377,7 @@ function winBattle(enemy) {
     // 💰 Thưởng cơ bản
     state.gold += finalGold;
     gainXP(finalXp);
-    log(`🏵️ Hạ ${enemy.name}! Nhận ${finalXp} tu vi và ${finalGold} vàng.`);
+    log(`🏵️ Hạ ${enemy.name}! Nhận ${finalXp} tu vi và ${finalGold} linh thạch.`);
 
     // 🌌 Vượt cấp chi phúc — thưởng thêm khi địch mạnh hơn
     const realmDiff = (enemy.realmIndex ?? 0) - (state.realmIndex ?? 0);
@@ -392,7 +392,7 @@ function winBattle(enemy) {
         state.gold += goldBonus;
         state.cultivateBoost = (state.cultivateBoost || 1.0) * boost;
 
-        log(`⚡ Vượt cấp chiến thắng! Cảnh giới chênh lệch ${realmDiff}, thưởng thêm +${xpBonus} tu vi, +${goldBonus} vàng.`);
+        log(`⚡ Vượt cấp chiến thắng! Cảnh giới chênh lệch ${realmDiff}, thưởng thêm +${xpBonus} tu vi, +${goldBonus} linh thạch.`);
         log(`💠 Đạo tâm dao động — tốc độ tu luyện vĩnh viễn tăng ${(boost * 100 - 100).toFixed(1)}%!`);
     }
 

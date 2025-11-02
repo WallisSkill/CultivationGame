@@ -246,7 +246,7 @@ window.addEventListener("load", () => {
     KIỂM TRA THỌ NGUYÊN — TU SĨ HẾT THỌ TẮC TỬ
    =========================== */
 function checkLongevity() {
-    if (state.age > state.maxAge) {
+    if (state.age >= state.maxAge) {
         log('⚰️ Tuổi thọ đã vượt quá cực hạn! Nguyên thần tán, thân thể hóa tro bụi...');
         loseByLongevity();
     }
@@ -818,7 +818,7 @@ function renderTopStats() {
             <div class="bar"><i id="ageBar" style="width:${Math.min(100, Math.round(state.age / state.maxAge * 100))}%"></i></div>
         </div>
 
-        <div class="stat"><b>Vàng</b>
+        <div class="stat"><b>Linh thạch</b>
             <div id="goldTxt">${state.gold}</div>
         </div>
     `;
