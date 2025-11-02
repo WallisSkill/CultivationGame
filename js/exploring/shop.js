@@ -18,15 +18,15 @@ const SHOP_ITEMS = [
     { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560 },
     { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, desc: 'Tăng khí vận lâu dài' },
     { id: 'manual_iron_body', name: 'Công Pháp Huyền Thiết', type: 'manual', skillId: 'iron_body', cost: 540, desc: 'Học kỹ năng tăng phòng thủ' },
-    { id: 'manual_dragon', name: 'Chân Giải Long Nha Trảm', type: 'manual', skillId: 'dragon_roar', cost: 820, desc: 'Học tuyệt kỹ bộc phát sát thương' },
-    { id: 'manual_wind', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, desc: 'Học thân pháp gia tăng né tránh' },
-    { id: 'manual_crimson', name: 'Chiếu Nguyệt Đồ Quyết', type: 'manual', skillId: 'crimson_edge', cost: 940, desc: 'Học kỹ năng tăng chí mạng' },
-    { id: 'manual_lotus', name: 'Liên Tâm Dưỡng Sinh Kinh', type: 'manual', skillId: 'lotus_rebirth', cost: 760, desc: 'Học công pháp hồi phục khí huyết' },
+    // { id: 'manual_dragon', name: 'Chân Giải Long Nha Trảm', type: 'manual', skillId: 'dragon_roar', cost: 820, desc: 'Học tuyệt kỹ bộc phát sát thương' },
+    { id: 'manual_wind_step', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, desc: 'Học thân pháp gia tăng né tránh' },
+    // { id: 'manual_crimson', name: 'Chiếu Nguyệt Đồ Quyết', type: 'manual', skillId: 'crimson_edge', cost: 940, desc: 'Học kỹ năng tăng chí mạng' },
+    // { id: 'manual_lotus', name: 'Liên Tâm Dưỡng Sinh Kinh', type: 'manual', skillId: 'lotus_rebirth', cost: 760, desc: 'Học công pháp hồi phục khí huyết' },
     
-    // 🔥 THÊM SKILL CHỦ ĐỘNG
-    { id: 'manual_thuong_thanh', name: '⚡ Thượng Thanh Trảm Quyết', type: 'manual', skillId: 'thuong_thanh_tram', cost: 1200, desc: 'Học chiêu thức sát thương 300% ATK (CD 2)' },
-    { id: 'manual_thien_ma', name: '🌪️ Thiên Ma Chuyển Pháp', type: 'manual', skillId: 'thien_ma_chuyen', cost: 1500, desc: 'Học chiêu xoáy 200% ATK + 15% HP địch (CD 3)' },
-    { id: 'manual_huyet_kiem', name: '🩸 Cửu Thiên Huyết Kiếm Phổ', type: 'manual', skillId: 'cuu_thien_huyet_kiem', cost: 1800, desc: 'Học chiêu hút máu 250% ATK + 30% lifesteal (CD 3)' }
+    // // 🔥 THÊM SKILL CHỦ ĐỘNG
+    // { id: 'manual_thuong_thanh', name: '⚡ Thượng Thanh Trảm Quyết', type: 'manual', skillId: 'thuong_thanh_tram', cost: 1200, desc: 'Học chiêu thức sát thương 300% ATK (CD 2)' },
+    // { id: 'manual_thien_ma', name: '🌪️ Thông Thiên Vạn Kiếm Pháp', type: 'manual', skillId: 'thong_thien_van_kiem', cost: 1500, desc: 'Học chiêu xoáy 200% ATK + 15% HP địch (CD 3)' },
+    // { id: 'manual_huyet_kiem', name: '🩸 Cửu Thiên Huyết Kiếm Phổ', type: 'manual', skillId: 'cuu_thien_huyet_kiem', cost: 1800, desc: 'Học chiêu hút máu 250% ATK + 30% lifesteal (CD 3)' }
 ];
 
 function addItemToInventory(it) {

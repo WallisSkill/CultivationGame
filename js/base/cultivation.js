@@ -200,10 +200,12 @@ function checkRealmProgress() {
         if (state.realmStage < 3) {
             state.realmStage++;
             smallStageGain();
+            renderAllImmediate();
             log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}`);
             continue;
         } else {
             attemptMajorBreakthrough();
+            renderAllImmediate();
             break;
         }
     }

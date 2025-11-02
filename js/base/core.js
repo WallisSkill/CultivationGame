@@ -194,7 +194,8 @@ let state = {
     npcInteractionLock: false,
     luckBonus: 0,
     specialTicks: [],
-    lastXpGain: 0
+    lastXpGain: 0,
+    skillUsedThisTurn: false
 };
 
 window.addEventListener("load", () => {
@@ -294,11 +295,11 @@ function stopAging() {
 function updateAgeDisplay() {
     const ageTxt = $('ageTxt');
     const ageBar = $('ageBar');
-    
+
     if (ageTxt) {
         ageTxt.textContent = `${state.age} / ${state.maxAge}`;
     }
-    
+
     if (ageBar) {
         const agePercent = Math.min(100, Math.round(state.age / state.maxAge * 100));
         ageBar.style.width = `${agePercent}%`;
@@ -455,7 +456,7 @@ function log(msg) {
 /* ===========================
    AGE REGEN: +1 every 5 seconds
    =========================== */
-   startAging();
+startAging();
 
 
 /* ===========================
@@ -474,11 +475,11 @@ function startAutoTrain() {
         gainXP(base);
         // small age consumption occasionally
         if (Math.random() < 0.18) state.maxAge = Math.max(1, state.maxAge - 1);
-        if (Math.random() < 0.015) { 
-            state.maxAge = Math.max(1, state.maxAge - 3); 
-            log('Tu luyện gặp cố, mất tuổi thọ.'); 
+        if (Math.random() < 0.015) {
+            state.maxAge = Math.max(1, state.maxAge - 3);
+            log('Tu luyện gặp cố, mất tuổi thọ.');
         }
-        
+
         updateTrainingUI();
     }, 2000);
 }
@@ -488,18 +489,18 @@ function updateTrainingUI() {
     const need = getNeed();
     const xpTxt = $('xpTxt');
     const xpBar = $('xpBar');
-    
+
     if (xpTxt) {
         const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
         const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${xpGain})`;
         xpTxt.textContent = `${state.xp}${gainLabel} / ${need}`;
     }
-    
+
     if (xpBar) {
         const xpPercent = Math.min(100, Math.round(state.xp / need * 100));
         xpBar.style.width = `${xpPercent}%`;
     }
-    
+
     // Cập nhật tuổi thọ (nếu bị giảm)
     updateAgeDisplay();
 }
@@ -536,6 +537,7 @@ function updateAutoFightLoop() {
         return;
     }
     if (fightTimer) return;
+
     fightTimer = setInterval(() => {
         if (!window._autoFightOn) {
             stopAutoFight();
@@ -545,7 +547,22 @@ function updateAutoFightLoop() {
             stopAutoFight(false);
             return;
         }
-        pvpAttackOrLocal();
+
+        let skillUsed = false;
+
+        if (typeof getUsableActiveSkills === 'function') {
+            const usableSkills = getUsableActiveSkills();
+
+            for (let skill of usableSkills) {
+                if (skill.canUse && !state.skillUsedThisTurn) {
+                    if (typeof useActiveSkill === 'function') {
+                        skillUsed = useActiveSkill(skill.id);
+                        if (skillUsed) break; // Chỉ dùng 1 skill mỗi lượt
+                    }
+                }
+            }
+        }
+            pvpAttackOrLocal();
     }, 2400);
 }
 window.updateAutoFightLoop = updateAutoFightLoop;
@@ -917,7 +934,7 @@ function renderInventory() {
         else if (item.type === 'armor') desc = `(DEF +${item.def}, HP +${item.hp})`;
         else if (item.type === 'defense') desc = `(maxDEF +${item.value})`;
         else if (item.type === 'relic') desc = `💠 Linh Bảo — ${item.effect} (${item.uses} lần)`;
-        else if (item.type === 'luck') desc = `Tăng cường vận khí — +${item.value}% vận may)`;
+        else if (item.type === 'luck') desc = `Tăng cường vận khí — +${item.value * 100}% vận may)`;
 
         if (item.type === 'root') {
             const isSelected = rootCombineSelection.includes(realIndex);

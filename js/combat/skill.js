@@ -5,30 +5,32 @@ const SKILL_LIBRARY = {
         id: 'thuong_thanh_tram',
         name: '⚡ Thượng Thanh Trảm',
         type: 'active',
-        description: 'Tấn công cực mạnh gây 300% ATK, cooldown 2 round',
-        maxLevel: 6,
+        description: 'Tấn công cực mạnh gây 550% ATK, cooldown 2 round,bị động thêm 15% DEF',
+        maxLevel: 10,
         cooldown: 2,
         getEffect(level) {
             return {
-                damageMultiplier: 3.0 + (level - 1) * 0.3, // 300% -> 480% ở max level
-                cooldown: Math.max(1, 2 - Math.floor(level / 3))
+                damageMultiplier: 5.5 + (level - 1) * 0.3,
+                cooldown: Math.max(1, 2 - Math.floor(level / 3)),
+                defPercent: 0.15 + (level - 1) * 0.2
             };
         },
         xp(level) { return 80 + (level - 1) * 60; }
     },
-    
-    thien_ma_chuyen: {
-        id: 'thien_ma_chuyen',
-        name: '🌪️ Thiên Ma Chuyển',
+
+    thong_thien_van_kiem: {
+        id: 'thong_thien_van_kiem',
+        name: '🌪️ Thông Thiên Vạn Kiếm',
         type: 'active',
-        description: 'Xoáy sát thương 200% ATK + 15% HP địch, cooldown 3 round',
+        description: 'Xoáy sát thương 300% ATK + 15% HP địch, cooldown 3 round, bị động tăng 20% ATK',
         maxLevel: 6,
         cooldown: 3,
         getEffect(level) {
             return {
-                damageMultiplier: 2.0 + (level - 1) * 0.2,
+                damageMultiplier: 3.0 + (level - 1) * 0.2,
                 percentHpDamage: 0.15 + (level - 1) * 0.02,
-                cooldown: Math.max(2, 3 - Math.floor(level / 4))
+                cooldown: Math.max(2, 3 - Math.floor(level / 4)),
+                atkPercent: 0.2 + (level - 1) * 0.15,
             };
         },
         xp(level) { return 90 + (level - 1) * 70; }
@@ -68,7 +70,7 @@ const SKILL_LIBRARY = {
         },
         xp(level) { return 60 + (level - 1) * 45; }
     },
-    
+
     dragon_roar: {
         id: 'dragon_roar',
         name: '🐉 Long Nha Phá Thiên',
@@ -84,7 +86,7 @@ const SKILL_LIBRARY = {
         },
         xp(level) { return 70 + (level - 1) * 55; }
     },
-    
+
     wind_step: {
         id: 'wind_step',
         name: '⚡ Ảnh Phong Bộ',
@@ -100,7 +102,7 @@ const SKILL_LIBRARY = {
         },
         xp(level) { return 55 + (level - 1) * 35; }
     },
-    
+
     crimson_edge: {
         id: 'crimson_edge',
         name: '🔪 Huyết Nguyệt Trảm',
@@ -116,7 +118,7 @@ const SKILL_LIBRARY = {
         },
         xp(level) { return 65 + (level - 1) * 50; }
     },
-    
+
     lotus_rebirth: {
         id: 'lotus_rebirth',
         name: '🌸 Liên Tâm Hồi Mệnh',
@@ -219,6 +221,7 @@ function getSkillXpProgress(skillId) {
 // 🆕 Thêm hệ thống cooldown cho active skills
 function initSkillCooldowns() {
     if (!state.skillCooldowns) state.skillCooldowns = {};
+    if (!state.skillUsedThisTurn) state.skillUsedThisTurn = false; // ⭐ Track đã dùng skill lượt này
 }
 
 function getSkillCooldown(skillId) {
@@ -238,6 +241,22 @@ function reduceAllCooldowns() {
             state.skillCooldowns[id]--;
         }
     }
+    state.skillUsedThisTurn = false;
+}
+
+function canUseSkill(skillId) {
+    const def = SKILL_LIBRARY[skillId];
+    if (!def || def.type !== 'active') return false;
+
+    if (state.skillUsedThisTurn) return false;
+
+    return getSkillCooldown(skillId) === 0;
+}
+
+// ⭐ Đánh dấu đã dùng skill
+function markSkillUsed() {
+    initSkillCooldowns();
+    state.skillUsedThisTurn = true;
 }
 
 function canUseSkill(skillId) {
@@ -251,32 +270,33 @@ function getUsableActiveSkills() {
     ensureSkillsState();
     const result = [];
     const equipped = state.skills?.equipped || [];
-    
+
     for (let skillId of equipped) {
         const def = SKILL_LIBRARY[skillId];
         if (!def || def.type !== 'active') continue;
-        
+
         const canUse = canUseSkill(skillId);
         const cooldown = getSkillCooldown(skillId);
         const effect = getSkillEffect(skillId);
-        
+
         result.push({
             id: skillId,
             name: def.name,
             canUse,
             cooldown,
             effect,
-            description: def.description
+            description: def.description,
+            usedThisTurn: state.skillUsedThisTurn
         });
     }
-    
+
     return result;
 }
 
 // 🆕 Lấy thông tin passive buffs đang active
 function getActivePassiveBuffs() {
     if (!state.skillRuntime?.active) return [];
-    
+
     return state.skillRuntime.active.map(buff => {
         const def = SKILL_LIBRARY[buff.skillId];
         return {
@@ -305,11 +325,11 @@ function formatSkillEffect(effect) {
 function renderSkillsUI() {
     const container = document.getElementById('skillsDisplay');
     if (!container) return;
-    
+
     ensureSkillsState();
-    
+
     let html = '';
-    
+
     // 📚 Danh sách skill đã học
     const learned = Object.keys(state.skills.learned || {});
     if (learned.length === 0) {
@@ -317,17 +337,17 @@ function renderSkillsUI() {
     } else {
         html += '<div class="skill-section"><b>📚 Công pháp đã học:</b></div>';
         html += '<div class="skill-grid">';
-        
+
         learned.forEach(skillId => {
             const def = SKILL_LIBRARY[skillId];
             const data = state.skills.learned[skillId];
             if (!def || !data) return;
-            
+
             const isEquipped = state.skills.equipped.includes(skillId);
             const isActive = def.type === 'active';
             const effect = getSkillEffect(skillId);
             const progress = getSkillXpProgress(skillId);
-            
+
             html += `
                 <div class="skill-item ${isEquipped ? 'equipped' : ''}">
                     <div class="skill-header">
@@ -344,21 +364,27 @@ function renderSkillsUI() {
                 </div>
             `;
         });
-        
+
         html += '</div>';
     }
-    
+
     // ⚡ Active skills có thể dùng (trong combat)
     if (window._battleActive && state.currentEnemy) {
         const activeSkills = getUsableActiveSkills();
         if (activeSkills.length > 0) {
             html += '<div class="skill-section" style="margin-top:12px;"><b>⚡ Chiêu thức:</b></div>';
+
+            // ⭐ Hiển thị thông báo nếu đã dùng skill lượt này
+            if (state.skillUsedThisTurn) {
+                html += '<div class="small" style="color:#ff9800; margin-bottom:8px;">⚠️ Đã dùng chiêu thức lượt này</div>';
+            }
+
             html += '<div class="active-skills-grid">';
-            
+
             activeSkills.forEach(skill => {
-                const cdText = skill.cooldown > 0 ? `(${skill.cooldown})` : '✓';
-                const canUse = skill.canUse && !skill.cooldown;
-                
+                const cdText = skill.cooldown > 0 ? `(CD: ${skill.cooldown})` : '✓';
+                const canUse = skill.canUse && !skill.cooldown && !state.skillUsedThisTurn;
+
                 html += `
                     <button 
                         class="active-skill-btn ${canUse ? 'ready' : 'cooldown'}" 
@@ -371,7 +397,7 @@ function renderSkillsUI() {
                     </button>
                 `;
             });
-            
+
             html += '</div>';
         }
     }
@@ -381,7 +407,7 @@ function renderSkillsUI() {
     if (buffs.length > 0) {
         html += '<div class="skill-section" style="margin-top:12px;"><b>💫 Buff hiệu lực:</b></div>';
         html += '<div class="passive-buffs">';
-        
+
         buffs.forEach(buff => {
             html += `
                 <div class="buff-item">
@@ -390,12 +416,21 @@ function renderSkillsUI() {
                 </div>
             `;
         });
-        
+
         html += '</div>';
     }
-    
+
     container.innerHTML = html;
 }
+
+function resetAllCooldowns() {
+        initSkillCooldowns();
+        for (let id in state.skillCooldowns) {
+            state.skillCooldowns[id] = 0;
+        }
+        state.skillUsedThisTurn = false;
+        log('✨ Công pháp đã hồi phục hoàn toàn.');
+    }
 
 // 🔄 Tự động render khi skill thay đổi
 if (typeof window !== 'undefined') {
@@ -411,4 +446,5 @@ if (typeof window !== 'undefined') {
     window.getActivePassiveBuffs = getActivePassiveBuffs;
     window.formatSkillEffect = formatSkillEffect;
     window.renderSkillsUI = renderSkillsUI;
+    window.markSkillUsed = markSkillUsed;
 }

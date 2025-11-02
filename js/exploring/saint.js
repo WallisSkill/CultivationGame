@@ -30,6 +30,15 @@ const SAINTS = [
                     log("🎁 Đạo vận tương sinh — nhận được Thái Cực Đồ!");
                 }
             }
+            if (Math.random() < 0.4 && !state.skills?.learned?.thuong_thanh_tram) {
+                addItemToInventory({
+                    name: '⚡ Thượng Thanh Trảm Pháp',
+                    type: 'manual',
+                    skillId: 'thuong_thanh_tram',
+                    desc: 'Chân truyền Thái Thanh — Tấn công cực mạnh gây 550% ATK, CD 2 round, bị động thêm 15% DEF'
+                });
+                log("⚡ Thái Thanh truyền thụ Thượng Thanh Trảm Pháp!");
+            }
 
             // 🌈 Tăng thêm chút phúc vận
             state.luckBonus = (state.luckBonus || 0) + 0.05;
@@ -55,6 +64,15 @@ const SAINTS = [
                     state.inventory.push(relic);
                     log("🎁 Linh kiếm tự sinh — nhận được Tru Tiên Kiếm!");
                 }
+            }
+            if (Math.random() < 0.4 && !state.skills?.learned?.thong_thien_van_kiem) {
+                addItemToInventory({
+                    name: '🌪️ Thông Thiên Vạn Kiếm',
+                    type: 'manual',
+                    skillId: 'thong_thien_van_kiem',
+                    desc: 'Chân truyền Thông Thiên — Xoáy sát thương 300% ATK + 15% HP địch, cooldown 3 round, bị động tăng 20% ATK'
+                });
+                log("⚡ Thông Thiên truyền thụ Thông Thiên Vạn Kiếm!");
             }
         },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
@@ -136,13 +154,19 @@ const SAINTS = [
                 }
             }
             else {
-                // 🌸 Nâng Phẩm chất linh căn
-                const up = Math.random() < 0.2 ? 2 : 1;
-                const oldRank = ROOT_RANKS[state.root.rank];
-                state.root.rank = Math.min(7, state.root.rank + up);
-                const newRank = ROOT_RANKS[state.root.rank];
+                if(state.root.rank < 7) {
+                    // 🌸 Nâng Phẩm chất linh căn
+                    const up = Math.random() < 0.2 ? 2 : 1;
+                    const oldRank = ROOT_RANKS[state.root.rank];
+                    state.root.rank = Math.min(7, state.root.rank + up);
+                    const newRank = ROOT_RANKS[state.root.rank];
+                    logMsg = `🌸 Nữ Oa ân điển — Phẩm chất linh căn tăng ${up} bậc: ${oldRank} → ${newRank}!`;
+                }
+                else{
+                    logMsg = "🌈 Nữ Oa mỉm cười — Phẩm chất Linh căn của ngươi đã đạt cực hạn có thể tác động của thánh nhân.";
+                }
                 cultivateInc += up * 0.08; // mỗi bậc tăng +8% tốc độ tu luyện
-                logMsg = `🌸 Nữ Oa ân điển — Phẩm chất linh căn tăng ${up} bậc: ${oldRank} → ${newRank}!`;
+        
             }
 
             // 💮 Thêm tốc độ tu luyện (vĩnh viễn)

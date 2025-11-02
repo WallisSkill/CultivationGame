@@ -1,158 +1,185 @@
 /* ===========================
-    EXPLORATION / MYSTERIES / NPC
-    - cooldown anti-spam, block if in combat
+	EXPLORATION / MYSTERIES / NPC
+	- cooldown anti-spam, block if in combat
 =========================== */
 
 function canExplore() {
-    return !state.exploreCooldown && !state.currentEnemy;
+	return !state.exploreCooldown && !state.currentEnemy;
 }
 
 // Original implementation renamed
 function exploreOriginalImpl() {
-    if (state.currentEnemy) {
-        log('Không thể gặp kỳ ngộ khi đang chiến đấu.');
-        return;
-    }
-    if (state.exploreCooldown) {
-        log('Phải chờ trước khi gặp kỳ ngộ tiếp.');
-        return;
-    }
+	if (state.currentEnemy) {
+		log('Không thể gặp kỳ ngộ khi đang chiến đấu.');
+		return;
+	}
+	if (state.exploreCooldown) {
+		log('Phải chờ trước khi gặp kỳ ngộ tiếp.');
+		return;
+	}
 
-    state.exploreCooldown = true;
-    setTimeout(() => state.exploreCooldown = false, 500);
+	state.exploreCooldown = true;
+	setTimeout(() => state.exploreCooldown = false, 500);
 
-    const luck = state.luckBonus || 0;
-    const mysteryChance = Math.min(0.45, 0.1 + luck);
+	const luck = state.luckBonus || 0;
+	const mysteryChance = Math.min(0.45, 0.1 + luck);
 
-    const saintChance = Math.min(0.4, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
-    if (Math.random() < saintChance && typeof window.encounterRandomSaint === 'function') {
-        log('🌠 Thiên tượng dị thường — một vị Thánh Nhân hạ phàm giữa kỳ ngộ!');
-        window.encounterRandomSaint('explore');
-        renderAll();
-        return;
-    }
+	const saintChance = Math.min(0.4, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
+	if (Math.random() < saintChance && typeof window.encounterRandomSaint === 'function') {
+		log('🌠 Thiên tượng dị thường — một vị Thánh Nhân hạ phàm giữa kỳ ngộ!');
+		window.encounterRandomSaint('explore');
+		renderAll();
+		return;
+	}
 
-    const roll = Math.random();
+	const roll = Math.random();
 
-    if (roll < mysteryChance) {
-        const goodChance = Math.min(0.40, 0.20 + luck * 0.25);
+	if (roll < mysteryChance) {
+		const goodChance = Math.min(0.40, 0.20 + luck * 0.25);
 
-        const filteredMysteries = MYSTERIES.filter(m => {
-            if (m.type === 'good') {
-                return Math.random() < goodChance;
-            } else if (m.type === 'bad') {
-                const badChance = Math.max(0.15, 0.6 - luck * 0.4);
-                return Math.random() < badChance;
-            } else {
-                return true;
-            }
-        });
+		const filteredMysteries = MYSTERIES.filter(m => {
+			if (m.type === 'good') {
+				return Math.random() < goodChance;
+			} else if (m.type === 'bad') {
+				const badChance = Math.max(0.15, 0.6 - luck * 0.4);
+				return Math.random() < badChance;
+			} else {
+				return true;
+			}
+		});
 
-        const m = filteredMysteries[Math.floor(Math.random() * filteredMysteries.length)];
-        if (!m) {
-            log(`✨ Không có kỳ ngộ nào xuất hiện... (Thiên Cơ tạm đóng)`);
-            return;
-        }
+		const m = filteredMysteries[Math.floor(Math.random() * filteredMysteries.length)];
+		if (!m) {
+			log(`✨ Không có kỳ ngộ nào xuất hiện... (Thiên Cơ tạm đóng)`);
+			return;
+		}
 
-        log(`✨ Gặp kỳ ngộ: ${m.name} — ${m.desc}`);
+		log(`✨ Gặp kỳ ngộ: ${m.name} — ${m.desc}`);
 
-        if (m.type === 'good') mysteryGood();
-        else if (m.type === 'bad') mysteryBad();
-        else if (m.type === 'npc') mysteryNpc(m);
-    }
-    else {
-        window._battleActive = true;
-        spawnEnemyWithRules();
-    }
+		if (m.type === 'good') mysteryGood();
+		else if (m.type === 'bad') mysteryBad();
+		else if (m.type === 'npc') mysteryNpc(m);
+	}
+	else {
+		window._battleActive = true;
+		spawnEnemyWithRules();
+	}
 }
 
 // Wire a single guarded explore that enforces battle lock
 window.exploreOriginalImpl = exploreOriginalImpl;
 window.explore = function () {
-    if (window._battleActive || (typeof isBattleLocked === 'function' && isBattleLocked())) {
-        log('🔒 Đang chiến đấu — không thể đi kỳ ngộ.');
-        return;
-    }
-    return window.exploreOriginalImpl();
+	if (window._battleActive || (typeof isBattleLocked === 'function' && isBattleLocked())) {
+		log('🔒 Đang chiến đấu — không thể đi kỳ ngộ.');
+		return;
+	}
+	return window.exploreOriginalImpl();
 }
 
 function mysteryGood() {
-    const r = Math.random();
-    if (r < 0.25) {
-        //Ngọc Linh Đan — tăng tu vi
-        const val = Math.floor(200 * (1 + state.realmIndex * 0.25));
-        addItemToInventory({
-            name: 'Ngọc Linh Đan',
-            type: 'xp',
-            value: val,
-            desc: 'Dùng tăng tu vi'
-        });
-    }
-    else if (r < 0.5) {
-        //Trấn Pháp — tăng sức mạnh vĩnh viễn
-        const atk = Math.floor(6 + state.realmIndex * 2 + Math.random() * 10);
-        addItemToInventory({
-            name: 'Trấn Pháp',
-            type: 'power',
-            value: atk,
-            desc: 'Dùng tăng sức mạnh vĩnh viễn'
-        });
-    }
-    else if (r < 0.75) {
-        //Đan Sinh Mệnh — tăng tuổi thọ
-        const life = Math.floor(60 + state.realmIndex * 25);
-        addItemToInventory({
-            name: 'Đan Sinh Mệnh',
-            type: 'life',
-            value: life,
-            desc: 'Dùng tăng tuổi thọ'
-        });
-    }
-    else {
-        //Huyền Giáp — tăng phòng thủ vĩnh viễn
-        const def = Math.floor(5 + state.realmIndex * 2 + Math.random() * 8);
-        addItemToInventory({
-            name: 'Huyền Giáp',
-            type: 'defense',
-            value: def,
-            desc: 'Dùng tăng phòng thủ vĩnh viễn'
-        });
-    }
+	const r = Math.random();
+	if (r < 0.2) {
+		//Ngọc Linh Đan — tăng tu vi
+		const val = Math.floor(200 * (1 + state.realmIndex * 0.25));
+		addItemToInventory({
+			name: 'Ngọc Linh Đan',
+			type: 'xp',
+			value: val,
+			desc: 'Dùng tăng tu vi'
+		});
+	}
+	else if (r < 0.35) {
+		//Trấn Pháp — tăng sức mạnh vĩnh viễn
+		const atk = Math.floor(6 + state.realmIndex * 2 + Math.random() * 10);
+		addItemToInventory({
+			name: 'Trấn Pháp',
+			type: 'power',
+			value: atk,
+			desc: 'Dùng tăng sức mạnh vĩnh viễn'
+		});
+	}
+	else if (r < 0.5) {
+		//Đan Sinh Mệnh — tăng tuổi thọ
+		const life = Math.floor(60 + state.realmIndex * 25);
+		addItemToInventory({
+			name: 'Đan Sinh Mệnh',
+			type: 'life',
+			value: life,
+			desc: 'Dùng tăng tuổi thọ'
+		});
+	}
+	else if (r < 0.65) {
+		//Huyền Giáp — tăng phòng thủ vĩnh viễn
+		const def = Math.floor(5 + state.realmIndex * 2 + Math.random() * 8);
+		addItemToInventory({
+			name: 'Huyền Giáp',
+			type: 'defense',
+			value: def,
+			desc: 'Dùng tăng phòng thủ vĩnh viễn'
+		});
+	} else if (r < 0.75) {
+		const skillRoll = Math.random();
+		let skillId, skillName;
 
-    // small chance Hỗn Nguyên top
-    if (Math.random() < 0.02) {
-        const elems = randomHybridElements(state.realmIndex, true);
-        const rank = Math.min(6, 3 + Math.floor(state.realmIndex / 5));
-        addItemToInventory({ 
-            name: `Hỗn Nguyên ${elems.join('+')} ${ROOT_RANKS[rank]}`, 
-            type: 'root', 
-            elements: elems, 
-            rank, 
-            desc: 'Hỗn nguyên linh căn hiếm' 
-        });
-        log('Kỳ ngộ hiếm: tìm thấy Linh Căn Hỗn Nguyên!');
-    }
-    
-    // 🆕 Chỉ render inventory, không cần full render
-    renderInventory();
+		if (skillRoll < 0.4) {
+			skillId = 'dragon_roar';
+			skillName = '🐉 Long Nha Phá Thiên Quyết';
+		} else if (skillRoll < 0.7) {
+			skillId = 'crimson_edge';
+			skillName = '🔪 Huyết Nguyệt Trảm Pháp';
+		} else {
+			skillId = 'lotus_rebirth';
+			skillName = '🌸 Liên Tâm Hồi Mệnh Công';
+		}
+
+		addItemToInventory({
+			name: skillName,
+			type: 'manual',
+			skillId: skillId,
+			desc: 'Bí kíp kỳ ngộ — Sử dụng để học công pháp'
+		});
+		log(`✨ Kỳ ngộ nhận được bí kíp: ${skillName}!`);
+	}
+	else {
+		const gold = Math.floor(200 + state.realmIndex * 60 + Math.random() * 200);
+		state.gold += gold;
+		log(`💰 Nhặt được ${gold} Linh Thạch!`);
+	}
+
+	// small chance Hỗn Nguyên top
+	if (Math.random() < 0.02) {
+		const elems = randomHybridElements(state.realmIndex, true);
+		const rank = Math.min(6, 3 + Math.floor(state.realmIndex / 5));
+		addItemToInventory({
+			name: `Hỗn Nguyên ${elems.join('+')} ${ROOT_RANKS[rank]}`,
+			type: 'root',
+			elements: elems,
+			rank,
+			desc: 'Hỗn nguyên linh căn hiếm'
+		});
+		log('Kỳ ngộ hiếm: tìm thấy Linh Căn Hỗn Nguyên!');
+	}
+
+	// 🆕 Chỉ render inventory, không cần full render
+	renderInventory();
 }
 
 function mysteryBad() {
-    const r = Math.random();
-    if (r < 0.5) {
-        const loseAge = Math.floor(5 + Math.random() * 12 + state.realmIndex * 1.5);
-        state.maxAge = Math.max(1, state.maxAge - loseAge);
-        log(`Kỳ ngộ xấu: mất ${loseAge} tuổi thọ!`);
-    } else if (r < 0.85) {
-        const loseXP = Math.floor(getNeed() * 0.12);
-        state.xp = Math.max(0, state.xp - loseXP);
-        log(`Kỳ ngộ xấu: mất ${loseXP} tu vi!`);
-    } else {
-        const loseHp = Math.floor(50 + state.realmIndex * 20);
-        state.hp = Math.max(1, state.hp - loseHp);
-        log(`Kỳ ngộ xấu: bị thương, mất ${loseHp} HP!`);
-    }
-    renderAll();
+	const r = Math.random();
+	if (r < 0.5) {
+		const loseAge = Math.floor(5 + Math.random() * 12 + state.realmIndex * 1.5);
+		state.maxAge = Math.max(1, state.maxAge - loseAge);
+		log(`Kỳ ngộ xấu: mất ${loseAge} tuổi thọ!`);
+	} else if (r < 0.85) {
+		const loseXP = Math.floor(getNeed() * 0.12);
+		state.xp = Math.max(0, state.xp - loseXP);
+		log(`Kỳ ngộ xấu: mất ${loseXP} tu vi!`);
+	} else {
+		const loseHp = Math.floor(50 + state.realmIndex * 20);
+		state.hp = Math.max(1, state.hp - loseHp);
+		log(`Kỳ ngộ xấu: bị thương, mất ${loseHp} HP!`);
+	}
+	renderAll();
 }
 
 async function mysteryNpc(m) {
