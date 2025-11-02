@@ -697,7 +697,6 @@ function syncEnemyToRealm(enemy, override) {
     enemy.maxHp = Math.max(30, Math.floor(enemy.__baseHp * hpRatio * stageFactor * ferocity));
     enemy.def = Math.max(3, Math.floor(enemy.__baseDef * defRatio * stageFactor));
     enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp || enemy.maxHp));
-    enemy.maxHp = enemy.hp;
 
     const playerState = (typeof state !== 'undefined') ? state : null;
     const playerPower = Math.max(4, playerState ? (playerState.totalPower || playerState.power || 4) : profile.power);
