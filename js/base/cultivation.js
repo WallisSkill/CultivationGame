@@ -300,6 +300,10 @@ function smallStageGain(isForce = false) {
 
         log(`🎆 Viên Mãn chi lực — thêm ⚔️ ${perfectionBonus.pow.toLocaleString()} ATK, 💖 ${perfectionBonus.hp.toLocaleString()} HP, 🛡️ ${perfectionBonus.def.toLocaleString()} DEF!`);
     }
+    if (window.matchConnected && typeof registerProfile === 'function') {
+            registerProfile();
+            log('🌐 Đã cập nhật thông tin lên server.');
+        }
 }
 
 /* ===========================
