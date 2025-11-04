@@ -1097,13 +1097,6 @@ function onMatchMessage(ev) {
 
 // Helper to compute and format PvP damage log (fallback-safe)
 function pvpComputeDetail(attacker, defender) {
-    // Prefer detailed function if available
-    if (typeof computeDamageDetailed === 'function') {
-        return computeDamageDetailed(
-            attacker.str || 10, attacker.elements || [], attacker.rootRank || 0, attacker.realmIndex || 0, attacker.realmStage || 0,
-            defender.def || 0, defender.elements || [], defender.rootRank || 0, defender.realmIndex || 0, defender.realmStage || 0
-        );
-    }
     if (typeof computeDamage === 'function') {
         const det = computeDamage(
             attacker.str || 10, attacker.elements || [], attacker.rootRank || 0, attacker.realmIndex || 0, attacker.realmStage || 0,

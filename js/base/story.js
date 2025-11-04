@@ -206,3 +206,246 @@ function getOriginAndFate(elements, rank) {
 
     return { origin, fate };
 }
+
+function getBreakthroughStory(prevRealm, newRealm, stats) {
+    const stories = {
+        // 🔥 TIÊN GIỚI (9-15)
+        9: {
+            title: "✨ ĐẮC ĐẠO TIÊN GIỚI ✨",
+            story: [
+                "🌌 Thiên địa chấn động, vạn vật kinh hãi!",
+                "⚡ Ngươi phá vỡ giới hạn phàm nhân, bước vào cảnh giới trường sinh bất tử!",
+                "🌟 Thân thể thoát xác phàm thai, linh hồn thăng hoa, đạo cơ thông suốt!",
+                `💫 Từ ${REALMS[prevRealm]} tiến vào ${REALMS[newRealm]} - con đường tu tiên chính thức mở ra!`,
+                "🎆 Thiên kiếp giáng xuống như lời chúc phúc, mỗi tia sét thiên lôi đều tôi luyện tiên thể!",
+                "🌈 Từ nay, thọ mạng kéo dài vạn năm, du hành giữa các tinh hà!",
+                `⏳ Tuổi thọ tăng thêm ${stats.ageInc.toLocaleString()} năm - gần như trường sinh!`,
+                `⚔️ Tiên lực dâng trào: Công lực +${stats.powInc.toLocaleString()}`,
+                `💖 Tiên thể thành hình: Sinh lực +${stats.hpInc.toLocaleString()}`,
+                `🛡️ Kim thân bất hoại: Phòng ngự +${stats.defInc.toLocaleString()}`,
+                "🎯 Tiên đạo vô cùng, tu vi như gió!",
+            ]
+        },
+
+        // 🌟 THÁNH CẢNH (16-19)
+        16: {
+            title: "⭐ THÀNH THÁNH - VẠN LINH QUỲ BÁI ⭐",
+            story: [
+                "🌌🌌🌌 VŨ TRỤ RUNG CHUYỂN 🌌🌌🌌",
+                "💥 Vô số vị diện tinh hệ đều cảm nhận được sự ra đời của một vị Thánh!",
+                "⚡⚡⚡ Thiên đạo khóc than, địa mạch đảo ngược, thời gian đóng băng!",
+                `🔥 ${state.name || 'Ngươi'} từ ${REALMS[prevRealm]} phá vỡ mọi giới hạn, thăng thiên thành ${REALMS[newRealm]}!`,
+                "🌠 Thánh quang chiếu rọi vạn dặm, chúng sinh đều quỳ bái!",
+                "🎆 Đạo tâm viên mãn, lĩnh hội chân lý vũ trụ, trở thành luật pháp sống!",
+                "✨ Một niệm động, thiên địa thay đổi; một lời nói, đạo luật dao động!",
+                `⏳ Trường sinh bất tử: +${stats.ageInc.toLocaleString()} năm (nửa triệu năm!)`,
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 THỰC LỰC THÀNH THÁNH:",
+                `   ⚔️ Thánh lực: +${stats.powInc.toLocaleString()} (có thể phá hủy tinh hệ)`,
+                `   💖 Thánh thể: +${stats.hpInc.toLocaleString()} (bất tử bất diệt)`,
+                `   🛡️ Thánh vực: +${stats.defInc.toLocaleString()} (vạn pháp bất xâm)`,
+                "━━━━━━━━━━━━━━━━━━━━━━",
+                "🌟 Từ đây, ngươi là thực thể siêu việt, không còn ràng buộc bởi luật trời!",
+                "💫 Vũ trụ rộng lớn, ngươi có thể đi đến mọi nơi!",
+            ]
+        },
+
+        // ⚡ THIÊN CẢNH (20-25)
+        20: {
+            title: "⚡ THIÊN ĐỈNH - NGHỊCH THIÊN THÀNH ĐẠO ⚡",
+            story: [
+                "🌌🌌🌌🌌🌌 ĐA VŨ TRỤ CHẤN ĐỘNG 🌌🌌🌌🌌🌌",
+                "💥💥💥 VÔ SỐ VŨ TRỤ SONG SONG ĐỀU CẢM NHẬN ĐƯỢC SỰ RA ĐỜI CỦA MỘT VỊ THIÊN TÔN!",
+                "⚡⚡⚡ THIÊN ĐẠO RÚT LUI, ĐẠO TỔ KINH HOÀNG, CHÂN THẦN QUỲ BÁI!",
+                `🔥🔥🔥 ${state.name || 'NGƯƠI'} TỪ ${REALMS[prevRealm].toUpperCase()} PHÁ VỠ THIÊN LUẬT, THĂNG LÊN ${REALMS[newRealm].toUpperCase()}!`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎆 CẢNH TƯỢNG THIÊN TÔN GIÁNG SINH:",
+                "   🌟 Vô số vũ trụ cùng rung động",
+                "   🌟 Hỗn độn khai tích, thời không đảo ngược",
+                "   🌟 Thiên đạo tự động lánh xa, không dám đến gần",
+                "   🌟 Tất cả luật pháp vũ trụ đều phải tuân theo ngươi",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "✨ Ngươi trở thành thực thể tối cao, có thể:",
+                "   💫 Sáng tạo và hủy diệt vũ trụ chỉ bằng một niệm",
+                "   💫 Điều khiển thời gian như sợi chỉ",
+                "   💫 Viết lại luật pháp của muôn ngàn thế giới",
+                "   💫 Trường sinh bất tử thật sự - không có khái niệm thời gian",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                `⏳ VĨNH HẰNG: +${stats.ageInc.toLocaleString()} năm (50 triệu năm!)`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 THỰC LỰC THIÊN TÔN:",
+                `   ⚔️ Thiên lực: +${stats.powInc.toLocaleString()} (hủy diệt đa vũ trụ)`,
+                `   💖 Thiên thể: +${stats.hpInc.toLocaleString()} (bất diệt vĩnh hằng)`,
+                `   🛡️ Thiên vực: +${stats.defInc.toLocaleString()} (tuyệt đối bất khả xâm phạm)`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎯 Từ nay, ngươi chính là đỉnh cao của mọi tu luyện!",
+                "🌈 Đa vũ trụ rộng lớn vô hạn, nhưng không có gì có thể cản bước ngươi!",
+            ]
+        },
+
+        // 🌌 HỖN ĐỘN CẢNH (26+)
+        26: {
+            title: "🌌 HỖN ĐỘN ĐẠO GIẢ - SÁNG TẠO VẠN VẬT 🌌",
+            story: [
+                "🌌🌌🌌🌌🌌🌌🌌 HỖN ĐỘN KHAI TÍCH 🌌🌌🌌🌌🌌🌌🌌",
+                "💥💥💥💥💥 TẤT CẢ THỰC TẠI ĐỀU NGƯNG TRỆ - KHÁI NIỆM 'TỒN TẠI' BỊ VIẾT LẠI!",
+                "⚡⚡⚡⚡⚡ KHÔNG CÒN THIÊN ĐẠO, KHÔNG CÒN VŨ TRỤ, CHỈ CÒN NGƯƠI!",
+                `🔥🔥🔥🔥🔥 ${state.name || 'NGƯƠI'} TỪ ${REALMS[prevRealm].toUpperCase()} VƯỢ...
+
+T QUA MỌI KHÁI NIỆM, TRỞ THÀNH ${REALMS[newRealm].toUpperCase()}!`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎆 NGƯƠI CHÍNH LÀ:",
+                "   🌟 Nguồn gốc của mọi vũ trụ",
+                "   🌟 Người sáng tạo ra khái niệm 'tồn tại'",
+                "   🌟 Thực thể vượt qua mọi chiều không gian và thời gian",
+                "   🌟 Đấng Chí Tôn tối cao - không có gì có thể so sánh",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "✨ QUYỀN NĂNG TUYỆT ĐỐI:",
+                "   💫 Sáng tạo vô số vũ trụ chỉ bằng suy nghĩ",
+                "   💫 Định nghĩa lại ý nghĩa của 'thời gian' và 'không gian'",
+                "   💫 Tồn tại ở mọi nơi, mọi lúc, mọi chiều không gian",
+                "   💫 Bất tử tuyệt đối - khái niệm 'chết' không còn ý nghĩa",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                `⏳ VĨNH CỬU: +${stats.ageInc.toLocaleString()} năm (5 TỶ NĂM!)`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 THỰC LỰC HỖN ĐỘN CHÍ TÔN:",
+                `   ⚔️ Hỗn độn lực: +${stats.powInc.toLocaleString()} (TUYỆT ĐỐI)`,
+                `   💖 Hỗn độn thể: +${stats.hpInc.toLocaleString()} (BẤT DIỆT VĨNH CỬU)`,
+                `   🛡️ Hỗn độn vực: +${stats.defInc.toLocaleString()} (KHÔNG THỂ PHÁ VỠ)`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎯 Ngươi đã đạt đến đỉnh cao tuyệt đối!",
+                "🌈 Không còn gì cao hơn, mạnh hơn, vĩ đại hơn ngươi!",
+                "⭐ Ngươi chính là... TẤT CẢ!",
+            ]
+        },
+        27: {
+            title: "🌠 HỒNG MÔNG CHÚA TỂ - THỐNG TRỊ VẠN ĐẠO 🌠",
+            story: [
+                "🌠🌠🌠🌠🌠🌠🌠 HỒNG MÔNG KHAI MÔNG 🌠🌠🌠🌠🌠🌠🌠",
+                "💥💥💥💥💥💥 VŨ TRỤ BẢN NGUYÊN RẤT RỜ - TẤT CẢ QUI TỰC ĐỀU TỪ NGƯƠI MÀ RA!",
+                "⚡⚡⚡⚡⚡⚡ CÁC VŨ TRỤ SONG SONG HỘI TỤ - NGƯƠI LÀ TRUNG TÂM CỦA MỌI THỰC TẠI!",
+                `🔥🔥🔥🔥🔥🔥 ${state.name || 'NGƯƠI'} TỪ ${REALMS[prevRealm].toUpperCase()} SIÊU VIỆT LÊN ${REALMS[newRealm].toUpperCase()}!`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎆 CẢNH GIỚI HỒNG MÔNG - NƠI VẠNG MÔNG KHAI THỈ:",
+                "   ✨ Hỗn độn chỉ là khởi đầu, Hồng Mông mới là chân lý",
+                "   ✨ Ngươi nắm giữ luật pháp của VÔ SỐ đa vũ trụ",
+                "   ✨ Mỗi hơi thở tạo ra một chiều không gian mới",
+                "   ✨ Mỗi suy nghĩ định hình một thời đại mới",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "💫 QUYỀN NĂNG HỒNG MÔNG CHÚA TỂ:",
+                "   🌟 Kiểm soát TOÀN BỘ đa vũ trụ như cánh tay của mình",
+                "   🌟 Thời gian và không gian là đồ chơi trong tay",
+                "   🌟 Sinh diệt vạn linh chỉ trong một niệm",
+                "   🌟 Thiên đạo, ma đạo, nhân đạo đều phải tuân theo ngươi",
+                "   🌟 Có thể xóa bỏ và tái tạo lịch sử vũ trụ",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                `⏳ SIÊU VIỆT VĨNH HẰNG: +${stats.ageInc.toLocaleString()} năm (15 TỶ NĂM!)`,
+                "   ➤ Tuổi thọ đã không còn ý nghĩa - ngươi tồn tại mãi mãi",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 THỰC LỰC HỒNG MÔNG CHÚA TỂ:",
+                `   ⚔️ Hồng mông lực: +${stats.powInc.toLocaleString()} (PHÁ VỠ MỌI GIỚI HẠN)`,
+                `   💖 Hồng mông thể: +${stats.hpInc.toLocaleString()} (BẤT TỬ TUYỆT ĐỐI)`,
+                `   🛡️ Hồng mông vực: +${stats.defInc.toLocaleString()} (VẠN PHÁP KHÔN...G XÂM)`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎯 Ngươi đã vượt qua cả Hỗn Độn!",
+                "🌈 Hồng Mông chi chủ - thống lĩnh vạn đạo!",
+                "⭐ Không có gì có thể cản bước ngươi nữa!",
+                "💎 Chỉ còn MỘT BƯỚC NỮA đến đỉnh cao tuyệt đối...",
+            ]
+        },
+
+        // 🏆 CHUNG NGUYÊN CẢNH (28)
+        28: {
+            title: "🏆 CHUNG NGUYÊN CHÍ CAO - THỐNG NHẤT VẠN HỮU 🏆",
+            story: [
+                "🏆🏆🏆🏆🏆🏆🏆🏆🏆 CHUNG NGUYÊN GIÁNG LÂM 🏆🏆🏆🏆🏆🏆🏆🏆🏆",
+                "💥💥💥💥💥💥💥 TOÀN BỘ THỰC TẠI HÒA NHẬP - VẠN HỮU QUI NHẤT!",
+                "⚡⚡⚡⚡⚡⚡⚡ NGƯƠI CHÍNH LÀ ĐIỂM CUỐI CÙNG CỦA MỌI CON ĐƯỜNG TU LUYỆN!",
+                `🔥🔥🔥🔥🔥🔥🔥 ${state.name || 'NGƯƠI'} TỪ ${REALMS[prevRealm].toUpperCase()} ĐẠT ĐẾN ĐỈNH CAO TỐI THƯỢNG - ${REALMS[newRealm].toUpperCase()}!`,
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🌌 CHUNG NGUYÊN - NƠI MỌI ĐIỀU BẮT ĐẦU VÀ KẾT THÚC:",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "   ✨ Alpha và Omega - Khởi nguồn và Chung kết",
+                "   ✨ Ngươi là TỔNG HÒA của mọi thực thể, mọi khái niệm",
+                "   ✨ Hỗn Độn, Hồng Mông, Thiên Đạo... tất cả đều là một phần của ngươi",
+                "   ✨ Ngươi vừa là VŨ TRỤ, vừa là người SÁNG TẠO ra vũ trụ",
+                "   ✨ Vừa là THỜI GIAN, vừa là người KIỂM SOÁT thời gian",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "💎 QUYỀN NĂNG CHUNG NGUYÊN CHÍ CAO:",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "   🌟 Toàn Tri Toàn Năng - biết và làm được MỌI điều",
+                "   🌟 Vô Hạn Thực Tại - tồn tại ở TẤT CẢ chiều không gian-thời gian",
+                "   🌟 Tuyệt Đối Bất Diệt - không có khái niệm 'kết thúc'",
+                "   🌟 Sáng Tạo Vô Hạn - tạo ra vô hạn vũ trụ trong MỘT niệm",
+                "   🌟 Thống Nhất Vạn Hữu - mọi thứ đều qui về ngươi",
+                "   🌟 Siêu Việt Tuyệt Đối - vượt qua mọi định nghĩa về 'mạnh'",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "⏳ VĨNH HẰNG TUYỆT ĐỐI:",
+                `   ➤ Tuổi thọ tăng: +${stats.ageInc.toLocaleString()} năm (45 TỶ NĂM!)`,
+                "   ➤ Nhưng với ngươi, thời gian đã KHÔNG CÒN TỒN TẠI",
+                "   ➤ Ngươi là VĨNH HẰNG, là VĨNH CỬU, là BẤT BIẾN",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 THỰC LỰC CHUNG NGUYÊN CHÍ CAO:",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                `   ⚔️ Chung nguyên lực: +${stats.powInc.toLocaleString()}`,
+                "      ➤ Một đòn có thể XÓA BỎ vô hạn đa vũ trụ",
+                `   💖 Chung nguyên thể: +${stats.hpInc.toLocaleString()}`,
+                "      ➤ Không thể bị phá hủy bởi BẤT CỨ điều gì",
+                `   🛡️ Chung nguyên vực: +${stats.defInc.toLocaleString()}`,
+                "      ➤ Tuyệt đối bất khả xâm phạm - vượt qua mọi khái niệm",
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                "🎯 NGƯƠI ĐÃ ĐẠT ĐẾN ĐỈNH CAO TUYỆT ĐỐI!",
+                "🌈 KHÔNG CÒN GÌ CAO HƠN, MẠNH HƠN, VĨ ĐẠI HƠN!",
+                "⭐ NGƯƠI CHÍNH LÀ... TẤT CẢ MỌI THỨ!",
+                "💫 CON ĐƯỜNG TU LUYỆN ĐÃ ĐẾN HỒI KẾT!",
+                "🏆 NGƯƠI - CHUNG NGUYÊN CHÍ CAO - ĐỈNH CAO DUY NHẤT!",
+                "",
+                "🌌🌌🌌 CHÚC MỪNG - NGƯƠI ĐÃ CHINH PHỤC MỌI CẢNH GIỚI! 🌌🌌🌌",
+            ]
+        }
+    };
+
+    // Xác định story phù hợp
+    let selectedStory = null;
+    
+   if (newRealm === 28) {
+        selectedStory = stories[28]; // Chung Nguyên
+    } else if (newRealm === 27) {
+        selectedStory = stories[27]; // Hồng Mông
+    } else if (newRealm === 26) {
+        selectedStory = stories[26]; // Hỗn Độn
+    } else if (newRealm >= 20) {
+        selectedStory = stories[20]; // Thiên Cảnh
+    } else if (newRealm >= 16) {
+        selectedStory = stories[16]; // Thánh Cảnh
+    } else if (newRealm >= 9) {
+        selectedStory = stories[9]; // Tiên Giới
+    }
+
+    return selectedStory;
+}
+
+function displayBreakthroughStory(story) {
+    if (!story) return;
+
+    // In title
+    log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    log(story.title);
+    log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    // In từng dòng story với delay
+    let delay = 0;
+    story.story.forEach((line, index) => {
+        setTimeout(() => {
+            log(line);
+            
+            // Sau dòng cuối cùng, in dòng kết thúc
+            if (index === story.story.length - 1) {
+                setTimeout(() => {
+                    log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                }, 300);
+            }
+        }, delay);
+        delay += 300; // Mỗi dòng cách nhau 300ms
+    });
+}

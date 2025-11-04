@@ -2,31 +2,87 @@
            DAMAGE FORMULA with RANGE INFO
            =========================== */
 /* compute final damage from attacker -> defender */
-        function computeDamage(
-            atkPower, atkElements, atkRank, atkRealm, atkStage,
-            defPower, defElements, defRank, defRealm, defStage
-        ) {
-            const baseDamage = Math.max(1, atkPower - defPower * 0.5);
+function computeDamage(
+    atkPower, atkElements, atkRank, atkRealm, atkStage,
+    defPower, defElements, defRank, defRealm, defStage
+) {
+    const baseDamage = Math.max(1, atkPower - defPower * 0.5);
 
-            const elePercent = calcElementBonus(atkElements, defElements,atkRealm,defRealm);
-            const elementFactor = 1 + (elePercent / 100);
+    const elePercent = calcElementBonus(atkElements, defElements, atkRealm, defRealm);
+    const elementFactor = 1 + (elePercent / 100);
 
-            const rankFactor = calcRankBonus(atkRank, defRank);
+    const rankFactor = calcRankBonus(atkRank, defRank);
 
-            const realmFactor = calcRealmBonusFull(atkRealm, atkStage, defRealm, defStage);
+    const realmFactor = calcRealmBonusFull(atkRealm, atkStage, defRealm, defStage);
 
-            let raw = baseDamage * elementFactor * rankFactor * realmFactor;
+    const tierFactor = calcTierBonus(atkRealm, defRealm);
 
-            const mitigate = Math.floor(defPower * 0.4);
-            let final = Math.floor(raw - mitigate);
-            if (final < 1) final = 1;
+    let raw = baseDamage * elementFactor * rankFactor * realmFactor * tierFactor;
 
-            return {
-                final,
-                elementFactor,
-                rankFactor,
-                realmFactor,
-                mitigate,
-                elePercent
-            };
+    const mitigate = Math.floor(defPower * 0.4);
+    let final = Math.floor(raw - mitigate);
+    if (final < 1) final = 1;
+
+    return {
+        final,
+        elementFactor,
+        rankFactor,
+        realmFactor,
+        mitigate,
+        elePercent,
+    };
+}
+
+function calcTierBonus(atkRealm, defRealm) {
+    // Phân loại tier
+    function getTier(realm) {
+        if (realm < 9) return 0;      // Phàm giới (0-8)
+        if (realm < 16) return 1;     // Tiên giới (9-15)
+        if (realm < 20) return 2;     // Thánh cảnh (16-19)
+        if (realm < 26) return 3;     // Thiên cảnh (20-25)
+        if (realm === 26) return 4;   // Hỗn Độn (26)
+        if (realm === 27) return 5;   // Hồng Mông (27)
+        return 6;                      // Chung Nguyên (28)
+    }
+
+    function getTierName(tier) {
+        const tierNames = ['Phàm Giới', 'Tiên Giới', 'Thánh Cảnh', 'Thiên Cảnh', 'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên'];
+        return tierNames[tier] || 'Unknown';
+    }
+
+    const atkTier = getTier(atkRealm);
+    const defTier = getTier(defRealm);
+    const tierDiff = atkTier - defTier;
+
+    const atkTierName = getTierName(atkTier);
+    const defTierName = getTierName(defTier);
+
+    // Bonus khi vượt tier
+    if (tierDiff > 0) {
+        const tierBonuses = [1, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 15.0];
+        let bonus = 1.0;
+
+        for (let i = 1; i <= tierDiff; i++) {
+            bonus *= tierBonuses[i] || 15.0;
         }
+
+        log(`⚔️ Tier Bonus: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x${bonus.toFixed(2)} (vượt ${tierDiff} tier)`);
+        return bonus;
+    }
+    // Penalty khi thấp tier hơn
+    else if (tierDiff < 0) {
+        const tierPenalties = [1, 0.20, 0.15, 0.10, 0.05, 0.02, 0.01, 0.005];
+        let penalty = 1.0;
+
+        for (let i = 1; i <= Math.abs(tierDiff); i++) {
+            penalty *= tierPenalties[i] || 0.005;
+        }
+
+        log(`🛡️ Tier Penalty: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x${penalty.toFixed(4)} (kém ${Math.abs(tierDiff)} tier - giảm ${((1 - penalty) * 100).toFixed(2)}%)`);
+        return penalty;
+    }
+
+    // Cùng tier
+    log(`⚖️ Tier Equal: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x1.00 (cùng tier)`);
+    return 1.0;
+}
