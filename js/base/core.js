@@ -575,9 +575,6 @@ let _renderAllQueued = false;
 function renderAllImmediate() {
     renderTopStats();
     renderInventory();
-    if (document.getElementById('enemyList') && typeof renderEnemyList === 'function') {
-        renderEnemyList();
-    }
     renderShop();
     if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy);
     renderCurrentEnemy();

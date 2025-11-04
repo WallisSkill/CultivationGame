@@ -312,51 +312,6 @@ function randomHybridElements(realmIndex = 0, forceHybrid = false) {
 }
 
 
-function renderEnemyList() {
-    const el = $('enemyList');
-    el.innerHTML = '';
-
-    const pool = spawnEnemyPoolForRealm(state.realmIndex);
-
-    pool.forEach((e, idx) => {
-        const realmName = REALMS[e.realmIndex] || "Vô Danh";
-        const stageName = STAGES[e.realmStage || 0] || "Sơ Kỳ";
-        const rankName = ROOT_RANKS[e.rootRank] || "Phế Phẩm";
-        const elementIcons = e.elements.map(colorizeElement).join(' ');
-        const atk = e.str || 0;
-        const def = e.def || 0;
-        const hp = e.hp || 0;
-
-        const div = document.createElement('div');
-        div.className = 'enemy-box';
-        div.innerHTML = `
-            <b>${e.name}</b>
-            <div class="small">
-                🧿 Cảnh giới: ${realmName} ${stageName}
-            </div>
-            <div class="small">
-                🌿 Linh căn: ${elementIcons}
-            </div>
-            <div class="small">
-                💎 Phẩm chất: <b>${rankName}</b>
-            </div>
-            <div class="small">
-                ❤️ HP: ${hp}　⚔️ ATK: ${atk}　🛡️ DEF: ${def}
-            </div>
-            <div style="margin-top:6px">
-                <button>Chọn mục tiêu</button>
-            </div>
-        `;
-
-        // 🧠 Gán trực tiếp object e vào sự kiện (vẫn giữ được reference thật)
-        div.querySelector('button').onclick = () => spawnSpecific(e);
-
-        el.appendChild(div);
-    });
-}
-
-
-
 function spawnSpecific(e) {
     state.currentEnemy = e;
     renderAll();
