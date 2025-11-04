@@ -225,7 +225,7 @@ window.addEventListener("load", () => {
         state.gold = 240;
         if (state.name && ADMIN_NAMES.includes(state.name)) {
             state.name = "Thiên Đạo Chí Tôn";
-            state.gold = 99999999;
+            state.gold = 9999999999999;
         }
         const script = buildRootStoryScript();
 

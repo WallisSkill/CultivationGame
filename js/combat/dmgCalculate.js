@@ -33,7 +33,7 @@ function computeDamage(
     };
 }
 
-function calcTierBonus(atkRealm, defRealm) {
+function calcTierBonus(atkRealm, defRealm, atkName = state.name, defName = state.currentEnemy.name) {
     // Phân loại tier
     function getTier(realm) {
         if (realm < 9) return 0;      // Phàm giới (0-8)
@@ -66,10 +66,9 @@ function calcTierBonus(atkRealm, defRealm) {
             bonus *= tierBonuses[i] || 15.0;
         }
 
-        log(`⚔️ Tier Bonus: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x${bonus.toFixed(2)} (vượt ${tierDiff} tier)`);
+        log(`⚔️ ${atkName} [${atkTierName}] đánh ${defName} [${defTierName}] → x${bonus.toFixed(2)} (vượt ${tierDiff} tier)`);
         return bonus;
     }
-    // Penalty khi thấp tier hơn
     else if (tierDiff < 0) {
         const tierPenalties = [1, 0.20, 0.15, 0.10, 0.05, 0.02, 0.01, 0.005];
         let penalty = 1.0;
@@ -78,11 +77,9 @@ function calcTierBonus(atkRealm, defRealm) {
             penalty *= tierPenalties[i] || 0.005;
         }
 
-        log(`🛡️ Tier Penalty: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x${penalty.toFixed(4)} (kém ${Math.abs(tierDiff)} tier - giảm ${((1 - penalty) * 100).toFixed(2)}%)`);
+        log(`🛡️ ${atkName} [${atkTierName}] đánh ${defName} [${defTierName}] → x${penalty.toFixed(4)} (kém ${Math.abs(tierDiff)} tier, giảm ${((1 - penalty) * 100).toFixed(2)}%)`);
         return penalty;
     }
 
-    // Cùng tier
-    log(`⚖️ Tier Equal: ${atkTierName} (${atkRealm}) vs ${defTierName} (${defRealm}) → x1.00 (cùng tier)`);
     return 1.0;
 }
