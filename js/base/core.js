@@ -204,6 +204,14 @@ window.addEventListener("load", () => {
     const startScreen = document.getElementById("start-screen");
     const input = document.getElementById("playerNameInput");
     const btn = document.getElementById("startBtn");
+    
+    // 🆕 Load profileId ngay khi load page
+    const savedProfileId = localStorage.getItem('tt_profileId');
+    if (savedProfileId && !state.profileId) {
+        state.profileId = savedProfileId;
+        console.log('✅ window.load: Load profileId từ localStorage:', savedProfileId);
+    }
+    
     // Nếu chưa có tên -> yêu cầu nhập
     btn.addEventListener("click", () => {
         const val = input.value.trim();
@@ -229,7 +237,7 @@ window.addEventListener("load", () => {
         }
         const script = buildRootStoryScript();
 
-        initStarter();
+        initStarter(); // Sẽ tạo/load profileId ở đây
         renderAllImmediate();
         if (state.name !== "Thiên Đạo Chí Tôn") {
             announceRootStory(true);
@@ -241,6 +249,11 @@ window.addEventListener("load", () => {
         }
         state.age = 6;
     });
+
+    // 🆕 Khởi tạo hệ thống bạn bè
+    if (typeof initFriendsSystem === 'function') {
+        initFriendsSystem();
+    }
 });
 
 
@@ -585,6 +598,11 @@ function renderAllImmediate() {
         renderSkillsUI();
     }
 
+    // 🆕 Render friends UI
+    if (typeof renderFriendsUI === 'function') {
+        renderFriendsUI();
+    }
+
     checkLongevity();
     updateAutoFightLoop();
 
@@ -767,7 +785,7 @@ function recalculateStats() {
 }
 
 function renderTopStats() {
-    recalculateStats(); // đảm bảo luôn tính mới
+    recalculateStats();
 
     const atkBonus = getEquippedAtk();
     const hpBonus = getEquippedHp();
@@ -783,8 +801,9 @@ function renderTopStats() {
     const defDisplay = `${state.totalDef}${defBonus > 0 ? ` (+${defBonus})` : ''}`;
     const hpDisplay = `${Math.floor(state.hp)} / ${state.totalMaxHp}${hpBonus > 0 ? ` (+${hpBonus})` : ''}`;
 
-    // 🧙‍♂️ Lấy đạo danh (nếu chưa có thì fallback "Vô Danh Tu Sĩ")
+    // 🧙‍♂️ Lấy đạo danh và ID
     const playerName = state.name || localStorage.getItem("playerName") || "Vô Danh Tu Sĩ";
+    const playerId = state.profileId || buildPublicProfile().id;
 
     const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
     const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${xpGain})`;
@@ -794,6 +813,11 @@ function renderTopStats() {
             <b>Đạo danh</b>
             <div id="playerName" style="font-weight:bold; color:#e6c97a; font-size:1.1em;">
                 ${playerName}
+            </div>
+            <div class="small" style="color:#888; margin-top:4px; cursor:pointer;" 
+                 onclick="copyPlayerId()" title="Click để copy ID">
+                ID: <span id="playerIdDisplay">${playerId.substring(0, 16)}...</span>
+                <button onclick="copyPlayerId(event)" style="padding:2px 8px; font-size:0.75em; margin-left:4px;">📋</button>
             </div>
         </div>
 
@@ -1027,6 +1051,21 @@ function getEquippedHp() {
 =========================== */
 function initStarter() {
     startAging();
+    
+    // 🆕 Khởi tạo profileId ngay từ đầu - LOAD TỪ LOCALSTORAGE
+    if (!state.profileId) {
+        const savedId = localStorage.getItem('tt_profileId');
+        if (savedId) {
+            state.profileId = savedId;
+            console.log('✅ initStarter: Load profileId từ localStorage:', savedId);
+        } else {
+            // Tạo mới nếu chưa có
+            if (typeof buildPublicProfile === 'function') {
+                buildPublicProfile(); // Hàm này sẽ tạo và lưu
+            }
+        }
+    }
+    
     // 🎴 Thiết lập vật phẩm khởi thủy
     state.inventory = [
         { name: 'Kiếm Gỗ', type: 'weapon', atk: 4, desc: 'Vũ khí khởi thủy', equipped: true },
@@ -1099,14 +1138,43 @@ function fadeOutStartScreen() {
     SAVE / LOAD
 =========================== */
 function saveProgress() {
+    // 🆕 Đảm bảo profileId được lưu vào localStorage trước khi save state
+    if (state.profileId) {
+        try {
+            localStorage.setItem('tt_profileId', state.profileId);
+        } catch(e) {
+            console.error('Lỗi lưu profileId:', e);
+        }
+    }
+    
     localStorage.setItem('tt_state_complete_v2', JSON.stringify(state));
     log('Lưu tiến trình thành công.');
 }
+
 function loadProgress() {
     const s = localStorage.getItem('tt_state_complete_v2');
     if (!s) { log('Không tìm thấy save.'); return; }
     state = JSON.parse(s);
     state.lastXpGain = state.lastXpGain || 0;
+    
+    // 🆕 Tải profileId từ localStorage - ƯU TIÊN LOCALSTORAGE HƠN STATE
+    const savedId = localStorage.getItem('tt_profileId');
+    if (savedId) {
+        state.profileId = savedId;
+        console.log('✅ loadProgress: Load profileId từ localStorage:', savedId);
+    } else if (!state.profileId) {
+        // Nếu không có ở cả 2 nơi → tạo mới
+        if (typeof buildPublicProfile === 'function') {
+            buildPublicProfile();
+        }
+    } else {
+        // Nếu có trong state nhưng không có localStorage → lưu lại
+        try {
+            localStorage.setItem('tt_profileId', state.profileId);
+            console.log('✅ loadProgress: Sync profileId vào localStorage:', state.profileId);
+        } catch(e) {}
+    }
+    
     log('Tải tiến trình thành công.');
     renderAll();
 }
@@ -1177,4 +1245,45 @@ function renderRootTable() {
         html += `<div class="small">• ${elements} vs ${colorizeElement(element)} ⇒ ${bonus.toFixed(1)}%</div>`;
     });
     el.innerHTML = html;
+}
+
+// Hàm copy ID
+function copyPlayerId(event) {
+    if (event) event.stopPropagation();
+    
+    const playerId = state.profileId || buildPublicProfile().id;
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(playerId).then(() => {
+            showToast('Đã copy ID vào clipboard!', 'info');
+        }).catch(() => {
+            fallbackCopyToClipboard(playerId);
+        });
+    } else {
+        fallbackCopyToClipboard(playerId);
+    }
+}
+
+// Fallback cho trình duyệt cũ
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showToast('Đã copy ID!', 'info');
+    } catch (err) {
+        showToast('Không thể copy. ID: ' + text, 'warn');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+if (typeof window !== 'undefined') {
+    window.copyPlayerId = copyPlayerId;
 }

@@ -392,7 +392,6 @@ function attemptMajorBreakthrough(isForce = false) {
 
         const newScale = (typeof getHeavenScale === 'function') ? getHeavenScale(state.realmIndex, 0, rootRank) : 1;
 
-        // 🔥 TÍNH TOÁN BUFF VƯỢT BẬC
         const gain = calculateMajorGain({
             prevRealm,
             newRealm: state.realmIndex,
@@ -402,7 +401,6 @@ function attemptMajorBreakthrough(isForce = false) {
             elementCount
         });
 
-        // ⚡ ÁP DỤNG BUFF với hệ số vượt bậc
         const powInc = gain.powInc;
         const hpInc = gain.hpInc;
         const defInc = gain.defInc;
@@ -416,18 +414,14 @@ function attemptMajorBreakthrough(isForce = false) {
         state.hp = state.totalMaxHp;
         normalizeVitals();
 
-        // 🆕 TUỔI THỌ TĂNG VƯỢT BẬC
         const ageInc = gain.ageInc;
         state.maxAge += ageInc;
 
-        // 🎆 HIỂN THỊ STORY ĐẶC BIỆT cho các realm lớn
         const story = getBreakthroughStory(prevRealm, state.realmIndex, { powInc, hpInc, defInc, ageInc });
 
         if (story) {
-            // Có story đặc biệt - hiển thị story
             displayBreakthroughStory(story);
         } else {
-            // Không có story - log bình thường
             log(`🌈 Đột phá thành công: ${REALMS[prevRealm]} → ${REALMS[state.realmIndex]}!`);
             log(`⚔️ Công lực +${powInc.toLocaleString()}, 💖 HP +${hpInc.toLocaleString()}, 🪨 Phòng ngự +${defInc.toLocaleString()}`);
             log(`⏳ Tuổi thọ +${ageInc.toLocaleString()} năm`);
@@ -435,11 +429,16 @@ function attemptMajorBreakthrough(isForce = false) {
             log(`📿 Linh căn: ${ROOT_RANKS[rootRank]} (${(rankBonus * 100).toFixed(1)}%), căn ${elementCount} (${(hybridBonus * 100).toFixed(1)}%)`);
         }
 
-        // 🌠 Tốc độ tu luyện tăng theo cultivateMult
         const cultivateMult = gain.cultivateMult;
         state.cultivateBoost = (state.cultivateBoost || 1.0) * cultivateMult;
         const totalBoostPct = ((state.cultivateBoost - 1) * 100).toFixed(1);
         log(`🌠 Đạo cơ thăng hoa — tốc độ tu luyện nhân ${cultivateMult.toFixed(2)} (tổng +${totalBoostPct}%).`);
+
+        // 🆕 CẬP NHẬT PROFILE LÊN SERVER
+        if (window.matchConnected && typeof registerProfile === 'function') {
+            registerProfile();
+            log('🌐 Đã cập nhật thông tin lên server.');
+        }
 
     } else {
         const loseAge = Math.floor(20 + state.realmIndex * 10);

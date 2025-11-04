@@ -744,8 +744,40 @@ if (!('_findingMatch' in window)) window._findingMatch = false;
 
 /* --- PvP logic: matchmaking, turn sync, heartbeat --- */
 function buildPublicProfile() {
-    state.profileId = state.profileId || `p_${Date.now()}_${Math.floor(Math.random() * 1e5)}`;
+    // 🆕 Đảm bảo profileId luôn tồn tại và LOAD TỪ LOCALSTORAGE TRƯỚC
+    if (!state.profileId) {
+        // 1️⃣ Kiểm tra localStorage trước
+        const savedId = localStorage.getItem('tt_profileId');
+        if (savedId) {
+            state.profileId = savedId;
+            console.log('✅ Đã load profileId từ localStorage:', savedId);
+        } else {
+            // 2️⃣ Tạo ID mới nếu chưa có
+            const timestamp = Date.now();
+            const randomPart = Math.floor(Math.random() * 1e5);
+            state.profileId = `p_${timestamp}_${randomPart}`;
+            
+            // 3️⃣ LƯU NGAY vào localStorage
+            try {
+                localStorage.setItem('tt_profileId', state.profileId);
+                console.log('✅ Đã tạo và lưu profileId mới:', state.profileId);
+            } catch(e) {
+                console.error('❌ Lỗi lưu profileId:', e);
+            }
+        }
+    } else {
+        // 4️⃣ Nếu đã có trong state nhưng chưa lưu localStorage → LƯU NGAY
+        const savedId = localStorage.getItem('tt_profileId');
+        if (savedId !== state.profileId) {
+            try {
+                localStorage.setItem('tt_profileId', state.profileId);
+                console.log('✅ Đã sync profileId vào localStorage:', state.profileId);
+            } catch(e) {}
+        }
+    }
+    
     if (typeof recalculateStats === 'function') recalculateStats();
+    
     return {
         id: state.profileId,
         name: state.name || 'Tu Sĩ',
@@ -773,6 +805,12 @@ function connectMatchWS() {
             window.matchConnected = true;
             log('✅ Kết nối PvP đã mở.');
             registerProfile();
+            
+            // 🆕 Thông báo cho friends system
+            if (typeof window.onFriendsWSConnected === 'function') {
+                window.onFriendsWSConnected();
+            }
+            
             if (pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
                 wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'resync_request', data: {} });
             }
