@@ -203,7 +203,7 @@
   <div class="panel">
     <section>
       <h1 class="title">🎯 Vòng Quay May Mắn (1 → 100)</h1>
-      <p class="subtitle">Đã nâng lên 100 số và tỉ lệ lệch mạnh: số bé có tỉ lệ cao hơn rõ rệt.</p>
+      <p class="subtitle">Tỉ lệ dạng “con sóng” từ 1 đến 100: càng về cuối càng khó, số 100 siêu khó trúng.</p>
 
       <div class="wheel-wrap">
         <div class="pointer"></div>
@@ -218,7 +218,7 @@
       <div id="result" class="result">Bấm <b>Quay ngay</b> để bắt đầu.</div>
 
       <div class="odds">
-        <b>Tỉ lệ trúng (lệch mạnh):</b>
+        <b>Tỉ lệ trúng (dạng sóng, số cao khó hơn):</b>
         <div id="oddsMeta" class="odds-meta"></div>
         <ul id="oddsList" class="odds-list"></ul>
       </div>
@@ -234,14 +234,24 @@
 
     const MAX_NUMBER = 100;
 
-    // Lệch mạnh: ưu tiên số bé rõ rệt
-    const WEIGHT_POWER = 1.9;
-    const UNIFORM_RATIO = 0.2; // 20% đều, 80% lệch
+    // Dạng sóng giảm dần: đầu cao, cuối thấp mạnh (100 siêu khó)
+    const WEIGHT_POWER = 1.75;
+    const WAVE_AMPLITUDE = 0.42;
+    const TAIL_HARDNESS = 1.55;
     const weightedPool = Array.from({ length: MAX_NUMBER }, (_, i) => {
       const value = i + 1;
-      const inversePart = 1 / Math.pow(value, WEIGHT_POWER);
-      const mixedWeight = UNIFORM_RATIO * 1 + (1 - UNIFORM_RATIO) * inversePart;
-      return { value, weight: mixedWeight };
+      const progress = i / (MAX_NUMBER - 1); // 0 -> 1
+
+      // Nền xác suất giảm theo số
+      const base = 1 / Math.pow(value, WEIGHT_POWER);
+
+      // Dạng sóng mượt: đầu được boost, cuối bị giảm
+      const wave = 1 + WAVE_AMPLITUDE * Math.cos(Math.PI * progress);
+
+      // Siết đuôi để các số cuối (đặc biệt 100) rất khó ra
+      const tail = Math.pow(1 - progress, TAIL_HARDNESS) + 0.02;
+
+      return { value, weight: base * wave * tail };
     });
 
     const segmentDeg = 360 / MAX_NUMBER;
