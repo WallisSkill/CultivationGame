@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vòng Quay May Mắn 1-5</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .panel {
+      width: min(920px, 100%);
+      background: linear-gradient(180deg, #0b1220, #070b14);
+      border: 1px solid #1f2937;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+    }
+
+    .title {
+      margin: 0 0 6px;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: min(480px, 88vw);
+      aspect-ratio: 1;
+      margin-inline: auto;
+    }
+
+    .pointer {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 16px solid transparent;
+      border-right: 16px solid transparent;
+      border-top: 30px solid var(--danger);
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,.35));
+      z-index: 3;
+    }
+
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 10px solid #374151;
+      box-shadow: inset 0 0 0 8px #111827, 0 12px 30px rgba(0,0,0,.45);
+      position: relative;
+      transition: transform 4.8s cubic-bezier(.12,.95,.2,1);
+      background: conic-gradient(
+        #22d3ee 0deg 72deg,
+        #a78bfa 72deg 144deg,
+        #34d399 144deg 216deg,
+        #f59e0b 216deg 288deg,
+        #f87171 288deg 360deg
+      );
+      overflow: hidden;
+    }
+
+    .center {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      transform: translate(-50%, -50%);
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background: #0b1220;
+      border: 5px solid #4b5563;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      letter-spacing: .5px;
+      z-index: 2;
+      text-align: center;
+      font-size: .75rem;
+    }
+
+    .label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 6px rgba(0,0,0,.45);
+      user-select: none;
+    }
+
+    .side {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+      height: fit-content;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: transform .12s ease, filter .2s ease;
+      box-shadow: 0 8px 20px rgba(34,197,94,.32);
+    }
+
+    .btn:active { transform: translateY(1px); }
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      filter: grayscale(.2);
+      box-shadow: none;
+    }
+
+    .result {
+      margin-top: 14px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 12px;
+      line-height: 1.45;
+      min-height: 62px;
+    }
+
+    .odds {
+      margin-top: 14px;
+      font-size: .92rem;
+      color: var(--muted);
+      border-top: 1px dashed #334155;
+      padding-top: 12px;
+    }
+
+    .odds ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+      color: #cbd5e1;
+    }
+
+    .odds-meta {
+      margin-top: 8px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .odds-list {
+      max-height: 260px;
+      overflow: auto;
+      margin-top: 10px;
+      padding-right: 8px;
+    }
+
+    @media (max-width: 880px) {
+      .panel {
+        grid-template-columns: 1fr;
+      }
+      .side {
+        max-width: 520px;
+        margin-inline: auto;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <section>
+      <h1 class="title">🎯 Vòng Quay May Mắn (1 → 100)</h1>
+      <p class="subtitle">Đã nâng lên 100 số và tỉ lệ lệch mạnh: số bé có tỉ lệ cao hơn rõ rệt.</p>
+
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <div id="wheel" class="wheel" aria-label="Vòng quay may mắn">
+          <div class="center">SPIN</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <button id="spinBtn" class="btn">Quay ngay</button>
+      <div id="result" class="result">Bấm <b>Quay ngay</b> để bắt đầu.</div>
+
+      <div class="odds">
+        <b>Tỉ lệ trúng (lệch mạnh):</b>
+        <div id="oddsMeta" class="odds-meta"></div>
+        <ul id="oddsList" class="odds-list"></ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    const resultBox = document.getElementById('result');
+    const oddsMeta = document.getElementById('oddsMeta');
+    const oddsList = document.getElementById('oddsList');
+
+    const MAX_NUMBER = 100;
+
+    // Lệch mạnh: ưu tiên số bé rõ rệt
+    const WEIGHT_POWER = 1.9;
+    const UNIFORM_RATIO = 0.2; // 20% đều, 80% lệch
+    const weightedPool = Array.from({ length: MAX_NUMBER }, (_, i) => {
+      const value = i + 1;
+      const inversePart = 1 / Math.pow(value, WEIGHT_POWER);
+      const mixedWeight = UNIFORM_RATIO * 1 + (1 - UNIFORM_RATIO) * inversePart;
+      return { value, weight: mixedWeight };
+    });
+
+    const segmentDeg = 360 / MAX_NUMBER;
+    const pointerAngle = 270; // Kim nằm ở đỉnh vòng quay (hướng 12 giờ)
+    let currentRotation = 0;
+    let spinning = false;
+
+    function normalizeDeg(deg) {
+      return ((deg % 360) + 360) % 360;
+    }
+
+    function pickWeightedNumber() {
+      const total = weightedPool.reduce((sum, item) => sum + item.weight, 0);
+      let r = Math.random() * total;
+      for (const item of weightedPool) {
+        if (r < item.weight) return item.value;
+        r -= item.weight;
+      }
+      return 1;
+    }
+
+    function buildWheelVisual() {
+      const segments = [];
+      for (let i = 0; i < MAX_NUMBER; i++) {
+        const start = i * segmentDeg;
+        const end = (i + 1) * segmentDeg;
+        const hue = Math.round((i / MAX_NUMBER) * 360);
+        const light = i % 2 === 0 ? 56 : 46;
+        segments.push(`hsl(${hue} 78% ${light}%) ${start}deg ${end}deg`);
+      }
+      wheel.style.background = `conic-gradient(${segments.join(',')})`;
+
+      // Hiển thị mốc mỗi 10 số cho dễ nhìn
+      for (let i = 10; i <= MAX_NUMBER; i += 10) {
+        const label = document.createElement('span');
+        label.className = 'label';
+        const deg = (i - 0.5) * segmentDeg;
+        label.style.transform = `rotate(${deg}deg) translate(165px) rotate(-${deg}deg)`;
+        label.style.fontSize = '.78rem';
+        label.textContent = String(i);
+        wheel.appendChild(label);
+      }
+    }
+
+    function renderOddsPreview() {
+      const total = weightedPool.reduce((sum, item) => sum + item.weight, 0);
+      const probs = weightedPool.map((item) => (item.weight / total) * 100);
+      const totalPct = probs.reduce((sum, p) => sum + p, 0);
+
+      oddsMeta.innerHTML = `Tổng xác suất 1-100: <b>${totalPct.toFixed(4)}%</b><br><small>Mỗi dòng dưới đây là xác suất của từng số riêng lẻ.</small>`;
+      oddsList.innerHTML = probs
+        .map((pct, idx) => `<li>Số ${idx + 1}: ${pct.toFixed(4)}%</li>`)
+        .join('');
+    }
+
+    function spin() {
+      if (spinning) return;
+      spinning = true;
+      spinBtn.disabled = true;
+      resultBox.innerHTML = 'Đang quay...';
+
+      const target = pickWeightedNumber();
+
+      // Tâm góc của mỗi ô trong 100 ô
+      const centerAngle = (target - 1) * segmentDeg + segmentDeg / 2;
+
+      // Kim nằm ở 270deg, nên cần đưa tâm ô trúng về 270deg
+      // Jitter luôn ở trong ô để không bị nhảy sang ô bên cạnh
+      const jitterRange = segmentDeg * 0.28;
+      const jitter = (Math.random() * (2 * jitterRange)) - jitterRange;
+      const desiredAngle = normalizeDeg(pointerAngle - centerAngle + jitter);
+
+      // Tính góc cần quay thêm từ vị trí hiện tại để luôn dừng đúng ô trúng
+      const currentAngle = normalizeDeg(currentRotation);
+      const deltaToTarget = normalizeDeg(desiredAngle - currentAngle);
+      const extraTurns = 360 * (5 + Math.floor(Math.random() * 3)); // 5-7 vòng
+
+      currentRotation += extraTurns + deltaToTarget;
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+      setTimeout(() => {
+        resultBox.innerHTML = `Kết quả: <b>${target}</b><br><small>(Số càng lớn càng khó trúng)</small>`;
+        spinning = false;
+        spinBtn.disabled = false;
+      }, 4900);
+    }
+
+    buildWheelVisual();
+    renderOddsPreview();
+    spinBtn.addEventListener('click', spin);
+  </script>
+</body>
+</html>
