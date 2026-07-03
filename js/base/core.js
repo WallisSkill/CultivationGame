@@ -989,7 +989,15 @@ function renderInventory() {
             const col = (typeof LB_ELEMENT_COLORS !== 'undefined' && LB_ELEMENT_COLORS[item.element]) || '#a6ffd1';
             const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown(item).toFixed(1) : item.cooldown;
             const gradeLabel = (typeof lbGradeLabel === 'function') ? lbGradeLabel(item) : `T${item.grade || item.tier || 0}`;
-            const maxed = (typeof lbIsMaxed === 'function') && lbIsMaxed(item);
+            const gradePlain = (typeof lbGradePlain === 'function') ? lbGradePlain(item) : `T${item.grade || item.tier || 0}`;
+            const isMaxed = (typeof lbIsMaxed === 'function') && lbIsMaxed(item);
+            const maxGrade = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
+            const currentGrade = item.grade || item.tier || 0;
+            const atMaxGrade = currentGrade >= maxGrade;
+            const gradeMax = (typeof lbMaxLevelFor === 'function') ? lbMaxLevelFor(currentGrade) : 100;
+            const currentLevel = item.level || 1;
+            const atMaxLevel = currentLevel >= gradeMax;
+            const canFuseGrade = !atMaxGrade;
             const sockets = (typeof lbSockets === 'function') ? lbSockets(item) : 0;
             const gemCount = Array.isArray(item.gems) ? item.gems.length : 0;
             const gemIcons = (typeof lbGemIcons === 'function') ? lbGemIcons(item) : '';
@@ -1002,9 +1010,12 @@ function renderInventory() {
                     ${onBoard
                     ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
                     : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
-                    ${maxed
+                    ${atMaxGrade && atMaxLevel
                     ? `<button class="use-btn" disabled style="opacity:.6">✨ Tối cao</button>`
                     : `<button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>`}
+                    ${canFuseGrade
+                    ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
+                    : ''}
                     ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
                     <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                 </div>`;

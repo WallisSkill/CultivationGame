@@ -490,9 +490,9 @@ function buyLinhBao(idx) {
 }
 if (typeof window !== 'undefined') window.buyLinhBao = buyLinhBao;
 
-/* Upgrade an owned linh bảo: raise its grade (giai) up to Chung Nguyên Pháp,
-   then level it up to max for that grade. Higher grades are MUCH harder to reach.
-   Grade progression: Phàm < Hoàng < Huyền < Địa < Thiên < Tiên < Chí Tôn < Đế < Chuẩn Thánh < Thánh < Hỗn Độn < Hồng Mông < Chung Nguyên */
+/* Upgrade an owned linh bảo: ONLY level up within current grade.
+   To raise grade, you MUST use fuseLinhBao function.
+   Level upgrade: cost increases with level and grade. */
 function upgradeLinhBao(inventoryIndex) {
     if (window._battleActive) { log('🔒 Đang giao chiến — không thể nâng cấp.'); return; }
     const it = state.inventory[inventoryIndex];
@@ -504,53 +504,80 @@ function upgradeLinhBao(inventoryIndex) {
     const gradeMax = (typeof lbMaxLevelFor === 'function') ? lbMaxLevelFor(g) : 100;
     const gradeCostMult = (typeof LB_GRADE_COST_MULT !== 'undefined') ? LB_GRADE_COST_MULT[g] || 1 : 1;
 
-    if (lvl < gradeMax) {
-        // level up within the current grade
-        // Cost increases exponentially with grade AND level
-        const levelCostMult = 1 + (lvl - 1) * (0.05 + g * 0.015);
-        const cost = Math.floor(lbShopPrice(it.cost, g) * levelCostMult * gradeCostMult);
-        if (state.gold < cost) { log(`Không đủ linh thạch để tăng cấp (cần ${cost.toLocaleString()}).`); return; }
-        state.gold -= cost;
-        it.level = lvl + 1;
+    if (lvl >= gradeMax) {
+        // Already at max level for this grade
         const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
-        log(`🔺 ${it.name} tu luyện tới ${gName} Lv.${it.level}! (−${cost.toLocaleString()} linh thạch)`);
-
-        // Announce milestone levels
-        const milestones = [gradeMax * 0.25, gradeMax * 0.5, gradeMax * 0.75, gradeMax];
-        if (milestones.includes(it.level)) {
-            log(`🌟 ${it.name} đạt cột mốc ${gName} Lv.${it.level}!`);
-        }
-    } else if (g < maxG) {
-        // grade is level-capped -> promote to next giai, reset level to 1
-        // Cost increases dramatically for higher grade transitions
-        const gradeUpCostMult = 2.5 + g * 0.8; // 2.5 at g=0, 11.9 at g=12
-        const cost = Math.floor(lbShopPrice(it.cost, g) * gradeUpCostMult * gradeCostMult);
-        if (state.gold < cost) { log(`Không đủ linh thạch để thăng giai (cần ${cost.toLocaleString()}).`); return; }
-        state.gold -= cost;
-        it.grade = g + 1;
-        it.level = 1;
-        const name = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[it.grade] : it.grade;
-        const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
-        log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${name}! (−${cost.toLocaleString()} linh thạch)`);
-
-        // Special messages for legendary grades
-        if (it.grade === 6) log(`⚔️ Chí Tôn Pháp — bước vào cảnh giới Chí Tôn!`);
-        else if (it.grade === 7) log(`👑 Đế Pháp — ngôi vị Đế君 không ai bì kịp!`);
-        else if (it.grade === 8) log(`🌟 Chuẩn Thánh Pháp — gần như thánh nhân!`);
-        else if (it.grade === 9) log(`💫 Thánh Pháp — cảnh giới thánh!`);
-        else if (it.grade === 10) log(`🌀 Hỗn Độn Pháp — hỗn loạn thiên địa!`);
-        else if (it.grade === 11) log(`🌌 Hồng Mông Pháp — khởi nguyên vũ trụ!`);
-        else if (it.grade === 12) log(`🏆 Chung Nguyên Pháp — đỉnh cao tuyệt đối!`);
-
-        if (it.grade >= maxG) log(`🏆 ${it.name} đã đạt ${LB_GRADE_NAMES[maxG]} — cảnh giới tối cao tuyệt đối!`);
-    } else {
-        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
-        log(`✨ ${it.name} đã đạt ${gName} Lv.${gradeMax} — cảnh giới tối cao.`);
+        log(`🔺 ${it.name} đã đạt ${gName} Lv.${gradeMax} (tối đa). Dùng Hợp nhất để thăng giai!`);
         return;
+    }
+
+    // level up within the current grade
+    // Cost increases exponentially with grade AND level
+    const levelCostMult = 1 + (lvl - 1) * (0.05 + g * 0.015);
+    const cost = Math.floor(lbShopPrice(it.cost, g) * levelCostMult * gradeCostMult);
+    if (state.gold < cost) { log(`Không đủ linh thạch để tăng cấp (cần ${cost.toLocaleString()}).`); return; }
+    state.gold -= cost;
+    it.level = lvl + 1;
+    const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
+    log(`🔺 ${it.name} tu luyện tới ${gName} Lv.${it.level}! (−${cost.toLocaleString()} linh thạch)`);
+
+    // Announce milestone levels
+    const milestones = [gradeMax * 0.25, gradeMax * 0.5, gradeMax * 0.75, gradeMax];
+    if (milestones.includes(it.level)) {
+        log(`🌟 ${it.name} đạt cột mốc ${gName} Lv.${it.level}!`);
     }
     renderAll();
 }
 if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
+
+/* Fuse linh bảo to raise grade: exponential cost, same formula as skill fusion.
+   Cost: 2, 9, 36, 100, 225... (same as skill tiers) */
+const LB_LINHBUO_FUSION_COST = [2, 9, 36, 100, 225, 441, 784, 1296, 2025, 3025, 4356, 6084, 8000];
+
+function fuseLinhBao(inventoryIndex) {
+    if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất.'); return; }
+    const it = state.inventory[inventoryIndex];
+    if (!it || it.type !== 'linhbao') return;
+
+    const maxG = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
+    const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
+
+    if (g >= maxG) {
+        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
+        log(`🔒 ${it.name} đã đạt ${gName} (tối đa), không thể thăng giai thêm!`);
+        return;
+    }
+
+    const cost = LB_LINHBUO_FUSION_COST[g] || (g * g * 4);
+    const gradeCostMult = (typeof LB_GRADE_COST_MULT !== 'undefined') ? LB_GRADE_COST_MULT[g] || 1 : 1;
+    const totalCost = Math.floor(cost * gradeCostMult * 1000); // Make it expensive
+
+    if (state.gold < totalCost) {
+        log(`⚠️ Cần ${totalCost.toLocaleString()} linh thạch để hợp nhất ${LB_GRADE_NAMES[g]} lên ${LB_GRADE_NAMES[g + 1]}!`);
+        return;
+    }
+
+    state.gold -= totalCost;
+    it.grade = g + 1;
+    it.level = 1;
+
+    const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
+    log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${LB_GRADE_NAMES[it.grade]}! (−${totalCost.toLocaleString()} linh thạch)`);
+
+    // Special messages for legendary grades
+    if (it.grade === 6) log(`⚔️ Chí Tôn Pháp — bước vào cảnh giới Chí Tôn!`);
+    else if (it.grade === 7) log(`👑 Đế Pháp — ngôi vị Đế không ai bì kịp!`);
+    else if (it.grade === 8) log(`🌟 Chuẩn Thánh Pháp — gần như thánh nhân!`);
+    else if (it.grade === 9) log(`💫 Thánh Pháp — cảnh giới thánh!`);
+    else if (it.grade === 10) log(`🌀 Hỗn Độn Pháp — hỗn loạn thiên địa!`);
+    else if (it.grade === 11) log(`🌌 Hồng Mông Pháp — khởi nguyên vũ trụ!`);
+    else if (it.grade === 12) log(`🏆 Chung Nguyên Pháp — đỉnh cao tuyệt đối!`);
+
+    if (it.grade >= maxG) log(`🏆 ${it.name} đã đạt cảnh giới tối cao tuyệt đối!`);
+
+    renderAll();
+}
+if (typeof window !== 'undefined') window.fuseLinhBao = fuseLinhBao;
 
 // Guard useItem during battle
 if (typeof window.useItem === 'function') {
