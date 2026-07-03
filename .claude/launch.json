@@ -2,14 +2,14 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "game",
       "runtimeExecutable": "powershell",
       "runtimeArgs": [
         "-NoProfile",
         "-Command",
-        "$root=(Get-Location).Path; $mime=@{'.html'='text/html';'.js'='text/javascript';'.css'='text/css';'.jpg'='image/jpeg';'.jpeg'='image/jpeg';'.png'='image/png';'.gif'='image/gif';'.svg'='image/svg+xml';'.json'='application/json';'.ico'='image/x-icon'}; $l=New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:5173/'); $l.Start(); Write-Host \"serving $root on 5173\"; $handler={ param($ctx,$root,$mime) try { $rel=[System.Uri]::UnescapeDataString($ctx.Request.Url.AbsolutePath.TrimStart('/')); if([string]::IsNullOrEmpty($rel)){$rel='index.html'}; $p=Join-Path $root $rel; if(Test-Path $p -PathType Container){$p=Join-Path $p 'index.html'}; if(Test-Path $p -PathType Leaf){ $e=[System.IO.Path]::GetExtension($p).ToLower(); $ct=$mime[$e]; if(-not $ct){$ct='application/octet-stream'}; $b=[System.IO.File]::ReadAllBytes($p); $ctx.Response.ContentType=$ct; $ctx.Response.ContentLength64=$b.Length; $ctx.Response.OutputStream.Write($b,0,$b.Length) } else { $ctx.Response.StatusCode=404 } } catch {} finally { try{ $ctx.Response.OutputStream.Close() }catch{} } }; $pool=[RunspaceFactory]::CreateRunspacePool(1,16); $pool.Open(); while($l.IsListening){ try { $ctx=$l.GetContext(); $ps=[PowerShell]::Create(); $ps.RunspacePool=$pool; [void]$ps.AddScript($handler).AddArgument($ctx).AddArgument($root).AddArgument($mime); [void]$ps.BeginInvoke() } catch {} }"
+        "$root=(Get-Location).Path; $mime=@{'.html'='text/html';'.js'='text/javascript';'.css'='text/css';'.jpg'='image/jpeg';'.jpeg'='image/jpeg';'.png'='image/png';'.gif'='image/gif';'.svg'='image/svg+xml';'.json'='application/json';'.ico'='image/x-icon'}; $l=New-Object System.Net.HttpListener; $l.Prefixes.Add('http://localhost:5188/'); $l.Start(); Write-Host 'serving on 5188'; $handler={ param($ctx,$root,$mime) try { $rel=[System.Uri]::UnescapeDataString($ctx.Request.Url.AbsolutePath.TrimStart('/')); if([string]::IsNullOrEmpty($rel)){$rel='index.html'}; $p=Join-Path $root $rel; if(Test-Path $p -PathType Container){$p=Join-Path $p 'index.html'}; if(Test-Path $p -PathType Leaf){ $e=[System.IO.Path]::GetExtension($p).ToLower(); $ct=$mime[$e]; if(-not $ct){$ct='application/octet-stream'}; $b=[System.IO.File]::ReadAllBytes($p); $ctx.Response.ContentType=$ct; $ctx.Response.ContentLength64=$b.Length; $ctx.Response.OutputStream.Write($b,0,$b.Length) } else { $ctx.Response.StatusCode=404 } } catch {} finally { try{ $ctx.Response.OutputStream.Close() }catch{} } }; $pool=[RunspaceFactory]::CreateRunspacePool(2,32); $pool.Open(); while($l.IsListening){ try { $ctx=$l.GetContext(); $ps=[PowerShell]::Create(); $ps.RunspacePool=$pool; [void]$ps.AddScript($handler).AddArgument($ctx).AddArgument($root).AddArgument($mime); [void]$ps.BeginInvoke() } catch {} }"
       ],
-      "port": 5173
+      "port": 5188
     }
   ]
 }

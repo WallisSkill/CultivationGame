@@ -984,19 +984,28 @@ function renderInventory() {
 
         if (item.type === 'linhbao') {
             const onBoard = Array.isArray(state.board) && item.uid && state.board.includes(item.uid);
-            const act = (typeof LB_ACTIONS !== 'undefined' && LB_ACTIONS[item.action]) ? LB_ACTIONS[item.action] : { icon: '❔', label: item.action };
+            const icons = (typeof lbEffectIcons === 'function') ? lbEffectIcons(item) : '⚜️';
+            const summary = (typeof lbEffectSummary === 'function') ? lbEffectSummary(item) : (item.action || '');
             const col = (typeof LB_ELEMENT_COLORS !== 'undefined' && LB_ELEMENT_COLORS[item.element]) || '#a6ffd1';
             const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown(item).toFixed(1) : item.cooldown;
-            const tierLabel = (typeof lbTierLabel === 'function') ? lbTierLabel(item.tier) : `T${item.tier || 0}`;
+            const gradeLabel = (typeof lbGradeLabel === 'function') ? lbGradeLabel(item) : `T${item.grade || item.tier || 0}`;
+            const maxed = (typeof lbIsMaxed === 'function') && lbIsMaxed(item);
+            const sockets = (typeof lbSockets === 'function') ? lbSockets(item) : 0;
+            const gemCount = Array.isArray(item.gems) ? item.gems.length : 0;
+            const gemIcons = (typeof lbGemIcons === 'function') ? lbGemIcons(item) : '';
             d.innerHTML = `
-                <div><b style="color:${col}">${act.icon} ${item.name}</b> <span class="small">(${tierLabel})</span></div>
-                <div class="small">${act.label} · CD ${cd}s · ${colorizeElement(item.element)}</div>
+                <div><b style="color:${col}">${icons} ${item.name}</b> <span class="small">(${gradeLabel})</span></div>
+                <div class="small">${summary} · CD ${cd}s · ${colorizeElement(item.element)}</div>
+                <div class="small">💎 Ổ ngọc: ${gemIcons || '—'} (${gemCount}/${sockets})</div>
                 <div class="small">${item.desc || ''}</div>
                 <div class="inv-buttons">
                     ${onBoard
                     ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
                     : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
-                    <button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>
+                    ${maxed
+                    ? `<button class="use-btn" disabled style="opacity:.6">✨ Tối cao</button>`
+                    : `<button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>`}
+                    ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
                     <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                 </div>`;
             listEl.appendChild(d);
@@ -1019,7 +1028,41 @@ function renderInventory() {
                         </div>
                      `;
         }
+        // 🌟 Gem items - show Khảm (socket) button
+        else if (item.type === 'gem') {
+            const gemKind = item.gemKind || 'power';
+            const gemDef = (typeof LB_GEM_KINDS !== 'undefined') ? LB_GEM_KINDS[gemKind] : null;
+            const gemIcon = gemDef ? gemDef.icon : '💎';
+            const gemColor = gemDef ? gemDef.color : '#ff9800';
+            const tierName = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'][item.tier || 0] || 'Thô';
+            d.innerHTML = `
+                <div><b style="color:${gemColor}">${gemIcon} ${item.name}</b> <span class="small">(${tierName})</span></div>
+                <div class="small" style="color:${gemColor}">+${((item.magnitude || 0.1) * 100).toFixed(0)}% ${gemDef?.desc || 'Tăng sức'}</div>
+                <div class="small">${item.desc || ''}</div>
+                <div class="inv-buttons">
+                    <button class="use-btn" onclick="openGemSocketModal(${realIndex})">💎 Khảm ngọc</button>
+                    <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
+                </div>`;
+        }
+        else if (item.type === 'manual') {
+            // Skill manual - show tier, fusion status, and fusion button
+            const tierName = item.tierName || (typeof LB_SKILL_TIER_NAMES !== 'undefined' ? LB_SKILL_TIER_NAMES[item.skillTier || 0] : `${(item.skillTier || 0) + 1}th`);
+            const tierColor = item.color || '#ffa94d';
+            const fusionLocked = item.fusionLocked;
+            const fusionLimited = item.fusionLimited;
+            const canFuse = !fusionLocked && (item.skillTier || 0) < 6;
+            const fusionLabel = fusionLocked ? '🔒 Tối đa' : (canFuse ? `🔥 Hợp nhất${fusionLimited ? ' (1 lần)' : ''}` : '📜 Học');
+            const fusionOnClick = canFuse ? `openSkillFusionModal()` : `useItem(${realIndex})`;
 
+            d.innerHTML = `
+                <div><b style="color:${tierColor}">${item.name}</b> <span class="small">${tierName} Cấp${fusionLimited ? ' ⚠️' : ''}</span></div>
+                <div class="small" style="color:${tierColor}">${item.desc || ''}</div>
+                <div class="inv-buttons">
+                    <button class="use-btn" onclick="${fusionOnClick}">${fusionLabel}</button>
+                    ${canFuse ? `<button class="equip-btn" onclick="useItem(${realIndex})">📜 Học</button>` : ''}
+                    <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
+                </div>`;
+        }
         else {
             d.innerHTML = `
                         <div><b>${item.name}</b> ${desc}</div>

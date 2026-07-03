@@ -399,25 +399,24 @@ function renderShop() {
 /* ===========================
    CHỢ LINH BẢO (Bazaar-style artifacts)
    =========================== */
-function lbShopPrice(baseCost, tier) {
+function lbShopPrice(baseCost, grade) {
     const realmBoost = Math.pow(1.3, state.realmIndex || 0) * (1 + (state.realmIndex || 0) * 0.06);
-    return Math.floor((baseCost || 300) * realmBoost * (1 + tier * 0.9));
+    return Math.floor((baseCost || 300) * realmBoost * (1 + grade * 0.9));
 }
 
 function lbRollShopOffer() {
     if (typeof LINH_BAO === 'undefined') { window._lbShopOffer = []; return; }
-    const tier = Math.max(0, Math.min((typeof LB_MAX_TIER !== 'undefined' ? LB_MAX_TIER : 3), Math.floor((state.realmIndex || 0) / 5)));
+    const maxG = (typeof LB_MAX_GRADE !== 'undefined' ? LB_MAX_GRADE : 5);
+    const grade = Math.max(0, Math.min(maxG, Math.floor((state.realmIndex || 0) / 5)));
     const pool = [...LINH_BAO];
-    // shuffle
     for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pool[i], pool[j]] = [pool[j], pool[i]];
     }
     const pick = pool.slice(0, 4);
     window._lbShopOffer = pick.map(def => {
-        // random tier around the realm baseline for variety
-        const t = Math.max(0, Math.min((typeof LB_MAX_TIER !== 'undefined' ? LB_MAX_TIER : 3), tier + (Math.random() < 0.25 ? 1 : 0)));
-        return { id: def.id, tier: t, price: lbShopPrice(def.cost, t) };
+        const g = Math.max(0, Math.min(maxG, grade + (Math.random() < 0.25 ? 1 : 0)));
+        return { id: def.id, grade: g, price: lbShopPrice(def.cost, g) };
     });
 }
 
@@ -443,17 +442,19 @@ function renderLinhBaoShop(listEl) {
     window._lbShopOffer.forEach((offer, idx) => {
         const def = LINH_BAO_MAP[offer.id];
         if (!def) return;
+        const view = { ...def, grade: offer.grade, level: 1 };
         const col = (typeof LB_ELEMENT_COLORS !== 'undefined' && LB_ELEMENT_COLORS[def.element]) || '#a6ffd1';
-        const act = (typeof LB_ACTIONS !== 'undefined' && LB_ACTIONS[def.action]) ? LB_ACTIONS[def.action] : { icon: '❔', label: def.action };
-        const tierLabel = (typeof LB_TIER_NAMES !== 'undefined') ? LB_TIER_NAMES[offer.tier] : `T${offer.tier}`;
-        const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown({ ...def, tier: offer.tier }).toFixed(1) : def.cooldown;
+        const icons = (typeof lbEffectIcons === 'function') ? lbEffectIcons(view) : '⚜️';
+        const summary = (typeof lbEffectSummary === 'function') ? lbEffectSummary(view) : '';
+        const gradeLabel = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[offer.grade] : `G${offer.grade}`;
+        const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown(view).toFixed(1) : def.cooldown;
         const row = document.createElement('div');
         row.className = 'shop-item';
         row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,0.05);border-left:3px solid ' + col + ';';
         row.innerHTML = `
             <div style="flex:1;">
-                <div style="font-weight:600;color:${col};">${act.icon} ${def.name} <span class="small">(${tierLabel})</span></div>
-                <div class="small" style="margin-top:4px;line-height:1.4;">${act.label} · CD ${cd}s · ${def.desc}</div>
+                <div style="font-weight:600;color:${col};">${icons} ${def.name} <span class="small">(${gradeLabel})</span></div>
+                <div class="small" style="margin-top:4px;line-height:1.4;">${summary} · CD ${cd}s · ${def.desc}</div>
             </div>
             <div style="text-align:right;margin-left:12px;">
                 <div class="small" style="color:#ffd166;">${offer.price.toLocaleString()} linh thạch</div>
@@ -479,31 +480,74 @@ function buyLinhBao(idx) {
     if (state.gold < offer.price) { log(`Không đủ linh thạch (${offer.price.toLocaleString()}).`); return; }
     if (typeof makeLinhBao !== 'function') { log('Hệ thống linh bảo chưa sẵn sàng.'); return; }
 
-    const lb = makeLinhBao(offer.id, offer.tier);
+    const lb = makeLinhBao(offer.id, offer.grade);
     if (!lb) { log('Không thể tạo linh bảo.'); return; }
     state.gold -= offer.price;
     addItemToInventory(lb);
-    log(`🛒 Thỉnh được linh bảo ${lb.name} (${(typeof LB_TIER_NAMES !== 'undefined' ? LB_TIER_NAMES[lb.tier] : lb.tier)}) — ${offer.price.toLocaleString()} linh thạch.`);
+    log(`🛒 Thỉnh được linh bảo ${lb.name} (${(typeof lbGradePlain === 'function' ? lbGradePlain(lb) : lb.grade)}) — ${offer.price.toLocaleString()} linh thạch.`);
     window._lbShopOffer.splice(idx, 1);
     renderShop();
 }
 if (typeof window !== 'undefined') window.buyLinhBao = buyLinhBao;
 
-/* Upgrade an owned linh bảo one tier, for gold. */
+/* Upgrade an owned linh bảo: raise its grade (giai) up to Chung Nguyên Pháp,
+   then level it up to max for that grade. Higher grades are MUCH harder to reach.
+   Grade progression: Phàm < Hoàng < Huyền < Địa < Thiên < Tiên < Chí Tôn < Đế < Chuẩn Thánh < Thánh < Hỗn Độn < Hồng Mông < Chung Nguyên */
 function upgradeLinhBao(inventoryIndex) {
     if (window._battleActive) { log('🔒 Đang giao chiến — không thể nâng cấp.'); return; }
     const it = state.inventory[inventoryIndex];
     if (!it || it.type !== 'linhbao') return;
-    const maxTier = (typeof LB_MAX_TIER !== 'undefined') ? LB_MAX_TIER : 3;
-    if ((it.tier || 0) >= maxTier) { log(`✨ ${it.name} đã đạt phẩm cấp tối cao.`); return; }
 
-    const cost = lbShopPrice(it.cost, it.tier || 0);
-    if (state.gold < cost) { log(`Không đủ linh thạch để nâng cấp (cần ${cost.toLocaleString()}).`); return; }
+    const maxG = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
+    const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
+    const lvl = (typeof lbLevelOf === 'function') ? lbLevelOf(it) : (it.level || 1);
+    const gradeMax = (typeof lbMaxLevelFor === 'function') ? lbMaxLevelFor(g) : 100;
+    const gradeCostMult = (typeof LB_GRADE_COST_MULT !== 'undefined') ? LB_GRADE_COST_MULT[g] || 1 : 1;
 
-    state.gold -= cost;
-    it.tier = (it.tier || 0) + 1;
-    const tierName = (typeof LB_TIER_NAMES !== 'undefined') ? LB_TIER_NAMES[it.tier] : it.tier;
-    log(`🔺 Luyện hóa ${it.name} lên phẩm ${tierName}! (−${cost.toLocaleString()} linh thạch)`);
+    if (lvl < gradeMax) {
+        // level up within the current grade
+        // Cost increases exponentially with grade AND level
+        const levelCostMult = 1 + (lvl - 1) * (0.05 + g * 0.015);
+        const cost = Math.floor(lbShopPrice(it.cost, g) * levelCostMult * gradeCostMult);
+        if (state.gold < cost) { log(`Không đủ linh thạch để tăng cấp (cần ${cost.toLocaleString()}).`); return; }
+        state.gold -= cost;
+        it.level = lvl + 1;
+        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
+        log(`🔺 ${it.name} tu luyện tới ${gName} Lv.${it.level}! (−${cost.toLocaleString()} linh thạch)`);
+
+        // Announce milestone levels
+        const milestones = [gradeMax * 0.25, gradeMax * 0.5, gradeMax * 0.75, gradeMax];
+        if (milestones.includes(it.level)) {
+            log(`🌟 ${it.name} đạt cột mốc ${gName} Lv.${it.level}!`);
+        }
+    } else if (g < maxG) {
+        // grade is level-capped -> promote to next giai, reset level to 1
+        // Cost increases dramatically for higher grade transitions
+        const gradeUpCostMult = 2.5 + g * 0.8; // 2.5 at g=0, 11.9 at g=12
+        const cost = Math.floor(lbShopPrice(it.cost, g) * gradeUpCostMult * gradeCostMult);
+        if (state.gold < cost) { log(`Không đủ linh thạch để thăng giai (cần ${cost.toLocaleString()}).`); return; }
+        state.gold -= cost;
+        it.grade = g + 1;
+        it.level = 1;
+        const name = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[it.grade] : it.grade;
+        const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
+        log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${name}! (−${cost.toLocaleString()} linh thạch)`);
+
+        // Special messages for legendary grades
+        if (it.grade === 6) log(`⚔️ Chí Tôn Pháp — bước vào cảnh giới Chí Tôn!`);
+        else if (it.grade === 7) log(`👑 Đế Pháp — ngôi vị Đế君 không ai bì kịp!`);
+        else if (it.grade === 8) log(`🌟 Chuẩn Thánh Pháp — gần như thánh nhân!`);
+        else if (it.grade === 9) log(`💫 Thánh Pháp — cảnh giới thánh!`);
+        else if (it.grade === 10) log(`🌀 Hỗn Độn Pháp — hỗn loạn thiên địa!`);
+        else if (it.grade === 11) log(`🌌 Hồng Mông Pháp — khởi nguyên vũ trụ!`);
+        else if (it.grade === 12) log(`🏆 Chung Nguyên Pháp — đỉnh cao tuyệt đối!`);
+
+        if (it.grade >= maxG) log(`🏆 ${it.name} đã đạt ${LB_GRADE_NAMES[maxG]} — cảnh giới tối cao tuyệt đối!`);
+    } else {
+        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
+        log(`✨ ${it.name} đã đạt ${gName} Lv.${gradeMax} — cảnh giới tối cao.`);
+        return;
+    }
     renderAll();
 }
 if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
