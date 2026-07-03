@@ -19,6 +19,21 @@ function computeDamage(
 
     let raw = baseDamage * elementFactor * rankFactor * realmFactor * tierFactor;
 
+    // Apply maximum damage cap when fighting higher realm enemies
+    // This prevents astronomical damage when player stats are very high
+    const realmDiff = defRealm - atkRealm;
+    if (realmDiff > 3) {
+        // Cap damage at a percentage of baseDamage based on realm difference
+        // For realmDiff = 4: cap at 20% of baseDamage
+        // For realmDiff = 6: cap at 10% of baseDamage
+        // For realmDiff = 8+: cap at 5% of baseDamage
+        let maxDamageRatio = Math.max(0.05, 0.5 - (realmDiff - 3) * 0.1);
+        const maxDamage = Math.floor(baseDamage * maxDamageRatio);
+        if (raw > maxDamage) {
+            raw = maxDamage;
+        }
+    }
+
     const mitigate = Math.floor(defPower * 0.4);
     let final = Math.floor(raw - mitigate);
     if (final < 1) final = 1;
@@ -75,6 +90,15 @@ function calcTierBonus(atkRealm, defRealm, atkName = state.name, defName = state
 
         for (let i = 1; i <= Math.abs(tierDiff); i++) {
             penalty *= tierPenalties[i] || 0.005;
+        }
+
+        // Additional severe penalty for large realm differences
+        // If actual realm difference is very large, apply extra reduction
+        const realmDiff = Math.abs(atkRealm - defRealm);
+        if (realmDiff > 6) {
+            // Extra penalty: reduce damage by 50% for each realm above 6
+            const extraReduction = Math.pow(0.5, realmDiff - 6);
+            penalty *= extraReduction;
         }
 
         log(`🛡️ ${atkName} [${atkTierName}] đánh ${defName} [${defTierName}] → x${penalty.toFixed(4)} (kém ${Math.abs(tierDiff)} tier, giảm ${((1 - penalty) * 100).toFixed(2)}%)`);

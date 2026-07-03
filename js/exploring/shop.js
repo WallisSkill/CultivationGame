@@ -530,9 +530,36 @@ function upgradeLinhBao(inventoryIndex) {
 }
 if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
 
-/* Fuse linh bảo to raise grade: exponential cost, same formula as skill fusion.
-   Cost: 2, 9, 36, 100, 225... (same as skill tiers) */
-const LB_LINHBUO_FUSION_COST = [2, 9, 36, 100, 225, 441, 784, 1296, 2025, 3025, 4356, 6084, 8000];
+/* Fuse linh bảo to raise grade: requires 2 items of same grade to create 1 of next grade.
+   Works like skill fusion - exponential material cost: 2, 9, 36, 100, 225...
+   The first grade (Phàm) needs 2 to fuse, Hoàng needs 9, etc. */
+const LB_LINHBAO_FUSION_MATERIALS = [2, 9, 36, 100, 225, 441, 784, 1296, 2025, 3025, 4356, 6084, 8000];
+const LB_LINHBAO_FUSION_GOLD = [100, 500, 2000, 8000, 30000, 100000, 350000, 1200000, 4000000, 14000000, 50000000, 180000000, 650000000];
+
+// Check if a specific Linh Bảo item can be used for fusion
+function canLinhBaoFuse(inventoryIndex) {
+    const it = state.inventory[inventoryIndex];
+    if (!it || it.type !== 'linhbao') return false;
+    const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
+    const maxG = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
+    if (g >= maxG) return false; // Already at max grade
+    // Check if fusion is locked
+    if (it.fusionLocked) return false;
+    // Check if already at max fusion tier
+    if (it.maxFusionTier != null && g >= it.maxFusionTier) return false;
+    return true;
+}
+
+// Count available Linh Bảo of a given grade that can be fused
+function countLinhBaoForFusion(grade) {
+    if (!Array.isArray(state.inventory)) return 0;
+    return state.inventory.filter(it => {
+        if (!it || it.type !== 'linhbao') return false;
+        const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
+        if (g !== grade) return false;
+        return canLinhBaoFuse(state.inventory.indexOf(it));
+    }).length;
+}
 
 function fuseLinhBao(inventoryIndex) {
     if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất.'); return; }
@@ -548,21 +575,61 @@ function fuseLinhBao(inventoryIndex) {
         return;
     }
 
-    const cost = LB_LINHBUO_FUSION_COST[g] || (g * g * 4);
-    const gradeCostMult = (typeof LB_GRADE_COST_MULT !== 'undefined') ? LB_GRADE_COST_MULT[g] || 1 : 1;
-    const totalCost = Math.floor(cost * gradeCostMult * 1000); // Make it expensive
-
-    if (state.gold < totalCost) {
-        log(`⚠️ Cần ${totalCost.toLocaleString()} linh thạch để hợp nhất ${LB_GRADE_NAMES[g]} lên ${LB_GRADE_NAMES[g + 1]}!`);
+    // Check if item can be fused
+    if (!canLinhBaoFuse(inventoryIndex)) {
+        log(`🔒 ${it.name} không thể hợp nhất!`);
         return;
     }
 
-    state.gold -= totalCost;
+    const materialCost = LB_LINHBAO_FUSION_MATERIALS[g] || 2;
+    const goldCost = LB_LINHBAO_FUSION_GOLD[g] || 100;
+
+    // Check if we have enough materials (same grade Linh Bảo)
+    const available = countLinhBaoForFusion(g);
+    if (available < materialCost) {
+        log(`⚠️ Cần ${materialCost} Trận Pháp Bảo ${LB_GRADE_NAMES ? LB_GRADE_NAMES[g] : 'Giai ' + g} để hợp nhất! Hiện có: ${available}`);
+        return;
+    }
+
+    // Check gold cost
+    if (state.gold < goldCost) {
+        log(`⚠️ Cần ${goldCost.toLocaleString()} linh thạch để hợp nhất! Hiện có: ${state.gold.toLocaleString()}`);
+        return;
+    }
+
+    // Find material Linh Bảo items to consume (excluding the one we're upgrading)
+    const toRemove = [];
+    for (let i = 0; i < state.inventory.length && toRemove.length < materialCost; i++) {
+        const item = state.inventory[i];
+        if (!item || item.type !== 'linhbao') continue;
+        if (i === inventoryIndex) continue; // Don't include the target item
+        const ig = (typeof lbGradeOf === 'function') ? lbGradeOf(item) : (item.grade || 0);
+        if (ig !== g) continue; // Must be same grade
+        if (!canLinhBaoFuse(i)) continue; // Must be fusible
+        toRemove.push(i);
+    }
+
+    if (toRemove.length < materialCost) {
+        log(`⚠️ Không đủ Trận Pháp Bảo cùng giai đoạn để hợp nhất!`);
+        return;
+    }
+
+    // Deduct gold
+    state.gold -= goldCost;
+
+    // Remove material items (highest index first to avoid shifting issues)
+    toRemove.sort((a, b) => b - a);
+    for (const idx of toRemove) {
+        state.inventory.splice(idx, 1);
+    }
+
+    // Upgrade the target item
     it.grade = g + 1;
     it.level = 1;
+    it.fusionLocked = true; // Lock from further fusion (can only ascend once like skills)
 
     const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
-    log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${LB_GRADE_NAMES[it.grade]}! (−${totalCost.toLocaleString()} linh thạch)`);
+    log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${LB_GRADE_NAMES[it.grade]}! (−${goldCost.toLocaleString()} linh thạch, −${materialCost} vật liệu)`);
 
     // Special messages for legendary grades
     if (it.grade === 6) log(`⚔️ Chí Tôn Pháp — bước vào cảnh giới Chí Tôn!`);

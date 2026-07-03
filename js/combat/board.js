@@ -563,13 +563,14 @@ function fuseSkillOfTier(fromTier) {
     let newColor = baseSkill.color;
 
     // Create upgraded description for higher tier skills
-    if (isUpgraded && fromTier >= 1) {
-        // Upgrade damage numbers and effects based on tier
-        const tierMultiplier = 1 + (fromTier + 1) * 0.3;
-        const tierName = LB_SKILL_TIER_NAMES[fromTier + 1] || `${fromTier + 2}th`;
-        newDesc = `[${tierName} Cấp] ${baseSkill.desc} (+${Math.floor((tierMultiplier - 1) * 100)}%)`;
-        newColor = getHigherTierColor(baseSkill.color, fromTier + 1);
-    }
+    // ALL fusions get upgraded (even tier 0→1), stronger bonuses for higher tiers
+    // 40% chance for LUCKY upgrade (extra 20% bonus)
+    const tierMultiplier = isUpgraded
+        ? 1 + (fromTier + 1) * 0.35 + 0.2  // Lucky: 35% + 20% extra = 55% per tier
+        : 1 + (fromTier + 1) * 0.35;        // Normal: 35% per tier
+    const tierName = LB_SKILL_TIER_NAMES[fromTier + 1] || `${fromTier + 2}th`;
+    newDesc = `[${tierName} Cấp] ${baseSkill.desc} (+${Math.floor((tierMultiplier - 1) * 100)}% mạnh hơn)`;
+    newColor = getHigherTierColor(baseSkill.color, fromTier + 1);
 
     // NEW SKILL: Skills from fusion can only ascend ONE more tier
     const newSkill = createSkillItem(newSkillId, fromTier + 1, {
@@ -1049,6 +1050,9 @@ function lbStep(battle) {
                 if (foe.hp <= 0 || self.hp <= 0) break;
             }
         }
+        // End battle immediately if either combatant is dead after attacks
+        if (battle.player.hp <= 0) { lbEndBattle(battle, 'lose'); return; }
+        if (battle.enemy.hp <= 0) { lbEndBattle(battle, 'win'); return; }
     }
 
     for (const c of [battle.player, battle.enemy]) {
