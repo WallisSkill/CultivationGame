@@ -392,7 +392,121 @@ function renderShop() {
         `;
         listEl.appendChild(row);
     });
+
+    renderLinhBaoShop(listEl);
 }
+
+/* ===========================
+   CHỢ LINH BẢO (Bazaar-style artifacts)
+   =========================== */
+function lbShopPrice(baseCost, tier) {
+    const realmBoost = Math.pow(1.3, state.realmIndex || 0) * (1 + (state.realmIndex || 0) * 0.06);
+    return Math.floor((baseCost || 300) * realmBoost * (1 + tier * 0.9));
+}
+
+function lbRollShopOffer() {
+    if (typeof LINH_BAO === 'undefined') { window._lbShopOffer = []; return; }
+    const tier = Math.max(0, Math.min((typeof LB_MAX_TIER !== 'undefined' ? LB_MAX_TIER : 3), Math.floor((state.realmIndex || 0) / 5)));
+    const pool = [...LINH_BAO];
+    // shuffle
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const pick = pool.slice(0, 4);
+    window._lbShopOffer = pick.map(def => {
+        // random tier around the realm baseline for variety
+        const t = Math.max(0, Math.min((typeof LB_MAX_TIER !== 'undefined' ? LB_MAX_TIER : 3), tier + (Math.random() < 0.25 ? 1 : 0)));
+        return { id: def.id, tier: t, price: lbShopPrice(def.cost, t) };
+    });
+}
+
+function renderLinhBaoShop(listEl) {
+    if (typeof LINH_BAO === 'undefined' || typeof LINH_BAO_MAP === 'undefined') return;
+    if (!Array.isArray(window._lbShopOffer)) lbRollShopOffer();
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;';
+    header.innerHTML = `
+        <div style="color:#ffd166;font-weight:700;">🎴 Chợ Linh Bảo <span class="small" style="color:#9fb3c8">(pháp bảo bày trận)</span></div>
+        <button onclick="refreshLinhBaoShop()" style="white-space:nowrap;">🔄 Làm mới</button>`;
+    listEl.appendChild(header);
+
+    if (!window._lbShopOffer.length) {
+        const empty = document.createElement('div');
+        empty.className = 'small';
+        empty.textContent = 'Hết linh bảo — bấm “Làm mới” để lấy lô mới.';
+        listEl.appendChild(empty);
+        return;
+    }
+
+    window._lbShopOffer.forEach((offer, idx) => {
+        const def = LINH_BAO_MAP[offer.id];
+        if (!def) return;
+        const col = (typeof LB_ELEMENT_COLORS !== 'undefined' && LB_ELEMENT_COLORS[def.element]) || '#a6ffd1';
+        const act = (typeof LB_ACTIONS !== 'undefined' && LB_ACTIONS[def.action]) ? LB_ACTIONS[def.action] : { icon: '❔', label: def.action };
+        const tierLabel = (typeof LB_TIER_NAMES !== 'undefined') ? LB_TIER_NAMES[offer.tier] : `T${offer.tier}`;
+        const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown({ ...def, tier: offer.tier }).toFixed(1) : def.cooldown;
+        const row = document.createElement('div');
+        row.className = 'shop-item';
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,0.05);border-left:3px solid ' + col + ';';
+        row.innerHTML = `
+            <div style="flex:1;">
+                <div style="font-weight:600;color:${col};">${act.icon} ${def.name} <span class="small">(${tierLabel})</span></div>
+                <div class="small" style="margin-top:4px;line-height:1.4;">${act.label} · CD ${cd}s · ${def.desc}</div>
+            </div>
+            <div style="text-align:right;margin-left:12px;">
+                <div class="small" style="color:#ffd166;">${offer.price.toLocaleString()} linh thạch</div>
+                <button onclick="buyLinhBao(${idx})" style="margin-top:6px;white-space:nowrap;">Mua</button>
+            </div>`;
+        listEl.appendChild(row);
+    });
+}
+
+function refreshLinhBaoShop() {
+    lbRollShopOffer();
+    renderShop();
+}
+if (typeof window !== 'undefined') window.refreshLinhBaoShop = refreshLinhBaoShop;
+
+function buyLinhBao(idx) {
+    if (window._battleActive || (typeof isBattleLocked === 'function' && isBattleLocked())) {
+        log('🔒 Đang chiến đấu — không thể mua sắm.');
+        return;
+    }
+    const offer = (window._lbShopOffer || [])[idx];
+    if (!offer) { log('Không tìm thấy linh bảo.'); return; }
+    if (state.gold < offer.price) { log(`Không đủ linh thạch (${offer.price.toLocaleString()}).`); return; }
+    if (typeof makeLinhBao !== 'function') { log('Hệ thống linh bảo chưa sẵn sàng.'); return; }
+
+    const lb = makeLinhBao(offer.id, offer.tier);
+    if (!lb) { log('Không thể tạo linh bảo.'); return; }
+    state.gold -= offer.price;
+    addItemToInventory(lb);
+    log(`🛒 Thỉnh được linh bảo ${lb.name} (${(typeof LB_TIER_NAMES !== 'undefined' ? LB_TIER_NAMES[lb.tier] : lb.tier)}) — ${offer.price.toLocaleString()} linh thạch.`);
+    window._lbShopOffer.splice(idx, 1);
+    renderShop();
+}
+if (typeof window !== 'undefined') window.buyLinhBao = buyLinhBao;
+
+/* Upgrade an owned linh bảo one tier, for gold. */
+function upgradeLinhBao(inventoryIndex) {
+    if (window._battleActive) { log('🔒 Đang giao chiến — không thể nâng cấp.'); return; }
+    const it = state.inventory[inventoryIndex];
+    if (!it || it.type !== 'linhbao') return;
+    const maxTier = (typeof LB_MAX_TIER !== 'undefined') ? LB_MAX_TIER : 3;
+    if ((it.tier || 0) >= maxTier) { log(`✨ ${it.name} đã đạt phẩm cấp tối cao.`); return; }
+
+    const cost = lbShopPrice(it.cost, it.tier || 0);
+    if (state.gold < cost) { log(`Không đủ linh thạch để nâng cấp (cần ${cost.toLocaleString()}).`); return; }
+
+    state.gold -= cost;
+    it.tier = (it.tier || 0) + 1;
+    const tierName = (typeof LB_TIER_NAMES !== 'undefined') ? LB_TIER_NAMES[it.tier] : it.tier;
+    log(`🔺 Luyện hóa ${it.name} lên phẩm ${tierName}! (−${cost.toLocaleString()} linh thạch)`);
+    renderAll();
+}
+if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
 
 // Guard useItem during battle
 if (typeof window.useItem === 'function') {

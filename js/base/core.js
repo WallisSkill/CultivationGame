@@ -190,6 +190,7 @@ let state = {
     autoTrain: false,
     autoFight: false,
     currentEnemy: null,
+    board: [null, null, null, null, null, null],
     exploreCooldown: false,
     npcInteractionLock: false,
     luckBonus: 0,
@@ -439,6 +440,7 @@ function rebirth() {
         autoTrain: false,
         autoFight: false,
         currentEnemy: null,
+        board: [null, null, null, null, null, null],
         exploreCooldown: false,
         npcInteractionLock: false,
         luckBonus: 0,
@@ -562,6 +564,15 @@ function updateAutoFightLoop() {
             return;
         }
 
+        // 🎴 PvE enemies are handled by the real-time board auto-battle; the
+        // legacy turn loop only drives PvP now.
+        if (!state.currentEnemy.isPvP) {
+            if (typeof runBoardBattle === 'function' && !(window.__boardBattle && window.__boardBattle.running)) {
+                runBoardBattle();
+            }
+            return;
+        }
+
         let skillUsed = false;
 
         if (typeof getUsableActiveSkills === 'function') {
@@ -586,11 +597,13 @@ window.updateAutoFightLoop = updateAutoFightLoop;
    =========================== */
 let _renderAllQueued = false;
 function renderAllImmediate() {
+    if (typeof ensureBoardState === 'function') ensureBoardState();
     renderTopStats();
     renderInventory();
     renderShop();
     if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy);
     renderCurrentEnemy();
+    if (typeof renderBoardArena === 'function') renderBoardArena();
     renderRootTable();
 
     // 🆕 Render skill UI
@@ -619,6 +632,13 @@ function renderAllImmediate() {
         }
     } else if (wasActive) {
         window._battleActive = false;
+    }
+
+    // 🎴 Auto-start the board auto-battle for fresh PvE enemies
+    if (state.currentEnemy && !state.currentEnemy.isPvP && state.currentEnemy.hp > 0
+        && typeof runBoardBattle === 'function'
+        && !(window.__boardBattle && window.__boardBattle.running)) {
+        runBoardBattle();
     }
 }
 
@@ -892,6 +912,7 @@ function getFilteredInventory() {
         if (inventoryFilter === 'usable')
             return ['consumable', 'xp', 'life', 'power', 'defense', 'luck'].includes(item.type);
         if (inventoryFilter === 'relic') return item.type === 'relic';
+        if (inventoryFilter === 'linhbao') return item.type === 'linhbao';
         if (inventoryFilter === 'root') return item.type === 'root';
         if (inventoryFilter === 'root_frag') return item.type === 'root_frag';
         if (inventoryFilter === 'manual') return item.type === 'manual';
@@ -920,6 +941,7 @@ function renderInventory() {
                         <option value="all">Tất cả</option>
                         <option value="equipped">Đang mặc</option>
                         <option value="equipment">Trang bị</option>
+                        <option value="linhbao">Linh bảo (trận)</option>
                         <option value="manual">Công pháp</option>
                         <option value="usable">Dùng được</option>
                         <option value="relic">Thánh vật</option>
@@ -959,6 +981,27 @@ function renderInventory() {
         else if (item.type === 'defense') desc = `(maxDEF +${item.value})`;
         else if (item.type === 'relic') desc = `💠 Linh Bảo — ${item.effect} (${item.uses} lần)`;
         else if (item.type === 'luck') desc = `Tăng cường vận khí — +${item.value * 100}% vận may)`;
+
+        if (item.type === 'linhbao') {
+            const onBoard = Array.isArray(state.board) && item.uid && state.board.includes(item.uid);
+            const act = (typeof LB_ACTIONS !== 'undefined' && LB_ACTIONS[item.action]) ? LB_ACTIONS[item.action] : { icon: '❔', label: item.action };
+            const col = (typeof LB_ELEMENT_COLORS !== 'undefined' && LB_ELEMENT_COLORS[item.element]) || '#a6ffd1';
+            const cd = (typeof lbEffCooldown === 'function') ? lbEffCooldown(item).toFixed(1) : item.cooldown;
+            const tierLabel = (typeof lbTierLabel === 'function') ? lbTierLabel(item.tier) : `T${item.tier || 0}`;
+            d.innerHTML = `
+                <div><b style="color:${col}">${act.icon} ${item.name}</b> <span class="small">(${tierLabel})</span></div>
+                <div class="small">${act.label} · CD ${cd}s · ${colorizeElement(item.element)}</div>
+                <div class="small">${item.desc || ''}</div>
+                <div class="inv-buttons">
+                    ${onBoard
+                    ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
+                    : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
+                    <button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>
+                    <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
+                </div>`;
+            listEl.appendChild(d);
+            return;
+        }
 
         if (item.type === 'root') {
             const isSelected = rootCombineSelection.includes(realIndex);
@@ -1072,6 +1115,16 @@ function initStarter() {
         { name: 'Áo Lót', type: 'armor', hp: 20, def: 3, desc: 'Giáp sơ cấp', equipped: true }
     ];
 
+    // ⚜️ Linh bảo khởi thủy cho trận pháp (Bazaar-style board)
+    state.board = [null, null, null, null, null, null];
+    if (typeof makeLinhBao === 'function') {
+        const starters = ['phi_kiem', 'thanh_moc'];
+        starters.forEach((id, i) => {
+            const lb = makeLinhBao(id, 0);
+            if (lb) { state.inventory.push(lb); state.board[i] = lb.uid; }
+        });
+    }
+
     state.hp = state.maxHp;
     state.__rootStoryShown = false;
 }
@@ -1156,7 +1209,8 @@ function loadProgress() {
     if (!s) { log('Không tìm thấy save.'); return; }
     state = JSON.parse(s);
     state.lastXpGain = state.lastXpGain || 0;
-    
+    if (typeof ensureBoardState === 'function') ensureBoardState();
+
     // 🆕 Tải profileId từ localStorage - ƯU TIÊN LOCALSTORAGE HƠN STATE
     const savedId = localStorage.getItem('tt_profileId');
     if (savedId) {
@@ -1205,8 +1259,12 @@ $('autoFight').onclick = () => {
     else { $('autoFight').innerText = 'Tắt auto chiến'; window.startAutoFight && window.startAutoFight(); }
 };
 $('explore').onclick = () => explore();
-$('fightNow').onclick = () => pvpAttackOrLocal();
-$('runBtn').onclick = () => runFromBattle();
+$('fightNow').onclick = () => {
+    if (state.currentEnemy && state.currentEnemy.isPvP) return pvpAttackOrLocal();
+    if (typeof runBoardBattle === 'function') return runBoardBattle();
+    return pvpAttackOrLocal();
+};
+$('runBtn').onclick = () => { if (typeof forfeitBoardBattle === 'function') forfeitBoardBattle(); runFromBattle(); };
 // changed to window-safe call to avoid "findMatchPvP is not defined"
 $('findMatch').onclick = () => { if (window.findMatchPvP) window.findMatchPvP(); };
 $('saveBtn').onclick = () => saveProgress();
