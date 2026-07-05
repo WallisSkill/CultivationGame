@@ -347,6 +347,16 @@ function lbEffectIcons(item) {
 function lbEffectSummary(item) {
     return lbEffectList(item).map(e => LB_ACTIONS[e.action] ? LB_ACTIONS[e.action].label : e.action).join(' + ');
 }
+// Icons for legendary grades (6-12)
+const LB_GRADE_ICONS = ['', '', '', '', '', '',
+    '⚔️',  // Chí Tôn Pháp
+    '👑',  // Đế Pháp
+    '⭐',  // Chuẩn Thánh Pháp
+    '✨',  // Thánh Pháp
+    '🌀',  // Hỗn Độn Pháp
+    '🌌',  // Hồng Mông Pháp
+    '🏆'   // Chung Nguyên Pháp
+];
 
 // ==================== DAMAGE/EFFECT INFO DISPLAY ====================
 // Show damage at each level for Linh Bảo (e.g., "Lv.1: 1x | Lv.2: 1.08x | Lv.3: 1.16x")
