@@ -237,33 +237,32 @@ function lbMaxLevelFor(grade) { return LB_GRADE_MAX_LEVEL[lbClamp(grade, 0, LB_M
 function lbLevelOf(item) { return lbClamp(item.level || 1, 1, lbMaxLevelFor(lbGradeOf(item))); }
 function lbIsMaxed(item) { return lbGradeOf(item) >= LB_MAX_GRADE && lbLevelOf(item) >= LB_MAX_LEVEL; }
 
-// combat power multiplier from grade + level (every grade levels now)
-// Higher grades get MASSIVELY better scaling - each grade is dramatically more powerful
+// combat power multiplier from grade + level
+// Each grade is meaningfully stronger, but not absurdly so
 function lbPowerScale(item) {
     const g = lbGradeOf(item), lvl = lbLevelOf(item);
-    // Base scales: MASSIVE difference between grades
-    // Grade 0-5: Early game tiers, reasonable progression
-    // Grade 6+: Endgame tiers - each one is 3-5x more powerful than the previous
-    // This makes "tier difference super many" - reaching a new grade is a massive power spike
+    // Balanced progression: each grade is 1.5-2x better than previous
+    // Grade 0-5: Early game (1x to ~12x)
+    // Grade 6-12: Endgame (~20x to ~400x)
     const baseTable = [
         1,     // Grade 0 (Phàm): 1x - baseline
-        5,     // Grade 1 (Hoàng): 5x
-        25,    // Grade 2 (Huyền): 25x
-        100,   // Grade 3 (Địa): 100x
-        400,   // Grade 4 (Thiên): 400x
-        1500,  // Grade 5 (Tiên): 1,500x
-        5000,  // Grade 6 (Chí Tôn): 5,000x
-        18000, // Grade 7 (Đế): 18,000x
-        60000, // Grade 8 (Chuẩn Thánh): 60,000x
-        200000,// Grade 9 (Thánh): 200,000x
-        700000,// Grade 10 (Hỗn Độn): 700,000x
-        2500000,// Grade 11 (Hồng Mông): 2,500,000x
-        10000000 // Grade 12 (Chung Nguyên): 10,000,000x - 10 MILLION times more powerful than Grade 0!
+        1.5,   // Grade 1 (Hoàng): 1.5x
+        2.5,   // Grade 2 (Huyền): 2.5x
+        4,     // Grade 3 (Địa): 4x
+        7,     // Grade 4 (Thiên): 7x
+        12,    // Grade 5 (Tiên): 12x
+        20,    // Grade 6 (Chí Tôn): 20x
+        35,    // Grade 7 (Đế): 35x
+        60,    // Grade 8 (Chuẩn Thánh): 60x
+        100,   // Grade 9 (Thánh): 100x
+        160,   // Grade 10 (Hỗn Độn): 160x
+        250,   // Grade 11 (Hồng Mông): 250x
+        400    // Grade 12 (Chung Nguyên): 400x
     ];
     const base = baseTable[lbClamp(g, 0, 12)] || (1 + g * 1.2);
-    // Step also scales better for higher grades - high level = bigger bonus
-    const stepTable = [0.08, 0.10, 0.12, 0.15, 0.18, 0.22, 0.26, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55];
-    const step = stepTable[lbClamp(g, 0, 12)] || 0.15;
+    // Level scaling: moderate increase per level
+    const stepTable = [0.08, 0.08, 0.08, 0.09, 0.09, 0.10, 0.10, 0.11, 0.11, 0.12, 0.12, 0.13, 0.13];
+    const step = stepTable[lbClamp(g, 0, 12)] || 0.10;
     return base * (1 + (lvl - 1) * step);
 }
 // gentler scale for durations (freeze / stun)
@@ -359,21 +358,20 @@ const LB_GRADE_ICONS = ['', '', '', '', '', '',
 ];
 
 // ==================== DAMAGE/EFFECT INFO DISPLAY ====================
-// Show damage at each level for Linh Bảo (e.g., "Lv.1: 1x | Lv.2: 1.08x | Lv.3: 1.16x")
+// Show each effect's value at different levels for Linh Bảo
+// Example output:
+// Sát thương: Lv.1 1.0x | Lv.80 8.5x ★ | Lv.160 16x
+// Hút máu: Lv.1 0.3x | Lv.80 0.8x ★ | Lv.160 1.2x
 function getLinhBaoDamageInfo(item) {
     if (!item) return '';
     const def = LINH_BAO_MAP[item.linhBaoId || item.id];
     if (!def) return '';
 
-    // Get damage effect magnitude
-    const damageEffect = def.effects.find(e => e.action === 'damage');
-    if (!damageEffect) return ''; // No damage effect to display
-
-    const baseMag = damageEffect.magnitude;
+    const effects = lbEffectList(item);
     const maxLvl = lbMaxLevelFor(lbGradeOf(item));
     const currentLvl = lbLevelOf(item);
 
-    // Show damage at key levels (1, max/4, max/2, 3*max/4, max)
+    // Show stats at key levels (1, max/4, max/2, 3*max/4, max)
     const keyLevels = [1];
     if (maxLvl >= 10) keyLevels.push(Math.floor(maxLvl * 0.25));
     if (maxLvl >= 20) keyLevels.push(Math.floor(maxLvl * 0.5));
@@ -383,17 +381,32 @@ function getLinhBaoDamageInfo(item) {
     // Remove duplicates and sort
     const uniqueLevels = [...new Set(keyLevels)].sort((a, b) => a - b);
 
-    const dmgInfo = uniqueLevels.map(lvl => {
-        // Create a temporary item to calculate power at this level
-        const tempItem = { ...item, level: lvl };
-        const powerScale = lbPowerScale(tempItem);
-        const actualDmg = baseMag * powerScale;
-        const isCurrentLevel = lvl === currentLvl;
-        const marker = isCurrentLevel ? ' ★' : '';
-        return `Lv.${lvl}: ${fmtVal(actualDmg)}x${marker}`;
-    }).join(' | ');
+    // Build info for each effect
+    const effectsInfo = effects.map(eff => {
+        const actionDef = LB_ACTIONS[eff.action];
+        const icon = actionDef ? actionDef.icon : '❔';
+        const label = actionDef ? actionDef.label : eff.action;
+        const baseMag = eff.magnitude;
 
-    return dmgInfo;
+        // Calculate effect value at each level
+        const levelValues = uniqueLevels.map(lvl => {
+            const tempItem = { ...item, level: lvl };
+            const powerScale = lbPowerScale(tempItem);
+            // Apply the magnitude to power scale
+            const actualVal = eff.action === 'damage' || eff.action === 'lifesteal' || eff.action === 'burn'
+                ? baseMag * powerScale
+                : eff.action === 'heal' || eff.action === 'shield'
+                ? baseMag * lbPowerScale(tempItem) * 0.5  // heals/shields scale slower
+                : baseMag * lbPowerScale(tempItem);
+            const isCurrentLevel = lvl === currentLvl;
+            const marker = isCurrentLevel ? ' ★' : '';
+            return `Lv.${lvl}: ${fmtVal(actualVal)}${marker}`;
+        });
+
+        return `${icon} ${label}: ${levelValues.join(' | ')}`;
+    });
+
+    return effectsInfo.join('\n');
 }
 
 // Show how effects evolve with grade when upgrading
