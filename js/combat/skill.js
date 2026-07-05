@@ -158,6 +158,477 @@ const SKILL_LIBRARY = {
             };
         },
         xp(level) { return 60 + (level - 1) * 45; }
+    },
+
+    // ⛰️ Sơn Hà Tái Tạo - skill từ explore.js SKILL_TIERS
+    mountain_breaker: {
+        id: 'mountain_breaker',
+        name: '⛰️ Sơn Hà Tái Tạo',
+        type: 'active',
+        description: '900% ATK + giảm 30% DEF địch 3 round, CD 4',
+        maxLevel: 6,
+        cooldown: 4,
+        getEffect(level) {
+            return {
+                duration: 3,
+                damageMultiplier: 9.0 + (level - 1) * 0.5,
+                cooldown: Math.max(2, 4 - Math.floor(level / 3)),
+                defShred: 0.30 + (level - 1) * 0.03,
+                defShredDuration: 3
+            };
+        },
+        xp(level) { return 100 + (level - 1) * 75; }
+    },
+
+    // 🛡️ Thanh Thiết Hộ Thể
+    steel_shield: {
+        id: 'steel_shield',
+        name: '🛡️ Thanh Thiết Hộ Thể',
+        type: 'passive',
+        description: 'Tăng 25% DEF trong 3 round',
+        maxLevel: 6,
+        getEffect(level) {
+            return {
+                duration: 3 + Math.floor(level / 2),
+                defPercent: 0.25 + (level - 1) * 0.04
+            };
+        },
+        xp(level) { return 70 + (level - 1) * 50; }
+    },
+
+    // 🌪️ Phong Nguyệt Trảm
+    wind_slash: {
+        id: 'wind_slash',
+        name: '🌪️ Phong Nguyệt Trảm',
+        type: 'active',
+        description: 'Công kích 200% ATK, +10% tốc độ',
+        maxLevel: 6,
+        cooldown: 3,
+        getEffect(level) {
+            return {
+                damageMultiplier: 2.0 + (level - 1) * 0.3,
+                cooldown: Math.max(2, 3 - Math.floor(level / 3)),
+                speedPercent: 0.10 + (level - 1) * 0.03
+            };
+        },
+        xp(level) { return 80 + (level - 1) * 60; }
+    },
+
+    // 🔥 Hoả Long Quyết
+    flame_dragon_break: {
+        id: 'flame_dragon_break',
+        name: '🔥 Hoả Long Quyết',
+        type: 'active',
+        description: '600% ATK + đốt cháy 3 round, CD 3',
+        maxLevel: 6,
+        cooldown: 3,
+        getEffect(level) {
+            return {
+                damageMultiplier: 6.0 + (level - 1) * 0.5,
+                cooldown: Math.max(2, 3 - Math.floor(level / 3)),
+                burnDamage: 0.15 + (level - 1) * 0.03,
+                burnDuration: 3
+            };
+        },
+        xp(level) { return 90 + (level - 1) * 70; }
+    },
+
+    // ❄️ Băng Giáp Vệ Thể
+    ice_shield_ward: {
+        id: 'ice_shield_ward',
+        name: '❄️ Băng Giáp Vệ Thể',
+        type: 'passive',
+        description: 'Tăng 40% DEF và kháng băng 3 round',
+        maxLevel: 6,
+        getEffect(level) {
+            return {
+                duration: 3 + Math.floor(level / 2),
+                defPercent: 0.40 + (level - 1) * 0.05,
+                iceResist: 0.30 + (level - 1) * 0.05
+            };
+        },
+        xp(level) { return 85 + (level - 1) * 60; }
+    },
+
+    // ⚡ Lôi Quyền
+    lightning_fist: {
+        id: 'lightning_fist',
+        name: '⚡ Lôi Quyền',
+        type: 'active',
+        description: '550% ATK + choáng 1 round, CD 2',
+        maxLevel: 6,
+        cooldown: 2,
+        getEffect(level) {
+            return {
+                damageMultiplier: 5.5 + (level - 1) * 0.4,
+                cooldown: Math.max(1, 2 - Math.floor(level / 4)),
+                stunDuration: 1 + Math.floor(level / 4)
+            };
+        },
+        xp(level) { return 85 + (level - 1) * 65; }
+    },
+
+    // ☁️ Hư Không Vân Bộ
+    void_cloud_step: {
+        id: 'void_cloud_step',
+        name: '☁️ Hư Không Vân Bộ',
+        type: 'active',
+        description: 'Tránh 60% sát thương next hit, tăng 30% tốc độ 2 round',
+        maxLevel: 6,
+        cooldown: 4,
+        getEffect(level) {
+            return {
+                dodgeDamagePercent: 0.60 + (level - 1) * 0.05,
+                speedPercent: 0.30 + (level - 1) * 0.04,
+                duration: 2
+            };
+        },
+        xp(level) { return 90 + (level - 1) * 70; }
+    },
+
+    // 🌙 Huyết Nguyệt Tà Diệt
+    blood_moon_slasher: {
+        id: 'blood_moon_slasher',
+        name: '🌙 Huyết Nguyệt Tà Diệt',
+        type: 'active',
+        description: '800% ATK, hút 50% HP, CD 4',
+        maxLevel: 6,
+        cooldown: 4,
+        getEffect(level) {
+            return {
+                damageMultiplier: 8.0 + (level - 1) * 0.6,
+                cooldown: Math.max(2, 4 - Math.floor(level / 3)),
+                lifesteal: 0.50 + (level - 1) * 0.04
+            };
+        },
+        xp(level) { return 110 + (level - 1) * 80; }
+    },
+
+    // 🐉 Long Thần Quyền
+    dragon_god_fist: {
+        id: 'dragon_god_fist',
+        name: '🐉 Long Thần Quyền',
+        type: 'active',
+        description: '700% ATK + 20% crit rate permanent, CD 3',
+        maxLevel: 6,
+        cooldown: 3,
+        getEffect(level) {
+            return {
+                damageMultiplier: 7.0 + (level - 1) * 0.5,
+                cooldown: Math.max(2, 3 - Math.floor(level / 3)),
+                critChance: 0.20 + (level - 1) * 0.03
+            };
+        },
+        xp(level) { return 120 + (level - 1) * 90; }
+    },
+
+    // ✨ Thái Hư Phân Thể
+    celestial_division: {
+        id: 'celestial_division',
+        name: '✨ Thái Hư Phân Thể',
+        type: 'active',
+        description: 'Tạo 2 bóng ma, mỗi 400% ATK, CD 5',
+        maxLevel: 6,
+        cooldown: 5,
+        getEffect(level) {
+            return {
+                damageMultiplier: 4.0 + (level - 1) * 0.4,
+                cloneCount: 2,
+                cooldown: Math.max(3, 5 - Math.floor(level / 3))
+            };
+        },
+        xp(level) { return 130 + (level - 1) * 100; }
+    },
+
+    // 🔥 Huyết Ngọc Phượng Hoàng
+    phoenix_rebirth: {
+        id: 'phoenix_rebirth',
+        name: '🔥 Huyết Ngọc Phượng Hoàng',
+        type: 'active',
+        description: 'Hồi sinh với 80% HP một lần, CD 8',
+        maxLevel: 6,
+        cooldown: 8,
+        getEffect(level) {
+            return {
+                resurrectionHpPercent: 0.80 + (level - 1) * 0.03,
+                cooldown: Math.max(5, 8 - Math.floor(level / 2))
+            };
+        },
+        xp(level) { return 150 + (level - 1) * 120; }
+    },
+
+    // 🐉 Cửu Long Quyết
+    nine_dragon_fist: {
+        id: 'nine_dragon_fist',
+        name: '🐉 Cửu Long Quyết',
+        type: 'active',
+        description: '900% ATK x 3 lần, mỗi +10% crit, CD 6',
+        maxLevel: 6,
+        cooldown: 6,
+        getEffect(level) {
+            return {
+                damageMultiplier: 9.0 + (level - 1) * 0.7,
+                hitCount: 3,
+                cooldown: Math.max(4, 6 - Math.floor(level / 3)),
+                critBonus: 0.10 + (level - 1) * 0.02
+            };
+        },
+        xp(level) { return 140 + (level - 1) * 110; }
+    },
+
+    // ❄️ Băng Long Xà Uy
+    ice_dragon_bite: {
+        id: 'ice_dragon_bite',
+        name: '❄️ Băng Long Xà Uy',
+        type: 'active',
+        description: '1200% ATK, đóng băng 2 round, CD 5',
+        maxLevel: 6,
+        cooldown: 5,
+        getEffect(level) {
+            return {
+                damageMultiplier: 12.0 + (level - 1) * 1.0,
+                cooldown: Math.max(3, 5 - Math.floor(level / 3)),
+                freezeDuration: 2
+            };
+        },
+        xp(level) { return 145 + (level - 1) * 115; }
+    },
+
+    // ⚡ Lôi Thần Chi Uy
+    thunder_god_wrath: {
+        id: 'thunder_god_wrath',
+        name: '⚡ Lôi Thần Chi Uy',
+        type: 'active',
+        description: '1500% ATK + choáng toàn trận, CD 6',
+        maxLevel: 6,
+        cooldown: 6,
+        getEffect(level) {
+            return {
+                damageMultiplier: 15.0 + (level - 1) * 1.2,
+                cooldown: Math.max(4, 6 - Math.floor(level / 3)),
+                aoeStun: true,
+                stunDuration: 1
+            };
+        },
+        xp(level) { return 160 + (level - 1) * 130; }
+    },
+
+    // 👊 Thiên Nhai Kích
+    heavenly_strike: {
+        id: 'heavenly_strike',
+        name: '👊 Thiên Nhai Kích',
+        type: 'active',
+        description: '2000% ATK, bỏ qua 50% phòng, CD 7',
+        maxLevel: 6,
+        cooldown: 7,
+        getEffect(level) {
+            return {
+                damageMultiplier: 20.0 + (level - 1) * 1.5,
+                cooldown: Math.max(4, 7 - Math.floor(level / 2)),
+                armorPenetration: 0.50 + (level - 1) * 0.05
+            };
+        },
+        xp(level) { return 180 + (level - 1) * 140; }
+    },
+
+    // 🛡️ Bất Diệt Thân
+    immortal_body: {
+        id: 'immortal_body',
+        name: '🛡️ Bất Diệt Thân',
+        type: 'active',
+        description: 'Miễn nhiễm sát thương 2 round, CD 10',
+        maxLevel: 6,
+        cooldown: 10,
+        getEffect(level) {
+            return {
+                damageImmunityDuration: 2 + Math.floor(level / 3),
+                cooldown: Math.max(6, 10 - Math.floor(level / 2))
+            };
+        },
+        xp(level) { return 200 + (level - 1) * 150; }
+    },
+
+    // 💀 Linh Hồn Ly Tán
+    soul_severance: {
+        id: 'soul_severance',
+        name: '💀 Linh Hồn Ly Tán',
+        type: 'active',
+        description: '2000% ATK + 50% HP địch, triệt tiêu hồi phục 3 round',
+        maxLevel: 6,
+        cooldown: 8,
+        getEffect(level) {
+            return {
+                damageMultiplier: 20.0 + (level - 1) * 1.5,
+                percentHpDamage: 0.50 + (level - 1) * 0.05,
+                cooldown: Math.max(5, 8 - Math.floor(level / 3)),
+                healBlockDuration: 3
+            };
+        },
+        xp(level) { return 190 + (level - 1) * 145; }
+    },
+
+    // 🌌 Nguyên Lai Hỗn Độn
+    primordial_chaos: {
+        id: 'primordial_chaos',
+        name: '🌌 Nguyên Lai Hỗn Độn',
+        type: 'active',
+        description: '2500% ATK + 30% lifesteal + 20% crit dmg permanent, CD 8',
+        maxLevel: 6,
+        cooldown: 8,
+        getEffect(level) {
+            return {
+                damageMultiplier: 25.0 + (level - 1) * 2.0,
+                cooldown: Math.max(5, 8 - Math.floor(level / 3)),
+                lifesteal: 0.30 + (level - 1) * 0.04,
+                critBonus: 0.20 + (level - 1) * 0.03
+            };
+        },
+        xp(level) { return 220 + (level - 1) * 160; }
+    },
+
+    // ⚔️ Thần Giới Sát Quyền
+    god_slayer_fist: {
+        id: 'god_slayer_fist',
+        name: '⚔️ Thần Giới Sát Quyền',
+        type: 'active',
+        description: '3000% ATK, bỏ qua 80% phòng, CD 9',
+        maxLevel: 6,
+        cooldown: 9,
+        getEffect(level) {
+            return {
+                damageMultiplier: 30.0 + (level - 1) * 2.5,
+                cooldown: Math.max(5, 9 - Math.floor(level / 2)),
+                armorPenetration: 0.80 + (level - 1) * 0.03
+            };
+        },
+        xp(level) { return 250 + (level - 1) * 180; }
+    },
+
+    // 🌍 Thế Giới Trảm Phá
+    world_breaker: {
+        id: 'world_breaker',
+        name: '🌍 Thế Giới Trảm Phá',
+        type: 'active',
+        description: '3500% ATK, phá hủy 30% tất cả chỉ số địch vĩnh viễn',
+        maxLevel: 6,
+        cooldown: 10,
+        getEffect(level) {
+            return {
+                damageMultiplier: 35.0 + (level - 1) * 2.5,
+                cooldown: Math.max(6, 10 - Math.floor(level / 2)),
+                statDestroyPercent: 0.30 + (level - 1) * 0.03
+            };
+        },
+        xp(level) { return 280 + (level - 1) * 200; }
+    },
+
+    // ♾️ Vĩnh Hằng Tái Sinh
+    eternal_rebirth: {
+        id: 'eternal_rebirth',
+        name: '♾️ Vĩnh Hằng Tái Sinh',
+        type: 'active',
+        description: 'Hồi full HP + miễn khống chế 3 round, CD 12',
+        maxLevel: 6,
+        cooldown: 12,
+        getEffect(level) {
+            return {
+                fullHeal: true,
+                cooldown: Math.max(7, 12 - Math.floor(level / 2)),
+                ccImmuneDuration: 3 + Math.floor(level / 2)
+            };
+        },
+        xp(level) { return 300 + (level - 1) * 220; }
+    },
+
+    // 🌟 Vũ Trụ Phá Diệt
+    universe_breaker: {
+        id: 'universe_breaker',
+        name: '🌟 Vũ Trụ Phá Diệt',
+        type: 'active',
+        description: '5000% ATK + 50% HP toàn trận địch, CD 10',
+        maxLevel: 6,
+        cooldown: 10,
+        getEffect(level) {
+            return {
+                damageMultiplier: 50.0 + (level - 1) * 4.0,
+                cooldown: Math.max(6, 10 - Math.floor(level / 2)),
+                aoeDamagePercent: 0.50 + (level - 1) * 0.05
+            };
+        },
+        xp(level) { return 350 + (level - 1) * 250; }
+    },
+
+    // 👑 Thiên Đế Chân Quyền
+    celestial_emperor: {
+        id: 'celestial_emperor',
+        name: '👑 Thiên Đế Chân Quyền',
+        type: 'active',
+        description: '4000% ATK + 100% crit dmg permanent + 50% tốc độ vĩnh viễn, CD 8',
+        maxLevel: 6,
+        cooldown: 8,
+        getEffect(level) {
+            return {
+                damageMultiplier: 40.0 + (level - 1) * 3.0,
+                cooldown: Math.max(5, 8 - Math.floor(level / 3)),
+                critDamageBonus: 1.00 + (level - 1) * 0.10,
+                speedPercent: 0.50 + (level - 1) * 0.05
+            };
+        },
+        xp(level) { return 400 + (level - 1) * 280; }
+    },
+
+    // 🌌 Nguyên Thủy Thần Công
+    primordial_god: {
+        id: 'primordial_god',
+        name: '🌌 Nguyên Thủy Thần Công',
+        type: 'active',
+        description: '6000% ATK + hồi 200% ATK dạng HP, CD 12',
+        maxLevel: 6,
+        cooldown: 12,
+        getEffect(level) {
+            return {
+                damageMultiplier: 60.0 + (level - 1) * 5.0,
+                cooldown: Math.max(7, 12 - Math.floor(level / 2)),
+                healPercentOfDamage: 2.00 + (level - 1) * 0.15
+            };
+        },
+        xp(level) { return 500 + (level - 1) * 350; }
+    },
+
+    // ⚔️ Tay Du Kỳ Đại - skill từ board.js
+    tay_du_ky_dai: {
+        id: 'tay_du_ky_dai',
+        name: '⚔️ Tay Du Kỳ Đại',
+        type: 'active',
+        description: '350% ATK x2 lần, CD 4',
+        maxLevel: 6,
+        cooldown: 4,
+        getEffect(level) {
+            return {
+                damageMultiplier: 3.5 + (level - 1) * 0.3,
+                hitCount: 2,
+                cooldown: Math.max(3, 4 - Math.floor(level / 3))
+            };
+        },
+        xp(level) { return 120 + (level - 1) * 90; }
+    },
+
+    // 🔥 Thần Túc Vô Sư - skill từ board.js
+    than_tuc_vo_su: {
+        id: 'than_tuc_vo_su',
+        name: '🔥 Thần Túc Vô Sư',
+        type: 'active',
+        description: '400% ATK, hút 50% sát thương',
+        maxLevel: 6,
+        cooldown: 3,
+        getEffect(level) {
+            return {
+                damageMultiplier: 4.0 + (level - 1) * 0.4,
+                lifesteal: 0.50 + (level - 1) * 0.03,
+                cooldown: Math.max(2, 3 - Math.floor(level / 4))
+            };
+        },
+        xp(level) { return 130 + (level - 1) * 100; }
     }
 };
 

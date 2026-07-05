@@ -2,32 +2,91 @@
     INVENTORY / ITEMS / EQUIP
 =========================== */
 /* --- Shop items (base) --- */
+/* 🎮 REALM-BASED SHOP TIERS:
+   - Tier 0 (Realm 0-4):    Phàm giới items
+   - Tier 1 (Realm 5-8):    Trúc Cơ→Đại Thừa items
+   - Tier 2 (Realm 9-15):   Tiên giới items
+   - Tier 3 (Realm 16-19):  Thánh cảnh items
+   - Tier 4 (Realm 20-25):  Thiên cảnh items
+   - Tier 5 (Realm 26+):    Cực cảnh items
+*/
 const SHOP_ITEMS = [
-    { id: 'swd_iron', name: 'Kiếm Sắt', type: 'weapon', atk: 12, hp: 0, def: 0, cost: 80 },
-    { id: 'swd_storm', name: 'Kiếm Lôi Đình', type: 'weapon', atk: 210, hp: 40, def: 0, cost: 1800 },
-    { id: 'blade_void', name: 'Đoản Đao Hư Không', type: 'weapon', atk: 320, hp: 0, def: 35, cost: 3400 },
-    { id: 'arm_basic', name: 'Giáp Cơ Bản', type: 'armor', atk: 0, hp: 70, def: 12, cost: 120 },
-    { id: 'arm_dragon', name: 'Long Lân Khải', type: 'armor', atk: 0, hp: 520, def: 78, cost: 2200 },
-    { id: 'robe_stellar', name: 'Tinh Hà Đạo Bào', type: 'armor', atk: 45, hp: 420, def: 55, cost: 3600 },
-    { id: 'elixir_small', name: 'Đan Hồi Phục Tiểu', type: 'consumable', heal: 120, cost: 60 },
-    { id: 'elixir_royal', name: 'Đan Long Huyết', type: 'consumable', heal: 680, cost: 420 },
-    { id: 'jade_cult', name: 'Ngọc Bội Tụ Linh', type: 'xp', value: 900, cost: 260 },
-    { id: 'jade_sun', name: 'Thái Dương Kim Ngọc', type: 'xp', value: 2800, cost: 980 },
-    { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: 45, cost: 320 },
-    { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: 55, cost: 340 },
-    { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560 },
-    { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, desc: 'Tăng khí vận lâu dài' },
-    { id: 'manual_iron_body', name: 'Công Pháp Huyền Thiết', type: 'manual', skillId: 'iron_body', cost: 540, desc: 'Học kỹ năng tăng phòng thủ' },
-    // { id: 'manual_dragon', name: 'Chân Giải Long Nha Trảm', type: 'manual', skillId: 'dragon_roar', cost: 820, desc: 'Học tuyệt kỹ bộc phát sát thương' },
-    { id: 'manual_wind_step', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, desc: 'Học thân pháp gia tăng né tránh' },
-    // { id: 'manual_crimson', name: 'Chiếu Nguyệt Đồ Quyết', type: 'manual', skillId: 'crimson_edge', cost: 940, desc: 'Học kỹ năng tăng chí mạng' },
-    // { id: 'manual_lotus', name: 'Liên Tâm Dưỡng Sinh Kinh', type: 'manual', skillId: 'lotus_rebirth', cost: 760, desc: 'Học công pháp hồi phục khí huyết' },
-    
-    // // 🔥 THÊM SKILL CHỦ ĐỘNG
-    // { id: 'manual_thuong_thanh', name: '⚡ Thượng Thanh Trảm Quyết', type: 'manual', skillId: 'thuong_thanh_tram', cost: 1200, desc: 'Học chiêu thức sát thương 300% ATK (CD 2)' },
-    // { id: 'manual_thien_ma', name: '🌪️ Thông Thiên Vạn Kiếm Pháp', type: 'manual', skillId: 'thong_thien_van_kiem', cost: 1500, desc: 'Học chiêu xoáy 200% ATK + 15% HP địch (CD 3)' },
-    // { id: 'manual_huyet_kiem', name: '🩸 Cửu Thiên Huyết Kiếm Phổ', type: 'manual', skillId: 'cuu_thien_huyet_kiem', cost: 1800, desc: 'Học chiêu hút máu 250% ATK + 30% lifesteal (CD 3)' }
+    // 🎯 TIER 0 - Phàm giới (Realm 0-4)
+    { id: 'swd_iron', name: 'Kiếm Sắt', type: 'weapon', atk: 12, hp: 0, def: 0, cost: 80, minTier: 0 },
+    { id: 'arm_basic', name: 'Giáp Cơ Bản', type: 'armor', atk: 0, hp: 70, def: 12, cost: 120, minTier: 0 },
+    { id: 'elixir_small', name: 'Đan Hồi Phục Tiểu', type: 'consumable', heal: 120, cost: 60, minTier: 0 },
+    { id: 'jade_cult', name: 'Ngọc Bội Tụ Linh', type: 'xp', value: 900, cost: 260, minTier: 0 },
+    { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: 45, cost: 320, minTier: 0 },
+    { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: 55, cost: 340, minTier: 0 },
+    { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560, minTier: 0 },
+    { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, minTier: 0, desc: 'Tăng khí vận lâu dài' },
+    { id: 'manual_iron_body', name: 'Công Pháp Huyền Thiết', type: 'manual', skillId: 'iron_body', cost: 540, minTier: 0, desc: 'Học kỹ năng tăng phòng thủ' },
+    { id: 'manual_wind_step', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, minTier: 0, desc: 'Học thân pháp gia tăng né tránh' },
+
+    // ⚔️ TIER 1 - Trúc Cơ→Đại Thừa (Realm 5-8)
+    { id: 'swd_storm', name: 'Kiếm Lôi Đình', type: 'weapon', atk: 210, hp: 40, def: 0, cost: 1800, minTier: 1 },
+    { id: 'arm_dragon', name: 'Long Lân Khải', type: 'armor', atk: 0, hp: 520, def: 78, cost: 2200, minTier: 1 },
+    { id: 'blade_void', name: 'Đoản Đao Hư Không', type: 'weapon', atk: 320, hp: 0, def: 35, cost: 3400, minTier: 1 },
+    { id: 'robe_stellar', name: 'Tinh Hà Đạo Bào', type: 'armor', atk: 45, hp: 420, def: 55, cost: 3600, minTier: 1 },
+    { id: 'elixir_royal', name: 'Đan Long Huyết', type: 'consumable', heal: 680, cost: 420, minTier: 1 },
+    { id: 'jade_sun', name: 'Thái Dương Kim Ngọc', type: 'xp', value: 2800, cost: 980, minTier: 1 },
+    { id: 'pill_cosmic', name: 'Nguyệt Tâm Đan', type: 'power', value: 120, cost: 880, minTier: 1 },
+    { id: 'pill_eden', name: 'Thiên Địa Đan', type: 'defense', value: 150, cost: 920, minTier: 1 },
+
+    // 🔮 TIER 2 - Tiên giới (Realm 9-15)
+    { id: 'sword_celestial', name: 'Thiên Kiếm', type: 'weapon', atk: 850, hp: 180, def: 80, cost: 12000, minTier: 2 },
+    { id: 'armor_immortal', name: 'Bất Diệt Khải', type: 'armor', atk: 120, hp: 2200, def: 380, cost: 15000, minTier: 2 },
+    { id: 'robe_phoenix', name: 'Phượng Hoàng Dao Bào', type: 'armor', atk: 280, hp: 1800, def: 290, cost: 14000, minTier: 2 },
+    { id: 'elixir_immortal', name: 'Tiên Tân Đan', type: 'consumable', heal: 3500, cost: 2500, minTier: 2 },
+    { id: 'jade_star', name: 'Tinh Ngọc Tụ Tu Vi', type: 'xp', value: 15000, cost: 6000, minTier: 2 },
+    { id: 'pill_dragon', name: 'Long Cốt Đan', type: 'power', value: 380, cost: 3200, minTier: 2 },
+    { id: 'pill_phoenix', name: 'Phượng Linh Đan', type: 'defense', value: 420, cost: 3500, minTier: 2 },
+    { id: 'manual_iron_body_t2', name: 'Thiên Thiết Công Pháp', type: 'manual', skillId: 'iron_body', cost: 4000, minTier: 2, desc: 'Phiên bản Tiên giới của Huyền Thiết' },
+    { id: 'manual_wind_step_t2', name: 'Thần Tung Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 4500, minTier: 2, desc: 'Phiên bản Tiên giới của Ảnh Phong' },
+
+    // ⭐ TIER 3 - Thánh cảnh (Realm 16-19)
+    { id: 'sword_divine', name: 'Thánh Kiếm', type: 'weapon', atk: 3200, hp: 650, def: 280, cost: 45000, minTier: 3 },
+    { id: 'armor_divine', name: 'Thánh Khải', type: 'armor', atk: 380, hp: 8000, def: 1200, cost: 55000, minTier: 3 },
+    { id: 'robe_goddess', name: 'Nữ Thần Bào', type: 'armor', atk: 850, hp: 6500, def: 920, cost: 52000, minTier: 3 },
+    { id: 'elixir_divine', name: 'Thánh Tân Đan', type: 'consumable', heal: 15000, cost: 9800, minTier: 3 },
+    { id: 'jade_divine', name: 'Thánh Ngọc Tụ Linh', type: 'xp', value: 65000, cost: 22000, minTier: 3 },
+    { id: 'pill_divine_power', name: 'Thánh Lực Đan', type: 'power', value: 1200, cost: 12000, minTier: 3 },
+    { id: 'pill_divine_def', name: 'Thánh Giáp Đan', type: 'defense', value: 1400, cost: 13000, minTier: 3 },
+
+    // 🌟 TIER 4 - Thiên cảnh (Realm 20-25)
+    { id: 'sword_heaven', name: 'Thiên Kiếm Chư Thần', type: 'weapon', atk: 12000, hp: 2500, def: 950, cost: 180000, minTier: 4 },
+    { id: 'armor_heaven', name: 'Thiên Khải Chư Thần', type: 'armor', atk: 1400, hp: 28000, def: 4200, cost: 200000, minTier: 4 },
+    { id: 'robe_cosmos', name: 'Cosmos Đạo Bào', type: 'armor', atk: 2800, hp: 22000, def: 3200, cost: 190000, minTier: 4 },
+    { id: 'elixir_heaven', name: 'Thiên Tân Đan', type: 'consumable', heal: 55000, cost: 38000, minTier: 4 },
+    { id: 'jade_heaven', name: 'Thiên Ngọc Tụ Tu Vi', type: 'xp', value: 250000, cost: 85000, minTier: 4 },
+    { id: 'pill_heaven_power', name: 'Thiên Lực Đan', type: 'power', value: 4500, cost: 48000, minTier: 4 },
+    { id: 'pill_heaven_def', name: 'Thiên Giáp Đan', type: 'defense', value: 5200, cost: 52000, minTier: 4 },
+
+    // 🌌 TIER 5 - Cực cảnh (Realm 26+)
+    { id: 'sword_ultimate', name: 'Hỗn Độn Kiếm', type: 'weapon', atk: 45000, hp: 9500, def: 3500, cost: 650000, minTier: 5 },
+    { id: 'armor_ultimate', name: 'Hỗn Độn Khải', type: 'armor', atk: 5200, hp: 95000, def: 15000, cost: 720000, minTier: 5 },
+    { id: 'robe_chaos', name: 'Hồng Mông Đạo Bào', type: 'armor', atk: 9800, hp: 75000, def: 12000, cost: 680000, minTier: 5 },
+    { id: 'elixir_ultimate', name: 'Hỗn Độn Tân Đan', type: 'consumable', heal: 200000, cost: 150000, minTier: 5 },
+    { id: 'jade_ultimate', name: 'Hồng Mông Ngọc', type: 'xp', value: 1000000, cost: 320000, minTier: 5 },
+    { id: 'pill_ultimate_power', name: 'Hỗn Độn Lực Đan', type: 'power', value: 18000, cost: 180000, minTier: 5 },
+    { id: 'pill_ultimate_def', name: 'Hỗn Độn Giáp Đan', type: 'defense', value: 20000, cost: 200000, minTier: 5 },
 ];
+
+/* Get the player's shop tier based on realm */
+function getPlayerShopTier(realmIdx) {
+    if (realmIdx < 5) return 0;
+    if (realmIdx < 9) return 1;
+    if (realmIdx < 16) return 2;
+    if (realmIdx < 20) return 3;
+    if (realmIdx < 26) return 4;
+    return 5;
+}
+
+/* Get tier name for display */
+function getShopTierName(tier) {
+    const names = ['Phàm Giới', 'Trúc Cơ→Đại Thừa', 'Tiên Giới', 'Thánh Cảnh', 'Thiên Cảnh', 'Cực Cảnh'];
+    return names[tier] || 'Unknown';
+}
 
 function addItemToInventory(it) {
     state.inventory.push(it);
@@ -317,7 +376,48 @@ function renderShop() {
     if (!listEl) return;
     listEl.innerHTML = '';
     window.RENDERED_SHOP_LIST = [];
-    SHOP_ITEMS.forEach(si => {
+
+    const playerTier = getPlayerShopTier(state.realmIndex || 0);
+    const tierName = getShopTierName(playerTier);
+
+    // Show tier header
+    const tierHeader = document.createElement('div');
+    tierHeader.style.cssText = 'text-align:center;margin-bottom:14px;padding:8px;background:rgba(166,255,209,0.1);border-radius:8px;border:1px solid rgba(166,255,209,0.3);';
+    tierHeader.innerHTML = `<div style="color:#a6ffd1;font-weight:700;">🏪 Cửa Hàng ${tierName}</div>
+        <div class="small" style="color:#9fb3c8;margin-top:4px;">Tu vi hiện tại: <b>Cảnh ${state.realmIndex}</b> — Hiển thị vật phẩm từ Tier 0 đến Tier ${playerTier}</div>`;
+    listEl.appendChild(tierHeader);
+
+    // Filter items by tier
+    const availableItems = SHOP_ITEMS.filter(si => (si.minTier || 0) <= playerTier);
+
+    // Group items by tier
+    const itemsByTier = {};
+    availableItems.forEach(si => {
+        const tier = si.minTier || 0;
+        if (!itemsByTier[tier]) itemsByTier[tier] = [];
+        itemsByTier[tier].push(si);
+    });
+
+    // Render items grouped by tier with headers
+    let lastTier = -1;
+    Object.keys(itemsByTier).sort((a, b) => a - b).forEach(tier => {
+        const items = itemsByTier[tier];
+        const currentTierName = getShopTierName(parseInt(tier));
+
+        // Add tier header (only if we have multiple tiers)
+        if (playerTier > 0 && parseInt(tier) < playerTier) {
+            const sectionHeader = document.createElement('div');
+            sectionHeader.style.cssText = 'margin:12px 0 8px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.85em;color:#888;';
+            sectionHeader.innerHTML = `📦 ${currentTierName} — <span class="small">Cấp độ cơ bản</span>`;
+            listEl.appendChild(sectionHeader);
+        } else if (parseInt(tier) === playerTier) {
+            const sectionHeader = document.createElement('div');
+            sectionHeader.style.cssText = 'margin:12px 0 8px;padding:6px 10px;background:rgba(255,215,0,0.15);border-radius:6px;font-size:0.85em;color:#ffd700;';
+            sectionHeader.innerHTML = `✨ ${currentTierName} — <span class="small">Vật phẩm cao cấp mới xuất hiện!</span>`;
+            listEl.appendChild(sectionHeader);
+        }
+
+        items.forEach(si => {
         const realmAtkMul = Math.pow(1.5, state.realmIndex);
         const realmDefMul = Math.pow(1.45, state.realmIndex);
         const realmHpMul = Math.pow(1.5, state.realmIndex);
@@ -391,6 +491,7 @@ function renderShop() {
             </div>
         `;
         listEl.appendChild(row);
+        });
     });
 
     renderLinhBaoShop(listEl);
@@ -404,10 +505,27 @@ function lbShopPrice(baseCost, grade) {
     return Math.floor((baseCost || 300) * realmBoost * (1 + grade * 0.9));
 }
 
+/* 🎴 LINH BẢO SHOP GRADE BY REALM
+   - Realms 0-4:   Phàm giới (grade 0-1) - Phàm Pháp
+   - Realms 5-8:   Kim Đan→Đại Thừa (grade 2-3) - Huyền Pháp
+   - Realms 9-15:  Tiên giới (grade 4-5) - Tiên Pháp
+   - Realms 16-19: Thánh cảnh (grade 6-7) - Thánh Pháp
+   - Realms 20-25: Thiên cảnh (grade 8-9) - Thiên Pháp
+   - Realms 26-28: Cực cảnh (grade 10-11) - Hỗn Độn Pháp / Hồng Mông Pháp
+*/
+function getRealmLinhBaoGradeRange(realmIdx) {
+    if (realmIdx < 5) return { min: 0, max: 1, tierName: 'Phàm Pháp' };
+    if (realmIdx < 9) return { min: 2, max: 3, tierName: 'Huyền Pháp' };
+    if (realmIdx < 16) return { min: 4, max: 5, tierName: 'Tiên Pháp' };
+    if (realmIdx < 20) return { min: 6, max: 7, tierName: 'Thánh Pháp' };
+    if (realmIdx < 26) return { min: 8, max: 9, tierName: 'Thiên Pháp' };
+    return { min: 10, max: 11, tierName: 'Hỗn Độn Pháp' };
+}
+
 function lbRollShopOffer() {
     if (typeof LINH_BAO === 'undefined') { window._lbShopOffer = []; return; }
-    const maxG = (typeof LB_MAX_GRADE !== 'undefined' ? LB_MAX_GRADE : 5);
-    const grade = Math.max(0, Math.min(maxG, Math.floor((state.realmIndex || 0) / 5)));
+    const maxG = (typeof LB_MAX_GRADE !== 'undefined' ? LB_MAX_GRADE : 11);
+    const realmGrade = getRealmLinhBaoGradeRange(state.realmIndex || 0);
     const pool = [...LINH_BAO];
     for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -415,9 +533,12 @@ function lbRollShopOffer() {
     }
     const pick = pool.slice(0, 4);
     window._lbShopOffer = pick.map(def => {
-        const g = Math.max(0, Math.min(maxG, grade + (Math.random() < 0.25 ? 1 : 0)));
-        return { id: def.id, grade: g, price: lbShopPrice(def.cost, g) };
+        // Random grade within realm's allowed range, with some variance
+        const variance = Math.random() < 0.3 ? (Math.random() < 0.5 ? -1 : 1) : 0;
+        const g = Math.max(realmGrade.min, Math.min(realmGrade.max, realmGrade.min + Math.floor(Math.random() * (realmGrade.max - realmGrade.min + 1)) + variance));
+        return { id: def.id, grade: Math.min(maxG, Math.max(0, g)), price: lbShopPrice(def.cost, g) };
     });
+    log(`🎴 ${realmGrade.tierName} xuất hiện tại cửa hàng!`);
 }
 
 function renderLinhBaoShop(listEl) {

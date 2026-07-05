@@ -87,13 +87,12 @@ function spawnEnemyWithRules() {
     let diff = 0;
     const r = Math.random();
 
-    if (r < 0.6) diff = -1;
-    else if (r < 0.9) diff = 0;
+    // Mostly lower/same realm enemies, very rare to be higher
+    // 75% chance lower, 24% same, ~1% higher (and never more than 1 stage higher)
+    if (r < 0.75) diff = -1;
+    else if (r < 0.99) diff = 0;
     else {
-        const hr = Math.random();
-        if (hr < 0.8) diff = 1;
-        else if (hr < 0.95) diff = 2;
-        else diff = 3;
+        diff = 1; // Only ever +1, and very rare
     }
 
     if (state.realmIndex < 5 && diff > 1) diff = 1;

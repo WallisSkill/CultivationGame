@@ -288,6 +288,59 @@ const SAINTS = [
         },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
         drop: { name: "Tiếp Dẫn Bảo Tràng", type: "relic", uses: 1, effect: "Gọi Tam Thanh một lần" }
+    },
+    {
+        name: "Đạo Tổ",
+        realm: 25,
+        realmStage: 3,
+        desc: "🔥 Đấng sáng tạo — Mở rộng Trận Pháp Bảo lên 9 ô ngay lập tức! Cơ hội rất hiếm!",
+        onTalk: () => {
+            // 🔥 Increase board slots by 1 (max 9)
+            const currentSlots = state.maxBoardSlots || LB_BOARD_SLOTS;
+            if (currentSlots < 9) {
+                state.maxBoardSlots = currentSlots + 1;
+                log(`🔥 Đạo Tổ ban phúc — Trận Pháp Bảo mở rộng lên ${state.maxBoardSlots} ô!`);
+            } else {
+                log("⚜️ Trận Pháp Bảo của ngươi đã đạt cực đại 9 ô!");
+            }
+
+            // 💰 Massive gold reward
+            const goldGain = Math.floor(50000 + Math.random() * 100000 * (1 + state.realmIndex * 0.3));
+            state.gold += goldGain;
+            log(`💰 Đạo Tổ mở kho bảo — Ngươi nhận được ${goldGain.toLocaleString()} linh thạch!`);
+
+            // ✨ Increase max HP significantly
+            state.maxHp = Math.floor(state.maxHp * 1.5);
+            const bonusHp = typeof getEquippedHp === 'function' ? getEquippedHp() : 0;
+            state.totalMaxHp = state.maxHp + bonusHp;
+            state.hp = state.totalMaxHp;
+            log(`💖 Đạo Tổ ban phép — HP tối đa gấp 1.5 lần (${state.totalMaxHp}), đã hồi full!`);
+
+            // ⚡ Increase power significantly
+            state.power = Math.floor(state.power * 1.8);
+            log(`⚡ Đạo Tổ truyền đạo — Sức mạnh tăng 80%!`);
+
+            // 🌟 Increase defense significantly
+            state.defense = Math.floor(state.defense * 1.5);
+            log(`🛡️ Đạo Tổ ban phúc — Phòng ngự tăng 50%!`);
+
+            // 💠 Massive luck boost
+            state.luckBonus = (state.luckBonus || 0) + 0.15;
+            log(`🍀 Đạo Tổ ban phước — May mắn +15%!`);
+
+            // 📜 Chance to get a legendary skill
+            if (Math.random() < 0.5 && !state.skills?.learned?.nguyen_thuy_hon_don) {
+                addItemToInventory({
+                    name: '🌌 Nguyên Thủy Hỗn Độn Chưởng Pháp',
+                    type: 'manual',
+                    skillId: 'nguyen_thuy_hon_don',
+                    desc: 'Chân truyền Đạo Tổ — 450% ATK + 12% HP địch + 40% lifesteal (CD 4)'
+                });
+                log("🌌 Đạo Tổ truyền thụ Hỗn Độn Chưởng Pháp!");
+            }
+        },
+        elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
+        drop: null // Đạo Tổ doesn't drop items, the blessing is the reward
     }
 
 ];
@@ -465,6 +518,10 @@ const LEGENDS = [
     {
         name: "Tiếp Dẫn Đạo Nhân",
         story: `Tiếp Dẫn Đạo Nhân, người đã mở ra cánh cửa dẫn đến những chân trời mới, nơi mà nhân loại có thể giao lưu và học hỏi với các sinh mệnh cao cấp hơn.`
+    },
+    {
+        name: "Đạo Tổ",
+        story: `Đạo Tổ, đấng sáng tạo nguyên thủy, ngọn nguồn của vạn vật. Ngài là tồn tại vĩnh cửu trước cả thiên địa, mang trong mình quyền năng sáng tạo và hủy diệt. Ngài chưa bao giờ thực sự rời khỏi cõi ta bởi Ngài ở khắp nơi như là quy luật của vũ trụ. Gặp được Đạo Tổ là cơ duyên vi diệu nhất trong thiên hạ.`
     }
 ];
 
@@ -521,6 +578,59 @@ function encounterRandomSaint(source = 'unknown') {
     }
     bless();
     return true;
+}
+
+/* ================================================
+   ENCOUNTER DAO TO - The rarest and strongest saint
+   ================================================ */
+function encounterDaoTo(source = 'unknown') {
+    const daoToSaint = SAINTS.find(s => s.name === 'Đạo Tổ');
+    if (!daoToSaint) {
+        log('🌌 Đạo Tổ chưa hiện thân — cơ duyên chưa đến.');
+        return false;
+    }
+    log(`🕯️🔥 ${daoToSaint.name} NGỰ KIẾN!`);
+
+    const bless = () => {
+        const blessed = typeof callSaintOnTalk === 'function'
+            ? callSaintOnTalk(daoToSaint)
+            : (daoToSaint.onTalk?.(), true);
+        if (!blessed) log('🙏 Đạo Tổ chỉ mỉm cười, cơ duyên lần này khép lại.');
+        if (typeof renderAll === 'function') renderAll();
+    };
+    const battle = () => startSaintChallenge(daoToSaint, source);
+
+    if (typeof showDialog === 'function') {
+        showDialog({
+            message: `🔥 ${daoToSaint.name} HIỂN LINH! Đại nhân chọn con đường nào?\n(⚠️ Cơ duyên HIẾM CÓ trong vũ trụ!)\n\n📜 Ngài là Đấng Sáng Tạo — ngọn nguồn của muôn vạn vật.\n📜 Gặp được Ngài, ngươi đã được thiên địa chiếu cố!`,
+            buttons: [
+                { text: '🙏 Thỉnh giáo (+1 ô trận pháp)', value: 'bless', variant: 'primary' },
+                { text: '⚔️ Thách đấu (TỰ TUẨN THẦN!)', value: 'battle' },
+                { text: 'Rời đi', value: 'leave' }
+            ]
+        }).then(choice => {
+            if (choice === 'battle') battle();
+            else if (choice === 'leave') log('🙏 Ngươi khom người hành lễ, Đạo Tổ mỉm cười rồi rời đi.');
+            else bless();
+        });
+        return true;
+    }
+
+    const choice = parseInt(prompt(
+        `🔥 ${daoToSaint.name} HIỂN LINH!\n` +
+        `1) 🙏 Thỉnh giáo — +1 ô trận pháp! (Khuyến nghị)\n` +
+        `2) ⚔️ Thách đấu — TỰ TUẨN THẦN!`
+    ) || '1', 10);
+    if (choice === 2) {
+        battle();
+        return true;
+    }
+    bless();
+    return true;
+}
+
+if (typeof window !== 'undefined') {
+    window.encounterDaoTo = encounterDaoTo;
 }
 
 function startSaintChallenge(saint, source = 'unknown') {

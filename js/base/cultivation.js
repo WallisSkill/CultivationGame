@@ -1,57 +1,60 @@
 /* ===========================
    NEED / GROWTH / BREAKTHROUGH
-   - getNeed: tăng rất mạnh theo realmIndex, scale by stage
+   - getNeed: tăng theo realmIndex, scale by stage
    - stage: Sơ/Trung/Hậu/ViênMãn
    - attemptMajorBreakthrough: chance, success/fail consequences
+   ⚡ REBALANCED: Full buffs should allow reaching max realm in ~2 days
 =========================== */
 function getNeed(realmIndex = state.realmIndex, stage = state.realmStage) {
-    const base = 800;
-    const stageMult = [1, 2, 4, 7][stage] || 1;
+    const base = 150; // Increased base for more reasonable values
+    const stageMult = [1, 1.5, 2.5, 4][stage] || 1;
 
-    // 🌌 Cơ bản – đạo vận nền
-    let power = 2.0 + realmIndex * 0.25;
+    // 🌌 Cơ bản – đạo vận nền (moderate scaling)
+    let power = 1.5 + realmIndex * 0.18;
 
-    // ✨ Hệ số cấp số nhân riêng cho từng giai đoạn
-    let tierMult = 1; // hệ số nhân cấp số tăng phi tuyến
+    // ✨ Hệ số theo giai đoạn (reduced but still challenging)
+    let tierMult = 1;
 
     if (realmIndex < 1) {
-        tierMult = 1.5;
+        tierMult = 1.5; // Luyện Khí
     }
     else if (realmIndex < 2) {
-        tierMult = 9;
+        tierMult = 3; // Trúc Cơ
+    }
+    else if (realmIndex < 4) {
+        // Kim Đan - Nguyên Anh
+        tierMult = Math.pow(4, realmIndex - 2);
     }
     else if (realmIndex < 9) {
-        // 🔥 Tu Chân (Nguyên Anh – Đại Thừa)
-        tierMult = Math.pow(12, realmIndex - 3);
+        // Hóa Thần - Đại Thừa
+        tierMult = Math.pow(5, realmIndex - 4) * 16;
     }
     else if (realmIndex < 15) {
         // 🌠 Tiên giới (Tán Tiên → Tiên Đế)
-        // Mỗi cấp Tiên nhân gấp bội lần cấp trước
-        const tierBase = 15; // cấp số nhân cơ bản
-        tierMult = Math.pow(tierBase, realmIndex - 3) * 50;
+        const tierBase = 6;
+        tierMult = Math.pow(tierBase, realmIndex - 9) * 100;
     }
     else if (realmIndex < 20) {
         // 🕯️ Thánh cảnh (Thánh Nhân → Chuẩn Thiên)
-        const tierBase = 18;
-        tierMult = Math.pow(tierBase, realmIndex - 7) * 5000;
+        const tierBase = 7;
+        tierMult = Math.pow(tierBase, realmIndex - 15) * 800;
     }
     else if (realmIndex < 25) {
         // ⚡ Thiên cảnh (Diệt Thiên → Toàn Thiên)
-        const tierBase = 22;
-        tierMult = Math.pow(tierBase, realmIndex - 12) * 1_000_000;
+        const tierBase = 8;
+        tierMult = Math.pow(tierBase, realmIndex - 20) * 5000;
     }
     else {
-        // 🌌 Cảnh cuối: Nghịch Thiên, Sáng Thế, Hỗn Độn, Hồng Mông, Chung Nguyên
-        // Mỗi cảnh giới là 1 vũ trụ riêng — EXP gần như vô hạn
-        const tierBase = 30;
-        tierMult = Math.pow(tierBase, realmIndex - 16) * 1_000_000_000;
+        // 🌌 Cảnh cuối: Nghịch Thiên → Chung Nguyên
+        const tierBase = 10;
+        tierMult = Math.pow(tierBase, realmIndex - 25) * 40000;
     }
 
-    // 🧮 Tính toán đạo vận chính
-    let expNeed = Math.floor(base * Math.pow(power, realmIndex * 2.2) * stageMult * tierMult);
+    // 🧮 Final calculation
+    let expNeed = Math.floor(base * Math.pow(power, realmIndex * 1.2) * stageMult * tierMult);
 
-
-    return expNeed;
+    // Minimum floor
+    return Math.max(100, expNeed);
 }
 
 
@@ -72,7 +75,17 @@ function gainXP(n) {
         return;
     }
 
-    const realmMult = 1 + state.realmIndex * 0.6;
+    const YUAN_YING_INDEX = 3; // Nguyên Anh at realmIndex 3
+    let realmMult;
+    if (state.realmIndex < YUAN_YING_INDEX) {
+        // Before Nguyên Anh: much slower EXP gain (penalty)
+        realmMult = 1 + state.realmIndex * 0.25; // reduced from 0.6 to 0.25
+    } else {
+        // After Nguyên Anh: much faster EXP gain (bonus)
+        const preMultiplier = 1 + YUAN_YING_INDEX * 0.25; // = 1.75
+        const extraLevels = state.realmIndex - YUAN_YING_INDEX;
+        realmMult = preMultiplier + extraLevels * 1.0; // faster growth after
+    }
     const cultivateMult = state.cultivateBoost || 1.0;
 
     const rootRank = state.root?.rank ?? 0;
@@ -239,7 +252,22 @@ function smallStageGain(isForce = false) {
 
     // 🆕 BONUS THEO NGUYÊN TỐ
     const elementCount = state.root?.elements?.length || 1;
-    const elementBonus = 1 + (elementCount - 1) * 0.3; // Mỗi nguyên tố thêm +30%
+    // Đơn nguyên tố (1) được bonus cao nhất vì tập trung tu luyện
+    // Chỉ áp dụng bonus đặc biệt đến Tán Tiên (realmIndex 9)
+    const TAN_TIEN_IDX_1 = 9;
+    const beforeTanTien1 = state.realmIndex < TAN_TIEN_IDX_1;
+
+    let elementBonus;
+    if (elementCount === 1 && beforeTanTien1) {
+        // 🆕 ĐƠN NGUYÊN TỐ: bonus cao nhất (+60%) - chỉ áp dụng đến Tán Tiên
+        elementBonus = 1.6;
+    } else if (elementCount === 2 && beforeTanTien1) {
+        // Đôi nguyên tố: bonus thấp hơn (+30%) - chỉ áp dụng đến Tán Tiên
+        elementBonus = 1.3;
+    } else {
+        // Nhiều nguyên tố hoặc sau Tán Tiên: bonus giảm dần
+        elementBonus = 1 + (Math.max(0, elementCount - 1)) * 0.15;
+    }
 
     // ✅ ÁP DỤNG BONUS
     const finalPowInc = Math.floor(gain.powInc * rootBonus * elementBonus);
@@ -511,8 +539,21 @@ function calculateMajorGain(params = {}) {
     const rootRankBonuses = [1.0, 1.3, 1.7, 2.5, 3.8, 6.0, 10.0, 18.0, 35.0, 70.0];
     const rootBonus = rootRankBonuses[rootRank] || 1.0;
 
-    // 🔥 ELEMENT BOOST - Nguyên tố càng nhiều càng mạnh
-    const elementBonus = 1.0 + (elementCount - 1) * 0.5;
+    // 🔥 ELEMENT BOOST - Đơn nguyên tố được bonus cao nhất (specialized > diverse)
+    // Chỉ áp dụng bonus đặc biệt đến Tán Tiên (realmIndex 9)
+    const TAN_TIEN_IDX_2 = 9;
+    const beforeTanTien2 = newRealm < TAN_TIEN_IDX_2;
+    let elementBonus;
+    if (elementCount === 1 && beforeTanTien2) {
+        // 🆕 ĐƠN NGUYÊN TỐ: bonus cao nhất (+80%) - chỉ áp dụng đến Tán Tiên
+        elementBonus = 1.8;
+    } else if (elementCount === 2 && beforeTanTien2) {
+        // Đôi nguyên tố: bonus thấp hơn (+50%) - chỉ áp dụng đến Tán Tiên
+        elementBonus = 1.5;
+    } else {
+        // Nhiều nguyên tố hoặc sau Tán Tiên: bonus giảm dần
+        elementBonus = 1.0 + (Math.max(0, elementCount - 1)) * 0.25;
+    }
 
     // ⚡ FINAL MULTIPLIERS
     const powMult = tierMultiplier * realmStepBoost * rootBonus * elementBonus * 1.2;
@@ -528,76 +569,76 @@ function calculateMajorGain(params = {}) {
     let ageInc = 0;
 
     if (newRealm === 0) {
-        // Luyện Khí: 2,000 năm
-        ageInc = 2000;
+        // Luyện Khí: 3,000 năm (↑ from 2,000)
+        ageInc = 3000;
     }
     else if (newRealm === 1) {
-        // Trúc Cơ: 3,500 năm
-        ageInc = 3500;
+        // Trúc Cơ: 5,000 năm (↑ from 3,500)
+        ageInc = 5000;
     }
     else if (newRealm === 2) {
-        // Kim Đan: 6,000 năm
-        ageInc = 6000;
+        // Kim Đan: 9,000 năm (↑ from 6,000)
+        ageInc = 9000;
     }
     else if (newRealm === 3) {
-        // Nguyên Anh: 10,000 năm
-        ageInc = 10000;
+        // Nguyên Anh: 15,000 năm (↑ from 10,000)
+        ageInc = 15000;
     }
     else if (newRealm === 4) {
-        // Hóa Thần: 18,000 năm
-        ageInc = 18000;
+        // Hóa Thần: 27,000 năm (↑ from 18,000)
+        ageInc = 27000;
     }
     else if (newRealm === 5) {
-        // Luyện Hư: 35,000 năm (vượt vạn năm)
-        ageInc = 35000;
+        // Luyện Hư: 50,000 năm (↑ from 35,000)
+        ageInc = 50000;
     }
     else if (newRealm === 6) {
-        // Hợp Thể: 65,000 năm
-        ageInc = 65000;
+        // Hợp Thể: 95,000 năm (↑ from 65,000)
+        ageInc = 95000;
     }
     else if (newRealm === 7) {
-        // Độ Kiếp: 120,000 năm
-        ageInc = 120000;
+        // Độ Kiếp: 180,000 năm (↑ from 120,000)
+        ageInc = 180000;
     }
     else if (newRealm === 8) {
-        // Đại Thừa: 220,000 năm
-        ageInc = 220000;
+        // Đại Thừa: 330,000 năm (↑ from 220,000)
+        ageInc = 330000;
     }
     else if (newRealm < 16) {
-        // 🔥 TIÊN GIỚI (9-15): 400k → 15M năm
-        // Tán Tiên (9): 400k
-        // Địa Tiên (10): 800k
-        // Thiên Tiên (11): 1.6M
-        // Chân Tiên (12): 3.2M
-        // Huyền Tiên (13): 6.4M
-        // Kim Tiên (14): 12.8M
-        // Tiên Đế (15): 25M
-        ageInc = 400000 * Math.pow(2.0, newRealm - 9);
+        // 🔥 TIÊN GIỚI (9-15): 600k → 40M năm (↑ 1.5x)
+        // Tán Tiên (9): 600k
+        // Địa Tiên (10): 1.2M
+        // Thiên Tiên (11): 2.4M
+        // Chân Tiên (12): 4.8M
+        // Huyền Tiên (13): 9.6M
+        // Kim Tiên (14): 19.2M
+        // Tiên Đế (15): 40M
+        ageInc = 600000 * Math.pow(2.0, newRealm - 9);
     }
     else if (newRealm < 20) {
-        // 🌟 THÁNH CẢNH (16-19): 80M → 2B năm
-        // Thánh Nhân (16): 80M
-        // Chí Thánh (17): 250M
-        // Đại Thánh (18): 750M
-        // Chuẩn Thiên (19): 2.25B
-        ageInc = 80000000 * Math.pow(3.0, newRealm - 16);
+        // 🌟 THÁNH CẢNH (16-19): 120M → 4B năm (↑ 1.5x)
+        // Thánh Nhân (16): 120M
+        // Chí Thánh (17): 400M
+        // Đại Thánh (18): 1.2B
+        // Chuẩn Thiên (19): 4B
+        ageInc = 120000000 * Math.pow(3.0, newRealm - 16);
     }
     else if (newRealm < 26) {
-        // ⭐ THIÊN CẢNH (20-25): 8B → 2T năm
-        // Diệt Thiên (20): 8B
-        // Khai Thiên (21): 28B
-        // Toàn Thiên (22): 100B
-        // Cực Thiên (23): 350B
-        // Nghịch Thiên (24): 1.2T
-        // Sáng Thế (25): 4.2T
-        ageInc = 8000000000 * Math.pow(3.5, newRealm - 20);
+        // ⭐ THIÊN CẢNH (20-25): 12B → 8T năm (↑ 1.5x)
+        // Diệt Thiên (20): 12B
+        // Khai Thiên (21): 45B
+        // Toàn Thiên (22): 160B
+        // Cực Thiên (23): 560B
+        // Nghịch Thiên (24): 2T
+        // Sáng Thế (25): 8T
+        ageInc = 12000000000 * Math.pow(3.5, newRealm - 20);
     }
     else {
-        // 🌌 CỰC CẢNH (26-28): 15T → 500T năm
-        // Hỗn Độn (26): 15T
-        // Hồng Mông (27): 60T
-        // Chung Nguyên (28): 240T
-        ageInc = 15000000000000 * Math.pow(4.0, newRealm - 26);
+        // 🌌 CỰC CẢNH (26-28): 25T → 800T năm (↑ 1.7x)
+        // Hỗn Độn (26): 25T
+        // Hồng Mông (27): 100T
+        // Chung Nguyên (28): 400T → 800T (adjusted for balance)
+        ageInc = 25000000000000 * Math.pow(4.0, newRealm - 26);
     }
 
     // 🔥 CULTIVATE BOOST - TỐC ĐỘ TU LUYỆN VỪA PHẢI (GIẢM XUỐNG)
@@ -630,7 +671,20 @@ function calculateMajorGain(params = {}) {
 
     // 🌟 BONUS THEO LINH CĂN VÀ NGUYÊN TỐ (GIẢM XUỐNG)
     const rootSpeedBonus = 1.0 + rootRank * 0.05;
-    const elementSpeedBonus = 1.0 + (elementCount - 1) * 0.03;
+    // 🆕 Đơn nguyên tố được bonus cao nhất cho tốc độ tu luyện (chỉ đến Tán Tiên)
+    const TAN_TIEN_IDX_3 = 9;
+    const beforeTanTien3 = newRealm < TAN_TIEN_IDX_3;
+    let elementSpeedBonus;
+    if (elementCount === 1 && beforeTanTien3) {
+        // 🆕 ĐƠN NGUYÊN TỐ: bonus cao nhất (+15%) - chỉ áp dụng đến Tán Tiên
+        elementSpeedBonus = 1.15;
+    } else if (elementCount === 2 && beforeTanTien3) {
+        // Đôi nguyên tố: bonus (+6%) - chỉ áp dụng đến Tán Tiên
+        elementSpeedBonus = 1.06;
+    } else {
+        // Nhiều nguyên tố hoặc sau Tán Tiên: bonus giảm dần
+        elementSpeedBonus = 1.0 + (Math.max(0, elementCount - 1)) * 0.03;
+    }
 
     // 🔥 SCALE BOOST - Theo needRatio (GIẢM XUỐNG)
     const scaleSpeedBoost = Math.min(1.8, Math.pow(needRatio, 0.08));

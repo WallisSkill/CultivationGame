@@ -35,9 +35,7 @@
 
         <div class="controls">
             <button id="toggleAuto" class="primary">Bắt đầu tu luyện auto</button>
-            <button id="autoFight">Bật auto chiến</button>
             <button id="explore">Đi kỳ ngộ</button>
-            <button id="fightNow">Tấn công</button>
             <button id="runBtn">Chạy (−15% tu vi)</button>
             <button id="findMatch">Tìm đối thủ PvP</button>
             <button id="saveBtn">Lưu</button>
@@ -48,19 +46,7 @@
         </div>
 
         <div class="grid">
-            <div>
-                <div class="panel panel-log">
-                    <strong>Nhật ký tu luyện</strong>
-                    <div class="log" id="log"></div>
-                </div>
-
-                <div class="panel panel-inventory" style="margin-top:12px">
-                    <strong>Kho đồ & Hỗn nguyên</strong>
-                    <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
-                    <div class="items" id="inventory"></div>
-                </div>
-            </div>
-
+            <!-- Left column: Chiến đấu, Kho đồ, Công pháp -->
             <div>
                 <div class="panel panel-combat">
                     <strong>Chiến đấu</strong>
@@ -70,22 +56,36 @@
                     <div id="boardArena" class="board-arena"></div>
                 </div>
 
+                <div class="panel panel-inventory" style="margin-top:12px">
+                    <strong>Kho đồ & Hỗn nguyên</strong>
+                    <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
+                    <div class="items" id="inventory"></div>
+                </div>
+
+                <!-- Công pháp moved up to be with Kho đồ -->
+                <div class="panel panel-skills" style="margin-top:12px">
+                    <h3>🔮 Công Pháp</h3>
+                    <div id="skillsDisplay"></div>
+                </div>
+            </div>
+
+            <!-- Right column: Nhật ký (small), Hệ cảnh giới, Bạn bè -->
+            <div>
+                <div class="panel panel-log panel-log-small">
+                    <strong>Nhật ký tu luyện</strong>
+                    <div class="log" id="log"></div>
+                </div>
+
                 <div class="panel panel-realm" style="margin-top:12px">
                     <strong>Hệ cảnh giới & Linh căn</strong>
                     <div id="realms"></div>
                     <div id="rootTable" class="small" style="margin-top:8px"></div>
                 </div>
-            </div>
 
-            <!-- Thêm panel Skills sau panel Combat hoặc Inventory -->
-            <div class="panel panel-skills">
-                <h3>🔮 Công Pháp</h3>
-                <div id="skillsDisplay"></div>
-            </div>
-
-            <!-- 🆕 Thêm panel bạn bè -->
-            <div class="panel panel-friends">
-                <div id="friendsPanel"></div>
+                <!-- Bạn bè -->
+                <div class="panel panel-friends" style="margin-top:12px">
+                    <div id="friendsPanel"></div>
+                </div>
             </div>
         </div>
 

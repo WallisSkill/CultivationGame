@@ -22,7 +22,32 @@ function exploreOriginalImpl() {
 	setTimeout(() => state.exploreCooldown = false, 500);
 
 	const luck = state.luckBonus || 0;
-	const mysteryChance = Math.min(0.45, 0.1 + luck);
+	// Mostly good events (~88% chance), small chance of enemy encounter
+	const mysteryChance = Math.min(0.88, 0.6 + luck);
+
+	// 🌟 Very small chance to encounter Đạo Tổ specifically (the strongest)
+	const daoToChance = Math.min(0.02, 0.005 + luck * 0.03);
+	if (Math.random() < daoToChance && typeof window.encounterDaoTo === 'function') {
+		log('═══════════════════════════════════════════════════════');
+		log('🌟✨ THIÊN ĐỊA ĐẠI BIẾN ✨🌟');
+		log('═══════════════════════════════════════════════════════');
+		log('⚡ Mây đen vần vũ, thiên kiếp giáng lâm...');
+		log('⚡ Thời gian như ngưng đọng, không gian từ truyền vỡ tan...');
+		log('⚡ Một luồng khí tức vô thượng đang ào ạt đổ xuống!');
+		log('⚡ NHẬT NGUYỆT ĐỀU TỐI KHÔNG MANG MÀU...');
+		log('⚡ TRỜI ĐẤT ĐỀU SỤP ĐỔ KHÔNG CÙNG...');
+		log('⚡ ...Làm sao có thể? Chẳng lẽ là...');
+		log('═══════════════════════════════════════════════════════');
+		log('🔥🔥🔥 ĐẠO TỔ GIÁNG THẾ!!! 🔥🔥🔥');
+		log('═══════════════════════════════════════════════════════');
+		log('🌟 Đấng sáng tạo nguyên thủy, ngọn nguồn của vạn vật!');
+		log('🌟 Ngài là tồn tại vĩnh cửu trước cả thiên địa!');
+		log('🌟 Cơ duyên HIẾM CÓ nhất trong vũ trụ đang mở ra!');
+		log('═══════════════════════════════════════════════════════');
+		window.encounterDaoTo('explore');
+		renderAll();
+		return;
+	}
 
 	const saintChance = Math.min(0.4, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
 	if (Math.random() < saintChance && typeof window.encounterRandomSaint === 'function') {
@@ -270,9 +295,12 @@ function mysteryGood() {
 	}
 	// 💰 Gold
 	else {
-		const gold = Math.floor(250 + state.realmIndex * 80 + Math.random() * 250);
+		// 🎮 REWARD SCALING: Higher realm = much higher rewards
+		// Base 250 at realm 0, scales exponentially with realm
+		const realmMultiplier = Math.pow(1.6, state.realmIndex);
+		const gold = Math.floor((250 + Math.random() * 250) * realmMultiplier);
 		state.gold += gold;
-		log(`💰 Nhặt được ${gold} Linh Thạch!`);
+		log(`💰 Nhặt được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
 	}
 
 	// small chance Hỗn Nguyên top
@@ -302,9 +330,11 @@ function mysteryTreasureVault() {
 			name: '💎 Tiên Cung Bảo Tàng',
 			desc: 'Nhận 5000+ Linh Thạch',
 			apply: () => {
-				const gold = Math.floor(5000 + state.realmIndex * 500 + Math.random() * 3000);
+				// 🎮 REWARD SCALING: Higher realm = much higher rewards
+				const realmMultiplier = Math.pow(1.8, state.realmIndex);
+				const gold = Math.floor((5000 + Math.random() * 3000) * realmMultiplier);
 				state.gold += gold;
-				log(`💰 Nhận được ${gold.toLocaleString()} Linh Thạch!`);
+				log(`💰 Nhận được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
 			}
 		},
 		{
@@ -371,11 +401,12 @@ function mysteryDilemma() {
 			desc: 'Có cơ hội nhận gấp 3 phần thưởng, nhưng cũng có thể mất nhiều hơn',
 			apply: () => {
 				if (Math.random() < 0.6) {
-					const xp = Math.floor(getNeed() * 0.3);
-					const gold = Math.floor(500 + state.realmIndex * 100 + Math.random() * 500);
+					const realmMult = Math.pow(1.5, state.realmIndex);
+					const xp = Math.floor(getNeed() * 0.3 * realmMult);
+					const gold = Math.floor((500 + Math.random() * 500) * realmMult);
 					gainXP(xp);
 					state.gold += gold;
-					log(`✅ May mắn! Nhận được ${xp} tu vi và ${gold} Linh Thạch!`);
+					log(`✅ May mắn! Nhận được ${xp} tu vi và ${gold.toLocaleString()} Linh Thạch!`);
 					if (Math.random() < 0.3 && typeof grantLinhBaoDrop === 'function') {
 						grantLinhBaoDrop({ source: 'Thử thách', gradeBonus: 1 });
 					}
@@ -390,11 +421,12 @@ function mysteryDilemma() {
 			name: '🛡️ Chơi an toàn',
 			desc: 'Nhận phần thưởng nhỏ nhưng chắc chắn',
 			apply: () => {
-				const xp = Math.floor(getNeed() * 0.1);
+				const realmMult = Math.pow(1.4, state.realmIndex);
+				const xp = Math.floor(getNeed() * 0.1 * realmMult);
 				gainXP(xp);
-				const gold = Math.floor(150 + state.realmIndex * 40);
+				const gold = Math.floor(150 * realmMult);
 				state.gold += gold;
-				log(`✅ Nhận được ${xp} tu vi và ${gold} Linh Thạch (an toàn)!`);
+				log(`✅ Nhận được ${xp} tu vi và ${gold.toLocaleString()} Linh Thạch (an toàn)!`);
 			}
 		}
 	];

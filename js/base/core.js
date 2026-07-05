@@ -240,14 +240,14 @@ window.addEventListener("load", () => {
 
         initStarter(); // Sẽ tạo/load profileId ở đây
         renderAllImmediate();
-        if (state.name !== "Thiên Đạo Chí Tôn") {
+        // if (state.name !== "Thiên Đạo Chí Tôn") {
             announceRootStory(true);
             playIntroNarration(script).then(() => {
                 setTimeout(() => fadeOutStartScreen(), 1000);
             });
-        } else {
-            fadeOutStartScreen();
-        }
+        // } else {
+            // fadeOutStartScreen();
+        // }
         state.age = 6;
     });
 
@@ -913,9 +913,23 @@ function getFilteredInventory() {
             return ['consumable', 'xp', 'life', 'power', 'defense', 'luck'].includes(item.type);
         if (inventoryFilter === 'relic') return item.type === 'relic';
         if (inventoryFilter === 'linhbao') return item.type === 'linhbao';
+        if (inventoryFilter === 'gem') return item.type === 'gem';
         if (inventoryFilter === 'root') return item.type === 'root';
         if (inventoryFilter === 'root_frag') return item.type === 'root_frag';
         if (inventoryFilter === 'manual') return item.type === 'manual';
+        // Filter by Linh Bảo effect type
+        if (inventoryFilter === 'lb_damage') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'damage');
+        if (inventoryFilter === 'lb_heal') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'heal');
+        if (inventoryFilter === 'lb_shield') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'shield');
+        if (inventoryFilter === 'lb_buff') return item.type === 'linhbao' && lbEffectList(item).some(e => ['buffAtk', 'lifesteal'].includes(e.action));
+        if (inventoryFilter === 'lb_control') return item.type === 'linhbao' && lbEffectList(item).some(e => ['freeze', 'stun', 'parry'].includes(e.action));
+        // Filter by Linh Bảo grade
+        if (inventoryFilter === 'lb_grade_0') return item.type === 'linhbao' && (item.grade || 0) <= 0;
+        if (inventoryFilter === 'lb_grade_1') return item.type === 'linhbao' && (item.grade || 0) === 1;
+        if (inventoryFilter === 'lb_grade_2') return item.type === 'linhbao' && (item.grade || 0) === 2;
+        if (inventoryFilter === 'lb_grade_3') return item.type === 'linhbao' && (item.grade || 0) === 3;
+        if (inventoryFilter === 'lb_grade_4') return item.type === 'linhbao' && (item.grade || 0) === 4;
+        if (inventoryFilter === 'lb_grade_5') return item.type === 'linhbao' && (item.grade || 0) >= 5;
         return true;
     });
 }
@@ -936,26 +950,36 @@ function renderInventory() {
 
     filterEl.innerHTML = `
                 <div class="inventory-filter-row">
-                    <label for="inventoryFilterSelect">Bộ lọc</label>
-                    <select id="inventoryFilterSelect">
-                        <option value="all">Tất cả</option>
-                        <option value="equipped">Đang mặc</option>
-                        <option value="equipment">Trang bị</option>
-                        <option value="linhbao">Linh bảo (trận)</option>
-                        <option value="manual">Công pháp</option>
-                        <option value="usable">Dùng được</option>
-                        <option value="relic">Thánh vật</option>
-                        <option value="root">Linh căn</option>
-                        <option value="root_frag">Mảnh linh căn</option>
-                    </select>
+                    <div class="filter-chips">
+                        <button class="filter-chip ${inventoryFilter === 'all' ? 'active' : ''}" onclick="setInventoryFilter('all')">📦 Tất cả</button>
+                        <button class="filter-chip ${inventoryFilter === 'equipped' ? 'active' : ''}" onclick="setInventoryFilter('equipped')">🧤 Mặc</button>
+                        <button class="filter-chip ${inventoryFilter === 'equipment' ? 'active' : ''}" onclick="setInventoryFilter('equipment')">⚔️ Trang bị</button>
+                        <button class="filter-chip ${inventoryFilter === 'linhbao' ? 'active' : ''}" onclick="setInventoryFilter('linhbao')">🎴 Trận pháp</button>
+                        <button class="filter-chip ${inventoryFilter === 'gem' ? 'active' : ''}" onclick="setInventoryFilter('gem')">💎 Ngọc</button>
+                        <button class="filter-chip ${inventoryFilter === 'manual' ? 'active' : ''}" onclick="setInventoryFilter('manual')">📜 Công pháp</button>
+                        <button class="filter-chip ${inventoryFilter === 'usable' ? 'active' : ''}" onclick="setInventoryFilter('usable')">💊 Dùng được</button>
+                        <button class="filter-chip ${inventoryFilter === 'root' ? 'active' : ''}" onclick="setInventoryFilter('root')">💠 Linh căn</button>
+                    </div>
+                    <div class="filter-chips" style="margin-top:4px">
+                        <span class="filter-label">🎴 Trận pháp:</span>
+                        <button class="filter-chip ${inventoryFilter === 'lb_damage' ? 'active' : ''}" onclick="setInventoryFilter('lb_damage')">⚔️ Sát thương</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_heal' ? 'active' : ''}" onclick="setInventoryFilter('lb_heal')">🌿 Hồi phục</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_shield' ? 'active' : ''}" onclick="setInventoryFilter('lb_shield')">🛡️ Hộ thuẫn</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_buff' ? 'active' : ''}" onclick="setInventoryFilter('lb_buff')">⬆️ BUFF</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_control' ? 'active' : ''}" onclick="setInventoryFilter('lb_control')">❄️ Khống chế</button>
+                    </div>
+                    <div class="filter-chips" style="margin-top:4px">
+                        <span class="filter-label">Cấp:</span>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_0' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_0')">Phàm</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_1' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_1')">Hoàng</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_2' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_2')">Huyền</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_3' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_3')">Địa</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_4' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_4')">Thiên</button>
+                        <button class="filter-chip ${inventoryFilter === 'lb_grade_5' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_5')">🔮 Tiên+</button>
+                    </div>
                 </div>
                 <button class="equip-all-btn" onclick="equipAll()">🧤 Mặc tất cả</button>
             `;
-    const filterSelect = document.getElementById('inventoryFilterSelect');
-    if (filterSelect) {
-        filterSelect.value = inventoryFilter;
-        filterSelect.onchange = (ev) => setInventoryFilter(ev.target.value);
-    }
 
     const filtered = getFilteredInventory();
     if (!filtered.length) {
@@ -1001,23 +1025,28 @@ function renderInventory() {
             const sockets = (typeof lbSockets === 'function') ? lbSockets(item) : 0;
             const gemCount = Array.isArray(item.gems) ? item.gems.length : 0;
             const gemIcons = (typeof lbGemIcons === 'function') ? lbGemIcons(item) : '';
+            // Get tooltip for true values
+            const tooltipText = typeof getLinhBaoTooltipText === 'function' ? getLinhBaoTooltipText(item) : '';
             d.innerHTML = `
-                <div><b style="color:${col}">${icons} ${item.name}</b> <span class="small">(${gradeLabel})</span></div>
-                <div class="small">${summary} · CD ${cd}s · ${colorizeElement(item.element)}</div>
-                <div class="small">💎 Ổ ngọc: ${gemIcons || '—'} (${gemCount}/${sockets})</div>
-                <div class="small">${item.desc || ''}</div>
-                <div class="inv-buttons">
-                    ${onBoard
-                    ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
-                    : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
-                    ${atMaxGrade && atMaxLevel
-                    ? `<button class="use-btn" disabled style="opacity:.6">✨ Tối cao</button>`
-                    : `<button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>`}
-                    ${canFuseGrade
-                    ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
-                    : ''}
-                    ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
-                    <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
+                <div class="linhbao-container">
+                    <div class="linhbao-header"><b style="color:${col}">${icons} ${item.name}</b> <span class="small">(${gradeLabel})</span></div>
+                    <div class="small">${summary} · CD ${cd}s · ${colorizeElement(item.element)}</div>
+                    <div class="small">💎 Ổ ngọc: ${gemIcons || '—'} (${gemCount}/${sockets})</div>
+                    <div class="small">${item.desc || ''}</div>
+                    <div class="inv-buttons">
+                        ${onBoard
+                        ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
+                        : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
+                        ${atMaxGrade && atMaxLevel
+                        ? `<button class="use-btn" disabled style="opacity:.6">✨ Tối cao</button>`
+                        : `<button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>`}
+                        ${canFuseGrade
+                        ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
+                        : ''}
+                        ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
+                        <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
+                    </div>
+                    ${tooltipText ? `<div class="linhbao-tooltip">📊 GIÁ TRỊ THỰC:\n${tooltipText}</div>` : ''}
                 </div>`;
             listEl.appendChild(d);
             return;
@@ -1046,12 +1075,14 @@ function renderInventory() {
             const gemIcon = gemDef ? gemDef.icon : '💎';
             const gemColor = gemDef ? gemDef.color : '#ff9800';
             const tierName = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'][item.tier || 0] || 'Thô';
+            const canFuse = (item.tier || 0) < 3;
             d.innerHTML = `
                 <div><b style="color:${gemColor}">${gemIcon} ${item.name}</b> <span class="small">(${tierName})</span></div>
                 <div class="small" style="color:${gemColor}">+${((item.magnitude || 0.1) * 100).toFixed(0)}% ${gemDef?.desc || 'Tăng sức'}</div>
                 <div class="small">${item.desc || ''}</div>
                 <div class="inv-buttons">
                     <button class="use-btn" onclick="openGemSocketModal(${realIndex})">💎 Khảm ngọc</button>
+                    ${canFuse ? `<button class="equip-btn" onclick="openGemFusionModal()">🔥 Hợp nhất</button>` : ''}
                     <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                 </div>`;
         }
@@ -1169,9 +1200,12 @@ function initStarter() {
         { name: 'Áo Lót', type: 'armor', hp: 20, def: 3, desc: 'Giáp sơ cấp', equipped: true }
     ];
 
-    // ⚜️ Linh bảo khởi thủy cho trận pháp (Bazaar-style board)
+    // ⚜️ Linh bảo khởi thủy cho trận pháp - based on Linh căn
     state.board = [null, null, null, null, null, null];
-    if (typeof makeLinhBao === 'function') {
+    if (typeof grantStartingLinhBao === 'function') {
+        grantStartingLinhBao();
+    } else if (typeof makeLinhBao === 'function') {
+        // Fallback to old simple starter if grantStartingLinhBao not available
         const starters = ['phi_kiem', 'thanh_moc'];
         starters.forEach((id, i) => {
             const lb = makeLinhBao(id, 0);
@@ -1307,17 +1341,24 @@ $('toggleAuto').onclick = () => {
     if (state.autoTrain) { $('toggleAuto').innerText = 'Dừng tu luyện auto'; startAutoTrain(); log('Bật auto tu luyện.'); }
     else { $('toggleAuto').innerText = 'Bắt đầu tu luyện auto'; stopAutoTrain(); log('Tắt auto tu luyện.'); }
 };
-$('autoFight').onclick = () => {
-    // use new auto-fight loop (toggle text too)
-    if (window._autoFightOn) { $('autoFight').innerText = 'Bật auto chiến'; window.stopAutoFight && window.stopAutoFight(); }
-    else { $('autoFight').innerText = 'Tắt auto chiến'; window.startAutoFight && window.startAutoFight(); }
-};
+// autoFight button removed - only set onclick if element exists
+const autoFightBtn = $('autoFight');
+if (autoFightBtn) {
+    autoFightBtn.onclick = () => {
+        if (window._autoFightOn) { autoFightBtn.innerText = 'Bật auto chiến'; window.stopAutoFight && window.stopAutoFight(); }
+        else { autoFightBtn.innerText = 'Tắt auto chiến'; window.startAutoFight && window.startAutoFight(); }
+    };
+}
 $('explore').onclick = () => explore();
-$('fightNow').onclick = () => {
-    if (state.currentEnemy && state.currentEnemy.isPvP) return pvpAttackOrLocal();
-    if (typeof runBoardBattle === 'function') return runBoardBattle();
-    return pvpAttackOrLocal();
-};
+// fightNow button removed - only set onclick if element exists
+const fightNowBtn = $('fightNow');
+if (fightNowBtn) {
+    fightNowBtn.onclick = () => {
+        if (state.currentEnemy && state.currentEnemy.isPvP) return pvpAttackOrLocal();
+        if (typeof runBoardBattle === 'function') return runBoardBattle();
+        return pvpAttackOrLocal();
+    };
+}
 $('runBtn').onclick = () => { if (typeof forfeitBoardBattle === 'function') forfeitBoardBattle(); runFromBattle(); };
 // changed to window-safe call to avoid "findMatchPvP is not defined"
 $('findMatch').onclick = () => { if (window.findMatchPvP) window.findMatchPvP(); };
@@ -1398,4 +1439,64 @@ function fallbackCopyToClipboard(text) {
 
 if (typeof window !== 'undefined') {
     window.copyPlayerId = copyPlayerId;
+}
+
+/* ================================================
+   LINH BẢO TRUE VALUE CALCULATOR
+   Calculate what a Linh Bảo truly deals/heals based on player stats
+   ================================================ */
+function calcLinhBaoTrueValue(item) {
+    if (!item || item.type !== 'linhbao') return null;
+
+    const effects = lbEffectList(item);
+    const playerAtk = state.totalPower || state.power || 10;
+    const playerMaxHp = state.totalMaxHp || state.maxHp || 100;
+    const playerElements = state.root?.elements || [];
+
+    const elemMod = calcLinhBaoElementMod(
+        { elements: playerElements },
+        { elements: [] }, // target unknown, so no counter debuff
+        item.element
+    );
+
+    const result = { damage: 0, burn: 0, heal: 0, shield: 0, lifesteal: 0, buffAtk: 0, stun: 0, freeze: 0 };
+
+    for (const ef of effects) {
+        if (ef.action === 'damage') {
+            result.damage = Math.floor(playerAtk * lbEffMag(ef.magnitude, item) * elemMod);
+        } else if (ef.action === 'burn') {
+            result.burn = Math.floor(playerAtk * lbEffMag(ef.magnitude, item) * elemMod);
+        } else if (ef.action === 'heal') {
+            result.heal = Math.floor(playerMaxHp * lbEffMag(ef.magnitude, item) * elemMod);
+        } else if (ef.action === 'shield') {
+            result.shield = Math.floor(playerMaxHp * lbEffMag(ef.magnitude, item) * elemMod);
+        } else if (ef.action === 'lifesteal') {
+            result.lifesteal = (ef.magnitude * 100 * elemMod).toFixed(1);
+        } else if (ef.action === 'buffAtk') {
+            result.buffAtk = (ef.magnitude * 100 * elemMod).toFixed(1);
+        } else if (ef.action === 'stun') {
+            result.stun = lbDurMag(ef.magnitude, item).toFixed(1);
+        } else if (ef.action === 'freeze') {
+            result.freeze = lbDurMag(ef.magnitude, item).toFixed(1);
+        }
+    }
+
+    return result;
+}
+
+function getLinhBaoTooltipText(item) {
+    const val = calcLinhBaoTrueValue(item);
+    if (!val) return '';
+
+    const parts = [];
+    if (val.damage > 0) parts.push(`⚔️ Sát thương: ${val.damage.toLocaleString()}`);
+    if (val.burn > 0) parts.push(`🔥 Thiêu đốt: ${val.burn.toLocaleString()}/tick`);
+    if (val.heal > 0) parts.push(`🌿 Hồi máu: ${val.heal.toLocaleString()}`);
+    if (val.shield > 0) parts.push(`🛡️ Khiên: ${val.shield.toLocaleString()}`);
+    if (val.lifesteal > 0) parts.push(`🩸 Hút máu: ${val.lifesteal}%`);
+    if (val.buffAtk > 0) parts.push(`⬆️ Tăng ATK: ${val.buffAtk}%`);
+    if (val.stun > 0) parts.push(`💫 Choáng: ${val.stun}s`);
+    if (val.freeze > 0) parts.push(`❄️ Đóng băng: ${val.freeze}s`);
+
+    return parts.join('\n');
 }

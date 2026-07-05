@@ -81,7 +81,7 @@ function calcTierBonus(atkRealm, defRealm, atkName = state.name, defName = state
             bonus *= tierBonuses[i] || 15.0;
         }
 
-        log(`⚔️ ${atkName} [${atkTierName}] đánh ${defName} [${defTierName}] → x${bonus.toFixed(2)} (vượt ${tierDiff} tier)`);
+        log(`⚔️ ${atkName} [${defTierName}] đánh ${defName} [${atkTierName}] → x${bonus.toFixed(2)} (vượt ${tierDiff} tier)`);
         return bonus;
     }
     else if (tierDiff < 0) {

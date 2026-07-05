@@ -311,6 +311,20 @@ button.primary {
     scrollbar-color: rgba(123, 228, 163, 0.45) rgba(9, 16, 26, 0.65);
 }
 
+/* Small log for right column placement */
+.panel-log-small .log {
+    height: 120px;
+    font-size: 11px;
+}
+
+.panel-log-small {
+    min-height: auto;
+}
+
+.panel-log-small strong {
+    font-size: 0.9em;
+}
+
 .log::-webkit-scrollbar {
     width: 6px;
 }
@@ -433,6 +447,71 @@ footer {
 #inventoryFilter select option {
     background: #0f1724;
     color: #d7fbef;
+}
+
+/* Filter chips - better display */
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.filter-chip {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(123, 228, 163, 0.3);
+}
+
+.filter-chip.active {
+    background: rgba(123, 228, 163, 0.2);
+    border-color: rgba(123, 228, 163, 0.5);
+    color: #a6ffd1;
+}
+
+.filter-label {
+    font-size: 0.75rem;
+    color: #9aa6b2;
+    margin-right: 4px;
+    display: flex;
+    align-items: center;
+}
+
+/* Linh Bảo hover tooltip */
+.linhbao-container {
+    position: relative;
+    cursor: help;
+}
+
+.linhbao-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 25, 36, 0.95);
+    border: 1px solid rgba(123, 228, 163, 0.4);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    color: #e9fff5;
+    white-space: pre-line;
+    z-index: 100;
+    min-width: 180px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.linhbao-container:hover .linhbao-tooltip {
+    display: block;
 }
 
 #inventoryItems {
@@ -1116,6 +1195,33 @@ footer {
 .lb-tile:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.lb-tile-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10, 15, 25, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75em;
+    color: #e0e6f0;
+    white-space: pre-wrap;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    min-width: 140px;
+    max-width: 250px;
+}
+
+.lb-tile {
+    position: relative;
+}
+
+.lb-tile:hover .lb-tile-tooltip {
+    display: block;
 }
 
 .lb-tile-empty {

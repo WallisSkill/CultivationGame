@@ -571,8 +571,13 @@ function runFromBattle() {
 function winBattle(enemy) {
     window._battleActive = false;
     const mult = enemy.rewardMult || 1;
-    const baseXp = Math.floor((enemy.xp || 50) * mult);
-    const baseGold = Math.floor((enemy.gold || 20) * mult);
+
+    // 🎮 REWARD SCALING: Player realm multiplier - higher realm = much higher rewards
+    // Each realm level multiplies rewards by 1.5x
+    const playerRealmMult = Math.pow(1.5, state.realmIndex || 0);
+
+    const baseXp = Math.floor((enemy.xp || 50) * mult * playerRealmMult);
+    const baseGold = Math.floor((enemy.gold || 20) * mult * playerRealmMult);
 
     // ⚜️ Phần thưởng cơ bản
     let finalXp = baseXp;
@@ -592,7 +597,7 @@ function winBattle(enemy) {
     // 💰 Thưởng cơ bản
     state.gold += finalGold;
     gainXP(finalXp);
-    log(`🏵️ Hạ ${enemy.name}! Nhận ${finalXp} tu vi và ${finalGold} linh thạch.`);
+    log(`🏵️ Hạ ${enemy.name}! Nhận ${finalXp} tu vi và ${finalGold.toLocaleString()} linh thạch. (x${playerRealmMult.toFixed(1)} Cảnh ${state.realmIndex})`);
 
     // 🌌 Vượt cấp chi phúc — thưởng thêm khi địch mạnh hơn
     const realmDiff = (enemy.realmIndex ?? 0) - (state.realmIndex ?? 0);
@@ -680,6 +685,16 @@ function winBattle(enemy) {
         resetAllCooldowns();
     }
 
+    // 🆕 Clear board battle timer if running
+    const boardBattle = window.__boardBattle;
+    if (boardBattle && boardBattle.running) {
+        boardBattle.running = false;
+        if (boardBattle.timer) {
+            clearInterval(boardBattle.timer);
+            boardBattle.timer = null;
+        }
+    }
+
     renderInventory();
     checkRealmProgress();
 }
@@ -694,9 +709,19 @@ function loseBattle() {
         state.skillRuntime.enemyKey = null;
     }
 
+    // 🆕 Clear board battle timer if running
+    const boardBattle = window.__boardBattle;
+    if (boardBattle && boardBattle.running) {
+        boardBattle.running = false;
+        if (boardBattle.timer) {
+            clearInterval(boardBattle.timer);
+            boardBattle.timer = null;
+        }
+    }
+
     disableAllButtons();
     stopAging();
-    log('💀 Ngươi ngã gục! Đạo tâm tan rã, không thể tiếp tục.');
+    log('💀 Ngươi ngã gục! Đạo tâm tan rà, không thể tiếp tục.');
     showRebirthButton();
 }
 
