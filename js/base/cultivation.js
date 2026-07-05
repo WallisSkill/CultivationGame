@@ -6,55 +6,55 @@
    ⚡ REBALANCED: Full buffs should allow reaching max realm in ~2 days
 =========================== */
 function getNeed(realmIndex = state.realmIndex, stage = state.realmStage) {
-    const base = 150; // Increased base for more reasonable values
+    const base = 800; // Increased base for slower progression
     const stageMult = [1, 1.5, 2.5, 4][stage] || 1;
 
-    // 🌌 Cơ bản – đạo vận nền (moderate scaling)
-    let power = 1.5 + realmIndex * 0.18;
+    // 🌌 Cơ bản – đạo vận nền (stronger scaling)
+    let power = 2.0 + realmIndex * 0.25;
 
-    // ✨ Hệ số theo giai đoạn (reduced but still challenging)
+    // ✨ Hệ số theo giai đoạn (much higher values to slow progression)
     let tierMult = 1;
 
     if (realmIndex < 1) {
-        tierMult = 1.5; // Luyện Khí
+        tierMult = 2; // Luyện Khí
     }
     else if (realmIndex < 2) {
-        tierMult = 3; // Trúc Cơ
+        tierMult = 5; // Trúc Cơ
     }
     else if (realmIndex < 4) {
         // Kim Đan - Nguyên Anh
-        tierMult = Math.pow(4, realmIndex - 2);
+        tierMult = Math.pow(6, realmIndex - 2);
     }
     else if (realmIndex < 9) {
         // Hóa Thần - Đại Thừa
-        tierMult = Math.pow(5, realmIndex - 4) * 16;
+        tierMult = Math.pow(8, realmIndex - 4) * 30;
     }
     else if (realmIndex < 15) {
         // 🌠 Tiên giới (Tán Tiên → Tiên Đế)
-        const tierBase = 6;
-        tierMult = Math.pow(tierBase, realmIndex - 9) * 100;
+        const tierBase = 10;
+        tierMult = Math.pow(tierBase, realmIndex - 9) * 500;
     }
     else if (realmIndex < 20) {
         // 🕯️ Thánh cảnh (Thánh Nhân → Chuẩn Thiên)
-        const tierBase = 7;
-        tierMult = Math.pow(tierBase, realmIndex - 15) * 800;
+        const tierBase = 12;
+        tierMult = Math.pow(tierBase, realmIndex - 15) * 5000;
     }
     else if (realmIndex < 25) {
         // ⚡ Thiên cảnh (Diệt Thiên → Toàn Thiên)
-        const tierBase = 8;
-        tierMult = Math.pow(tierBase, realmIndex - 20) * 5000;
+        const tierBase = 15;
+        tierMult = Math.pow(tierBase, realmIndex - 20) * 80000;
     }
     else {
         // 🌌 Cảnh cuối: Nghịch Thiên → Chung Nguyên
-        const tierBase = 10;
-        tierMult = Math.pow(tierBase, realmIndex - 25) * 40000;
+        const tierBase = 18;
+        tierMult = Math.pow(tierBase, realmIndex - 25) * 500000;
     }
 
     // 🧮 Final calculation
-    let expNeed = Math.floor(base * Math.pow(power, realmIndex * 1.2) * stageMult * tierMult);
+    let expNeed = Math.floor(base * Math.pow(power, realmIndex * 1.3) * stageMult * tierMult);
 
     // Minimum floor
-    return Math.max(100, expNeed);
+    return Math.max(500, expNeed);
 }
 
 

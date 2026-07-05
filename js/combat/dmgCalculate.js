@@ -48,7 +48,7 @@ function computeDamage(
     };
 }
 
-function calcTierBonus(atkRealm, defRealm, atkName = state.name, defName = state.currentEnemy.name) {
+function calcTierBonus(atkRealm, defRealm, atkName = state.name, defName = (state.currentEnemy?.name || 'địch')) {
     // Phân loại tier
     function getTier(realm) {
         if (realm < 9) return 0;      // Phàm giới (0-8)

@@ -295,9 +295,8 @@ function mysteryGood() {
 	}
 	// 💰 Gold
 	else {
-		// 🎮 REWARD SCALING: Higher realm = much higher rewards
-		// Base 250 at realm 0, scales exponentially with realm
-		const realmMultiplier = Math.pow(1.6, state.realmIndex);
+		// 🎮 REWARD SCALING: Modest scaling - 6% increase per realm
+		const realmMultiplier = Math.pow(1.06, state.realmIndex);
 		const gold = Math.floor((250 + Math.random() * 250) * realmMultiplier);
 		state.gold += gold;
 		log(`💰 Nhặt được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
@@ -330,8 +329,8 @@ function mysteryTreasureVault() {
 			name: '💎 Tiên Cung Bảo Tàng',
 			desc: 'Nhận 5000+ Linh Thạch',
 			apply: () => {
-				// 🎮 REWARD SCALING: Higher realm = much higher rewards
-				const realmMultiplier = Math.pow(1.8, state.realmIndex);
+				// 🎮 REWARD SCALING: Modest 10% increase per realm
+				const realmMultiplier = Math.pow(1.1, state.realmIndex);
 				const gold = Math.floor((5000 + Math.random() * 3000) * realmMultiplier);
 				state.gold += gold;
 				log(`💰 Nhận được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
@@ -401,7 +400,7 @@ function mysteryDilemma() {
 			desc: 'Có cơ hội nhận gấp 3 phần thưởng, nhưng cũng có thể mất nhiều hơn',
 			apply: () => {
 				if (Math.random() < 0.6) {
-					const realmMult = Math.pow(1.5, state.realmIndex);
+					const realmMult = Math.pow(1.08, state.realmIndex);
 					const xp = Math.floor(getNeed() * 0.3 * realmMult);
 					const gold = Math.floor((500 + Math.random() * 500) * realmMult);
 					gainXP(xp);
@@ -421,7 +420,7 @@ function mysteryDilemma() {
 			name: '🛡️ Chơi an toàn',
 			desc: 'Nhận phần thưởng nhỏ nhưng chắc chắn',
 			apply: () => {
-				const realmMult = Math.pow(1.4, state.realmIndex);
+				const realmMult = Math.pow(1.06, state.realmIndex);
 				const xp = Math.floor(getNeed() * 0.1 * realmMult);
 				gainXP(xp);
 				const gold = Math.floor(150 * realmMult);

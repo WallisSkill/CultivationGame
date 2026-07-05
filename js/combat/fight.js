@@ -572,9 +572,9 @@ function winBattle(enemy) {
     window._battleActive = false;
     const mult = enemy.rewardMult || 1;
 
-    // 🎮 REWARD SCALING: Player realm multiplier - higher realm = much higher rewards
-    // Each realm level multiplies rewards by 1.5x
-    const playerRealmMult = Math.pow(1.5, state.realmIndex || 0);
+    // 🎮 REWARD SCALING: Player realm multiplier - modest scaling per realm
+    // Each realm level multiplies rewards by ~1.08x (8% increase per realm)
+    const playerRealmMult = Math.pow(1.08, state.realmIndex || 0);
 
     const baseXp = Math.floor((enemy.xp || 50) * mult * playerRealmMult);
     const baseGold = Math.floor((enemy.gold || 20) * mult * playerRealmMult);
