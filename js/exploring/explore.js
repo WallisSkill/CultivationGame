@@ -107,60 +107,8 @@ window.explore = function () {
    Higher realm = higher chance for higher tier skills
    ================================================ */
 
-// Skill tier pools organized by power level
-const SKILL_TIER_POOLS = [
-    // Tier 0 (1st tier) - Basic skills
-    [
-        { skillId: 'dragon_roar', name: '🐉 Long Nha Phá Thiên Quyết', desc: 'Hủy diệt công kích dồn dập 250% ATK, CD 3 round', element: 'fire' },
-        { skillId: 'crimson_edge', name: '🔪 Huyết Nguyệt Trảm Pháp', desc: 'Tấn công chí mạng 300% ATK, có hút máu 20%', element: 'fire' },
-        { skillId: 'lotus_rebirth', name: '🌸 Liên Tâm Hồi Mệnh Công', desc: 'Hồi phục 40% HP và tăng 15% DEF trong 2 round', element: 'water' },
-        { skillId: 'steel_shield', name: '🛡️ Thanh Thiết Hộ Thể', desc: 'Tăng 25% DEF trong 3 round', element: 'earth' },
-        { skillId: 'wind_slash', name: '🌪️ Phong Nguyệt Trảm', desc: 'Công kích 200% ATK, +10% tốc độ', element: 'wind' },
-    ],
-    // Tier 1 (2nd tier) - Intermediate skills
-    [
-        { skillId: 'thuong_thanh_tram', name: '⚡ Thượng Thanh Trảm Pháp', desc: 'Công kích cực mạnh 550% ATK, CD 2 round, bị động +15% DEF', element: 'thunder' },
-        { skillId: 'thong_thien_van_kiem', name: '🌪️ Thông Thiên Vạn Kiếm', desc: 'Xoáy sát 300% ATK + 15% HP địch, CD 3 round, bị động +20% ATK', element: 'wind' },
-        { skillId: 'flame_dragon_break', name: '🔥 Hoả Long Quyết', desc: '600% ATK + đốt cháy 3 round, CD 3', element: 'fire' },
-        { skillId: 'ice_shield_ward', name: '❄️ Băng Giáp Vệ Thể', desc: 'Tăng 40% DEF và kháng băng 3 round', element: 'water' },
-        { skillId: 'lightning_fist', name: '⚡ Lôi Quyền', desc: '550% ATK + choáng 1 round, CD 2', element: 'thunder' },
-    ],
-    // Tier 2 (3rd tier) - Advanced skills
-    [
-        { skillId: 'nguyen_thuy_hon_don', name: '🌌 Nguyên Thủy Hỗn Độn Chưởng', desc: '450% ATK + 12% HP địch + 40% lifesteal, CD 4', element: 'hybrid' },
-        { skillId: 'void_cloud_step', name: '☁️ Hư Không Vân Bộ', desc: 'Tránh 60% sát thương next hit, tăng 30% tốc độ 2 round', element: 'wind' },
-        { skillId: 'blood_moon_slasher', name: '🌙 Huyết Nguyệt Tà Diệt', desc: '800% ATK, hút 50% HP, CD 4', element: 'fire' },
-        { skillId: 'mountain_breaker', name: '⛰️ Sơn Hà Tái Tạo', desc: '900% ATK + giảm 30% DEF địch 3 round', element: 'earth' },
-        { skillId: 'dragon_god_fist', name: '🐉 Long Thần Quyền', desc: '700% ATK + 20% crit rate permanent, CD 3', element: 'fire' },
-    ],
-    // Tier 3 (4th tier) - Rare skills
-    [
-        { skillId: 'celestial_division', name: '✨ Thái Hư Phân Thể', desc: 'Tạo 2 bóng ma, mỗi 400% ATK, CD 5', element: 'thunder' },
-        { skillId: 'phoenix_rebirth', name: '🔥 Huyết Ngọc Phượng Hoàng', desc: 'Hồi sinh với 80% HP một lần, CD 8', element: 'fire' },
-        { skillId: 'nine_dragon_fist', name: '🐉 Cửu Long Quyết', desc: '900% ATK x 3 lần, mỗi +10% crit, CD 6', element: 'fire' },
-        { skillId: 'ice_dragon_bite', name: '❄️ Băng Long Xà Uy', desc: '1200% ATK, đóng băng 2 round, CD 5', element: 'water' },
-        { skillId: 'thunder_god_wrath', name: '⚡ Lôi Thần Chi Uy', desc: '1500% ATK + choáng toàn trận, CD 6', element: 'thunder' },
-    ],
-    // Tier 4 (5th tier) - Epic skills
-    [
-        { skillId: 'heavenly_strike', name: '👊 Thiên Nhai Kích', desc: '2000% ATK, bỏ qua 50% phòng, CD 7', element: 'thunder' },
-        { skillId: 'immortal_body', name: '🛡️ Bất Diệt Thân', desc: 'Miễn nhiễm sát thương 2 round, CD 10', element: 'earth' },
-        { skillId: 'soul_severance', name: '💀 Linh Hồn Ly Tán', desc: '2000% ATK + 50% HP địch, triệt tiêu hồi phục 3 round', element: 'fire' },
-        { skillId: 'primordial_chaos', name: '🌌 Nguyên Lai Hỗn Độn', desc: '2500% ATK + 30% lifesteal + 20% crit dmg permanent, CD 8', element: 'hybrid' },
-    ],
-    // Tier 5 (6th tier) - Legendary skills
-    [
-        { skillId: 'god_slayer_fist', name: '⚔️ Thần Giới Sát Quyền', desc: '3000% ATK, bỏ qua 80% phòng, CD 9', element: 'thunder' },
-        { skillId: 'world_breaker', name: '🌍 Thế Giới Trảm Phá', desc: '3500% ATK, phá hủy 30% tất cả chỉ số địch vĩnh viễn', element: 'earth' },
-        { skillId: 'eternal_rebirth', name: '♾️ Vĩnh Hằng Tái Sinh', desc: 'Hồi full HP + miễn khống chế 3 round, CD 12', element: 'water' },
-    ],
-    // Tier 6 (7th tier) - Mythic skills
-    [
-        { skillId: 'universe_breaker', name: '🌟 Vũ Trụ Phá Diệt', desc: '5000% ATK + 50% HP toàn trận địch, CD 10', element: 'hybrid' },
-        { skillId: 'celestial_emperor', name: '👑 Thiên Đế Chân Quyền', desc: '4000% ATK + 100% crit dmg permanent + 50% tốc độ vĩnh viễn, CD 8', element: 'thunder' },
-        { skillId: 'primordial_god', name: '🌌 Nguyên Thủy Thần Công', desc: '6000% ATK + hồi 200% ATK dạng HP, CD 12', element: 'hybrid' },
-    ],
-];
+// OLD Công Pháp skills - REMOVED
+const SKILL_TIER_POOLS = [];
 
 // Get skill tier based on realm (higher realm = higher tier chance)
 function getSkillTierFromRealm(realmIndex) {

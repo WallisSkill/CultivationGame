@@ -997,17 +997,8 @@ function openGemSocketModal(gemInvIndex) {
 }
 if (typeof window !== 'undefined') window.openGemSocketModal = openGemSocketModal;
 
-/* ---------- skill reward catalog for battle ---------- */
-const LB_SKILL_REWARDS = [
-    { skillId: 'dragon_roar', name: '🐉 Long Nha Phá Thiên', desc: '250% ATK, CD 3 round', color: '#ff6b6b' },
-    { skillId: 'crimson_edge', name: '🔪 Huyết Nguyệt Trảm', desc: '300% ATK + 20% lifesteal', color: '#c92a2a' },
-    { skillId: 'lotus_rebirth', name: '🌸 Liên Tâm Hồi Mệnh', desc: 'Hồi 40% HP, +15% DEF 2 round', color: '#f783ac' },
-    { skillId: 'thuong_thanh_tram', name: '⚡ Thượng Thanh Trảm Pháp', desc: '550% ATK, CD 2, +15% DEF', color: '#ffd43b' },
-    { skillId: 'thong_thien_van_kiem', name: '🌪️ Thông Thiên Vạn Kiếm', desc: '300% ATK + 15% HP, CD 3, +20% ATK', color: '#74c0fc' },
-    { skillId: 'nguyen_thuy_hon_don', name: '🌌 Nguyên Thủy Hỗn Độn', desc: '450% ATK + 12% HP + 40% lifesteal', color: '#9775fa' },
-    { skillId: 'tay_du_ky_dai', name: '⚔️ Tay Du Kỳ Đại', desc: '350% ATK x2 lần, CD 4', color: '#ffa94d' },
-    { skillId: 'than_tuc_vo_su', name: '🔥 Thần Túc Vô Sư', desc: '400% ATK, hút 50% sát thương', color: '#ff922b' }
-];
+/* ---------- OLD Công Pháp skills - REMOVED ---------- */
+const LB_SKILL_REWARDS = [];
 
 // Skill tier display names (1st = tier 0, 2nd = tier 1, etc.)
 const LB_SKILL_TIER_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];

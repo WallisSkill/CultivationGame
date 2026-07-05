@@ -30,17 +30,6 @@ const SAINTS = [
                     log("🎁 Đạo vận tương sinh — nhận được Thái Cực Đồ!");
                 }
             }
-            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.thuong_thanh_tram) {
-                addItemToInventory({
-                    name: '⚡ Thượng Thanh Trảm Pháp',
-                    type: 'manual',
-                    skillId: 'thuong_thanh_tram',
-                    desc: 'Chân truyền Thái Thanh — Tấn công cực mạnh gây 550% ATK, CD 2 round, bị động thêm 15% DEF'
-                });
-                log("⚡ Thái Thanh truyền thụ Thượng Thanh Trảm Pháp!");
-                state.learnedSkillFromSaint = true;
-            }
-
             // 🌈 Tăng thêm chút phúc vận
             state.luckBonus = (state.luckBonus || 0) + 0.05;
             log("💠 Khí vận của ngươi dâng trào — may mắn +5%!");
