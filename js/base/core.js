@@ -275,7 +275,7 @@ function loseByLongevity() {
     stopAging();
     disableAllButtons();
     log('☠️ Người đã tử vong do cạn thọ nguyên. Thân thể hóa tro bụi...');
-    showRebirthButton();
+    showRebirthButton('cạn thọ nguyên');
 }
 
 
@@ -323,23 +323,194 @@ function updateAgeDisplay() {
 
 
 
-function showRebirthButton() {
+function showRebirthButton(deathReason = 'không rõ nguyên nhân', killInfo = null) {
+    // Tạo overlay popup kết thúc giống như màn hình khởi đầu
+    const overlay = document.createElement('div');
+    overlay.id = 'ending-overlay';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.9)';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '9999';
+
     const container = document.createElement('div');
-    container.id = 'rebirthContainer';
+    container.id = 'ending-screen';
+    container.style.background = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+    container.style.borderRadius = '16px';
+    container.style.padding = '40px';
+    container.style.maxWidth = '550px';
+    container.style.width = '90%';
     container.style.textAlign = 'center';
-    container.style.marginTop = '20px';
+    container.style.boxShadow = '0 0 60px rgba(230, 201, 122, 0.3)';
+    container.style.border = '2px solid #e6c97a';
+    container.style.maxHeight = '90vh';
+    container.style.overflowY = 'auto';
 
-    const btn = document.createElement('button');
-    btn.innerText = '🔁 Trùng sinh';
-    btn.className = 'primary';
-    btn.style.fontSize = '18px';
-    btn.onclick = () => {
-        container.remove();
-        rebirth();
-    };
+    const realmName = REALMS[state.realmIndex] || 'Luyện Khí';
+    const stageName = STAGES[state.realmStage] || 'Sơ Kỳ';
+    const rootRankName = ROOT_RANKS[state.root?.rank || 0] || 'Phế Phẩm';
+    const elements = state.root?.elements?.join(', ') || 'Vô căn';
 
-    container.appendChild(btn);
-    document.querySelector('.app').appendChild(container);
+    // Map death reason to display text
+    const deathReasonText = {
+        'cạn thọ nguyên': 'Tuổi thọ đã cạn kiệt, nguyên thần tán thể...',
+        'ngã gục trong chiến đấu': 'Đạo tâm tan rà, thân thể ngã gục trên chiến trường...'
+    }[deathReason] || 'Nguyên nhân không rõ...';
+
+    // Build kill info HTML if available
+    let killInfoHtml = '';
+    if (killInfo && killInfo.enemyName) {
+        killInfoHtml = `
+            <div style="background: rgba(255,0,0,0.15); border: 1px solid rgba(255,100,100,0.3); border-radius: 8px; padding: 12px; margin-bottom: 15px; text-align: left;">
+                <div style="color: #ff6b6b; font-weight: bold; margin-bottom: 8px;">☠️ Thông tin tử vong</div>
+                <div style="color: #ccc; line-height: 1.6;">
+                    <div><b style="color: #ff9999;">Kẻ thù:</b> ${colorizeWithMap(killInfo.enemyName)}</div>
+                    <div><b style="color: #ff9999;">Phương thức:</b> ${killInfo.killMethod || 'không rõ'}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Nút toggle xem nhật ký
+    const toggleLogBtnId = 'toggleDeathLogBtn';
+    const logContainerId = 'deathLogContainer';
+
+    container.innerHTML = `
+        <h2 style="color: #e6c97a; font-size: 2em; margin-bottom: 10px;">☠️ Ngọa Long Túc</h2>
+        <p style="color: #ff6b6b; font-style: italic; margin-bottom: 20px;">${deathReasonText}</p>
+
+        ${killInfoHtml}
+
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; margin-bottom: 15px; text-align: left;">
+            <h3 style="color: #e6c97a; margin-bottom: 15px; text-align: center;">📜 Nhật ký tu luyện</h3>
+            <div style="color: #ccc; line-height: 1.8;">
+                <div><b style="color: #e6c97a;">Đạo danh:</b> ${state.name || 'Vô Danh Tu Sĩ'}</div>
+                <div><b style="color: #e6c97a;">Cảnh giới đạt được:</b> ${colorizeWithMap(realmName)} ${colorizeWithMap(stageName)}</div>
+                <div><b style="color: #e6c97a;">Linh căn:</b> ${elements} (${colorizeWithMap(rootRankName)})</div>
+                <div><b style="color: #e6c97a;">Tuổi thọ:</b> ${state.age} / ${state.maxAge}</div>
+                <div><b style="color: #e6c97a;">Linh thạch tích lũy:</b> ${state.gold}</div>
+                <div><b style="color: #e6c97a;">Sức mạnh tối đa:</b> ${state.totalPower || state.power}</div>
+                <div><b style="color: #e6c97a;">Kho đồ:</b> ${state.inventory.length} vật phẩm</div>
+            </div>
+        </div>
+
+        <button id="${toggleLogBtnId}" style="
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 8px;
+            background: rgba(230, 201, 122, 0.2);
+            color: #e6c97a;
+            border: 1px solid #e6c97a;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        ">📜 Xem nhật ký tu luyện</button>
+
+        <div id="${logContainerId}" style="display: none; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 10px; margin-bottom: 15px; text-align: left;"></div>
+
+        <div style="margin-top: 15px;">
+            <button id="trungSinhBtn" style="
+                padding: 15px 40px;
+                font-size: 1.2em;
+                border-radius: 10px;
+                background: linear-gradient(135deg, #b8860b, #e6c97a);
+                color: #1a1a2e;
+                border: none;
+                cursor: pointer;
+                font-weight: bold;
+                box-shadow: 0 4px 20px rgba(230, 201, 122, 0.4);
+                transition: transform 0.2s, box-shadow 0.2s;
+            ">🔁 Trùng sinh</button>
+            <p style="color: #666; font-size: 0.85em; margin-top: 10px;">Bắt đầu một vòng luân hồi mới</p>
+        </div>
+    `;
+
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+
+    // Add hover effect
+    const trungSinhBtn = document.getElementById('trungSinhBtn');
+    trungSinhBtn.addEventListener('mouseenter', () => {
+        trungSinhBtn.style.transform = 'scale(1.05)';
+        trungSinhBtn.style.boxShadow = '0 6px 30px rgba(230, 201, 122, 0.6)';
+    });
+    trungSinhBtn.addEventListener('mouseleave', () => {
+        trungSinhBtn.style.transform = 'scale(1)';
+        trungSinhBtn.style.boxShadow = '0 4px 20px rgba(230, 201, 122, 0.4)';
+    });
+
+    // 🆕 Toggle xem nhật ký tu luyện
+    const toggleLogBtn = document.getElementById(toggleLogBtnId);
+    const logContainer = document.getElementById(logContainerId);
+    let logVisible = false;
+
+    toggleLogBtn.addEventListener('click', () => {
+        logVisible = !logVisible;
+        if (logVisible) {
+            // Hiển thị nhật ký
+            logContainer.style.display = 'block';
+            toggleLogBtn.innerText = '📕 Ẩn nhật ký tu luyện';
+            toggleLogBtn.style.background = 'rgba(230, 201, 122, 0.4)';
+
+            // Build log content from cultivation log history
+            const logHistory = window.__cultivationLog || [];
+            const initCount = typeof __initLogCount !== 'undefined' ? __initLogCount : 0;
+
+            if (logHistory.length === 0) {
+                logContainer.innerHTML = '<div style="color: #888; font-style: italic;">Không có nhật ký nào được ghi lại.</div>';
+            } else {
+                // Lọc bỏ các dòng log khởi tạo, chỉ hiển thị log thực tế
+                let logHtml = '';
+                const gameLogs = logHistory.slice(initCount);
+                gameLogs.forEach(entry => {
+                    logHtml += `<div style="color: #ccc; margin-bottom: 6px;">★ ${entry.time} — ${entry.coloredMsg || entry.msg}</div>`;
+                });
+                logContainer.innerHTML = logHtml || '<div style="color: #888; font-style: italic;">Không có nhật ký nào được ghi lại.</div>';
+            }
+        } else {
+            // Ẩn nhật ký
+            logContainer.style.display = 'none';
+            toggleLogBtn.innerText = '📜 Xem nhật ký tu luyện';
+            toggleLogBtn.style.background = 'rgba(230, 201, 122, 0.2)';
+        }
+    });
+
+    // Trùng sinh button - reset everything like a new game
+    trungSinhBtn.addEventListener('click', () => {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.5s';
+        setTimeout(() => {
+            overlay.remove();
+            rebirth(); // Reset state
+            // Show start screen again for new game
+            showStartScreenForRebirth();
+        }, 500);
+    });
+
+    // Fade in animation
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.5s';
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+    });
+}
+
+// Hiển thị màn hình khởi đầu sau khi trùng sinh
+function showStartScreenForRebirth() {
+    // Xóa tất cả localStorage để reset hoàn toàn
+    try {
+        localStorage.removeItem('playerName');
+        localStorage.removeItem('tt_state_complete_v2');
+        localStorage.removeItem('tt_profileId');
+    } catch(e) {}
+
+    // Tải lại trang để bắt đầu mới hoàn toàn
+    location.reload();
 }
 
 const TOAST_HOST_ID = 'toastLayer';
@@ -456,6 +627,19 @@ function rebirth() {
 
 /* --- Helpers DOM & log --- */
 function $(id) { return document.getElementById(id); }
+
+// 🌟 Lịch sử nhật ký tu luyện để hiển thị khi chết
+if (typeof window !== 'undefined') {
+    window.__cultivationLog = [];
+}
+
+// Lưu số dòng log khởi tạo (không tính dòng "Game đã khởi tạo")
+let __initLogCount = 0;
+function countInitLogs() {
+    const el = $('log');
+    if (el) __initLogCount = el.children.length;
+}
+
 function log(msg) {
     const el = $('log');
     const time = new Date().toLocaleTimeString();
@@ -465,6 +649,12 @@ function log(msg) {
     const entry = `<div>★ ${time} — ${coloredMsg}</div>`;
     el.innerHTML += entry;
     el.scrollTop = el.scrollHeight;
+
+    // 🌟 Lưu vào lịch sử để hiển thị khi chết
+    if (typeof window !== 'undefined') {
+        if (!window.__cultivationLog) window.__cultivationLog = [];
+        window.__cultivationLog.push({ time, msg, coloredMsg });
+    }
 }
 
 
@@ -1381,6 +1571,7 @@ function setGameVersionLabel() {
 
 setGameVersionLabel();
 log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
+countInitLogs(); // Đếm số dòng log khởi tạo để lọc bỏ khi hiển thị nhật ký chết
 function renderRootTable() {
     const el = $('rootTable');
     if (!el) return;

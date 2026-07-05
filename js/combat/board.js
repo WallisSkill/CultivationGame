@@ -1426,6 +1426,13 @@ function lbEndBattle(battle, result) {
             else if (Math.random() < 0.25) grantGemDrop({ source: 'Chiến thắng' });
         } catch { }
     } else {
+        // 🆕 Lưu thông tin tử vong - bị Linh Bảo trận pháp tiêu diệt
+        if (enemy) {
+            window.__lastDeathInfo = {
+                enemyName: enemy.name || 'Kẻ thù không rõ',
+                killMethod: 'Linh Bảo trận pháp'
+            };
+        }
         if (typeof loseBattle === 'function') loseBattle();
         state.currentEnemy = null;
     }

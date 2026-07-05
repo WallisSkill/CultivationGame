@@ -530,6 +530,11 @@ function attackTurn() {
         updateBattleInfo(edmg, true);
 
         if (state.hp <= 0) {
+            // 🆕 Lưu thông tin tử vong
+            window.__lastDeathInfo = {
+                enemyName: enemy.name || 'Kẻ thù không rõ',
+                killMethod: 'đòn đánh thường'
+            };
             loseBattle();
             state.currentEnemy = null;
         }
@@ -722,7 +727,17 @@ function loseBattle() {
     disableAllButtons();
     stopAging();
     log('💀 Ngươi ngã gục! Đạo tâm tan rà, không thể tiếp tục.');
-    showRebirthButton();
+
+    // Lấy thông tin tử vong từ window.__lastDeathInfo (đã được set trước khi gọi loseBattle)
+    let killInfo = {
+        enemyName: 'Kẻ thù không rõ',
+        killMethod: 'không rõ'
+    };
+    if (window.__lastDeathInfo) {
+        killInfo = window.__lastDeathInfo;
+        window.__lastDeathInfo = null; // Xóa sau khi đọc
+    }
+    showRebirthButton('ngã gục trong chiến đấu', killInfo);
 }
 
 /* update battle info display */
