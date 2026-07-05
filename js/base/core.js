@@ -1210,6 +1210,15 @@ if (typeof window !== 'undefined') {
     window.closeItemDetailModal = closeItemDetailModal;
 }
 
+// Wrapper to safely upgrade all Linh Bảo to current realm tier
+function doUpgradeLinhBaoByRealm() {
+    if (typeof window.upgradeAllLinhBaoToRealmTier === 'function') {
+        window.upgradeAllLinhBaoToRealmTier();
+    } else {
+        log('❌ Chức năng nâng cấp chưa sẵn sàng. Hãy đợi trò chơi tải xong.');
+    }
+}
+
 function renderInventory() {
     const el = $('inventory');
     if (!el) return;
@@ -1254,6 +1263,7 @@ function renderInventory() {
                     </div>
                 </div>
                 <button class="equip-all-btn" onclick="equipAll()">🧤 Mặc tất cả</button>
+                <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()" style="background:#5c3d11;color:#ffd700;margin-left:8px">🌟 Nâng Cấp Công Pháp Theo Tu Vi</button>
             `;
 
     const filtered = getFilteredInventory();
