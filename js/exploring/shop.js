@@ -20,8 +20,6 @@ const SHOP_ITEMS = [
     { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: 55, cost: 340, minTier: 0 },
     { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560, minTier: 0 },
     { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, minTier: 0, desc: 'Tăng khí vận lâu dài' },
-    { id: 'manual_iron_body', name: 'Công Pháp Huyền Thiết', type: 'manual', skillId: 'iron_body', cost: 540, minTier: 0, desc: 'Học kỹ năng tăng phòng thủ' },
-    { id: 'manual_wind_step', name: 'Ảnh Phong Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 680, minTier: 0, desc: 'Học thân pháp gia tăng né tránh' },
 
     // ⚔️ TIER 1 - Trúc Cơ→Đại Thừa (Realm 5-8)
     { id: 'swd_storm', name: 'Kiếm Lôi Đình', type: 'weapon', atk: 210, hp: 40, def: 0, cost: 1800, minTier: 1 },
@@ -41,8 +39,6 @@ const SHOP_ITEMS = [
     { id: 'jade_star', name: 'Tinh Ngọc Tụ Tu Vi', type: 'xp', value: 15000, cost: 6000, minTier: 2 },
     { id: 'pill_dragon', name: 'Long Cốt Đan', type: 'power', value: 380, cost: 3200, minTier: 2 },
     { id: 'pill_phoenix', name: 'Phượng Linh Đan', type: 'defense', value: 420, cost: 3500, minTier: 2 },
-    { id: 'manual_iron_body_t2', name: 'Thiên Thiết Công Pháp', type: 'manual', skillId: 'iron_body', cost: 4000, minTier: 2, desc: 'Phiên bản Tiên giới của Huyền Thiết' },
-    { id: 'manual_wind_step_t2', name: 'Thần Tung Thân Pháp', type: 'manual', skillId: 'wind_step', cost: 4500, minTier: 2, desc: 'Phiên bản Tiên giới của Ảnh Phong' },
 
     // ⭐ TIER 3 - Thánh cảnh (Realm 16-19)
     { id: 'sword_divine', name: 'Thánh Kiếm', type: 'weapon', atk: 3200, hp: 650, def: 280, cost: 45000, minTier: 3 },
@@ -418,11 +414,11 @@ function renderShop() {
         }
 
         items.forEach(si => {
-        const realmAtkMul = Math.pow(1.5, state.realmIndex);
-        const realmDefMul = Math.pow(1.45, state.realmIndex);
-        const realmHpMul = Math.pow(1.5, state.realmIndex);
-        const realmHealMul = Math.pow(1.25, state.realmIndex);
-        const realmValueMul = Math.pow(1.35, state.realmIndex);
+        const realmAtkMul = Math.pow(1.08, state.realmIndex);
+        const realmDefMul = Math.pow(1.06, state.realmIndex);
+        const realmHpMul = Math.pow(1.08, state.realmIndex);
+        const realmHealMul = Math.pow(1.15, state.realmIndex);
+        const realmValueMul = Math.pow(1.15, state.realmIndex);
 
         const priceBoost = Math.pow(1.35, state.realmIndex) * (1 + state.realmIndex * 0.08);
         const price = Math.floor(si.cost * priceBoost);
@@ -430,11 +426,11 @@ function renderShop() {
         const enhanced = { ...si, price };
 
         if (si.type === 'weapon') {
-            enhanced.atk = Math.floor((si.atk || 0) * realmAtkMul + state.realmIndex * 18);
+            enhanced.atk = Math.floor((si.atk || 0) * realmAtkMul + state.realmIndex * 10);
             enhanced.hp = si.hp || 0;
         } else if (si.type === 'armor') {
-            enhanced.hp = Math.floor((si.hp || 0) * realmHpMul + state.realmIndex * 110);
-            enhanced.def = Math.floor((si.def || 0) * realmDefMul + state.realmIndex * 16);
+            enhanced.hp = Math.floor((si.hp || 0) * realmHpMul + state.realmIndex * 60);
+            enhanced.def = Math.floor((si.def || 0) * realmDefMul + state.realmIndex * 8);
             enhanced.atk = si.atk || 0;
         } else if (si.type === 'consumable') {
             enhanced.heal = Math.floor((si.heal || 0) * realmHealMul);

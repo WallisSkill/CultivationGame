@@ -44,6 +44,119 @@ const LB_GRADE_MAX_LEVEL = [10, 20, 35, 50, 70, 100, 150, 220, 320, 450, 620, 85
 const LB_GRADE_COST_MULT = [1, 1.2, 1.5, 2, 2.8, 4, 6, 9, 14, 22, 35, 55, 90];
 const LB_BOARD_SLOTS = 6;
 
+/* ---------- Realm-based Linh Bảo Grade Unlocking ----------
+   When player reaches certain realms, they can use Linh Bảo of that tier.
+   Previously you had to fuse to get higher grades - now realm breakthrough grants access.
+   Each realm tier unlocks the ability to use + equip Linh Bảo of that grade.
+---------------------------------------------------------------- */
+// Map: which grade is available at which realm
+// Realm 0-4 (Phàm giới): grade 0-1
+// Realm 5-8 (Trúc Cơ-Đại Thừa): grade 0-2
+// Realm 9-15 (Tiên giới): grade 0-3
+// Realm 16-19 (Thánh cảnh): grade 0-4 → Grade 4 = Thiên Giai
+// Realm 20-25 (Thiên cảnh): grade 0-5 → Grade 5 = Tiên Pháp
+// Realm 26 (Hỗn Độn): grade 0-6 → Grade 6 = Chí Tôn Pháp
+// Realm 27 (Hồng Mông): grade 0-7 → Grade 7 = Đế Pháp
+// Realm 28 (Chung Nguyên): grade 0-8 → Grade 8 = Chuẩn Thánh Pháp
+// (Higher grades require fusion or special methods to exceed realm unlock)
+const LB_GRADE_UNLOCK_REALM = [
+    0,  // Grade 0 (Phàm): available from realm 0
+    3,  // Grade 1 (Hoàng): unlock at realm 3
+    5,  // Grade 2 (Huyền): unlock at realm 5
+    8,  // Grade 3 (Địa): unlock at realm 8
+    12, // Grade 4 (Thiên): unlock at realm 12
+    16, // Grade 5 (Tiên): unlock at realm 16 (Thánh cảnh)
+    20, // Grade 6 (Chí Tôn): unlock at realm 20 (Thiên cảnh)
+    23, // Grade 7 (Đế): unlock at realm 23
+    25, // Grade 8 (Chuẩn Thánh): unlock at realm 25
+    26, // Grade 9 (Thánh): unlock at realm 26 (Hỗn Độn)
+    27, // Grade 10 (Hỗn Độn): unlock at realm 27 (Hồng Mông)
+    28, // Grade 11 (Hồng Mông): unlock at realm 28 (Chung Nguyên)
+    28  // Grade 12 (Chung Nguyên): unlock at realm 28 (max)
+];
+
+// Get the highest grade the player can use based on their realm
+function getMaxLinhBaoGradeForRealm(realmIndex) {
+    let maxGrade = 0;
+    for (let g = 0; g < LB_GRADE_UNLOCK_REALM.length; g++) {
+        if (realmIndex >= LB_GRADE_UNLOCK_REALM[g]) {
+            maxGrade = g;
+        }
+    }
+    return maxGrade;
+}
+
+// Check if player can use a specific grade of Linh Bảo
+function canUseLinhBaoGrade(grade) {
+    const playerRealm = state.realmIndex || 0;
+    const maxGrade = getMaxLinhBaoGradeForRealm(playerRealm);
+    return grade <= maxGrade;
+}
+
+// Get realm name for a given grade
+function getRealmNameForGrade(grade) {
+    const realmRequired = LB_GRADE_UNLOCK_REALM[grade] || 0;
+    if (realmRequired === 0) return 'Phàm giới';
+    if (realmRequired <= 4) return `Trúc Cơ (Cảnh ${realmRequired})`;
+    if (realmRequired <= 8) return `Tiên Giới (Cảnh ${realmRequired})`;
+    if (realmRequired <= 12) return `Thánh Cảnh (Cảnh ${realmRequired})`;
+    if (realmRequired <= 16) return `Thiên Cảnh (Cảnh ${realmRequired})`;
+    if (realmRequired <= 20) return `Hỗn Độn (Cảnh ${realmRequired})`;
+    if (realmRequired <= 25) return `Hồng Mông (Cảnh ${realmRequired})`;
+    return `Chung Nguyên (Cảnh ${realmRequired})`;
+}
+
+// 🆕 When player breakthroughs to a new realm, upgrade all Linh Bảo to the max grade for that realm
+// This is an EASY upgrade - no fusion needed, just gold cost
+function upgradeAllLinhBaoToRealmTier() {
+    if (window._battleActive) { log('🔒 Đang giao chiến — không thể nâng cấp.'); return; }
+
+    const playerRealm = state.realmIndex || 0;
+    const maxGradeForRealm = getMaxLinhBaoGradeForRealm(playerRealm);
+    let upgraded = 0;
+    let totalCost = 0;
+
+    state.inventory.forEach(it => {
+        if (!it || it.type !== 'linhbao') return;
+        const currentGrade = lbGradeOf(it);
+        const currentLevel = lbLevelOf(it);
+
+        // Only upgrade if current grade is below realm max AND item is below max grade
+        if (currentGrade < maxGradeForRealm && currentGrade < LB_MAX_GRADE) {
+            // Cost to upgrade to realm tier: much cheaper than fusion
+            // Level 1 of the new grade costs baseCost * grade * 10
+            const gradeCostMult = LB_GRADE_COST_MULT[currentGrade + 1] || 1;
+            const baseCost = it.cost || 1000;
+            const upgradeCost = Math.floor(baseCost * gradeCostMult * 50); // 50 is a multiplier to make it significant but not insane
+
+            // Skip if not enough gold (we'll check total later)
+            if (state.gold < totalCost + upgradeCost) return;
+
+            totalCost += upgradeCost;
+            it.grade = currentGrade + 1;
+            it.level = 1; // Reset to level 1 when upgrading grade
+            upgraded++;
+        }
+    });
+
+    if (upgraded === 0) {
+        log('Không có Trận Pháp Bảo nào có thể nâng cấp lên cấp hiện tại.');
+        return;
+    }
+
+    if (state.gold < totalCost) {
+        log(`Không đủ linh thạch để nâng cấp (cần ${totalCost.toLocaleString()}).`);
+        return;
+    }
+
+    state.gold -= totalCost;
+    const realmName = getRealmNameForGrade(maxGradeForRealm);
+    log(`🌟 Đột phá tu vi — Tất cả Trận Pháp Bảo được nâng cấp lên ${LB_GRADE_NAMES[maxGradeForRealm]}! (−${totalCost.toLocaleString()} linh thạch)`);
+    log(`✨ Mở khóa cấp độ Linh Bảo: ${realmName}`);
+    renderAll();
+}
+if (typeof window !== 'undefined') window.upgradeAllLinhBaoToRealmTier = upgradeAllLinhBaoToRealmTier;
+
 // Helper to get effective board slots (can be increased to 9 by Đạo Tổ)
 function getEffectiveBoardSlots() {
     return state.maxBoardSlots || LB_BOARD_SLOTS;
@@ -125,14 +238,31 @@ function lbLevelOf(item) { return lbClamp(item.level || 1, 1, lbMaxLevelFor(lbGr
 function lbIsMaxed(item) { return lbGradeOf(item) >= LB_MAX_GRADE && lbLevelOf(item) >= LB_MAX_LEVEL; }
 
 // combat power multiplier from grade + level (every grade levels now)
-// Higher grades get exponentially better scaling
+// Higher grades get MASSIVELY better scaling - each grade is dramatically more powerful
 function lbPowerScale(item) {
     const g = lbGradeOf(item), lvl = lbLevelOf(item);
-    // Base scales: 1, 1.6, 2.2, 2.8, 3.5, 4.2, 5.0, 6.0, 7.2, 8.5, 10.0, 12.0, 14.5
-    const baseTable = [1, 1.6, 2.2, 2.8, 3.5, 4.2, 5.0, 6.2, 7.8, 9.8, 12.5, 16.0, 21.0];
+    // Base scales: MASSIVE difference between grades
+    // Grade 0-5: Early game tiers, reasonable progression
+    // Grade 6+: Endgame tiers - each one is 3-5x more powerful than the previous
+    // This makes "tier difference super many" - reaching a new grade is a massive power spike
+    const baseTable = [
+        1,     // Grade 0 (Phàm): 1x - baseline
+        5,     // Grade 1 (Hoàng): 5x
+        25,    // Grade 2 (Huyền): 25x
+        100,   // Grade 3 (Địa): 100x
+        400,   // Grade 4 (Thiên): 400x
+        1500,  // Grade 5 (Tiên): 1,500x
+        5000,  // Grade 6 (Chí Tôn): 5,000x
+        18000, // Grade 7 (Đế): 18,000x
+        60000, // Grade 8 (Chuẩn Thánh): 60,000x
+        200000,// Grade 9 (Thánh): 200,000x
+        700000,// Grade 10 (Hỗn Độn): 700,000x
+        2500000,// Grade 11 (Hồng Mông): 2,500,000x
+        10000000 // Grade 12 (Chung Nguyên): 10,000,000x - 10 MILLION times more powerful than Grade 0!
+    ];
     const base = baseTable[lbClamp(g, 0, 12)] || (1 + g * 1.2);
-    // Step also scales better for higher grades
-    const stepTable = [0.08, 0.09, 0.10, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19, 0.20];
+    // Step also scales better for higher grades - high level = bigger bonus
+    const stepTable = [0.08, 0.10, 0.12, 0.15, 0.18, 0.22, 0.26, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55];
     const step = stepTable[lbClamp(g, 0, 12)] || 0.15;
     return base * (1 + (lvl - 1) * step);
 }
@@ -217,16 +347,152 @@ function lbEffectIcons(item) {
 function lbEffectSummary(item) {
     return lbEffectList(item).map(e => LB_ACTIONS[e.action] ? LB_ACTIONS[e.action].label : e.action).join(' + ');
 }
-// Icons for legendary grades (6-12)
-const LB_GRADE_ICONS = ['', '', '', '', '', '',
-    '⚔️',  // Chí Tôn Pháp
-    '👑',  // Đế Pháp
-    '⭐',  // Chuẩn Thánh Pháp
-    '✨',  // Thánh Pháp
-    '🌀',  // Hỗn Độn Pháp
-    '🌌',  // Hồng Mông Pháp
-    '🏆'   // Chung Nguyên Pháp
-];
+
+// ==================== DAMAGE/EFFECT INFO DISPLAY ====================
+// Show damage at each level for Linh Bảo (e.g., "Lv.1: 1x | Lv.2: 1.08x | Lv.3: 1.16x")
+function getLinhBaoDamageInfo(item) {
+    if (!item) return '';
+    const def = LINH_BAO_MAP[item.linhBaoId || item.id];
+    if (!def) return '';
+
+    // Get damage effect magnitude
+    const damageEffect = def.effects.find(e => e.action === 'damage');
+    if (!damageEffect) return ''; // No damage effect to display
+
+    const baseMag = damageEffect.magnitude;
+    const maxLvl = lbMaxLevelFor(lbGradeOf(item));
+    const currentLvl = lbLevelOf(item);
+
+    // Show damage at key levels (1, max/4, max/2, 3*max/4, max)
+    const keyLevels = [1];
+    if (maxLvl >= 10) keyLevels.push(Math.floor(maxLvl * 0.25));
+    if (maxLvl >= 20) keyLevels.push(Math.floor(maxLvl * 0.5));
+    if (maxLvl >= 30) keyLevels.push(Math.floor(maxLvl * 0.75));
+    keyLevels.push(maxLvl);
+
+    // Remove duplicates and sort
+    const uniqueLevels = [...new Set(keyLevels)].sort((a, b) => a - b);
+
+    const dmgInfo = uniqueLevels.map(lvl => {
+        // Create a temporary item to calculate power at this level
+        const tempItem = { ...item, level: lvl };
+        const powerScale = lbPowerScale(tempItem);
+        const actualDmg = baseMag * powerScale;
+        const isCurrentLevel = lvl === currentLvl;
+        const marker = isCurrentLevel ? ' ★' : '';
+        return `Lv.${lvl}: ${fmtVal(actualDmg)}x${marker}`;
+    }).join(' | ');
+
+    return dmgInfo;
+}
+
+// Show how effects evolve with grade when upgrading
+function getLinhBaoEffectEvolution(item) {
+    if (!item) return '';
+    const def = LINH_BAO_MAP[item.linhBaoId || item.id];
+    if (!def) return '';
+
+    const g = lbGradeOf(item);
+    const currentEffects = lbEffectList(item);
+
+    // Build evolution info
+    let evolution = '';
+
+    // Check each effect and how it evolves with grade
+    currentEffects.forEach(eff => {
+        const baseAction = eff.action;
+        const baseMag = eff.magnitude;
+        const actionDef = LB_ACTIONS[baseAction];
+        if (!actionDef) return;
+
+        // Calculate magnitude at this grade vs next grade
+        const currentItem = { ...item };
+        const nextGradeItem = { ...item, grade: Math.min(g + 1, LB_MAX_GRADE) };
+
+        const currentMag = lbEffMag(baseMag, currentItem);
+        const nextMag = lbEffMag(baseMag, nextGradeItem);
+
+        const improvement = ((nextMag / currentMag - 1) * 100).toFixed(0);
+
+        // Add new effects at higher grades
+        let newEffects = '';
+        if (g < 4 && baseAction === 'damage') {
+            newEffects = ' → Hút máu khi đạt Thánh cảnh';
+        } else if (g < 6 && baseAction === 'shield') {
+            newEffects = ' → Buff ATK khi đạt Chí Tôn';
+        } else if (g < 8 && baseAction === 'burn') {
+            newEffects = ' → Kháng băng khi đạt Chuẩn Thánh';
+        }
+
+        evolution += `${actionDef.icon} ${actionDef.label}: ${fmtVal(currentMag)} → ${fmtVal(nextMag)} (+${improvement}%)${newEffects}\n`;
+    });
+
+    return evolution.trim();
+}
+
+// Show how gems affect this Linh Bảo's stats
+function getLinhBaoGemEffectInfo(item) {
+    if (!item) return '';
+
+    const sockets = lbSockets(item);
+    const gems = item.gems || [];
+    const gemMods = lbGemMods(item);
+
+    let info = `💎 Ổ ngọc: `;
+
+    // Show socket status
+    const emptySockets = sockets - gems.length;
+    const filledDisplay = gems.map(g => getGemIcon(g.gemKind)).join('');
+    const emptyDisplay = Array(emptySockets).fill('○').join('');
+    info += `${filledDisplay}${emptyDisplay} (${gems.length}/${sockets})`;
+
+    // Show gem effects if any gems are installed
+    if (gems.length > 0) {
+        info += `\n`;
+        if (gemMods.powerMul > 1) {
+            info += `🌀 Công: +${((gemMods.powerMul - 1) * 100).toFixed(0)}% (${fmtVal(gemMods.powerMul)}x damage)\n`;
+        }
+        if (gemMods.cdMul < 1) {
+            info += `⏱️ Tốc: -${((1 - gemMods.cdMul) * 100).toFixed(0)}% CD\n`;
+        }
+        if (gemMods.leech > 0) {
+            info += `🩸 Hút: +${(gemMods.leech * 100).toFixed(0)}% hút máu\n`;
+        }
+        if (gemMods.guard > 0) {
+            info += `🛡️ Giáp: +${(gemMods.guard * 100).toFixed(0)}% phòng thủ\n`;
+        }
+    }
+
+    return info.trim();
+}
+
+// Get icon for gem kind
+function getGemIcon(gemKind) {
+    switch (gemKind) {
+        case 'power': return '🌀';
+        case 'haste': return '⏱️';
+        case 'leech': return '🩸';
+        case 'guard': return '💠';
+        default: return '💎';
+    }
+}
+
+// ==================== ENHANCED DISPLAY FORMAT ====================
+// Enhanced grade label showing max level instead of current level
+function lbGradeLabelEnhanced(item) {
+    const g = lbGradeOf(item);
+    const icon = LB_GRADE_ICONS[g] || '';
+    const name = LB_GRADE_NAMES[g] || `Giai ${g}`;
+    const maxLvl = lbMaxLevelFor(g);
+    const col = LB_GRADE_COLORS[g] || '#fff';
+    const isLegendary = g >= 6;
+    const glowStyle = isLegendary ? `text-shadow: 0 0 8px ${col};` : '';
+    return `<span style="color:${col};${glowStyle}">${icon} ${name} Lv.${maxLvl}</span>`;
+}
+if (typeof window !== 'undefined') window.getLinhBaoDamageInfo = getLinhBaoDamageInfo;
+if (typeof window !== 'undefined') window.getLinhBaoEffectEvolution = getLinhBaoEffectEvolution;
+if (typeof window !== 'undefined') window.getLinhBaoGemEffectInfo = getLinhBaoGemEffectInfo;
+if (typeof window !== 'undefined') window.lbGradeLabelEnhanced = lbGradeLabelEnhanced;
 
 function lbGradeLabel(item) {
     const g = lbGradeOf(item);

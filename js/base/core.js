@@ -1098,6 +1098,9 @@ function changeInventoryPage(offset) {
 // 📦 Lọc vật phẩm theo loại
 function getFilteredInventory() {
     return state.inventory.filter(item => {
+        // 🆕 Công pháp (manual) removed - never show in inventory
+        if (item.type === 'manual') return false;
+
         if (inventoryFilter === 'equipped') return item.equipped === true;
         if (inventoryFilter === 'usable')
             return ['consumable', 'xp', 'life', 'power', 'defense', 'luck'].includes(item.type);
@@ -1124,6 +1127,89 @@ function getFilteredInventory() {
     });
 }
 
+// 🆕 Item Detail Modal
+function showItemDetailModal(itemIndex) {
+    const item = state.inventory[itemIndex];
+    if (!item) return;
+
+    let modal = document.getElementById('itemDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'itemDetailModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:10000;';
+        document.body.appendChild(modal);
+    }
+
+    // Build stats HTML based on item type
+    let statsHtml = '';
+    if (item.type === 'weapon') {
+        statsHtml = `<div style="color:#ff6b6b;margin:8px 0;">⚔️ Sát thương: +${item.atk || 0}</div>`;
+        if (item.hp) statsHtml += `<div style="color:#69db7c;margin:8px 0;">❤️ Máu: +${item.hp}</div>`;
+    } else if (item.type === 'armor') {
+        statsHtml = `<div style="color:#69db7c;margin:8px 0;">❤️ Máu: +${item.hp || 0}</div>`;
+        statsHtml += `<div style="color:#74c0fc;margin:8px 0;">🛡️ Phòng thủ: +${item.def || 0}</div>`;
+        if (item.atk) statsHtml += `<div style="color:#ff6b6b;margin:8px 0;">⚔️ Sát thương: +${item.atk}</div>`;
+    } else if (item.type === 'relic') {
+        statsHtml = `<div style="color:#9775fa;margin:8px 0;">💠 ${item.effect || 'Linh Bảo'}</div>`;
+        statsHtml += `<div style="color:#ffa94d;margin:8px 0;">⏱️ Còn ${item.uses || 0} lần sử dụng</div>`;
+    } else if (item.type === 'consumable') {
+        statsHtml = `<div style="color:#69db7c;margin:8px 0;">🧪 Hồi phục: ${item.heal || 0} HP</div>`;
+    } else if (item.type === 'xp') {
+        statsHtml = `<div style="color:#ffd43b;margin:8px 0;">📘 Tăng tu vi: +${item.value}</div>`;
+    } else if (item.type === 'power') {
+        statsHtml = `<div style="color:#ff6b6b;margin:8px 0;">💪 Sức mạnh: +${item.value}</div>`;
+    } else if (item.type === 'defense') {
+        statsHtml = `<div style="color:#74c0fc;margin:8px 0;">🛡️ Phòng thủ: +${item.value}</div>`;
+    } else if (item.type === 'life') {
+        statsHtml = `<div style="color:#f783ac;margin:8px 0;">🩸 Tuổi thọ: +${item.value}</div>`;
+    } else if (item.type === 'luck') {
+        statsHtml = `<div style="color:#ffa94d;margin:8px 0;">🍀 May mắn: +${(item.value * 100).toFixed(1)}%</div>`;
+    } else if (item.type === 'linhbao') {
+        // Linh Bảo specific display with damage info, effect evolution, and gem effects
+        const gradeLabel = window.lbGradeLabelEnhanced ? window.lbGradeLabelEnhanced(item) : (item.name + ' G.' + item.grade + ' Lv.' + item.level);
+        const damageInfo = window.getLinhBaoDamageInfo ? window.getLinhBaoDamageInfo(item) : '';
+        const effectEvolution = window.getLinhBaoEffectEvolution ? window.getLinhBaoEffectEvolution(item) : '';
+        const gemInfo = window.getLinhBaoGemEffectInfo ? window.getLinhBaoGemEffectInfo(item) : '';
+        const cooldown = window.lbEffCooldown ? window.lbEffCooldown(item).toFixed(2) + 's' : (item.cooldown || '?') + 's';
+        const element = item.element || '';
+        const elementIcon = element === 'Kim' ? '⚔️' : element === 'Mộc' ? '🌿' : element === 'Thủy' ? '💧' : element === 'Hỏa' ? '🔥' : element === 'Thổ' ? '🪨' : '💠';
+        const effectSummary = window.lbEffectSummary ? window.lbEffectSummary(item) : (item.desc || '');
+
+        statsHtml = `<div style="margin:8px 0;">${gradeLabel}</div>`;
+        statsHtml += `<div style="color:#ffd43b;margin:4px 0;font-size:0.9em;">${elementIcon} ${element} · ⏱️ CD ${cooldown}</div>`;
+        if (effectSummary) statsHtml += `<div style="color:#74c0fc;margin:4px 0;font-size:0.85em;">${effectSummary}</div>`;
+        if (damageInfo) statsHtml += `<div style="color:#ff9f43;margin:4px 0;font-size:0.85em;">📊 ${damageInfo}</div>`;
+        if (effectEvolution) statsHtml += `<div style="color:#c77dff;margin:4px 0;font-size:0.8em;">🔄 ${effectEvolution.replace(/\n/g, '<br>')}</div>`;
+        if (gemInfo) statsHtml += `<div style="color:#5cd85c;margin:4px 0;font-size:0.8em;">${gemInfo.replace(/\n/g, '<br>')}</div>`;
+    }
+
+    const typeColor = item.type === 'weapon' ? '#ff6b6b' : item.type === 'armor' ? '#74c0fc' : item.type === 'linhbao' ? '#a6ffd1' : '#e6c97a';
+
+    modal.innerHTML = `
+        <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:16px;max-width:380px;width:90%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+                <div style="color:${typeColor};font-weight:700;font-size:1.3em;">${item.name || 'Vật phẩm'}</div>
+                <button onclick="closeItemDetailModal()" style="border:0;background:rgba(255,255,255,0.1);color:#fff;font-size:18px;cursor:pointer;padding:4px 10px;border-radius:6px;">✕</button>
+            </div>
+            <div style="color:#888;font-size:0.9em;margin-bottom:12px;">Loại: ${item.type === 'linhbao' ? 'Linh Bảo' : item.type === 'weapon' ? 'Vũ khí' : item.type === 'armor' ? 'Giáp' : item.type}</div>
+            ${statsHtml}
+            <div style="color:#aaa;margin-top:12px;font-size:0.9em;line-height:1.5;">${item.desc || 'Không có mô tả'}</div>
+            ${item.equipped ? '<div style="color:#4ade80;margin-top:12px;font-weight:600;">✓ Đang trang bị</div>' : ''}
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+function closeItemDetailModal() {
+    const modal = document.getElementById('itemDetailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+if (typeof window !== 'undefined') {
+    window.showItemDetailModal = showItemDetailModal;
+    window.closeItemDetailModal = closeItemDetailModal;
+}
+
 function renderInventory() {
     const el = $('inventory');
     if (!el) return;
@@ -1144,14 +1230,13 @@ function renderInventory() {
                         <button class="filter-chip ${inventoryFilter === 'all' ? 'active' : ''}" onclick="setInventoryFilter('all')">📦 Tất cả</button>
                         <button class="filter-chip ${inventoryFilter === 'equipped' ? 'active' : ''}" onclick="setInventoryFilter('equipped')">🧤 Mặc</button>
                         <button class="filter-chip ${inventoryFilter === 'equipment' ? 'active' : ''}" onclick="setInventoryFilter('equipment')">⚔️ Trang bị</button>
-                        <button class="filter-chip ${inventoryFilter === 'linhbao' ? 'active' : ''}" onclick="setInventoryFilter('linhbao')">🎴 Trận pháp</button>
+                        <button class="filter-chip ${inventoryFilter === 'linhbao' ? 'active' : ''}" onclick="setInventoryFilter('linhbao')">📜 Công pháp</button>
                         <button class="filter-chip ${inventoryFilter === 'gem' ? 'active' : ''}" onclick="setInventoryFilter('gem')">💎 Ngọc</button>
-                        <button class="filter-chip ${inventoryFilter === 'manual' ? 'active' : ''}" onclick="setInventoryFilter('manual')">📜 Công pháp</button>
                         <button class="filter-chip ${inventoryFilter === 'usable' ? 'active' : ''}" onclick="setInventoryFilter('usable')">💊 Dùng được</button>
                         <button class="filter-chip ${inventoryFilter === 'root' ? 'active' : ''}" onclick="setInventoryFilter('root')">💠 Linh căn</button>
                     </div>
                     <div class="filter-chips" style="margin-top:4px">
-                        <span class="filter-label">🎴 Trận pháp:</span>
+                        <span class="filter-label">📜 Công pháp:</span>
                         <button class="filter-chip ${inventoryFilter === 'lb_damage' ? 'active' : ''}" onclick="setInventoryFilter('lb_damage')">⚔️ Sát thương</button>
                         <button class="filter-chip ${inventoryFilter === 'lb_heal' ? 'active' : ''}" onclick="setInventoryFilter('lb_heal')">🌿 Hồi phục</button>
                         <button class="filter-chip ${inventoryFilter === 'lb_shield' ? 'active' : ''}" onclick="setInventoryFilter('lb_shield')">🛡️ Hộ thuẫn</button>
@@ -1297,7 +1382,7 @@ function renderInventory() {
         }
         else {
             d.innerHTML = `
-                        <div><b>${item.name}</b> ${desc}</div>
+                        <div style="cursor:pointer" onclick="showItemDetailModal(${realIndex})"><b style="color:#e6c97a">${item.name}</b> ${desc}</div>
                         <div class="inv-buttons">
                             ${item.type === 'weapon' || item.type === 'armor'
                     ? `<button class="equip-btn" onclick="useItem(${realIndex})">

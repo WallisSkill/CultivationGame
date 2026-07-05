@@ -509,7 +509,7 @@ function attackTurn() {
             state.hp = 1;
             if (edmg.elePercent === 0) log(`${enemy.name} chưa phải Kim Đan chưa có sát thương ngũ hành`);
 
-            log(`${enemy.name} phản kích, gây ${fmtVal(enemyFinalDmg)} sát thương.
+            log(`${enemy.name} tấn công, gây ${fmtVal(enemyFinalDmg)} sát thương.
                 (Ngũ hành ${(edmg.elePercent.toFixed(1))}%,
                 Phẩm chất x${edmg.rankFactor.toFixed(2)},
                 Cảnh giới x${edmg.realmFactor.toFixed(2)})`);
@@ -523,7 +523,7 @@ function attackTurn() {
         // 💥 Nhận sát thương thực tế
         state.hp -= enemyFinalDmg;
         if (edmg.elePercent === 0) log(`${enemy.name} chưa phải Kim Đan chưa có sát thương ngũ hành`);
-        log(`${enemy.name} phản kích, gây ${fmtVal(enemyFinalDmg)} sát thương.
+        log(`${enemy.name} tấn công, gây ${fmtVal(enemyFinalDmg)} sát thương.
                     (Ngũ hành ${edmg.elePercent.toFixed(1)}%,
                     Phẩm chất x${edmg.rankFactor.toFixed(2)},
                     Cảnh giới x${edmg.realmFactor.toFixed(2)})`);
@@ -577,9 +577,9 @@ function winBattle(enemy) {
     window._battleActive = false;
     const mult = enemy.rewardMult || 1;
 
-    // 🎮 REWARD SCALING: Player realm multiplier - modest scaling per realm
-    // Each realm level multiplies rewards by ~1.08x (8% increase per realm)
-    const playerRealmMult = Math.pow(1.08, state.realmIndex || 0);
+    // 🎮 REWARD SCALING: Player realm multiplier - reduced scaling per realm
+    // Each realm level multiplies rewards by ~1.02x (2% increase per realm) - much more modest
+    const playerRealmMult = Math.pow(1.02, state.realmIndex || 0);
 
     const baseXp = Math.floor((enemy.xp || 50) * mult * playerRealmMult);
     const baseGold = Math.floor((enemy.gold || 20) * mult * playerRealmMult);
