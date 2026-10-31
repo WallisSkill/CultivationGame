@@ -11,6 +11,9 @@ const REALMS = [
 ];
 const STAGES = ['Sơ Kỳ', 'Trung Kỳ', 'Hậu Kỳ', 'Đại Viên Mãn'];
 const GAME_VERSION = '1.0.0';
+// Expose for cross-file access
+window.REALMS = REALMS;
+window.STAGES = STAGES;
 
 function colorizeElement(el) {
     switch (el) {
@@ -174,87 +177,90 @@ let startRootRank;
 let startRootElement;
 
 /* --- Game state --- */
-let state = {
-    realmIndex: 0,
-    realmStage: 0,
-    xp: 0,
-    hp: 120,
-    maxHp: 120,
-    power: 15,
-    defense: 5,
-    gold: 200,
-    inventory: [],
-    root: {},
-    age: 6,
-    maxAge: 200,
-    autoTrain: false,
-    autoFight: false,
-    currentEnemy: null,
-    board: [null, null, null, null, null, null],
-    exploreCooldown: false,
-    npcInteractionLock: false,
-    luckBonus: 0,
-    specialTicks: [],
-    lastXpGain: 0,
-    skillUsedThisTurn: false,
-    learnedSkillFromSaint: false
-};
+let state = createDefaultState();
+
+function createDefaultState() {
+    return {
+        realmIndex: 0,
+        realmStage: 0,
+        xp: 0,
+        hp: 120,
+        maxHp: 120,
+        power: 15,
+        defense: 5,
+        gold: 200,
+        inventory: [],
+        root: {},
+        age: 6,
+        maxAge: 200,
+        autoTrain: false,
+        autoFight: false,
+        currentEnemy: null,
+        board: [null, null, null, null, null, null],
+        exploreCooldown: false,
+        npcInteractionLock: false,
+        luckBonus: 0,
+        specialTicks: [],
+        lastXpGain: 0
+    };
+}
 
 window.addEventListener("load", () => {
-    const saved = localStorage.getItem("playerName");
-    const startScreen = document.getElementById("start-screen");
     const input = document.getElementById("playerNameInput");
     const btn = document.getElementById("startBtn");
-    
-    // 🆕 Load profileId ngay khi load page
+
     const savedProfileId = localStorage.getItem('tt_profileId');
-    if (savedProfileId && !state.profileId) {
-        state.profileId = savedProfileId;
-        console.log('✅ window.load: Load profileId từ localStorage:', savedProfileId);
+    if (savedProfileId && !state.profileId) state.profileId = savedProfileId;
+
+    if (typeof initFriendsSystem === 'function') initFriendsSystem();
+
+    if (hasSavedGame()) {
+        loadProgress(true);
+        fadeOutStartScreen();
+        return;
     }
-    
-    // Nếu chưa có tên -> yêu cầu nhập
+
+    renderCharacterCreator(document.getElementById('creatorHost'));
+
     btn.addEventListener("click", () => {
         const val = input.value.trim();
         if (!val) {
             showToast('Ngươi chưa khai báo đạo danh!', 'warn');
             return;
         }
-        window.state = window.state || {};
         state.name = val;
         localStorage.setItem("playerName", val);
 
         state.__rootStoryShown = false;
         btn.disabled = true;
         btn.innerText = 'Đang khởi tạo...';
+        document.getElementById('creatorHost').style.display = 'none';
         startRootRank = randomRootRank();
         startRootElement = randomElements();
         state.root.elements = startRootElement;
         state.root.rank = startRootRank;
-        state.gold = 240;
+        state.gold = goldRef(0) * 4;
         if (state.name && ADMIN_NAMES.includes(state.name)) {
             state.name = "Thiên Đạo Chí Tôn";
             state.gold = 9999999999999;
         }
         const script = buildRootStoryScript();
 
-        initStarter(); // Sẽ tạo/load profileId ở đây
+        initStarter();
         renderAllImmediate();
-        // if (state.name !== "Thiên Đạo Chí Tôn") {
+        if (state.name !== "Thiên Đạo Chí Tôn") {
             announceRootStory(true);
             playIntroNarration(script).then(() => {
-                setTimeout(() => fadeOutStartScreen(), 1000);
+                setTimeout(() => {
+                    fadeOutStartScreen();
+                    startMainStory();
+                }, 1000);
             });
-        // } else {
-            // fadeOutStartScreen();
-        // }
-        state.age = 6;
+        } else {
+            fadeOutStartScreen();
+            startMainStory();
+        }
     });
-
-    // 🆕 Khởi tạo hệ thống bạn bè
-    if (typeof initFriendsSystem === 'function') {
-        initFriendsSystem();
-    }
 });
 
 
@@ -269,10 +275,11 @@ function checkLongevity() {
 }
 
 function loseByLongevity() {
+    if (state.dead) return;
+    state.dead = true;
     state.hp = 0;
     state.autoTrain = false;
     state.autoFight = false;
-    stopAging();
     disableAllButtons();
     log('☠️ Người đã tử vong do cạn thọ nguyên. Thân thể hóa tro bụi...');
     showRebirthButton('cạn thọ nguyên');
@@ -287,32 +294,12 @@ function enableAllButtons() {
     document.querySelectorAll('button').forEach(btn => btn.disabled = false);
 }
 
-// gọi 1 lần khi khởi game
-function startAging() {
-    // nếu đang có interval thì bỏ qua
-    if (state.ageIntervalId) return;
-
-    state.ageIntervalId = setInterval(() => {
-        // nếu đạt max tuổi thì dừng
-        checkLongevity();
-        state.age += 1;
-        updateAgeDisplay();
-    }, 5000);
-}
-
-function stopAging() {
-    if (state.ageIntervalId) {
-        clearInterval(state.ageIntervalId);
-        state.ageIntervalId = null;
-    }
-}
-
 function updateAgeDisplay() {
     const ageTxt = $('ageTxt');
     const ageBar = $('ageBar');
 
     if (ageTxt) {
-        ageTxt.textContent = `${state.age} / ${state.maxAge}`;
+        ageTxt.textContent = `${Math.floor(state.age)} / ${formatNumber(state.maxAge)}`;
     }
 
     if (ageBar) {
@@ -392,7 +379,7 @@ function showRebirthButton(deathReason = 'không rõ nguyên nhân', killInfo = 
                 <div><b style="color: #e6c97a;">Đạo danh:</b> ${state.name || 'Vô Danh Tu Sĩ'}</div>
                 <div><b style="color: #e6c97a;">Cảnh giới đạt được:</b> ${colorizeWithMap(realmName)} ${colorizeWithMap(stageName)}</div>
                 <div><b style="color: #e6c97a;">Linh căn:</b> ${elements} (${colorizeWithMap(rootRankName)})</div>
-                <div><b style="color: #e6c97a;">Tuổi thọ:</b> ${state.age} / ${state.maxAge}</div>
+                <div><b style="color: #e6c97a;">Tuổi thọ:</b> ${Math.floor(state.age)} / ${state.maxAge}</div>
                 <div><b style="color: #e6c97a;">Linh thạch tích lũy:</b> ${state.gold}</div>
                 <div><b style="color: #e6c97a;">Sức mạnh tối đa:</b> ${state.totalPower || state.power}</div>
                 <div><b style="color: #e6c97a;">Kho đồ:</b> ${state.inventory.length} vật phẩm</div>
@@ -505,9 +492,9 @@ function showStartScreenForRebirth() {
     // Xóa tất cả localStorage để reset hoàn toàn
     try {
         localStorage.removeItem('playerName');
-        localStorage.removeItem('tt_state_complete_v2');
-        localStorage.removeItem('tt_profileId');
+        localStorage.removeItem(SAVE_KEY);
     } catch(e) {}
+    window.__skipAutosave = true;
 
     // Tải lại trang để bắt đầu mới hoàn toàn
     location.reload();
@@ -582,8 +569,9 @@ async function clearSavedProfile() {
     if (!ok) return;
     try {
         localStorage.removeItem('playerName');
-        localStorage.removeItem('tt_state_complete_v2');
+        localStorage.removeItem(SAVE_KEY);
     } catch { }
+    window.__skipAutosave = true;
     log('🧹 Đã xóa đạo danh và save cũ. Đang tải lại...');
     setTimeout(() => location.reload(), 150);
 }
@@ -591,42 +579,42 @@ async function clearSavedProfile() {
 function rebirth() {
     const logBox = $('log');
     if (logBox) logBox.innerHTML = '';
+    window.__skipAutosave = true;
     log('🔥 Một vòng luân hồi mới bắt đầu — Thiên Đạo chuyển sinh!');
-    log('🌄 Khí tức mới tràn ngập — Linh căn tái hiện, thiên địa lại mở ra!');
-
-    // reset toàn bộ state về mặc định
-    state = {
-        realmIndex: 0,
-        realmStage: 0,
-        xp: 0,
-        hp: 120,
-        maxHp: 120,
-        power: 15,
-        defense: 5,
-        gold: 200,
-        inventory: [],
-        root: { elements: startRootElement, rank: startRootRank },
-        age: 18,
-        maxAge: 200,
-        autoTrain: false,
-        autoFight: false,
-        currentEnemy: null,
-        board: [null, null, null, null, null, null],
-        exploreCooldown: false,
-        npcInteractionLock: false,
-        luckBonus: 0,
-        specialTicks: [],
-        lastXpGain: 0
-    };
-    initStarter();
-    enableAllButtons();
-    renderAll();
 }
 
 
 
 /* --- Helpers DOM & log --- */
 function $(id) { return document.getElementById(id); }
+
+// 🌟 Format huge numbers to readable format (e.g., 1.69T, 7.72e76, etc.)
+function formatNumber(num) {
+    if (!Number.isFinite(num)) return '0';
+    if (num === 0) return '0';
+
+    const abs = Math.abs(num);
+    const sign = num < 0 ? '-' : '';
+
+    // Handle truly astronomical numbers (e >= 15)
+    if (abs >= 1e15) {
+        const exp = Math.floor(Math.log10(abs));
+        const mantissa = abs / Math.pow(10, exp);
+        if (exp >= 100) {
+            // Ultra astronomical - cleaner format
+            return sign + mantissa.toFixed(2) + 'e' + exp;
+        }
+        return sign + mantissa.toFixed(2) + 'e' + exp;
+    }
+
+    // Large number abbreviations
+    if (abs >= 1e12) return sign + (abs / 1e12).toFixed(2) + 'T';
+    if (abs >= 1e9) return sign + (abs / 1e9).toFixed(2) + 'B';
+    if (abs >= 1e6) return sign + (abs / 1e6).toFixed(2) + 'M';
+    if (abs >= 1e3) return sign + abs.toLocaleString();
+
+    return sign + abs.toString();
+}
 
 // 🌟 Lịch sử nhật ký tu luyện để hiển thị khi chết
 if (typeof window !== 'undefined') {
@@ -640,29 +628,25 @@ function countInitLogs() {
     if (el) __initLogCount = el.children.length;
 }
 
+const LOG_LIMIT = 200;
 function log(msg) {
     const el = $('log');
     const time = new Date().toLocaleTimeString();
     const coloredMsg = colorizeWithMap(msg);
 
     // 🌟 Thêm giờ và render vào nhật ký
-    const entry = `<div>★ ${time} — ${coloredMsg}</div>`;
-    el.innerHTML += entry;
+    el.insertAdjacentHTML('beforeend', `<div>★ ${time} — ${coloredMsg}</div>`);
+    while (el.childElementCount > LOG_LIMIT) el.firstElementChild.remove();
     el.scrollTop = el.scrollHeight;
 
     // 🌟 Lưu vào lịch sử để hiển thị khi chết
     if (typeof window !== 'undefined') {
         if (!window.__cultivationLog) window.__cultivationLog = [];
         window.__cultivationLog.push({ time, msg, coloredMsg });
+        if (window.__cultivationLog.length > LOG_LIMIT) window.__cultivationLog.shift();
     }
 }
 
-
-
-/* ===========================
-   AGE REGEN: +1 every 5 seconds
-   =========================== */
-startAging();
 
 
 /* ===========================
@@ -672,22 +656,7 @@ AUTO TRAIN / AUTO FIGHT
 let trainTimer = null, fightTimer = null;
 window._autoFightOn = !!window._autoFightOn;
 function startAutoTrain() {
-    if (trainTimer) clearInterval(trainTimer);
-    trainTimer = setInterval(() => {
-        if (state.hp <= 0) return;
-        let base = Math.max(1, Math.floor(state.power * (0.5 + Math.random() * 0.6)));
-        // apply special tick items
-        state.inventory.forEach(it => { if (it.effect === 'xp_tick') base += it.value; });
-        gainXP(base);
-        // small age consumption occasionally
-        if (Math.random() < 0.18) state.maxAge = Math.max(1, state.maxAge - 1);
-        if (Math.random() < 0.015) {
-            state.maxAge = Math.max(1, state.maxAge - 3);
-            log('Tu luyện gặp cố, mất tuổi thọ.');
-        }
-
-        updateTrainingUI();
-    }, 2000);
+    state.autoTrain = true;
 }
 
 function updateTrainingUI() {
@@ -698,8 +667,8 @@ function updateTrainingUI() {
 
     if (xpTxt) {
         const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
-        const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${xpGain})`;
-        xpTxt.textContent = `${state.xp}${gainLabel} / ${need}`;
+        const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${formatNumber(xpGain)})`;
+        xpTxt.textContent = `${formatNumber(state.xp)}${gainLabel} / ${formatNumber(need)}`;
     }
 
     if (xpBar) {
@@ -707,10 +676,31 @@ function updateTrainingUI() {
         xpBar.style.width = `${xpPercent}%`;
     }
 
+    // Cập nhật dự đoán tu vi
+    const predEl = $('xpPrediction');
+    if (predEl) {
+        const pred = getRealmPrediction();
+        if (state.realmStage === 3 && state.xp >= need && typeof getBreakthroughGate === 'function' && getBreakthroughGate(state.realmIndex + 1)) {
+            predEl.innerHTML = `<span style="color:#ff9f7a">🚧 Bình cảnh: ${getBreakthroughGate(state.realmIndex + 1).title}</span>`;
+        } else if (pred) {
+            let html = '';
+            if (pred.small) {
+                const nextStageName = STAGES[state.realmStage + 1] || '';
+                html += `<span style="color:#7fbf7f">→ ${nextStageName}: ${pred.small.timeText}</span>`;
+            }
+            if (pred.big) {
+                html += `<span style="color:#f0c674">→ ${pred.big.nextRealm}: ${pred.big.timeText}</span>`;
+            }
+            predEl.innerHTML = html;
+        } else {
+            predEl.innerHTML = '';
+        }
+    }
+
     // Cập nhật tuổi thọ (nếu bị giảm)
     updateAgeDisplay();
 }
-function stopAutoTrain() { if (trainTimer) clearInterval(trainTimer); trainTimer = null; }
+function stopAutoTrain() { state.autoTrain = false; }
 
 function startAutoFight() {
     window._autoFightOn = true;
@@ -763,21 +753,7 @@ function updateAutoFightLoop() {
             return;
         }
 
-        let skillUsed = false;
-
-        if (typeof getUsableActiveSkills === 'function') {
-            const usableSkills = getUsableActiveSkills();
-
-            for (let skill of usableSkills) {
-                if (skill.canUse && !state.skillUsedThisTurn) {
-                    if (typeof useActiveSkill === 'function') {
-                        skillUsed = useActiveSkill(skill.id);
-                        if (skillUsed) break; // Chỉ dùng 1 skill mỗi lượt
-                    }
-                }
-            }
-        }
-            pvpAttackOrLocal();
+        pvpAttackOrLocal();
     }, 2400);
 }
 window.updateAutoFightLoop = updateAutoFightLoop;
@@ -795,11 +771,7 @@ function renderAllImmediate() {
     renderCurrentEnemy();
     if (typeof renderBoardArena === 'function') renderBoardArena();
     renderRootTable();
-
-    // 🆕 Render skill UI
-    if (typeof renderSkillsUI === 'function') {
-        renderSkillsUI();
-    }
+    if (typeof renderWorldPanels === 'function') renderWorldPanels();
 
     // 🆕 Render friends UI
     if (typeof renderFriendsUI === 'function') {
@@ -845,125 +817,11 @@ function renderAll() {
 }
 if (typeof window !== 'undefined') window.renderAllImmediate = renderAllImmediate;
 
-const BASE_REALM_PROFILE = { power: 15, hp: 120, def: 5 };
-
-function computeCultivationProfile(baseStats, realmIndex = 0, realmStage = 0, opts = {}) {
-    const stats = {
-        power: Math.max(1, baseStats?.power ?? BASE_REALM_PROFILE.power),
-        hp: Math.max(1, baseStats?.hp ?? BASE_REALM_PROFILE.hp),
-        def: Math.max(1, baseStats?.def ?? BASE_REALM_PROFILE.def)
-    };
-    const rank = Math.max(0, opts.rootRank ?? 0);
-    const elementCount = Math.max(1, opts.elementCount || (opts.elements?.length ?? 1));
-
-    if (typeof calculateMajorGain === 'function') {
-        for (let realm = 0; realm < realmIndex; realm++) {
-            const gain = calculateMajorGain({
-                prevRealm: realm,
-                newRealm: realm + 1,
-                prevScale: sampleRealmScale(realm, 3, rank),
-                newScale: sampleRealmScale(realm + 1, 0, rank),
-                rootRank: rank,
-                elementCount
-            });
-            stats.power += gain.powInc;
-            stats.hp += gain.hpInc;
-            stats.def += gain.defInc;
-        }
-    }
-
-    if (typeof calculateStageGain === 'function' && realmStage > 0) {
-        const stageGain = calculateStageGain(realmIndex, 0, realmStage, rank);
-        stats.power += stageGain.powInc;
-        stats.hp += stageGain.hpInc;
-        stats.def += stageGain.defInc;
-    }
-
-    return {
-        power: Math.max(1, Math.floor(stats.power)),
-        hp: Math.max(1, Math.floor(stats.hp)),
-        def: Math.max(1, Math.floor(stats.def))
-    };
-}
-
-function sampleRealmScale(realm, stage, rank) {
-    if (typeof getHeavenScale === 'function') {
-        const v = getHeavenScale(realm, stage, rank);
-        if (Number.isFinite(v) && v > 0) return v;
-    }
-    return 1 + realm * 0.8 + stage * 0.3 + rank * 0.12;
-}
-
-function getRealmProfile(realmIndex = 0, opts = {}) {
-    return computeCultivationProfile(BASE_REALM_PROFILE, realmIndex, 0, opts);
-}
-
-function syncEnemyToRealm(enemy, override) {
-    if (!enemy) return enemy;
-
-    if (enemy.__basePower == null) enemy.__basePower = Math.max(1, enemy.str || enemy.baseStr || BASE_REALM_PROFILE.power);
-    if (enemy.__baseHp == null) enemy.__baseHp = Math.max(1, enemy.maxHp || enemy.hp || BASE_REALM_PROFILE.hp);
-    if (enemy.__baseDef == null) enemy.__baseDef = Math.max(1, enemy.def || enemy.baseDef || BASE_REALM_PROFILE.def);
-
-    const rank = override?.rootRank ?? enemy.rootRank ?? 2;
-    const elementCount = override?.elementCount ?? (enemy.elements?.length || 1);
-    const profile = getRealmProfile(enemy.realmIndex || 0, { rootRank: rank, elementCount });
-    const baseProfile = getRealmProfile(0, { rootRank: rank, elementCount });
-
-    const powRatio = profile.power / Math.max(1, baseProfile.power);
-    const hpRatio = profile.hp / Math.max(1, baseProfile.hp);
-    const defRatio = profile.def / Math.max(1, baseProfile.def);
-
-    const stageFactor = 1 + Math.max(0, enemy.realmStage || 0) * 0.35;
-    const ferocity = Math.max(1, override?.ferocity ?? enemy.baseFerocity ?? enemy.ferocity ?? 1);
-    enemy.ferocity = ferocity;
-
-    enemy.str = Math.max(4, Math.floor(enemy.__basePower * powRatio * stageFactor * ferocity));
-    enemy.maxHp = Math.max(30, Math.floor(enemy.__baseHp * hpRatio * stageFactor * ferocity));
-    enemy.def = Math.max(3, Math.floor(enemy.__baseDef * defRatio * stageFactor));
-    enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp || enemy.maxHp));
-
-    const playerState = (typeof state !== 'undefined') ? state : null;
-    const playerPower = Math.max(4, playerState ? (playerState.totalPower || playerState.power || 4) : profile.power);
-    const playerHp = Math.max(30, playerState ? (playerState.totalMaxHp || playerState.maxHp || 30) : profile.hp);
-    const playerDef = Math.max(3, playerState ? (playerState.totalDef || playerState.defense || 3) : profile.def);
-    const playerRealm = playerState?.realmIndex ?? 0;
-    const realmGap = (enemy.realmIndex ?? playerRealm) - playerRealm;
-
-    const powerCapBase = realmGap >= 0
-        ? 2.2 + realmGap * 0.65
-        : Math.max(1.35, 2.2 + realmGap * 0.55);
-    const hpCapBase = realmGap >= 0
-        ? 3.2 + realmGap * 1.1
-        : Math.max(1.6, 3.2 + realmGap * 0.8);
-    const defCapBase = realmGap >= 0
-        ? 2.0 + realmGap * 0.45
-        : Math.max(1.25, 2.0 + realmGap * 0.35);
-
-    const powerCap = powerCapBase * ferocity;
-    const hpCap = hpCapBase * Math.max(1, ferocity * 0.9);
-    const defCap = defCapBase * Math.max(1, Math.pow(ferocity, 0.6));
-
-    enemy.str = Math.max(4, Math.min(enemy.str, Math.floor(playerPower * powerCap)));
-    enemy.maxHp = Math.max(30, Math.min(enemy.maxHp, Math.floor(playerHp * hpCap)));
-    enemy.totalMaxHp = enemy.maxHp;
-    enemy.hp = Math.max(1, Math.min(enemy.maxHp, enemy.hp));
-    enemy.def = Math.max(3, Math.min(enemy.def, Math.floor(playerDef * defCap)));
-
-    const rewardPowerRatio = enemy.str / Math.max(1, playerPower);
-    const rewardHpRatio = enemy.maxHp / Math.max(1, playerHp);
-    const rewardDefRatio = enemy.def / Math.max(1, playerDef);
-    const rewardBase = Math.max(rewardPowerRatio * 0.7, rewardHpRatio * 0.25, rewardDefRatio * 0.4) * Math.max(1, ferocity * 0.85);
-
-    enemy.rewardMult = Math.max(enemy.rewardMult || ferocity, rewardBase);
+function syncEnemyToRealm(enemy) {
     return enemy;
 }
 
-if (typeof window !== 'undefined') {
-    window.getRealmProfile = window.getRealmProfile || getRealmProfile;
-    window.syncEnemyToRealm = syncEnemyToRealm;
-    window.computeCultivationProfile = window.computeCultivationProfile || computeCultivationProfile;
-}
+if (typeof window !== 'undefined') window.syncEnemyToRealm = syncEnemyToRealm;
 
 function recalculateStats() {
     // Chỉ số gốc
@@ -1007,16 +865,16 @@ function renderTopStats() {
     const stageDisplay = colorizeWithMap(STAGES[state.realmStage]);
     const rootRankDisplay = colorizeWithMap(ROOT_RANKS[state.root.rank]);
 
-    const powerDisplay = `${state.totalPower}${atkBonus > 0 ? ` (+${atkBonus})` : ''}`;
-    const defDisplay = `${state.totalDef}${defBonus > 0 ? ` (+${defBonus})` : ''}`;
-    const hpDisplay = `${Math.floor(state.hp)} / ${state.totalMaxHp}${hpBonus > 0 ? ` (+${hpBonus})` : ''}`;
+    const powerDisplay = `${formatNumber(state.totalPower)}${atkBonus > 0 ? ` (+${formatNumber(atkBonus)})` : ''}`;
+    const defDisplay = `${formatNumber(state.totalDef)}${defBonus > 0 ? ` (+${formatNumber(defBonus)})` : ''}`;
+    const hpDisplay = `${formatNumber(Math.floor(state.hp))} / ${formatNumber(state.totalMaxHp)}${hpBonus > 0 ? ` (+${formatNumber(hpBonus)})` : ''}`;
 
     // 🧙‍♂️ Lấy đạo danh và ID
     const playerName = state.name || localStorage.getItem("playerName") || "Vô Danh Tu Sĩ";
     const playerId = state.profileId || buildPublicProfile().id;
 
     const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
-    const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${xpGain})`;
+    const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${formatNumber(xpGain)})`;
 
     top.innerHTML = `
         <div class="stat name-box">
@@ -1024,7 +882,7 @@ function renderTopStats() {
             <div id="playerName" style="font-weight:bold; color:#e6c97a; font-size:1.1em;">
                 ${playerName}
             </div>
-            <div class="small" style="color:#888; margin-top:4px; cursor:pointer;" 
+            <div class="small" style="color:#888; margin-top:4px; cursor:pointer;"
                  onclick="copyPlayerId()" title="Click để copy ID">
                 ID: <span id="playerIdDisplay">${playerId.substring(0, 16)}...</span>
                 <button onclick="copyPlayerId(event)" style="padding:2px 8px; font-size:0.75em; margin-left:4px;">📋</button>
@@ -1032,13 +890,14 @@ function renderTopStats() {
         </div>
 
         <div class="stat"><b>Cảnh giới</b>
-            <div>${realmDisplay} 
+            <div>${realmDisplay}
             <span class="badge">${stageDisplay}</span></div>
         </div>
 
         <div class="stat"><b>Tu vi</b>
-            <div id="xpTxt">${state.xp}${gainLabel} / ${need}</div>
+            <div id="xpTxt">${formatNumber(state.xp)}${gainLabel} / ${formatNumber(need)}</div>
             <div class="bar"><i id="xpBar" style="width:${Math.min(100, Math.round(state.xp / need * 100))}%"></i></div>
+            <div id="xpPrediction" class="small" style="color:#7a9fcd;margin-top:4px;"></div>
         </div>
 
         <div class="stat"><b>HP</b>
@@ -1050,8 +909,8 @@ function renderTopStats() {
             <div id="powerTxt">${powerDisplay}</div>
         </div>
 
-        <div class="stat"><b>Sát thương dao động</b>
-            <div>${Math.floor(state.totalPower * 0.7)} – ${Math.floor(state.totalPower * 1.3)}</div>
+        <div class="stat"><b>Bản thể / Trang bị</b>
+            ${renderPowerShareBar()}
         </div>
 
         <div class="stat"><b>Phòng thủ</b>
@@ -1063,19 +922,196 @@ function renderTopStats() {
         </div>
 
         <div class="stat"><b>Tuổi thọ</b>
-            <div id="ageTxt">${state.age} / ${state.maxAge}</div>
+            <div id="ageTxt">${Math.floor(state.age)} / ${formatNumber(state.maxAge)}</div>
             <div class="bar"><i id="ageBar" style="width:${Math.min(100, Math.round(state.age / state.maxAge * 100))}%"></i></div>
         </div>
 
         <div class="stat"><b>Linh thạch</b>
-            <div id="goldTxt">${state.gold}</div>
+            <div id="goldTxt">${formatNumber(state.gold)}</div>
+        </div>
+
+        <div class="stat" style="grid-column:span 2; text-align:center;">
+            <button onclick="showStatDetails()" style="background:rgba(230,201,122,0.15);border:1px solid rgba(230,201,122,0.4);color:#e6c97a;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:0.85em;">
+                📊 Chi tiết chỉ số
+            </button>
         </div>
     `;
 }
 
+// 📊 STAT DETAILS MODAL - Detailed breakdown like Linh Bảo display
+function showStatDetails() {
+    let modal = document.getElementById('statDetailModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'statDetailModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:10000;';
+        document.body.appendChild(modal);
+    }
 
+    recalculateStats();
 
-// 🌟 Biến điều khiển lọc và phân trang
+    // Calculate bonuses
+    const baseHp = state.maxHp;
+    const basePower = state.power;
+    const baseDef = state.defense;
+    const equipHp = getEquippedHp();
+    const equipAtk = getEquippedAtk();
+    const equipDef = getEquippedDef();
+
+    // Linh Bảo bonuses from board items
+    let lbAtkBonus = 0, lbHpBonus = 0, lbDefBonus = 0;
+    if (typeof getLinhBaoStatsBonuses === 'function') {
+        const lbBonuses = getLinhBaoStatsBonuses();
+        lbAtkBonus = lbBonuses.atk || 0;
+        lbHpBonus = lbBonuses.hp || 0;
+        lbDefBonus = lbBonuses.def || 0;
+    }
+
+    // Element and root rank bonuses (simplified calculation)
+    const rootRank = state.root?.rank || 0;
+    const rootRankNames = ['', 'Hạ Phẩm', 'Trung Phẩm', 'Thượng Phẩm', 'Huyền Phẩm', 'Địa Phẩm', 'Thiên Phẩm', 'Hậu Thiên Phẩm', 'Tiên thiên Phẩm', 'Hỗn Độn Phẩm'];
+    const rootRankName = ROOT_RANKS[rootRank] || 'Phế Phẩm';
+
+    const realmName = REALMS[state.realmIndex] || 'Luyện Khí';
+    const stageName = STAGES[state.realmStage] || 'Sơ Kỳ';
+
+    // Cultivation boost
+    const cultivateBoost = state.cultivateBoost || 1.0;
+
+    // Calculate total bonuses
+    const totalPower = basePower + equipAtk + lbAtkBonus;
+    const totalMaxHp = baseHp + equipHp + lbHpBonus;
+    const totalDef = baseDef + equipDef + lbDefBonus;
+
+    // Linh Bảo damage info
+    let lbDamageInfo = '';
+    let lbHealInfo = '';
+    let lbShieldInfo = '';
+    let lbEffectDetails = [];
+
+    if (Array.isArray(state.board)) {
+        state.board.forEach((uid, idx) => {
+            if (!uid) return;
+            const item = state.inventory.find(i => i.uid === uid && i.type === 'linhbao');
+            if (!item) return;
+
+            if (typeof calcLinhBaoTrueValue === 'function') {
+                const val = calcLinhBaoTrueValue(item);
+                if (val) {
+                    if (val.damage > 0) lbEffectDetails.push(`⚔️ ${item.name}: ${formatNumber(val.damage)} sát thương`);
+                    if (val.burn > 0) lbEffectDetails.push(`🔥 ${item.name}: ${formatNumber(val.burn)} thiêu đốt/tick`);
+                    if (val.heal > 0) lbEffectDetails.push(`🌿 ${item.name}: ${formatNumber(val.heal)} hồi máu`);
+                    if (val.shield > 0) lbEffectDetails.push(`🛡️ ${item.name}: ${formatNumber(val.shield)} lá chắn`);
+                    if (val.stun > 0) lbEffectDetails.push(`💫 ${item.name}: ${val.stun}s choáng`);
+                    if (val.freeze > 0) lbEffectDetails.push(`❄️ ${item.name}: ${val.freeze}s đóng băng`);
+                    if (val.lifesteal > 0) lbEffectDetails.push(`🩸 ${item.name}: ${val.lifesteal}% hút máu`);
+                    if (val.buffAtk > 0) lbEffectDetails.push(`⬆️ ${item.name}: ${val.buffAtk}% tăng ATK`);
+                }
+            }
+        });
+    }
+
+    modal.innerHTML = `
+        <div style="background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:16px;max-width:480px;width:90%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(230,201,122,0.3);max-height:85vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <div style="color:#e6c97a;font-weight:700;font-size:1.3em;">📊 Chi Tiết Chỉ Số</div>
+                <button onclick="closeStatDetailModal()" style="border:0;background:rgba(255,255,255,0.1);color:#fff;font-size:18px;cursor:pointer;padding:4px 10px;border-radius:6px;">✕</button>
+            </div>
+
+            <div style="color:#888;font-size:0.9em;margin-bottom:16px;text-align:center;">
+                ${colorizeWithMap(realmName)} ${colorizeWithMap(stageName)} · ${colorizeWithMap(rootRankName)} · ${state.root.elements.map(colorizeElement).join(' ')}
+            </div>
+
+            <!-- Power Section -->
+            <div style="background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#ff6b6b;font-weight:600;margin-bottom:10px;font-size:1.1em;">⚔️ Sức Mạnh (Attack)</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>📍 Căn bản: <span style="color:#fff">${formatNumber(basePower)}</span></div>
+                    ${equipAtk > 0 ? `<div>⚔️ Trang bị: <span style="color:#4ade80">+${formatNumber(equipAtk)}</span></div>` : ''}
+                    ${lbAtkBonus > 0 ? `<div>📜 Công pháp: <span style="color:#4ade80">+${formatNumber(lbAtkBonus)}</span></div>` : ''}
+                    <div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;color:#e6c97a;font-weight:600;">
+                        💥 Tổng: ${formatNumber(totalPower)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- HP Section -->
+            <div style="background:rgba(105,219,124,0.1);border:1px solid rgba(105,219,124,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#69db7c;font-weight:600;margin-bottom:10px;font-size:1.1em;">❤️ HP (Máu)</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>📍 Căn bản: <span style="color:#fff">${formatNumber(baseHp)}</span></div>
+                    ${equipHp > 0 ? `<div>🛡️ Trang bị: <span style="color:#4ade80">+${formatNumber(equipHp)}</span></div>` : ''}
+                    ${lbHpBonus > 0 ? `<div>📜 Công pháp: <span style="color:#4ade80">+${formatNumber(lbHpBonus)}</span></div>` : ''}
+                    <div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;color:#e6c97a;font-weight:600;">
+                        💖 Tổng: ${formatNumber(totalMaxHp)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defense Section -->
+            <div style="background:rgba(116,192,252,0.1);border:1px solid rgba(116,192,252,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#74c0fc;font-weight:600;margin-bottom:10px;font-size:1.1em;">🛡️ Phòng Thủ (Defense)</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>📍 Căn bản: <span style="color:#fff">${formatNumber(baseDef)}</span></div>
+                    ${equipDef > 0 ? `<div>🛡️ Trang bị: <span style="color:#4ade80">+${formatNumber(equipDef)}</span></div>` : ''}
+                    ${lbDefBonus > 0 ? `<div>📜 Công pháp: <span style="color:#4ade80">+${formatNumber(lbDefBonus)}</span></div>` : ''}
+                    <div style="border-top:1px solid rgba(255,255,255,0.1);margin-top:6px;padding-top:6px;color:#e6c97a;font-weight:600;">
+                        🛡️ Tổng: ${formatNumber(totalDef)}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Damage Range -->
+            <div style="background:rgba(255,159,67,0.1);border:1px solid rgba(255,159,67,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#ffa94d;font-weight:600;margin-bottom:10px;font-size:1.1em;">⚔️ Sát Thương Dao Động</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>💥 Nhỏ nhất: <span style="color:#fff">${formatNumber(Math.floor(totalPower * 0.7))}</span></div>
+                    <div>💥 Lớn nhất: <span style="color:#fff">${formatNumber(Math.floor(totalPower * 1.3))}</span></div>
+                    <div>💥 Trung bình: <span style="color:#e6c97a">${formatNumber(Math.floor(totalPower))}</span></div>
+                </div>
+            </div>
+
+            <!-- Linh Bảo Effects from Board -->
+            ${lbEffectDetails.length > 0 ? `
+            <div style="background:rgba(166,255,209,0.1);border:1px solid rgba(166,255,209,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#a6ffd1;font-weight:600;margin-bottom:10px;font-size:1.1em;">📜 Linh Bảo Hiệu Quả</div>
+                <div style="color:#ccc;font-size:0.85em;line-height:1.8;">
+                    ${lbEffectDetails.map(e => `<div style="margin-bottom:4px;">${e}</div>`).join('')}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- Cultivation Boost -->
+            <div style="background:rgba(255,212,59,0.1);border:1px solid rgba(255,212,59,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#ffd43b;font-weight:600;margin-bottom:10px;font-size:1.1em;">🌠 Tốc Độ Tu Luyện</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>⚡ Hệ số hiện tại: <span style="color:#e6c97a">x${cultivateBoost.toFixed(2)}</span></div>
+                    <div>📈 Bonus: <span style="color:#4ade80">+${((cultivateBoost - 1) * 100).toFixed(1)}%</span></div>
+                </div>
+            </div>
+
+            <!-- Lifespan -->
+            <div style="background:rgba(248,131,172,0.1);border:1px solid rgba(248,131,172,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#f783ac;font-weight:600;margin-bottom:10px;font-size:1.1em;">🩸 Tuổi Thọ</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>⏳ Hiện tại: <span style="color:#fff">${Math.floor(state.age)}</span> / <span style="color:#fff">${formatNumber(state.maxAge)}</span> tuổi</div>
+                    <div>📊 Đã sử dụng: <span style="color:#ff6b6b">${((state.age / state.maxAge) * 100).toFixed(1)}%</span></div>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'flex';
+}
+
+function closeStatDetailModal() {
+    const modal = document.getElementById('statDetailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+if (typeof window !== 'undefined') {
+    window.showStatDetails = showStatDetails;
+    window.closeStatDetailModal = closeStatDetailModal;
+}
 let inventoryFilter = 'all';
 let inventoryPage = 0;
 const ITEMS_PER_PAGE = 4;
@@ -1263,7 +1299,7 @@ function renderInventory() {
                     </div>
                 </div>
                 <button class="equip-all-btn" onclick="equipAll()">🧤 Mặc tất cả</button>
-                <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()" style="background:#5c3d11;color:#ffd700;margin-left:8px">🌟 Nâng Cấp Công Pháp Theo Tu Vi</button>
+                <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()" style="background:#5c3d11;color:#ffd700;margin-left:8px">🌟 Nâng Cấp Linh Bảo Theo Tu Vi</button>
             `;
 
     const filtered = getFilteredInventory();
@@ -1282,13 +1318,13 @@ function renderInventory() {
         d.className = 'item';
 
         let desc = '';
-        if (item.type === 'xp') desc = `(+${item.value} Tu vi)`;
+        if (item.type === 'xp') desc = `(${item.hours} giờ bế quan)`;
         else if (item.type === 'power') desc = `(+${item.value} Sức mạnh)`;
         else if (item.type === 'life') desc = `(+${item.value} Thọ nguyên)`;
-        else if (item.type === 'weapon') desc = `(ATK +${item.atk})`;
-        else if (item.type === 'armor') desc = `(DEF +${item.def}, HP +${item.hp})`;
+        else if (item.type === 'weapon' || item.type === 'armor') desc = `${GEAR_SLOTS[item.slot]?.icon || ''} (${gearStatText(item)})`;
         else if (item.type === 'defense') desc = `(maxDEF +${item.value})`;
         else if (item.type === 'relic') desc = `💠 Linh Bảo — ${item.effect} (${item.uses} lần)`;
+        else if (item.type === 'consumable') desc = `(Hồi ${Math.round((item.healPct || 0) * 100)}% HP)`;
         else if (item.type === 'luck') desc = `Tăng cường vận khí — +${item.value * 100}% vận may)`;
 
         if (item.type === 'linhbao') {
@@ -1310,8 +1346,10 @@ function renderInventory() {
             const sockets = (typeof lbSockets === 'function') ? lbSockets(item) : 0;
             const gemCount = Array.isArray(item.gems) ? item.gems.length : 0;
             const gemIcons = (typeof lbGemIcons === 'function') ? lbGemIcons(item) : '';
-            // Get tooltip for true values
+            // Get tooltip for true values (damage/heal/shield)
             const tooltipText = typeof getLinhBaoTooltipText === 'function' ? getLinhBaoTooltipText(item) : '';
+            // Get gem effect info for tooltip
+            const gemEffectInfo = window.getLinhBaoGemEffectInfo ? window.getLinhBaoGemEffectInfo(item) : '';
             d.innerHTML = `
                 <div class="linhbao-container">
                     <div class="linhbao-header"><b style="color:${col}">${icons} ${item.name}</b> <span class="small">(${gradeLabel})</span></div>
@@ -1331,7 +1369,7 @@ function renderInventory() {
                         ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
                         <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                     </div>
-                    ${tooltipText ? `<div class="linhbao-tooltip">📊 GIÁ TRỊ THỰC:\n${tooltipText}</div>` : ''}
+                    ${(tooltipText || gemEffectInfo) ? `<div class="linhbao-tooltip">${tooltipText ? `📊 GIÁ TRỊ THỰC:\n${tooltipText}${gemEffectInfo ? '\n\n' : ''}` : ''}${gemEffectInfo ? `💎 HIỆU ỨNG NGỌC:\n${gemEffectInfo}` : ''}</div>` : ''}
                 </div>`;
             listEl.appendChild(d);
             return;
@@ -1368,25 +1406,6 @@ function renderInventory() {
                 <div class="inv-buttons">
                     <button class="use-btn" onclick="openGemSocketModal(${realIndex})">💎 Khảm ngọc</button>
                     ${canFuse ? `<button class="equip-btn" onclick="openGemFusionModal()">🔥 Hợp nhất</button>` : ''}
-                    <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
-                </div>`;
-        }
-        else if (item.type === 'manual') {
-            // Skill manual - show tier, fusion status, and fusion button
-            const tierName = item.tierName || (typeof LB_SKILL_TIER_NAMES !== 'undefined' ? LB_SKILL_TIER_NAMES[item.skillTier || 0] : `${(item.skillTier || 0) + 1}th`);
-            const tierColor = item.color || '#ffa94d';
-            const fusionLocked = item.fusionLocked;
-            const fusionLimited = item.fusionLimited;
-            const canFuse = !fusionLocked && (item.skillTier || 0) < 6;
-            const fusionLabel = fusionLocked ? '🔒 Tối đa' : (canFuse ? `🔥 Hợp nhất${fusionLimited ? ' (1 lần)' : ''}` : '📜 Học');
-            const fusionOnClick = canFuse ? `openSkillFusionModal()` : `useItem(${realIndex})`;
-
-            d.innerHTML = `
-                <div><b style="color:${tierColor}">${item.name}</b> <span class="small">${tierName} Cấp${fusionLimited ? ' ⚠️' : ''}</span></div>
-                <div class="small" style="color:${tierColor}">${item.desc || ''}</div>
-                <div class="inv-buttons">
-                    <button class="use-btn" onclick="${fusionOnClick}">${fusionLabel}</button>
-                    ${canFuse ? `<button class="equip-btn" onclick="useItem(${realIndex})">📜 Học</button>` : ''}
                     <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                 </div>`;
         }
@@ -1429,17 +1448,48 @@ function renderInventory() {
 }
 
 
+function gearStatText(item) {
+    const parts = [];
+    if (item.atk) parts.push(`ATK +${formatNumber(item.atk)}`);
+    if (item.def) parts.push(`DEF +${formatNumber(item.def)}`);
+    if (item.hp) parts.push(`HP +${formatNumber(item.hp)}`);
+    if (item.speed) parts.push(`Tốc hành +${Math.round(item.speed * 100)}%`);
+    return parts.join(', ');
+}
+
+function gearScore(item) {
+    const b = refStats(0);
+    return (item.atk || 0) / b.atk + (item.def || 0) / b.def + (item.hp || 0) / b.hp;
+}
+
 function equipAll() {
-    let equippedCount = 0;
-
-    state.inventory.forEach((item, idx) => {
-        if ((item.type === 'weapon' || item.type === 'armor') && !item.equipped) {
-            useItem(idx); // dùng hàm trang bị sẵn có
-            equippedCount++;
-        }
+    GEAR_SLOT_IDS.forEach(slot => {
+        const best = state.inventory
+            .filter(it => it.slot === slot && (it.reqRealm || 0) <= state.realmIndex)
+            .sort((a, b) => gearScore(b) - gearScore(a))[0];
+        if (best && !best.equipped) useItem(state.inventory.indexOf(best));
     });
+    renderAll();
+}
 
-    renderInventory();
+function equippedInSlot(slot) {
+    return state.inventory.find(it => it.equipped && it.slot === slot) || null;
+}
+
+function equipmentPowerShare() {
+    recalculateStats();
+    const score = (a, d, h) => a / refStats(state.realmIndex, state.realmStage).atk
+        + d / refStats(state.realmIndex, state.realmStage).def
+        + h / refStats(state.realmIndex, state.realmStage).hp;
+    const gear = score(getEquippedAtk(), getEquippedDef(), getEquippedHp());
+    const self = score(state.power, state.defense, state.maxHp);
+    return self / Math.max(1e-9, self + gear);
+}
+
+function renderPowerShareBar() {
+    const pct = Math.round(equipmentPowerShare() * 100);
+    return `<div class="small">${pct}% / ${100 - pct}%</div>
+        <div class="share-bar"><i style="width:${pct}%"></i></div>`;
 }
 
 /* equipment helpers */
@@ -1463,42 +1513,29 @@ function getEquippedHp() {
     STARTER: give starter items and render
 =========================== */
 function initStarter() {
-    startAging();
-    
-    // 🆕 Khởi tạo profileId ngay từ đầu - LOAD TỪ LOCALSTORAGE
     if (!state.profileId) {
         const savedId = localStorage.getItem('tt_profileId');
-        if (savedId) {
-            state.profileId = savedId;
-            console.log('✅ initStarter: Load profileId từ localStorage:', savedId);
-        } else {
-            // Tạo mới nếu chưa có
-            if (typeof buildPublicProfile === 'function') {
-                buildPublicProfile(); // Hàm này sẽ tạo và lưu
-            }
-        }
+        if (savedId) state.profileId = savedId;
+        else if (typeof buildPublicProfile === 'function') buildPublicProfile();
     }
-    
-    // 🎴 Thiết lập vật phẩm khởi thủy
+
+    const base = baseStatsFor(0, 0, state.root.rank || 0);
+    state.power = base.power;
+    state.defense = base.defense;
+    state.maxHp = base.hp;
+    state.totalMaxHp = base.hp;
+
     state.inventory = [
-        { name: 'Kiếm Gỗ', type: 'weapon', atk: 4, desc: 'Vũ khí khởi thủy', equipped: true },
-        { name: 'Áo Lót', type: 'armor', hp: 20, def: 3, desc: 'Giáp sơ cấp', equipped: true }
+        { ...makeGearItem(0, 'weapon', 0), equipped: true },
+        { ...makeGearItem(0, 'armor', 0), equipped: true }
     ];
 
-    // ⚜️ Linh bảo khởi thủy cho trận pháp - based on Linh căn
     state.board = [null, null, null, null, null, null];
-    if (typeof grantStartingLinhBao === 'function') {
-        grantStartingLinhBao();
-    } else if (typeof makeLinhBao === 'function') {
-        // Fallback to old simple starter if grantStartingLinhBao not available
-        const starters = ['phi_kiem', 'thanh_moc'];
-        starters.forEach((id, i) => {
-            const lb = makeLinhBao(id, 0);
-            if (lb) { state.inventory.push(lb); state.board[i] = lb.uid; }
-        });
-    }
+    if (typeof grantStartingLinhBao === 'function') grantStartingLinhBao();
 
-    state.hp = state.maxHp;
+    initWorldState();
+    recalculateStats();
+    state.hp = state.totalMaxHp;
     state.__rootStoryShown = false;
 }
 
@@ -1563,59 +1600,46 @@ function fadeOutStartScreen() {
 /* ===========================
     SAVE / LOAD
 =========================== */
-function saveProgress() {
-    // 🆕 Đảm bảo profileId được lưu vào localStorage trước khi save state
-    if (state.profileId) {
-        try {
-            localStorage.setItem('tt_profileId', state.profileId);
-        } catch(e) {
-            console.error('Lỗi lưu profileId:', e);
-        }
-    }
-    
-    localStorage.setItem('tt_state_complete_v2', JSON.stringify(state));
-    log('Lưu tiến trình thành công.');
+const SAVE_KEY = 'tt_state_v3';
+
+function hasSavedGame() {
+    return !!localStorage.getItem(SAVE_KEY);
 }
 
-function loadProgress() {
-    const s = localStorage.getItem('tt_state_complete_v2');
+function saveProgress(silent = false) {
+    if (window.__skipAutosave) return;
+    if (state.profileId) {
+        try { localStorage.setItem('tt_profileId', state.profileId); } catch { }
+    }
+    state.lastSeen = Date.now();
+    const snapshot = { ...state, currentEnemy: null };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+    if (!silent) log('Lưu tiến trình thành công.');
+}
+
+function loadProgress(isBoot = false) {
+    const s = localStorage.getItem(SAVE_KEY);
     if (!s) { log('Không tìm thấy save.'); return; }
+    if (window.__boardBattle && typeof forfeitBoardBattle === 'function') forfeitBoardBattle();
     state = JSON.parse(s);
     state.lastXpGain = state.lastXpGain || 0;
+    window._battleActive = false;
     if (typeof ensureBoardState === 'function') ensureBoardState();
 
-    // 🆕 Tải profileId từ localStorage - ƯU TIÊN LOCALSTORAGE HƠN STATE
     const savedId = localStorage.getItem('tt_profileId');
-    if (savedId) {
-        state.profileId = savedId;
-        console.log('✅ loadProgress: Load profileId từ localStorage:', savedId);
-    } else if (!state.profileId) {
-        // Nếu không có ở cả 2 nơi → tạo mới
-        if (typeof buildPublicProfile === 'function') {
-            buildPublicProfile();
-        }
-    } else {
-        // Nếu có trong state nhưng không có localStorage → lưu lại
-        try {
-            localStorage.setItem('tt_profileId', state.profileId);
-            console.log('✅ loadProgress: Sync profileId vào localStorage:', state.profileId);
-        } catch(e) {}
-    }
-    
+    if (savedId) state.profileId = savedId;
+    else if (typeof buildPublicProfile === 'function') buildPublicProfile();
+
+    initWorldState();
+    syncCultivationButton();
+    if (isBoot) applyOfflineProgress();
     log('Tải tiến trình thành công.');
     renderAll();
 }
-function turnLogCultivation() {
-    showXpLog = !showXpLog;
 
-    const btn = document.getElementById('toggleXpLog');
-    if (showXpLog) {
-        btn.textContent = 'Tắt log tu vi';
-        log('🧘‍♂️ Đại nhân mở lại hiển thị biến động tu vi.');
-    } else {
-        btn.textContent = 'Bật log tu vi';
-        log('🕯️ Đại nhân tĩnh tâm nhập định, tạm ẩn biến động tu vi.');
-    }
+function syncCultivationButton() {
+    const btn = $('toggleAuto');
+    if (btn) btn.innerText = state.autoTrain ? '🧘 Xuất quan' : '🧘 Bế quan tu luyện';
 }
 
 /* ===========================
@@ -1623,8 +1647,9 @@ function turnLogCultivation() {
 =========================== */
 $('toggleAuto').onclick = () => {
     state.autoTrain = !state.autoTrain;
-    if (state.autoTrain) { $('toggleAuto').innerText = 'Dừng tu luyện auto'; startAutoTrain(); log('Bật auto tu luyện.'); }
-    else { $('toggleAuto').innerText = 'Bắt đầu tu luyện auto'; stopAutoTrain(); log('Tắt auto tu luyện.'); }
+    syncCultivationButton();
+    log(state.autoTrain ? '🧘 Bắt đầu bế quan. Tu vi tăng theo thời gian thực, kể cả khi đóng game.' : '🚪 Xuất quan.');
+    renderAll();
 };
 // autoFight button removed - only set onclick if element exists
 const autoFightBtn = $('autoFight');
@@ -1634,7 +1659,7 @@ if (autoFightBtn) {
         else { autoFightBtn.innerText = 'Tắt auto chiến'; window.startAutoFight && window.startAutoFight(); }
     };
 }
-$('explore').onclick = () => explore();
+$('explore').onclick = () => startExplore();
 // fightNow button removed - only set onclick if element exists
 const fightNowBtn = $('fightNow');
 if (fightNowBtn) {
@@ -1649,9 +1674,9 @@ $('runBtn').onclick = () => { if (typeof forfeitBoardBattle === 'function') forf
 $('findMatch').onclick = () => { if (window.findMatchPvP) window.findMatchPvP(); };
 $('saveBtn').onclick = () => saveProgress();
 $('loadBtn').onclick = () => loadProgress();
-$('toggleXpLog').onclick = () => turnLogCultivation();
 const shopBtn = $('openShop');
-if (shopBtn) shopBtn.onclick = () => window.openShopModal && window.openShopModal();
+if (shopBtn) shopBtn.onclick = () => openServiceShop();
+$('openLook').onclick = () => openLookModal();
 const clearBtn = $('clearStorage');
 if (clearBtn) clearBtn.onclick = () => clearSavedProfile();
 
@@ -1665,7 +1690,7 @@ function setGameVersionLabel() {
 
 
 setGameVersionLabel();
-log('Game đã khởi tạo: hệ thống đầy đủ (spawn rules 50/40/10, đột phá, linh căn, shop, NPC).');
+log('Thiên địa khai mở.');
 countInitLogs(); // Đếm số dòng log khởi tạo để lọc bỏ khi hiển thị nhật ký chết
 function renderRootTable() {
     const el = $('rootTable');

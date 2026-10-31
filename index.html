@@ -19,6 +19,7 @@
                 đạo...</p>
             <input id="playerNameInput" type="text" maxlength="20" placeholder="Ví dụ: Thiên Đạo đại nhân"
                 style="padding: 0.5em 1em; font-size: 1.1em; border-radius: 6px; border: none; text-align: center; width: 260px;">
+            <div id="creatorHost"></div>
             <button id="startBtn" style="margin-top: 1em; padding: 0.6em 1.2em; font-size: 1em; border-radius: 8px;
                  background: #7b5633; color: #fff; border: none; cursor: pointer;">
                 Bắt đầu tu luyện
@@ -33,22 +34,33 @@
 
         <div class="topline" id="statsTop"></div>
 
+        <div class="activity-bar" id="activityBar" role="status"></div>
+
         <div class="controls">
-            <button id="toggleAuto" class="primary">Bắt đầu tu luyện auto</button>
-            <button id="explore">Đi kỳ ngộ</button>
-            <button id="runBtn">Chạy (−15% tu vi)</button>
+            <button id="toggleAuto" class="primary">🧘 Bế quan tu luyện</button>
+            <button id="explore">🧭 Thám hiểm</button>
+            <button id="runBtn">Chạy khỏi trận</button>
             <button id="findMatch">Tìm đối thủ PvP</button>
             <button id="saveBtn">Lưu</button>
             <button id="loadBtn">Tải</button>
-            <button id="toggleXpLog">Tắt log tu vi</button>
-            <button id="openShop">Mở cửa hàng</button>
+            <button id="openShop">Cửa hàng</button>
+            <button id="openLook">Ngoại hình</button>
+            <button onclick="toggleTestPanel()">🧪 Test</button>
             <button id="clearStorage">Bắt đầu lại</button>
         </div>
+
+        <div class="panel test-panel" id="testPanel" style="display:none"></div>
 
         <div class="grid">
             <!-- Left column: Chiến đấu, Kho đồ, Công pháp -->
             <div>
-                <div class="panel panel-combat">
+                <div class="panel panel-world">
+                    <strong>Thiên Hạ Đồ</strong>
+                    <div id="worldMap"></div>
+                    <div id="locationPanel"></div>
+                </div>
+
+                <div class="panel panel-combat" style="margin-top:12px">
                     <strong>Chiến đấu</strong>
                     <div class="small">Kẻ thù hiện tại:</div>
                     <div id="currentEnemy" class="enemy-box">Không có</div>
@@ -65,7 +77,17 @@
 
             <!-- Right column: Nhật ký (small), Hệ cảnh giới, Bạn bè -->
             <div>
-                <div class="panel panel-log panel-log-small">
+                <div class="panel panel-hero">
+                    <strong>Hình tượng & Trang bị</strong>
+                    <div id="appearancePanel"></div>
+                </div>
+
+                <div class="panel panel-quest" style="margin-top:12px">
+                    <strong>Nhiệm vụ</strong>
+                    <div id="questPanel"></div>
+                </div>
+
+                <div class="panel panel-log panel-log-small" style="margin-top:12px">
                     <strong>Nhật ký tu luyện</strong>
                     <div class="log" id="log"></div>
                 </div>
@@ -84,6 +106,11 @@
         </div>
 
     </div>
+    <div id="dialogueLayer"></div>
+    <script src="js/world/balance.js"></script>
+    <script src="js/world/avatar.js"></script>
+    <script src="js/world/atlas.js"></script>
+    <script src="js/world/storyline.js"></script>
     <script src="js/base/cultivation.js"></script>
     <script src="js/exploring/shop.js"></script>
     <script src="js/combat/enemy.js"></script>
@@ -91,13 +118,13 @@
     <script src="js/combat/dmgCalculate.js"></script>
     <script src="js/combat/fight.js"></script>
     <script src="js/combat/board.js"></script>
-    <script src="js/combat/skill.js"></script>
     <script src="js/exploring/explore.js"></script>
     <script src="js/exploring/saint.js"></script>
     <script src="js/base/story.js"></script>
     <script src="js/social/friends.js"></script>
 
     <script src="js/base/core.js"></script>
+    <script src="js/world/world.js"></script>
 </body>
 
 </html>

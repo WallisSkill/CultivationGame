@@ -1,87 +1,24 @@
 /* ===========================
     INVENTORY / ITEMS / EQUIP
 =========================== */
-/* --- Shop items (base) --- */
-/* 🎮 REALM-BASED SHOP TIERS:
-   - Tier 0 (Realm 0-4):    Phàm giới items
-   - Tier 1 (Realm 5-8):    Trúc Cơ→Đại Thừa items
-   - Tier 2 (Realm 9-15):   Tiên giới items
-   - Tier 3 (Realm 16-19):  Thánh cảnh items
-   - Tier 4 (Realm 20-25):  Thiên cảnh items
-   - Tier 5 (Realm 26+):    Cực cảnh items
-*/
-const SHOP_ITEMS = [
-    // 🎯 TIER 0 - Phàm giới (Realm 0-4)
-    { id: 'swd_iron', name: 'Kiếm Sắt', type: 'weapon', atk: 12, hp: 0, def: 0, cost: 80, minTier: 0 },
-    { id: 'arm_basic', name: 'Giáp Cơ Bản', type: 'armor', atk: 0, hp: 70, def: 12, cost: 120, minTier: 0 },
-    { id: 'elixir_small', name: 'Đan Hồi Phục Tiểu', type: 'consumable', heal: 120, cost: 60, minTier: 0 },
-    { id: 'jade_cult', name: 'Ngọc Bội Tụ Linh', type: 'xp', value: 900, cost: 260, minTier: 0 },
-    { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: 45, cost: 320, minTier: 0 },
-    { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: 55, cost: 340, minTier: 0 },
-    { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 220, cost: 560, minTier: 0 },
-    { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.06, cost: 720, minTier: 0, desc: 'Tăng khí vận lâu dài' },
-
-    // ⚔️ TIER 1 - Trúc Cơ→Đại Thừa (Realm 5-8)
-    { id: 'swd_storm', name: 'Kiếm Lôi Đình', type: 'weapon', atk: 210, hp: 40, def: 0, cost: 1800, minTier: 1 },
-    { id: 'arm_dragon', name: 'Long Lân Khải', type: 'armor', atk: 0, hp: 520, def: 78, cost: 2200, minTier: 1 },
-    { id: 'blade_void', name: 'Đoản Đao Hư Không', type: 'weapon', atk: 320, hp: 0, def: 35, cost: 3400, minTier: 1 },
-    { id: 'robe_stellar', name: 'Tinh Hà Đạo Bào', type: 'armor', atk: 45, hp: 420, def: 55, cost: 3600, minTier: 1 },
-    { id: 'elixir_royal', name: 'Đan Long Huyết', type: 'consumable', heal: 680, cost: 420, minTier: 1 },
-    { id: 'jade_sun', name: 'Thái Dương Kim Ngọc', type: 'xp', value: 2800, cost: 980, minTier: 1 },
-    { id: 'pill_cosmic', name: 'Nguyệt Tâm Đan', type: 'power', value: 120, cost: 880, minTier: 1 },
-    { id: 'pill_eden', name: 'Thiên Địa Đan', type: 'defense', value: 150, cost: 920, minTier: 1 },
-
-    // 🔮 TIER 2 - Tiên giới (Realm 9-15)
-    { id: 'sword_celestial', name: 'Thiên Kiếm', type: 'weapon', atk: 850, hp: 180, def: 80, cost: 12000, minTier: 2 },
-    { id: 'armor_immortal', name: 'Bất Diệt Khải', type: 'armor', atk: 120, hp: 2200, def: 380, cost: 15000, minTier: 2 },
-    { id: 'robe_phoenix', name: 'Phượng Hoàng Dao Bào', type: 'armor', atk: 280, hp: 1800, def: 290, cost: 14000, minTier: 2 },
-    { id: 'elixir_immortal', name: 'Tiên Tân Đan', type: 'consumable', heal: 3500, cost: 2500, minTier: 2 },
-    { id: 'jade_star', name: 'Tinh Ngọc Tụ Tu Vi', type: 'xp', value: 15000, cost: 6000, minTier: 2 },
-    { id: 'pill_dragon', name: 'Long Cốt Đan', type: 'power', value: 380, cost: 3200, minTier: 2 },
-    { id: 'pill_phoenix', name: 'Phượng Linh Đan', type: 'defense', value: 420, cost: 3500, minTier: 2 },
-
-    // ⭐ TIER 3 - Thánh cảnh (Realm 16-19)
-    { id: 'sword_divine', name: 'Thánh Kiếm', type: 'weapon', atk: 3200, hp: 650, def: 280, cost: 45000, minTier: 3 },
-    { id: 'armor_divine', name: 'Thánh Khải', type: 'armor', atk: 380, hp: 8000, def: 1200, cost: 55000, minTier: 3 },
-    { id: 'robe_goddess', name: 'Nữ Thần Bào', type: 'armor', atk: 850, hp: 6500, def: 920, cost: 52000, minTier: 3 },
-    { id: 'elixir_divine', name: 'Thánh Tân Đan', type: 'consumable', heal: 15000, cost: 9800, minTier: 3 },
-    { id: 'jade_divine', name: 'Thánh Ngọc Tụ Linh', type: 'xp', value: 65000, cost: 22000, minTier: 3 },
-    { id: 'pill_divine_power', name: 'Thánh Lực Đan', type: 'power', value: 1200, cost: 12000, minTier: 3 },
-    { id: 'pill_divine_def', name: 'Thánh Giáp Đan', type: 'defense', value: 1400, cost: 13000, minTier: 3 },
-
-    // 🌟 TIER 4 - Thiên cảnh (Realm 20-25)
-    { id: 'sword_heaven', name: 'Thiên Kiếm Chư Thần', type: 'weapon', atk: 12000, hp: 2500, def: 950, cost: 180000, minTier: 4 },
-    { id: 'armor_heaven', name: 'Thiên Khải Chư Thần', type: 'armor', atk: 1400, hp: 28000, def: 4200, cost: 200000, minTier: 4 },
-    { id: 'robe_cosmos', name: 'Cosmos Đạo Bào', type: 'armor', atk: 2800, hp: 22000, def: 3200, cost: 190000, minTier: 4 },
-    { id: 'elixir_heaven', name: 'Thiên Tân Đan', type: 'consumable', heal: 55000, cost: 38000, minTier: 4 },
-    { id: 'jade_heaven', name: 'Thiên Ngọc Tụ Tu Vi', type: 'xp', value: 250000, cost: 85000, minTier: 4 },
-    { id: 'pill_heaven_power', name: 'Thiên Lực Đan', type: 'power', value: 4500, cost: 48000, minTier: 4 },
-    { id: 'pill_heaven_def', name: 'Thiên Giáp Đan', type: 'defense', value: 5200, cost: 52000, minTier: 4 },
-
-    // 🌌 TIER 5 - Cực cảnh (Realm 26+)
-    { id: 'sword_ultimate', name: 'Hỗn Độn Kiếm', type: 'weapon', atk: 45000, hp: 9500, def: 3500, cost: 650000, minTier: 5 },
-    { id: 'armor_ultimate', name: 'Hỗn Độn Khải', type: 'armor', atk: 5200, hp: 95000, def: 15000, cost: 720000, minTier: 5 },
-    { id: 'robe_chaos', name: 'Hồng Mông Đạo Bào', type: 'armor', atk: 9800, hp: 75000, def: 12000, cost: 680000, minTier: 5 },
-    { id: 'elixir_ultimate', name: 'Hỗn Độn Tân Đan', type: 'consumable', heal: 200000, cost: 150000, minTier: 5 },
-    { id: 'jade_ultimate', name: 'Hồng Mông Ngọc', type: 'xp', value: 1000000, cost: 320000, minTier: 5 },
-    { id: 'pill_ultimate_power', name: 'Hỗn Độn Lực Đan', type: 'power', value: 18000, cost: 180000, minTier: 5 },
-    { id: 'pill_ultimate_def', name: 'Hỗn Độn Giáp Đan', type: 'defense', value: 20000, cost: 200000, minTier: 5 },
-];
-
-/* Get the player's shop tier based on realm */
-function getPlayerShopTier(realmIdx) {
-    if (realmIdx < 5) return 0;
-    if (realmIdx < 9) return 1;
-    if (realmIdx < 16) return 2;
-    if (realmIdx < 20) return 3;
-    if (realmIdx < 26) return 4;
-    return 5;
-}
-
-/* Get tier name for display */
-function getShopTierName(tier) {
-    const names = ['Phàm Giới', 'Trúc Cơ→Đại Thừa', 'Tiên Giới', 'Thánh Cảnh', 'Thiên Cảnh', 'Cực Cảnh'];
-    return names[tier] || 'Unknown';
+/* Hàng bán theo cảnh giới hiện tại — trang bị Phàm/Linh, đan dược, ngọc giản bế quan */
+function buildShopStock() {
+    const realm = state.realmIndex || 0;
+    const g = goldRef(realm);
+    const base = baseStatsFor(realm, state.realmStage || 0, state.root?.rank || 0);
+    const stock = [];
+    [1, 0].forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
+        stock.push({ ...makeGearItem(realm, slot, quality), id: `gear_${slot}_${quality}`, price: gearPrice(realm, quality) });
+    }));
+    stock.push(
+        { id: 'pill_heal', name: 'Hồi Thiên Đan', type: 'consumable', healPct: 0.5, price: g * 3 },
+        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', hours: 6, price: g * 60 },
+        { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: Math.ceil(base.power * 0.02), price: g * 150 },
+        { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: Math.ceil(base.defense * 0.02), price: g * 150 },
+        { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 30 + realm * 20, price: g * 20 },
+        { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.01, price: g * 200 }
+    );
+    return stock;
 }
 
 function addItemToInventory(it) {
@@ -97,9 +34,8 @@ function useItem(index) {
     let needsFullRender = false;
     
     if (it.type === 'xp') {
-        gainXP(Math.floor(it.value * (1 + state.realmIndex * 0.2)));
-        log(`📘 Dùng ${it.name}, tăng tu vi.`);
-        // gainXP đã tự update UI
+        const gained = gainCultivationHours(it.hours || 1);
+        log(`📘 Dùng ${it.name}, tu vi +${formatNumber(gained)}.`);
     }
 
     else if (it.type === 'power') {
@@ -132,32 +68,21 @@ function useItem(index) {
         needsFullRender = true;
     }
 
-    else if (it.type === 'consumable' && it.heal) {
-        state.hp = Math.min(state.maxHp, state.hp + it.heal);
-        log(`🧪 Dùng ${it.name}, hồi ${it.heal} HP.`);
-        
-        // 🆕 Chỉ cập nhật HP bar
-        const hpEl = document.getElementById('hpTxt');
-        const hpBarEl = document.getElementById('hpBar');
-        const bonusHp = typeof getEquippedHp === 'function' ? getEquippedHp() : 0;
-        const totalMaxHp = state.maxHp + bonusHp;
-        
-        if (hpEl) hpEl.textContent = `${Math.floor(state.hp)} / ${totalMaxHp}`;
-        if (hpBarEl) {
-            const percent = Math.round(state.hp / totalMaxHp * 100);
-            hpBarEl.style.width = `${percent}%`;
-        }
-    }
-
-    else if (it.type === 'weapon') {
-        it.equipped = !it.equipped;
-        log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
+    else if (it.type === 'consumable') {
+        const amount = Math.floor((state.totalMaxHp || state.maxHp) * (it.healPct || 0.25));
+        state.hp = Math.min(state.totalMaxHp || state.maxHp, state.hp + amount);
+        log(`🧪 Dùng ${it.name}, hồi ${formatNumber(amount)} HP.`);
         needsFullRender = true;
     }
 
-    else if (it.type === 'armor') {
+    else if (it.type === 'weapon' || it.type === 'armor') {
+        if (!it.equipped && (it.reqRealm || 0) > state.realmIndex) {
+            log(`⚠️ Cần ${REALMS[it.reqRealm]} mới trang bị được ${it.name}.`);
+            return;
+        }
+        if (!it.equipped) state.inventory.forEach(x => { if (x.slot === it.slot) x.equipped = false; });
         it.equipped = !it.equipped;
-        log(`${it.name} ${it.equipped ? 'đã mặc' : 'đã tháo'}`);
+        log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
         needsFullRender = true;
     }
 
@@ -206,16 +131,6 @@ function useItem(index) {
         state.inventory.splice(index, 1);
         renderAll();
         return;
-    }
-
-    else if (it.type === 'manual' && it.skillId) {
-        const success = learnSkill(it.skillId, it.name);
-        if (!success) {
-            renderAll();
-            return;
-        }
-        log(`🧠 Ngươi ngộ ra công pháp ${SKILL_LIBRARY?.[it.skillId]?.name || it.name}.`);
-        needsFullRender = true;
     }
 
     // consume non-equipment items
@@ -338,31 +253,28 @@ function buyItem(id) {
         log('Không tìm thấy vật phẩm trong shop hiện tại.');
         return;
     }
-
-    const price = si.price;
-    if (state.gold < price) {
-        log(`Không đủ linh thạch (${price}).`);
+    if (state.gold < si.price) {
+        log(`Không đủ linh thạch (${formatNumber(si.price)}).`);
         return;
     }
+    state.gold -= si.price;
+    const { id: _id, price: _price, ...item } = si;
+    addItemToInventory({ desc: 'Mua tại cửa hàng', ...item });
+    log(`🛒 Mua thành công: ${si.name} — Giá ${formatNumber(si.price)} linh thạch.`);
+}
 
-    state.gold -= price;
-
-    const obj = {
-        name: si.name,
-        type: si.type,
-        desc: 'Mua tại cửa hàng',
-        atk: si.atk,
-        def: si.def,
-        hp: si.hp,
-        heal: si.heal,
-        value: si.value,
-        effect: si.effect,
-        uses: si.uses,
-        skillId: si.skillId
-    };
-
-    addItemToInventory(obj);
-    log(`🛒 Mua thành công: ${si.name} — Giá ${price.toLocaleString()} linh thạch.`);
+function shopItemDesc(si) {
+    switch (si.type) {
+        case 'weapon':
+        case 'armor': return gearStatText(si);
+        case 'consumable': return `Hồi ${Math.round(si.healPct * 100)}% HP`;
+        case 'xp': return `Bằng ${si.hours} giờ bế quan`;
+        case 'power': return `Sức mạnh vĩnh viễn +${formatNumber(si.value)}`;
+        case 'defense': return `Phòng thủ vĩnh viễn +${formatNumber(si.value)}`;
+        case 'life': return `Tuổi thọ +${si.value}`;
+        case 'luck': return `May mắn +${(si.value * 100).toFixed(1)}%`;
+        default: return si.desc || '';
+    }
 }
 
 window.RENDERED_SHOP_LIST = [];
@@ -371,123 +283,24 @@ function renderShop() {
     const listEl = document.getElementById('shopModalList');
     if (!listEl) return;
     listEl.innerHTML = '';
-    window.RENDERED_SHOP_LIST = [];
+    window.RENDERED_SHOP_LIST = buildShopStock();
 
-    const playerTier = getPlayerShopTier(state.realmIndex || 0);
-    const tierName = getShopTierName(playerTier);
-
-    // Show tier header
-    const tierHeader = document.createElement('div');
-    tierHeader.style.cssText = 'text-align:center;margin-bottom:14px;padding:8px;background:rgba(166,255,209,0.1);border-radius:8px;border:1px solid rgba(166,255,209,0.3);';
-    tierHeader.innerHTML = `<div style="color:#a6ffd1;font-weight:700;">🏪 Cửa Hàng ${tierName}</div>
-        <div class="small" style="color:#9fb3c8;margin-top:4px;">Tu vi hiện tại: <b>Cảnh ${state.realmIndex}</b> — Hiển thị vật phẩm từ Tier 0 đến Tier ${playerTier}</div>`;
-    listEl.appendChild(tierHeader);
-
-    // Filter items by tier
-    const availableItems = SHOP_ITEMS.filter(si => (si.minTier || 0) <= playerTier);
-
-    // Group items by tier
-    const itemsByTier = {};
-    availableItems.forEach(si => {
-        const tier = si.minTier || 0;
-        if (!itemsByTier[tier]) itemsByTier[tier] = [];
-        itemsByTier[tier].push(si);
-    });
-
-    // Render items grouped by tier with headers
-    let lastTier = -1;
-    Object.keys(itemsByTier).sort((a, b) => a - b).forEach(tier => {
-        const items = itemsByTier[tier];
-        const currentTierName = getShopTierName(parseInt(tier));
-
-        // Add tier header (only if we have multiple tiers)
-        if (playerTier > 0 && parseInt(tier) < playerTier) {
-            const sectionHeader = document.createElement('div');
-            sectionHeader.style.cssText = 'margin:12px 0 8px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.85em;color:#888;';
-            sectionHeader.innerHTML = `📦 ${currentTierName} — <span class="small">Cấp độ cơ bản</span>`;
-            listEl.appendChild(sectionHeader);
-        } else if (parseInt(tier) === playerTier) {
-            const sectionHeader = document.createElement('div');
-            sectionHeader.style.cssText = 'margin:12px 0 8px;padding:6px 10px;background:rgba(255,215,0,0.15);border-radius:6px;font-size:0.85em;color:#ffd700;';
-            sectionHeader.innerHTML = `✨ ${currentTierName} — <span class="small">Vật phẩm cao cấp mới xuất hiện!</span>`;
-            listEl.appendChild(sectionHeader);
-        }
-
-        items.forEach(si => {
-        const realmAtkMul = Math.pow(1.08, state.realmIndex);
-        const realmDefMul = Math.pow(1.06, state.realmIndex);
-        const realmHpMul = Math.pow(1.08, state.realmIndex);
-        const realmHealMul = Math.pow(1.15, state.realmIndex);
-        const realmValueMul = Math.pow(1.15, state.realmIndex);
-
-        const priceBoost = Math.pow(1.35, state.realmIndex) * (1 + state.realmIndex * 0.08);
-        const price = Math.floor(si.cost * priceBoost);
-
-        const enhanced = { ...si, price };
-
-        if (si.type === 'weapon') {
-            enhanced.atk = Math.floor((si.atk || 0) * realmAtkMul + state.realmIndex * 10);
-            enhanced.hp = si.hp || 0;
-        } else if (si.type === 'armor') {
-            enhanced.hp = Math.floor((si.hp || 0) * realmHpMul + state.realmIndex * 60);
-            enhanced.def = Math.floor((si.def || 0) * realmDefMul + state.realmIndex * 8);
-            enhanced.atk = si.atk || 0;
-        } else if (si.type === 'consumable') {
-            enhanced.heal = Math.floor((si.heal || 0) * realmHealMul);
-        } else if (si.type === 'luck') {
-            enhanced.value = parseFloat((si.value + state.realmIndex * 0.015).toFixed(3));
-        } else if (['xp', 'power', 'defense', 'life'].includes(si.type)) {
-            enhanced.value = Math.floor((si.value || 0) * realmValueMul);
-        }
-
-        window.RENDERED_SHOP_LIST.push(enhanced);
-
-        const desc = (() => {
-            switch (si.type) {
-                case 'weapon':
-                    return `ATK +${enhanced.atk}${enhanced.hp ? `, HP +${enhanced.hp}` : ''}`;
-                case 'armor':
-                    return `HP +${enhanced.hp}, DEF +${enhanced.def}${enhanced.atk ? `, ATK +${enhanced.atk}` : ''}`;
-                case 'consumable':
-                    return `Hồi HP ${enhanced.heal}`;
-                case 'xp':
-                    return `Tăng tu vi +${enhanced.value}`;
-                case 'power':
-                    return `Sức mạnh +${enhanced.value}`;
-                case 'defense':
-                    return `Phòng thủ +${enhanced.value}`;
-                case 'life':
-                    return `Tuổi thọ +${enhanced.value}`;
-                case 'luck':
-                    return `May mắn +${(enhanced.value * 100).toFixed(1)}%`;
-                case 'manual':
-                    // 🆕 Hiển thị chi tiết skill
-                    const skillDef = window.SKILL_LIBRARY?.[si.skillId];
-                    if (skillDef) {
-                        const skillType = skillDef.type === 'active' ? '⚡ Chủ động' : '💫 Bị động';
-                        return `${skillType} — ${skillDef.description || si.desc || 'Kỹ năng mới'}`;
-                    }
-                    return si.desc || 'Công pháp mới';
-                default:
-                    return si.desc || 'Vật phẩm đặc biệt';
-            }
-        })();
-
+    window.RENDERED_SHOP_LIST.forEach(si => {
+        const color = si.quality != null ? GEAR_QUALITIES[si.quality].color : '#a6ffd1';
         const row = document.createElement('div');
         row.className = 'shop-item';
         row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,0.05);';
         row.innerHTML = `
             <div style="flex:1;">
-                <div style="font-weight:600;color:#a6ffd1;">${si.name}</div>
-                <div class="small" style="margin-top:4px;line-height:1.4;">${desc}</div>
+                <div style="font-weight:600;color:${color};">${si.name}</div>
+                <div class="small" style="margin-top:4px;line-height:1.4;">${shopItemDesc(si)}</div>
             </div>
             <div style="text-align:right;margin-left:12px;">
-                <div class="small" style="color:#ffd166;">${price.toLocaleString()} linh thạch</div>
+                <div class="small" style="color:#ffd166;">${formatNumber(si.price)} linh thạch</div>
                 <button onclick="buyItem('${si.id}')" style="margin-top:6px;white-space:nowrap;">Mua</button>
             </div>
         `;
         listEl.appendChild(row);
-        });
     });
 
     renderLinhBaoShop(listEl);
@@ -497,25 +310,12 @@ function renderShop() {
    CHỢ LINH BẢO (Bazaar-style artifacts)
    =========================== */
 function lbShopPrice(baseCost, grade) {
-    const realmBoost = Math.pow(1.3, state.realmIndex || 0) * (1 + (state.realmIndex || 0) * 0.06);
-    return Math.floor((baseCost || 300) * realmBoost * (1 + grade * 0.9));
+    return Math.floor(goldRef(state.realmIndex || 0) * (baseCost || 300) / 40 * (1 + grade * 0.15));
 }
 
-/* 🎴 LINH BẢO SHOP GRADE BY REALM
-   - Realms 0-4:   Phàm giới (grade 0-1) - Phàm Pháp
-   - Realms 5-8:   Kim Đan→Đại Thừa (grade 2-3) - Huyền Pháp
-   - Realms 9-15:  Tiên giới (grade 4-5) - Tiên Pháp
-   - Realms 16-19: Thánh cảnh (grade 6-7) - Thánh Pháp
-   - Realms 20-25: Thiên cảnh (grade 8-9) - Thiên Pháp
-   - Realms 26-28: Cực cảnh (grade 10-11) - Hỗn Độn Pháp / Hồng Mông Pháp
-*/
 function getRealmLinhBaoGradeRange(realmIdx) {
-    if (realmIdx < 5) return { min: 0, max: 1, tierName: 'Phàm Pháp' };
-    if (realmIdx < 9) return { min: 2, max: 3, tierName: 'Huyền Pháp' };
-    if (realmIdx < 16) return { min: 4, max: 5, tierName: 'Tiên Pháp' };
-    if (realmIdx < 20) return { min: 6, max: 7, tierName: 'Thánh Pháp' };
-    if (realmIdx < 26) return { min: 8, max: 9, tierName: 'Thiên Pháp' };
-    return { min: 10, max: 11, tierName: 'Hỗn Độn Pháp' };
+    const max = maxLinhBaoGradeForRealm(realmIdx);
+    return { min: Math.max(0, max - 1), max, tierName: LB_GRADE_NAMES[max] };
 }
 
 function lbRollShopOffer() {
@@ -648,7 +448,7 @@ function upgradeLinhBao(inventoryIndex) {
 if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
 
 /* Fuse linh bảo to raise grade: requires 2 items of same grade to create 1 of next grade.
-   Works like skill fusion - exponential material cost: 2, 9, 36, 100, 225...
+   Exponential material cost: 2, 9, 36, 100, 225...
    The first grade (Phàm) needs 2 to fuse, Hoàng needs 9, etc. */
 const LB_LINHBAO_FUSION_MATERIALS = [2, 9, 36, 100, 225, 441, 784, 1296, 2025, 3025, 4356, 6084, 8000];
 const LB_LINHBAO_FUSION_GOLD = [100, 500, 2000, 8000, 30000, 100000, 350000, 1200000, 4000000, 14000000, 50000000, 180000000, 650000000];
@@ -743,7 +543,7 @@ function fuseLinhBao(inventoryIndex) {
     // Upgrade the target item
     it.grade = g + 1;
     it.level = 1;
-    it.fusionLocked = true; // Lock from further fusion (can only ascend once like skills)
+    it.fusionLocked = true; // Lock from further fusion (can only ascend once)
 
     const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
     log(`${gradeTitle} Đột phá! ${it.name} thăng lên ${LB_GRADE_NAMES[it.grade]}! (−${goldCost.toLocaleString()} linh thạch, −${materialCost} vật liệu)`);

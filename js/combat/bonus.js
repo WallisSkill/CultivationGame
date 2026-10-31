@@ -126,25 +126,10 @@ function calcRealmBonusFull(attackerRealmIndex, attackerRealmStage, defenderReal
 }
 
 
-function calcRankBonus(attackerRank, defenderRank, isEnemy = false) {
-    const a = Math.max(0, Math.floor(attackerRank || 0));
-    const d = Math.max(0, Math.floor(defenderRank || 0));
-    const diff = a - d;
-
-    let mult;
-    if (diff > 0) {
-        mult = 1 + diff * 0.25 + a * 0.06;
-    } else if (diff < 0) {
-        mult = 1 - Math.abs(diff) * 0.18 - d * 0.04;
-    } else {
-        mult = 1.0;
-    }
-
-    mult *= (0.97 + Math.random() * 0.08);
-    if (isEnemy) mult *= 0.9;
-    mult = Math.max(0.4, Math.min(3.0, mult));
-
-    return parseFloat(mult.toFixed(2));
+function calcRankBonus(attackerRank, defenderRank) {
+    const diff = Math.floor(attackerRank || 0) - Math.floor(defenderRank || 0);
+    const mult = (1 + diff * 0.06) * (0.97 + Math.random() * 0.06);
+    return parseFloat(Math.max(0.75, Math.min(1.35, mult)).toFixed(2));
 }
 
 // ⛏️ Fix: chỉ giữ 1 bản getRealmMultiplier hợp lệ, xóa bản dư/thiếu dấu đóng trước đó
@@ -284,17 +269,9 @@ function applyElementalEffect(actor, target, factor, resist, isPlayer = false, v
 }
 
 function fmtVal(value, isPercent = false) {
-    if (value === undefined || value === null) return "0";
-    let num = Number(value);
-    if (!isFinite(num)) return "NaN";
-    if (isPercent) {
-        if (Math.abs(num) >= 1e9) return num.toExponential(3) + "%";
-        else return num.toFixed(2) + "%";
-    }
-    const abs = Math.abs(num);
-    if (abs >= 1e9) return num.toExponential(3);
-    if (abs >= 1) return num.toFixed(2);
-    return num.toPrecision(3);
+    if (isPercent) return `${(value * 100).toFixed(1)}%`;
+    if (Math.abs(value) < 100 && !Number.isInteger(value)) return value.toFixed(2);
+    return formatNumber(Math.round(value));
 }
 
 /*

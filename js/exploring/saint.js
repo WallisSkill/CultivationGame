@@ -55,16 +55,6 @@ const SAINTS = [
                     log("🎁 Linh kiếm tự sinh — nhận được Tru Tiên Kiếm!");
                 }
             }
-            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.thong_thien_van_kiem) {
-                addItemToInventory({
-                    name: '🌪️ Thông Thiên Vạn Kiếm',
-                    type: 'manual',
-                    skillId: 'thong_thien_van_kiem',
-                    desc: 'Chân truyền Thông Thiên — Xoáy sát thương 300% ATK + 15% HP địch, cooldown 3 round, bị động tăng 20% ATK'
-                });
-                log("⚡ Thông Thiên truyền thụ Thông Thiên Vạn Kiếm!");
-                state.learnedSkillFromSaint = true;
-            }
         },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
         drop: { name: "Tru Tiên Kiếm", type: "relic", uses: 3, effect: "Có cơ hội giết địch ngay lập tức" }
@@ -95,18 +85,7 @@ const SAINTS = [
                 }
 
             }
-
-            if (state.learnedSkillFromSaint === false && Math.random() < 0.4 && !state.skills?.learned?.nguyen_thuy_hon_don) {
-                addItemToInventory({
-                    name: '🌌 Nguyên Thủy Hỗn Độn Chưởng Pháp',
-                    type: 'manual',
-                    skillId: 'nguyen_thuy_hon_don',
-                    desc: 'Chân truyền Nguyên Thủy — 450% ATK + 12% HP địch + 40% lifesteal (CD 4)'
-                });
-                log("🌌 Nguyên Thủy truyền thụ Hỗn Độn Chưởng Pháp!");
-            }
-        }
-        ,
+        },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
         drop: { name: "Tam Bảo Ngọc Như Ý", type: "relic", uses: 3, effect: "Phản 75% sát thương trong 3 lượt" }
     },
@@ -317,17 +296,7 @@ const SAINTS = [
             state.luckBonus = (state.luckBonus || 0) + 0.15;
             log(`🍀 Đạo Tổ ban phước — May mắn +15%!`);
 
-            // 📜 Chance to get a legendary skill
-            if (Math.random() < 0.5 && !state.skills?.learned?.nguyen_thuy_hon_don) {
-                addItemToInventory({
-                    name: '🌌 Nguyên Thủy Hỗn Độn Chưởng Pháp',
-                    type: 'manual',
-                    skillId: 'nguyen_thuy_hon_don',
-                    desc: 'Chân truyền Đạo Tổ — 450% ATK + 12% HP địch + 40% lifesteal (CD 4)'
-                });
-                log("🌌 Đạo Tổ truyền thụ Hỗn Độn Chưởng Pháp!");
-            }
-        },
+            },
         elements: ["Thủy", "Thổ", "Hỏa", "Kim", "Mộc"],
         drop: null // Đạo Tổ doesn't drop items, the blessing is the reward
     }
@@ -538,7 +507,7 @@ function encounterRandomSaint(source = 'unknown') {
         if (!blessed) log('🙏 Thánh Nhân chỉ mỉm cười, cơ duyên lần này khép lại.');
         if (typeof renderAll === 'function') renderAll();
     };
-    const battle = () => startSaintChallenge(saint, source);
+    const battle = () => log(`${saint.name} khẽ lắc đầu: "Chưa đến lúc."`);
 
     if (typeof showDialog === 'function') {
         showDialog({
@@ -587,7 +556,7 @@ function encounterDaoTo(source = 'unknown') {
         if (!blessed) log('🙏 Đạo Tổ chỉ mỉm cười, cơ duyên lần này khép lại.');
         if (typeof renderAll === 'function') renderAll();
     };
-    const battle = () => startSaintChallenge(daoToSaint, source);
+    const battle = () => log('Đạo Tổ khẽ cười: "Chưa đến lúc."');
 
     if (typeof showDialog === 'function') {
         showDialog({
@@ -622,73 +591,7 @@ if (typeof window !== 'undefined') {
     window.encounterDaoTo = encounterDaoTo;
 }
 
-function startSaintChallenge(saint, source = 'unknown') {
-    const realmIndex = Math.min(REALMS.length - 1, Math.max(0, saint.realm ?? state.realmIndex + 3));
-    const mult = 1.4 + Math.max(0, state.realmIndex - 12) * 0.05;
-    const template = {
-        name: `${saint.name}`,
-        baseStr: 520,
-        baseHp: 1600,
-        baseDef: 360,
-        baseXp: 1500,
-        gold: 8000
-    };
-
-    const enemy = (typeof createCultivator === 'function')
-        ? createCultivator(template, realmIndex, mult, saint.realmStage || 0, saint.elements, 8)
-        : {
-            name: template.name,
-            tier: 'Thánh Chiến',
-            realmIndex,
-            realmStage: saint.realmStage || 0,
-            str: Math.floor(700 * mult),
-            def: Math.floor(420 * mult),
-            hp: Math.floor(4500 * mult),
-            maxHp: Math.floor(4500 * mult),
-            xp: Math.floor(2000 * mult),
-            gold: Math.floor(8000 * mult)
-        };
-    let diff = realmIndex - state.realmIndex;
-    let multiply = 1;
-    if (diff > 3) {
-        log(`⚔️ ${saint.name} phẫn nộ trước hành động của ngươi!`);
-        log(`⚔️ ${saint.name} nói: "Con kiến cũng đòi khiêu chiến Thánh Nhân? Ta sẽ cho ngươi biết thế nào là sức mạnh tuyệt đối của ${saint.name}!"`);
-        multiply = 4;
-        enemy.str = Math.floor(enemy.str * multiply);
-        enemy.def = Math.floor(enemy.def / multiply);
-        log(`${saint.name} tăng gấp ${multiply} lần sức mạnh nhưng giảm ${multiply} lần phòng ngự!`);
-        enemy.tier = "Phẫn Nộ";
-    }
-    else if (diff > 1) {
-        log(`⚔️ ${saint.name} nhìn ngươi bằng ánh mắt khinh miệt.`);
-        log(`⚔️ ${saint.name} nói: "Một phàm nhân cũng đòi đọ sức với Thánh Nhân!"`);
-        multiply = 2;
-        enemy.str = Math.floor(enemy.str * multiply);
-        enemy.def = Math.floor(enemy.def / multiply);
-        log(`${saint.name} tăng gấp ${multiply} lần sức mạnh nhưng giảm ${multiply} lần phòng ngự!`);
-        enemy.tier = "Khinh miệt";
-    }
-    else {
-        log(`⚔️ ${saint.name} mở mắt nhìn ngươi.`);
-        log(`⚔️ ${saint.name} nói: "Ngươi dũng cảm đòi thách đấu với ta, ta sẽ cho ngươi thấy sức mạnh của Thánh Nhân!"`);
-        enemy.tier = "Bình thường";
-    }
-
-    enemy.isSaint = true;
-    enemy.saintName = saint.name;
-    enemy.rewardMult = (enemy.rewardMult || 1) * 4;
-    enemy.elements = saint.elements?.slice?.() || enemy.elements;
-    enemy.rootRank = Math.max(enemy.rootRank || 0, 8);
-
-    state.currentEnemy = enemy;
-    window._battleActive = true;
-    if (typeof stopAutoTrainingHard === 'function') stopAutoTrainingHard();
-    log(`⚔️ ${saint.name} chấp nhận lời thách đấu!`);
-    if (typeof renderAll === 'function') renderAll();
-}
-
 if (typeof window !== 'undefined') {
     window.encounterRandomSaint = encounterRandomSaint;
-    window.startSaintChallenge = startSaintChallenge;
 }
 //# sourceMappingURL= saint.js.map

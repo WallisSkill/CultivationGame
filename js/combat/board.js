@@ -49,41 +49,8 @@ const LB_BOARD_SLOTS = 6;
    Previously you had to fuse to get higher grades - now realm breakthrough grants access.
    Each realm tier unlocks the ability to use + equip Linh Bảo of that grade.
 ---------------------------------------------------------------- */
-// Map: which grade is available at which realm
-// Realm 0-4 (Phàm giới): grade 0-1
-// Realm 5-8 (Trúc Cơ-Đại Thừa): grade 0-2
-// Realm 9-15 (Tiên giới): grade 0-3
-// Realm 16-19 (Thánh cảnh): grade 0-4 → Grade 4 = Thiên Giai
-// Realm 20-25 (Thiên cảnh): grade 0-5 → Grade 5 = Tiên Pháp
-// Realm 26 (Hỗn Độn): grade 0-6 → Grade 6 = Chí Tôn Pháp
-// Realm 27 (Hồng Mông): grade 0-7 → Grade 7 = Đế Pháp
-// Realm 28 (Chung Nguyên): grade 0-8 → Grade 8 = Chuẩn Thánh Pháp
-// (Higher grades require fusion or special methods to exceed realm unlock)
-const LB_GRADE_UNLOCK_REALM = [
-    0,  // Grade 0 (Phàm): available from realm 0
-    3,  // Grade 1 (Hoàng): unlock at realm 3
-    5,  // Grade 2 (Huyền): unlock at realm 5
-    8,  // Grade 3 (Địa): unlock at realm 8
-    12, // Grade 4 (Thiên): unlock at realm 12
-    16, // Grade 5 (Tiên): unlock at realm 16 (Thánh cảnh)
-    20, // Grade 6 (Chí Tôn): unlock at realm 20 (Thiên cảnh)
-    23, // Grade 7 (Đế): unlock at realm 23
-    25, // Grade 8 (Chuẩn Thánh): unlock at realm 25
-    26, // Grade 9 (Thánh): unlock at realm 26 (Hỗn Độn)
-    27, // Grade 10 (Hỗn Độn): unlock at realm 27 (Hồng Mông)
-    28, // Grade 11 (Hồng Mông): unlock at realm 28 (Chung Nguyên)
-    28  // Grade 12 (Chung Nguyên): unlock at realm 28 (max)
-];
-
-// Get the highest grade the player can use based on their realm
 function getMaxLinhBaoGradeForRealm(realmIndex) {
-    let maxGrade = 0;
-    for (let g = 0; g < LB_GRADE_UNLOCK_REALM.length; g++) {
-        if (realmIndex >= LB_GRADE_UNLOCK_REALM[g]) {
-            maxGrade = g;
-        }
-    }
-    return maxGrade;
+    return maxLinhBaoGradeForRealm(realmIndex);
 }
 
 // Check if player can use a specific grade of Linh Bảo
@@ -224,7 +191,7 @@ const LB_TICK_MS = 100;
 const LB_BURN_SECS = 4;
 const LB_FREEZE_SLOW = 0.35; // frozen board advances at 35% speed
 const LB_MAX_SECONDS = 90;   // safety cap so a stalemate cannot run forever
-const LB_ENEMY_DMG_SCALE = 0.7; // enemies fire many items — dial their hits down
+const LB_ENEMY_DMG_SCALE = 0.5;
 const LB_STUN_CHANCE = 0.5;  // chance a stun effect lands
 const LB_STUN_IMMUNE = 2.0;  // seconds a target is immune after a stun (no perma-stun)
 const LB_PARRY_SECS = 3.5;   // how long a parry charge lingers
@@ -237,33 +204,10 @@ function lbMaxLevelFor(grade) { return LB_GRADE_MAX_LEVEL[lbClamp(grade, 0, LB_M
 function lbLevelOf(item) { return lbClamp(item.level || 1, 1, lbMaxLevelFor(lbGradeOf(item))); }
 function lbIsMaxed(item) { return lbGradeOf(item) >= LB_MAX_GRADE && lbLevelOf(item) >= LB_MAX_LEVEL; }
 
-// combat power multiplier from grade + level
-// Each grade is meaningfully stronger, but not absurdly so
+// combat power multiplier from grade + level (kẻ địch dùng flatPower, đã tính sẵn trong HP của chúng)
 function lbPowerScale(item) {
-    const g = lbGradeOf(item), lvl = lbLevelOf(item);
-    // Balanced progression: each grade is 1.5-2x better than previous
-    // Grade 0-5: Early game (1x to ~12x)
-    // Grade 6-12: Endgame (~20x to ~400x)
-    const baseTable = [
-        1,     // Grade 0 (Phàm): 1x - baseline
-        1.5,   // Grade 1 (Hoàng): 1.5x
-        2.5,   // Grade 2 (Huyền): 2.5x
-        4,     // Grade 3 (Địa): 4x
-        7,     // Grade 4 (Thiên): 7x
-        12,    // Grade 5 (Tiên): 12x
-        20,    // Grade 6 (Chí Tôn): 20x
-        35,    // Grade 7 (Đế): 35x
-        60,    // Grade 8 (Chuẩn Thánh): 60x
-        100,   // Grade 9 (Thánh): 100x
-        160,   // Grade 10 (Hỗn Độn): 160x
-        250,   // Grade 11 (Hồng Mông): 250x
-        400    // Grade 12 (Chung Nguyên): 400x
-    ];
-    const base = baseTable[lbClamp(g, 0, 12)] || (1 + g * 1.2);
-    // Level scaling: moderate increase per level
-    const stepTable = [0.08, 0.08, 0.08, 0.09, 0.09, 0.10, 0.10, 0.11, 0.11, 0.12, 0.12, 0.13, 0.13];
-    const step = stepTable[lbClamp(g, 0, 12)] || 0.10;
-    return base * (1 + (lvl - 1) * step);
+    if (item.flatPower) return 1;
+    return LB_GRADE_POWER[lbGradeOf(item)] * (1 + (lbLevelOf(item) - 1) * 0.004);
 }
 // gentler scale for durations (freeze / stun)
 function lbDurScale(item) {
@@ -273,6 +217,7 @@ function lbDurScale(item) {
     return base * (1 + (lvl - 1) * 0.008);
 }
 function lbEffCooldown(item) {
+    if (item.flatPower) return item.cooldown || 2.5;
     const g = lbGradeOf(item), lvl = lbLevelOf(item);
     // Cooldown reduction: grade gives flat reduction (capped), level gives small reduction
     // Max reduction from grade alone is 45% (at grade 9+), plus up to 40% from levels
@@ -608,6 +553,7 @@ function placeOnBoard(inventoryIndex) {
     if (state.board.includes(it.uid)) { log(`⚠️ ${it.name} đã ở trên trận.`); return; }
     const slot = state.board.indexOf(null);
     if (slot < 0) { log('⚠️ Trận pháp đã đầy (6 ô). Gỡ bớt linh bảo trước.'); return; }
+    if (!canUseLinhBaoGrade(lbGradeOf(it))) { log(`⚠️ Cảnh giới chưa đủ để điều khiển ${LB_GRADE_NAMES[lbGradeOf(it)]}.`); return; }
     state.board[slot] = it.uid;
     log(`⚜️ Đặt ${it.name} vào ô ${slot + 1} của trận pháp.`);
     renderAll();
@@ -680,87 +626,17 @@ if (typeof window !== 'undefined') window.grantGemDrop = grantGemDrop;
 // Grant starting Trận Pháp Bảo based on player's Linh căn
 // Higher tier Linh căn = better chance, better grade, more matching elements
 function grantStartingLinhBao() {
-    if (typeof LINH_BAO === 'undefined' || typeof makeLinhBao !== 'function' || typeof addItemToInventory !== 'function') return [];
-
     const playerElements = state.root?.elements || [];
-    const playerRank = state.root?.rank || 0;
-    const elemCount = playerElements.length;
-
-    // Calculate Linh căn tier (0-7) based on element count and rank
-    // Higher tier = better Linh Bảo rewards
-    let tier = 0;
-    if (elemCount >= 5 && playerRank >= 9) tier = 7;      // Hỗn Độn Ngũ Linh Căn - best
-    else if (elemCount >= 5 || playerRank >= 9) tier = 6; // Ngũ Linh Căn or Hỗn Độn
-    else if (elemCount >= 4 || playerRank >= 7) tier = 5;  // Tứ Linh Căn or Thánh
-    else if (elemCount >= 3 || playerRank >= 5) tier = 4;  // Tam Linh Căn or Địa
-    else if (elemCount >= 2 || playerRank >= 3) tier = 3;  // Song Linh Căn or Huyền
-    else if (elemCount >= 1 || playerRank >= 1) tier = 2;  // Nhất Linh Căn or Hoàng
-    else tier = 1; // Phế Linh Căn
-
-    // Tier configuration: [baseChance, minGrade, maxGrade, numToGive]
-    const tierConfig = {
-        1: { chance: 0.35, minGrade: 0, maxGrade: 1, count: 1 },
-        2: { chance: 0.50, minGrade: 0, maxGrade: 2, count: 1 },
-        3: { chance: 0.65, minGrade: 1, maxGrade: 2, count: 1 },
-        4: { chance: 0.75, minGrade: 1, maxGrade: 3, count: 2 },
-        5: { chance: 0.85, minGrade: 2, maxGrade: 4, count: 2 },
-        6: { chance: 0.92, minGrade: 2, maxGrade: 5, count: 2 },
-        7: { chance: 1.00, minGrade: 3, maxGrade: 6, count: 3 }
-    };
-    const cfg = tierConfig[tier] || tierConfig[1];
-
-    // Element-matching pools: prefer Linh Bảo with player's elements
-    // If player has no elements, all Linh Bảo are equally available
-    const matchingElements = playerElements.length > 0 ? playerElements : null;
-
-    const granted = [];
-
-    // Determine how many Linh Bảo to try granting
-    const maxAttempts = cfg.count + (tier >= 5 ? 1 : 0); // Extra attempt for higher tiers
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Check if we get a Linh Bảo this attempt
-        if (Math.random() >= cfg.chance) continue;
-
-        // Select a Linh Bảo - prefer matching elements
-        let candidates = LINH_BAO;
-        if (matchingElements) {
-            const matching = LINH_BAO.filter(lb => matchingElements.includes(lb.element));
-            const nonMatching = LINH_BAO.filter(lb => !matchingElements.includes(lb.element));
-            // 70% chance to pick matching element if available
-            if (matching.length > 0 && Math.random() < 0.7) {
-                candidates = matching;
-            } else if (nonMatching.length > 0) {
-                candidates = nonMatching;
-            }
-        }
-
-        if (candidates.length === 0) continue;
-        const def = candidates[Math.floor(Math.random() * candidates.length)];
-
-        // Determine grade - higher tier = higher grades possible
-        let grade = cfg.minGrade + Math.floor(Math.random() * (cfg.maxGrade - cfg.minGrade + 1));
-        // Small chance for bonus grade
-        if (Math.random() < 0.15 + tier * 0.05) {
-            grade = Math.min(LB_MAX_GRADE, grade + 1);
-        }
-        grade = lbClamp(grade, 0, LB_MAX_GRADE);
-
-        // Create and give the Linh Bảo
-        const lb = makeLinhBao(def.id, grade, 1);
-        if (lb) {
-            addItemToInventory(lb);
-            granted.push(lb);
-
-            // Log the acquisition with tier info
-            const tierName = ['Phế', 'Hạ', 'Trung', 'Thượng', 'Tiên', 'Thánh', 'Đế'][Math.min(6, tier)] || 'Phế';
-            const elemInfo = matchingElements ? ` [${matchingElements.join(', ')}]` : '';
-            const gradeColor = LB_GRADE_COLORS[grade] || '#fff';
-            log(`🎴 Khởi nghiệp Trận Pháp Bảo — ${lb.name} <span style="color:${gradeColor}">[${LB_GRADE_NAMES[grade]}]</span> (Linh căn ${tierName}${elemInfo})!`);
-        }
-    }
-
-    return granted;
+    const matching = LINH_BAO.filter(lb => playerElements.includes(lb.element) && lb.cost <= 620);
+    const offensive = matching.find(lb => lb.effects.some(e => e.action === 'damage')) || LINH_BAO_MAP.phi_kiem;
+    const support = matching.find(lb => lb !== offensive) || LINH_BAO_MAP.thanh_moc;
+    return [offensive, support].map((def, i) => {
+        const lb = makeLinhBao(def.id, 0, 1);
+        state.inventory.push(lb);
+        state.board[i] = lb.uid;
+        log(`🎴 Pháp bảo khởi thủy: ${lb.name}.`);
+        return lb;
+    });
 }
 if (typeof window !== 'undefined') window.grantStartingLinhBao = grantStartingLinhBao;
 
@@ -997,266 +873,6 @@ function openGemSocketModal(gemInvIndex) {
 }
 if (typeof window !== 'undefined') window.openGemSocketModal = openGemSocketModal;
 
-/* ---------- OLD Công Pháp skills - REMOVED ---------- */
-const LB_SKILL_REWARDS = [];
-
-// Skill tier display names (1st = tier 0, 2nd = tier 1, etc.)
-const LB_SKILL_TIER_NAMES = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'];
-
-// Fusion cost: how many skills of tier N needed to create 1 of tier N+1
-// Formula: tier 0→1 = 2, 1→2 = 9, 2→3 = 36, 3→4 = 100, 4→5 = 225, etc.
-// Growing exponentially to make higher tier skills very rare
-const LB_SKILL_FUSION_COST = [2, 9, 36, 100, 225, 441, 784];
-
-// Get skill by skillId - uses LB_SKILL_REWARDS for display info (name, desc, color)
-// but ensures the skill exists in SKILL_LIBRARY so it can be learned
-function getSkillRewardById(skillId) {
-    // First try LB_SKILL_REWARDS (has display info like color, desc)
-    const fromRewards = LB_SKILL_REWARDS.find(s => s.skillId === skillId);
-    if (fromRewards) return fromRewards;
-
-    // Fall back to SKILL_LIBRARY (has core skill definition)
-    // This ensures skills that exist in SKILL_LIBRARY but not in LB_SKILL_REWARDS can still be used
-    const fromLibrary = SKILL_LIBRARY[skillId];
-    if (fromLibrary) {
-        return {
-            skillId: fromLibrary.id,
-            name: fromLibrary.name,
-            desc: fromLibrary.description,
-            color: '#9775fa' // default purple for skills from library
-        };
-    }
-
-    return null;
-}
-
-// Calculate how many skills needed to fuse from one tier to next
-function getSkillFusionCost(fromTier) {
-    if (fromTier < 0 || fromTier >= LB_SKILL_FUSION_COST.length) return Infinity;
-    return LB_SKILL_FUSION_COST[fromTier];
-}
-
-// Check if a skill can be used for fusion
-function canSkillFuse(item) {
-    if (!item || item.type !== 'manual') return false;
-    if (item.fusionLocked) return false; // already at max tier
-    // If maxFusionTier is set, check if we can still ascend
-    if (item.maxFusionTier != null && item.skillTier >= item.maxFusionTier) return false;
-    return true;
-}
-
-// Count how many skills of a specific tier the player has that can be fused
-function countSkillsByTier(tier) {
-    if (!Array.isArray(state.inventory)) return 0;
-    return state.inventory.filter(it => {
-        if (!it || it.type !== 'manual') return false;
-        if ((it.skillTier || 0) !== tier) return false;
-        return canSkillFuse(it);
-    }).length;
-}
-
-// Create a skill item for inventory
-function createSkillItem(skillId, skillTier = 0, options = {}) {
-    const reward = getSkillRewardById(skillId);
-    if (!reward) return null;
-    return {
-        name: reward.name,
-        skillId: skillId,
-        type: 'manual',
-        skillTier: skillTier,
-        tierName: LB_SKILL_TIER_NAMES[skillTier] || `${skillTier + 1}th`,
-        // Skills from fusion have a limit - can only ascend one more tier
-        maxFusionTier: options.fromFusion ? (skillTier + 1) : null,
-        element: reward.element || null,
-        desc: options.upgradedDesc || reward.desc,
-        color: reward.color,
-        isFusionSkill: !!options.fromFusion
-    };
-}
-
-// Fuse skills of a specific tier to create one of the next tier
-// Returns the new skill item, or null if not enough skills
-function fuseSkillOfTier(fromTier) {
-    const cost = getSkillFusionCost(fromTier);
-    if (cost === Infinity) {
-        log('🔒 Đã đạt cấp tối đa, không thể hợp nhất thêm.');
-        return null;
-    }
-
-    const available = countSkillsByTier(fromTier);
-    if (available < cost) {
-        log(`⚠️ Cần ${cost} bí kíp ${LB_SKILL_TIER_NAMES[fromTier]} để hợp nhất thành ${LB_SKILL_TIER_NAMES[fromTier + 1]}, nhưng chỉ có ${available}.`);
-        return null;
-    }
-
-    // Find and remove skills to consume (only skills that can fuse)
-    const skillsToRemove = [];
-    let removed = 0;
-    for (let i = 0; i < state.inventory.length && removed < cost; i++) {
-        const it = state.inventory[i];
-        if (it && it.type === 'manual' && (it.skillTier || 0) === fromTier && canSkillFuse(it)) {
-            skillsToRemove.push(i);
-            removed++;
-        }
-    }
-
-    if (removed < cost) {
-        log(`⚠️ Không đủ bí kíp để hợp nhất.`);
-        return null;
-    }
-
-    // Remove consumed skills (reverse order to preserve indices)
-    skillsToRemove.sort((a, b) => b - a).forEach(idx => {
-        state.inventory.splice(idx, 1);
-    });
-
-    // Randomly pick a skill from the rewards catalog
-    // Skills from fusion have higher chance to be upgraded versions
-    // Only pick skills that exist in SKILL_LIBRARY (single source of truth for learnable skills)
-    const isUpgraded = Math.random() < 0.4; // 40% chance for upgraded version
-    const learnableSkills = LB_SKILL_REWARDS.filter(s => SKILL_LIBRARY[s.skillId]);
-
-    // Safety check: if no learnable skills, return early
-    if (learnableSkills.length === 0) {
-        log(`⚠️ Không có bí kíp nào có thể hợp nhất!`);
-        return null;
-    }
-
-    const baseSkill = learnableSkills[Math.floor(Math.random() * learnableSkills.length)];
-
-    let newSkillId = baseSkill.skillId;
-    let newDesc = baseSkill.desc;
-    let newColor = baseSkill.color;
-
-    // Create upgraded description for higher tier skills
-    // ALL fusions get upgraded (even tier 0→1), stronger bonuses for higher tiers
-    // 40% chance for LUCKY upgrade (extra 20% bonus)
-    const tierMultiplier = isUpgraded
-        ? 1 + (fromTier + 1) * 0.35 + 0.2  // Lucky: 35% + 20% extra = 55% per tier
-        : 1 + (fromTier + 1) * 0.35;        // Normal: 35% per tier
-    const tierName = LB_SKILL_TIER_NAMES[fromTier + 1] || `${fromTier + 2}th`;
-    newDesc = `[${tierName} Cấp] ${baseSkill.desc} (+${Math.floor((tierMultiplier - 1) * 100)}% mạnh hơn)`;
-    newColor = getHigherTierColor(baseSkill.color, fromTier + 1);
-
-    // NEW SKILL: Skills from fusion can only ascend ONE more tier
-    const newSkill = createSkillItem(newSkillId, fromTier + 1, {
-        fromFusion: true, // Mark as fusion-created (limited to one more tier)
-        upgradedDesc: newDesc
-    });
-
-    log(`🌀 Hợp nhất ${cost} bí kíp ${LB_SKILL_TIER_NAMES[fromTier]} thành công!`);
-    log(`✨ Nhận được: ${newSkill.name} [${newSkill.tierName} Cấp]!`);
-    if (isUpgraded) {
-        log(`🌟 May mắn! Đây là bí kíp được tăng cấp!`);
-    }
-    log(`⚠️ Bí kíp này chỉ có thể hợp nhất tối đa 1 lần nữa.`);
-
-    return newSkill;
-}
-
-// Helper to get a visually higher-tier color
-function getHigherTierColor(baseColor, tier) {
-    const tierColors = [
-        '#ff6b6b', // tier 0 - red
-        '#ffa94d', // tier 1 - orange
-        '#ffd43b', // tier 2 - yellow
-        '#69db7c', // tier 3 - green
-        '#4dabf7', // tier 4 - blue
-        '#da77f2', // tier 5 - purple
-        '#ff922b', // tier 6 - gold (legendary)
-        '#fff'     // tier 7+ - white
-    ];
-    return tierColors[Math.min(tier, tierColors.length - 1)] || baseColor;
-}
-
-// Open skill fusion modal UI
-function openSkillFusionModal() {
-    if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất.'); return; }
-
-    let modal = document.getElementById('skillFusionModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'skillFusionModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:10050;';
-        document.body.appendChild(modal);
-    }
-
-    const maxTier = LB_SKILL_FUSION_COST.length - 1;
-    const rows = [];
-
-    for (let tier = 0; tier <= maxTier; tier++) {
-        const cost = LB_SKILL_FUSION_COST[tier];
-        const available = countSkillsByTier(tier);
-        const canFuse = available >= cost;
-        const tierName = LB_SKILL_TIER_NAMES[tier] || `${tier + 1}th`;
-        const nextTierName = LB_SKILL_TIER_NAMES[tier + 1] || `${tier + 2}th`;
-
-        const buttonDisabled = !canFuse ? 'disabled style="opacity:0.5"' : `onclick="doSkillFusion(${tier})"`;
-
-        rows.push(`
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:8px;background:rgba(255,255,255,0.05);border-left:3px solid ${canFuse ? '#4ade80' : '#666'};">
-                <div>
-                    <div style="font-weight:600;color:${canFuse ? '#4ade80' : '#888'}">${tierName} → ${nextTierName}</div>
-                    <div class="small">Cần ${cost} bí kíp · Có ${available} trong túi</div>
-                    ${available < cost ? `<div class="small" style="color:#f87171;">Thiếu ${cost - available} bí kíp</div>` : ''}
-                </div>
-                <button ${buttonDisabled}>🔥 Hợp nhất</button>
-            </div>
-        `);
-    }
-
-    // Also show fusion-limited skills info
-    const fusionLimitedSkills = state.inventory.filter(it => it && it.type === 'manual' && it.fusionLimited && it.fusionCount === 0);
-    let limitedInfo = '';
-    if (fusionLimitedSkills.length > 0) {
-        limitedInfo = `
-            <div style="margin-top:16px;padding:10px;background:rgba(255,152,0,0.1);border-radius:8px;">
-                <div style="color:#ffa94d;font-weight:600;">⚠️ Bí kíp giới hạn hợp nhất (${fusionLimitedSkills.length})</div>
-                <div class="small" style="color:#888;">Những bí kíp này chỉ có thể hợp nhất 1 lần cuối trước khi khóa vĩnh viễn.</div>
-                <div class="small" style="margin-top:4px;">
-                    ${fusionLimitedSkills.slice(0, 5).map(s => `${s.name} [${s.tierName}]`).join(', ')}${fusionLimitedSkills.length > 5 ? '...' : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    modal.innerHTML = `
-        <div style="background:#0f1724;border-radius:14px;max-width:520px;width:90%;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,0.6);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <div style="color:#ffa94d;font-weight:700;font-size:1.1em;">🌀 Hợp Nhất Bí Kíp</div>
-                <button onclick="closeSkillFusionModal()" style="border:0;background:transparent;color:#f87171;font-size:20px;cursor:pointer;">✕</button>
-            </div>
-            <div class="small" style="color:#888;margin-bottom:12px;">Hợp nhất ${maxTier + 1} bí kíp cùng cấp để tạo bí kíp cấp cao hơn. Bí kíp hợp nhất chỉ có thể nâng cấp 1 lần nữa!</div>
-            ${rows.join('')}
-            ${limitedInfo}
-        </div>
-    `;
-    modal.style.display = 'flex';
-}
-if (typeof window !== 'undefined') window.openSkillFusionModal = openSkillFusionModal;
-
-function closeSkillFusionModal() {
-    const m = document.getElementById('skillFusionModal');
-    if (m) m.style.display = 'none';
-}
-
-// Execute skill fusion for a specific tier
-function doSkillFusion(tier) {
-    const newSkill = fuseSkillOfTier(tier);
-    if (newSkill) {
-        addItemToInventory(newSkill);
-        // Mark the new skill as having been through one fusion
-        newSkill.fusionCount = 1;
-        // If it's fusion-limited, mark it as locked after this one use
-        if (newSkill.fusionLimited) {
-            // Actually, fusionLimited means it CAN fuse one more time, so we need to track count
-        }
-    }
-    closeSkillFusionModal();
-    renderAll();
-}
-if (typeof window !== 'undefined') window.doSkillFusion = doSkillFusion;
-
 /* ---------- victory reward choice ---------- */
 function _lbRewardPool() {
     const kinds = Object.keys(LB_GEM_KINDS);
@@ -1264,39 +880,21 @@ function _lbRewardPool() {
     const tier = lbClamp(Math.floor(realm / 7), 0, 3);
     const opts = [];
 
-    // Determine what categories to include
-    const roll = Math.random();
-    const useSkills = roll < 0.3; // 30% chance for skill reward option
-
-    if (useSkills) {
-        // 2 gems + 1 skill choice
-        const shuffled = kinds.slice().sort(() => Math.random() - 0.5);
-        opts.push({ kind: 'gem', gemKind: shuffled[0], tier: lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3) });
-        opts.push({ kind: 'gem', gemKind: shuffled[1], tier: lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3) });
-        // Only pick skills that exist in SKILL_LIBRARY (single source of truth for learnable skills)
-        // This ensures all skill rewards can be learned
-        const learnableSkills = LB_SKILL_REWARDS.filter(s => SKILL_LIBRARY[s.skillId]);
-        if (learnableSkills.length > 0) {
-            const skill = learnableSkills[Math.floor(Math.random() * learnableSkills.length)];
-            opts.push({ kind: 'skill', skillId: skill.skillId, skill });
-        }
+    // 2 gems + 1 linhbao (classic)
+    const shuffled = kinds.slice().sort(() => Math.random() - 0.5);
+    for (let i = 0; i < 2; i++) {
+        const kind = shuffled[i % shuffled.length];
+        const t = lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3);
+        opts.push({ kind: 'gem', gemKind: kind, tier: t });
+    }
+    if (Math.random() < 0.5) {
+        const def = LINH_BAO[Math.floor(Math.random() * LINH_BAO.length)];
+        opts.push({ kind: 'linhbao', id: def.id, grade: lbClamp(Math.floor(realm / 5), 0, LB_MAX_GRADE) });
     } else {
-        // 2 gems + 1 linhbao (classic)
-        const shuffled = kinds.slice().sort(() => Math.random() - 0.5);
-        for (let i = 0; i < 2; i++) {
-            const kind = shuffled[i % shuffled.length];
-            const t = lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3);
-            opts.push({ kind: 'gem', gemKind: kind, tier: t });
-        }
-        if (Math.random() < 0.5) {
-            const def = LINH_BAO[Math.floor(Math.random() * LINH_BAO.length)];
-            opts.push({ kind: 'linhbao', id: def.id, grade: lbClamp(Math.floor(realm / 5), 0, LB_MAX_GRADE) });
-        } else {
-            // Instead of linhbao, give another gem of different kind
-            const kind = shuffled[2 % shuffled.length];
-            const t = lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3);
-            opts.push({ kind: 'gem', gemKind: kind, tier: t });
-        }
+        // Instead of linhbao, give another gem of different kind
+        const kind = shuffled[2 % shuffled.length];
+        const t = lbClamp(tier + (Math.random() < 0.3 ? 1 : 0), 0, 3);
+        opts.push({ kind: 'gem', gemKind: kind, tier: t });
     }
     return opts;
 }
@@ -1311,14 +909,6 @@ function pickBattleReward(i) {
     } else if (o.kind === 'linhbao') {
         const lb = makeLinhBao(o.id, o.grade, 1);
         if (lb) { addItemToInventory(lb); log(`🎁 Chọn phần thưởng: ${lb.name} [${lbGradePlain(lb)}].`); }
-    } else if (o.kind === 'skill') {
-        addItemToInventory({
-            name: o.skill.name,
-            type: 'manual',
-            skillId: o.skill.skillId,
-            desc: o.skill.desc
-        });
-        log(`🎁 Chọn phần thưởng: ${o.skill.name}!`);
     }
     window.__lbRewardOpts = null;
     closeRewardModal();
@@ -1347,15 +937,6 @@ function showBoardRewardChoice() {
                 <div class="small">${def.desc}</div>
             </div>`;
         }
-        if (o.kind === 'skill') {
-            const s = o.skill;
-            return `<div class="lb-reward-card" onclick="pickBattleReward(${i})" style="border-color:${s.color}">
-                <div style="font-size:1.4em">📜</div>
-                <div style="font-weight:700;color:${s.color}">${s.name}</div>
-                <div class="small">${s.desc}</div>
-                <div class="small" style="color:#aaa;margin-top:4px;">Bí kíp chiến đấu</div>
-            </div>`;
-        }
         const def = LINH_BAO_MAP[o.id];
         const col = LB_ELEMENT_COLORS[def.element] || '#a6ffd1';
         return `<div class="lb-reward-card" onclick="pickBattleReward(${i})" style="border-color:${col}">
@@ -1377,23 +958,8 @@ if (typeof window !== 'undefined') window.showBoardRewardChoice = showBoardRewar
 /* ---------- enemy board generator ---------- */
 function buildEnemyBoard(enemy) {
     const realm = enemy.realmIndex || 0;
-    const grade = lbClamp(Math.floor(realm / 5), 0, LB_MAX_GRADE);
-    const gradeMax = lbMaxLevelFor(grade);
-
-    // Level scaling for enemies:
-    // Grades 0-5 (Phàm to Tiên Pháp): level = 1 (basic tiers)
-    // Grades 6-12 (Chí Tôn to Chung Nguyên): level scales within the grade's max
-    // Higher grades = more powerful enemies with higher level linhbao
-    let level;
-    if (grade <= 5) {
-        level = 1;
-    } else {
-        // Each grade covers 5 realm levels, scale level within grade's max
-        const realmOffset = realm - (grade * 5);
-        level = lbClamp(1 + Math.floor(realmOffset * (gradeMax / 8)), 1, gradeMax);
-    }
-
-    const count = Math.max(2, Math.min(5, 2 + Math.floor(realm / 6)));
+    const grade = maxLinhBaoGradeForRealm(realm);
+    const count = enemy.boardSize || 3;
     const enemyEls = enemy.elements || [];
 
     const pool = LINH_BAO.map(def => ({
@@ -1405,11 +971,8 @@ function buildEnemyBoard(enemy) {
     const chosen = [];
     const offensive = pool.filter(p => p.def.effects.some(e => e.action === 'damage' || e.action === 'burn'));
     if (offensive.length) chosen.push(lbWeightedPick(offensive).def);
-    while (chosen.length < count) {
-        chosen.push(lbWeightedPick(pool).def);
-        if (chosen.length > 12) break;
-    }
-    return chosen.map(def => ({ ...def, grade, level }));
+    while (chosen.length < count) chosen.push(lbWeightedPick(pool).def);
+    return chosen.map(def => ({ ...def, grade, level: 1, flatPower: true }));
 }
 function lbWeightedPick(list) {
     const total = list.reduce((a, b) => a + b.w, 0);
@@ -1464,9 +1027,6 @@ function lbBuildPlayerCombatant() {
     let atk = state.totalPower || state.power || 10;
     let def = state.totalDef || state.defense || 5;
     let maxHp = state.totalMaxHp || state.maxHp || 100;
-    if (typeof applyPassiveSkillBuffs === 'function') {
-        try { const b = applyPassiveSkillBuffs(); atk += b.atkBonus || 0; def += b.defBonus || 0; } catch { }
-    }
     const placed = boardItems().filter(Boolean);
     const defs = placed.length ? placed : [LB_DEFAULT_ATTACK];
     return Object.assign(lbBaseCombatant(), {
@@ -1476,7 +1036,7 @@ function lbBuildPlayerCombatant() {
         baseAtk: atk, atk, def,
         elements: state.root?.elements || [], rootRank: state.root?.rank || 0,
         realmIndex: state.realmIndex || 0, realmStage: state.realmStage || 0,
-        slots: defs.map(lbMakeSlot)
+        slots: defs.map(lbMakeSlot), avatar: playerAvatarSvg()
     });
 }
 
@@ -1490,7 +1050,7 @@ function lbBuildEnemyCombatant(enemy) {
         baseAtk: enemy.str || 10, atk: enemy.str || 10, def: enemy.def || 0,
         elements: enemy.elements || [], rootRank: enemy.rootRank || 0,
         realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0,
-        slots: defs.map(lbMakeSlot), ref: enemy
+        slots: defs.map(lbMakeSlot), ref: enemy, avatar: enemyAvatarSvg(enemy)
     });
 }
 
@@ -1655,6 +1215,7 @@ function lbStep(battle) {
             if (slot.elapsed >= slot.cooldown * 1000) {
                 slot.elapsed -= slot.cooldown * 1000;
                 lbFire(battle, self, foe, slot);
+                lbLunge(battle, self.side);
                 if (foe.hp <= 0 || self.hp <= 0) break;
             }
         }
@@ -1681,6 +1242,14 @@ function lbStep(battle) {
     }
 }
 
+function lbLunge(battle, side) {
+    const node = battle.dom?.[side]?.avatar;
+    if (!node) return;
+    node.classList.remove('lb-lunge');
+    void node.offsetWidth;
+    node.classList.add('lb-lunge');
+}
+
 function lbEndBattle(battle, result) {
     if (!battle.running) return;
     battle.running = false;
@@ -1699,22 +1268,19 @@ function lbEndBattle(battle, result) {
         state.hp = state.totalMaxHp;
         state.currentEnemy = null;
         log('🔥 Khí huyết sôi trào — HP hồi phục toàn phần sau chiến thắng!');
-        // 🏆 better rewards: sometimes a choice of gems/linh bảo, or a gem drop
-        try {
-            const elite = enemy && enemy.tier && enemy.tier !== 'Thường';
-            if (Math.random() < (elite ? 0.6 : 0.28)) showBoardRewardChoice();
-            else if (Math.random() < 0.25) grantGemDrop({ source: 'Chiến thắng' });
-        } catch { }
+        const elite = enemy && enemy.tier && enemy.tier !== 'Thường';
+        if (Math.random() < (elite ? 0.6 : 0.1)) showBoardRewardChoice();
+        else if (Math.random() < 0.15) grantGemDrop({ source: 'Chiến thắng' });
     } else {
-        // 🆕 Lưu thông tin tử vong - bị Linh Bảo trận pháp tiêu diệt
         if (enemy) {
             window.__lastDeathInfo = {
                 enemyName: enemy.name || 'Kẻ thù không rõ',
                 killMethod: 'Linh Bảo trận pháp'
             };
         }
-        if (typeof loseBattle === 'function') loseBattle();
         state.currentEnemy = null;
+        if (enemy && enemy.scriptedLoss) onScriptedLoss(enemy);
+        else loseBattle();
     }
 
     window.__boardBattle = null;
@@ -1756,12 +1322,15 @@ function lbSideHTML(c, side) {
     return `
         <div class="lb-side lb-side-${side}">
             <div class="lb-side-head">
-                <span class="lb-side-name">${side === 'enemy' ? '👹 ' : '🧙 '}${c.name}</span>
+                <span class="lb-side-name">${c.name}</span>
                 <span class="lb-side-hp-txt" data-hp="${side}"></span>
             </div>
             <div class="lb-hpbar"><div class="lb-hpfill lb-hpfill-${side}" data-hpfill="${side}"></div>
                 <div class="lb-shieldfill" data-shield="${side}"></div></div>
-            <div class="lb-board" data-board="${side}">${tiles}</div>
+            <div class="lb-duel">
+                <div class="lb-avatar" data-avatar="${side}">${c.avatar || ''}</div>
+                <div class="lb-board" data-board="${side}">${tiles}</div>
+            </div>
             <div class="lb-float" data-float="${side}"></div>
         </div>`;
 }
@@ -1787,7 +1356,8 @@ function lbBuildArenaDOM(battle) {
             hpTxt: el.querySelector(`[data-hp="${side}"]`),
             hpFill: el.querySelector(`[data-hpfill="${side}"]`),
             shield: el.querySelector(`[data-shield="${side}"]`),
-            float: el.querySelector(`[data-float="${side}"]`)
+            float: el.querySelector(`[data-float="${side}"]`),
+            avatar: el.querySelector(`[data-avatar="${side}"]`)
         };
     });
 }
@@ -1852,7 +1422,8 @@ function renderBoardArena() {
         }
         const col = LB_ELEMENT_COLORS[it.element] || '#888';
         const tooltipText = (typeof getLinhBaoTooltipText === 'function') ? getLinhBaoTooltipText(it) : '';
-        const tooltipHtml = tooltipText ? `<div class="lb-tile-tooltip">📊 GIÁ TRỊ THỰC:\n${tooltipText.replace(/\n/g, '<br>')}</div>` : '';
+        const gemEffectInfo = (typeof getLinhBaoGemEffectInfo === 'function') ? getLinhBaoGemEffectInfo(it) : '';
+        const tooltipHtml = (tooltipText || gemEffectInfo) ? `<div class="lb-tile-tooltip">${tooltipText ? `📊 GIÁ TRỊ THỰC:\n${tooltipText.replace(/\n/g, '<br>')}${gemEffectInfo ? '<br><br>' : ''}` : ''}${gemEffectInfo ? `💎 HIỆU ỨNG NGỌC:\n${gemEffectInfo.replace(/\n/g, '<br>')}` : ''}</div>` : '';
         return `<div class="lb-tile" style="border-color:${col}" onclick="removeFromBoard(${i})" title="Gỡ khỏi trận">
                     <div class="lb-tile-top"><span class="lb-tile-icon">${lbEffectIcons(it)}</span><span class="lb-tile-tier">${lbGradeLabel(it)}</span></div>
                     <div class="lb-tile-name" style="color:${col}">${it.name}</div>
@@ -1863,7 +1434,7 @@ function renderBoardArena() {
 
     const enemyLine = state.currentEnemy && !state.currentEnemy.isPvP
         ? `<div class="small" style="margin-bottom:6px">Kẻ địch chờ giao chiến: <b>${state.currentEnemy.name}</b> — bấm “Tấn công” để khai chiến.</div>`
-        : `<div class="small" style="margin-bottom:6px">Sắp xếp linh bảo rồi “Đi kỳ ngộ” để tìm địch.</div>`;
+        : `<div class="small" style="margin-bottom:6px">Sắp xếp pháp bảo trước khi đi săn hoặc khiêu chiến.</div>`;
 
     el.innerHTML = `
         <div class="lb-editor-head">🎴 Trận Pháp Bảo <span class="small">(bấm ô để gỡ · bấm linh bảo trong túi để đặt)</span></div>

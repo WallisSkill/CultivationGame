@@ -3,143 +3,37 @@
 	- cooldown anti-spam, block if in combat
 =========================== */
 
-function canExplore() {
-	return !state.exploreCooldown && !state.currentEnemy;
-}
-
-// Original implementation renamed
 function exploreOriginalImpl() {
 	if (state.currentEnemy) {
 		log('Không thể gặp kỳ ngộ khi đang chiến đấu.');
 		return;
 	}
-	if (state.exploreCooldown) {
-		log('Phải chờ trước khi gặp kỳ ngộ tiếp.');
-		return;
-	}
-
-	state.exploreCooldown = true;
-	setTimeout(() => state.exploreCooldown = false, 500);
 
 	const luck = state.luckBonus || 0;
-	// Mostly good events (~88% chance), small chance of enemy encounter
-	const mysteryChance = Math.min(0.88, 0.6 + luck);
-
-	// 🌟 Very small chance to encounter Đạo Tổ specifically (the strongest)
-	const daoToChance = Math.min(0.02, 0.005 + luck * 0.03);
-	if (Math.random() < daoToChance && typeof window.encounterDaoTo === 'function') {
-		log('═══════════════════════════════════════════════════════');
-		log('🌟✨ THIÊN ĐỊA ĐẠI BIẾN ✨🌟');
-		log('═══════════════════════════════════════════════════════');
-		log('⚡ Mây đen vần vũ, thiên kiếp giáng lâm...');
-		log('⚡ Thời gian như ngưng đọng, không gian từ truyền vỡ tan...');
-		log('⚡ Một luồng khí tức vô thượng đang ào ạt đổ xuống!');
-		log('⚡ NHẬT NGUYỆT ĐỀU TỐI KHÔNG MANG MÀU...');
-		log('⚡ TRỜI ĐẤT ĐỀU SỤP ĐỔ KHÔNG CÙNG...');
-		log('⚡ ...Làm sao có thể? Chẳng lẽ là...');
-		log('═══════════════════════════════════════════════════════');
-		log('🔥🔥🔥 ĐẠO TỔ GIÁNG THẾ!!! 🔥🔥🔥');
-		log('═══════════════════════════════════════════════════════');
-		log('🌟 Đấng sáng tạo nguyên thủy, ngọn nguồn của vạn vật!');
-		log('🌟 Ngài là tồn tại vĩnh cửu trước cả thiên địa!');
-		log('🌟 Cơ duyên HIẾM CÓ nhất trong vũ trụ đang mở ra!');
-		log('═══════════════════════════════════════════════════════');
-		window.encounterDaoTo('explore');
-		renderAll();
-		return;
-	}
-
-	const saintChance = Math.min(0.4, 0.02 + luck * 0.6 + state.realmIndex * 0.004);
-	if (Math.random() < saintChance && typeof window.encounterRandomSaint === 'function') {
-		log('🌠 Thiên tượng dị thường — một vị Thánh Nhân hạ phàm giữa kỳ ngộ!');
-		window.encounterRandomSaint('explore');
-		renderAll();
-		return;
-	}
-
 	const roll = Math.random();
 
-	if (roll < mysteryChance) {
-		const goodChance = Math.min(0.40, 0.20 + luck * 0.25);
-
-		const filteredMysteries = MYSTERIES.filter(m => {
-			if (m.type === 'good') {
-				return Math.random() < goodChance;
-			} else if (m.type === 'bad') {
-				const badChance = Math.max(0.15, 0.6 - luck * 0.4);
-				return Math.random() < badChance;
-			} else {
-				return true;
-			}
-		});
-
-		const m = filteredMysteries[Math.floor(Math.random() * filteredMysteries.length)];
-		if (!m) {
-			log(`✨ Không có kỳ ngộ nào xuất hiện... (Thiên Cơ tạm đóng)`);
-			return;
+	if (roll < Math.min(0.75, 0.55 + luck)) {
+		const goodChance = Math.min(0.75, 0.55 + luck * 0.25);
+		const pick = Math.random();
+		if (pick < goodChance) {
+			log('✨ Thám hiểm gặp cơ duyên!');
+			mysteryGood();
+		} else if (pick < goodChance + 0.15) {
+			log('☠️ Thám hiểm gặp hiểm cảnh!');
+			mysteryBad();
+		} else {
+			mysteryNpc({ name: 'Lão Sư Ẩn' });
 		}
-
-		log(`✨ Gặp kỳ ngộ: ${m.name} — ${m.desc}`);
-
-		if (m.type === 'good') mysteryGood();
-		else if (m.type === 'bad') mysteryBad();
-		else if (m.type === 'npc') mysteryNpc(m);
-	}
-	else {
-		window._battleActive = true;
-		activatePassiveSkills();
-		spawnEnemyWithRules();
-	}
-}
-
-// Wire a single guarded explore that enforces battle lock
-window.exploreOriginalImpl = exploreOriginalImpl;
-window.explore = function () {
-	if (window._battleActive || (typeof isBattleLocked === 'function' && isBattleLocked())) {
-		log('🔒 Đang chiến đấu — không thể đi kỳ ngộ.');
 		return;
 	}
-	return window.exploreOriginalImpl();
+	spawnEnemyWithRules();
 }
 
-/* ================================================
-   SKILL TIER SYSTEM - Realm-based skill drops
-   Higher realm = higher chance for higher tier skills
-   ================================================ */
+window.exploreOriginalImpl = exploreOriginalImpl;
 
-// OLD Công Pháp skills - REMOVED
-const SKILL_TIER_POOLS = [];
-
-// Get skill tier based on realm (higher realm = higher tier chance)
-function getSkillTierFromRealm(realmIndex) {
-    const r = Math.random();
-    // Tier probabilities scale with realm
-    // Base chances at realm 0, shifting toward higher tiers as realm increases
-    const t0Base = 0.50, t1Base = 0.25, t2Base = 0.15, t3Base = 0.08, t4Base = 0.02;
-    const realmBonus = Math.min(realmIndex, 30); // Cap realm bonus at 30
-
-    // Higher realm shifts chances toward higher tiers
-    const t0Chance = Math.max(0.10, t0Base - realmBonus * 0.015);
-    const t1Chance = Math.max(0.08, t1Base - realmBonus * 0.005);
-    const t2Chance = Math.min(0.30, t2Base + realmBonus * 0.008);
-    const t3Chance = Math.min(0.25, t3Base + realmBonus * 0.008);
-    const t4Chance = Math.min(0.20, t4Base + realmBonus * 0.006);
-    const t5Chance = Math.min(0.10, Math.max(0, (realmIndex - 10) * 0.005));
-    const t6Chance = Math.min(0.05, Math.max(0, (realmIndex - 20) * 0.003));
-
-    if (r < t6Chance) return 6;
-    if (r < t6Chance + t5Chance) return 5;
-    if (r < t6Chance + t5Chance + t4Chance) return 4;
-    if (r < t6Chance + t5Chance + t4Chance + t3Chance) return 3;
-    if (r < t6Chance + t5Chance + t4Chance + t3Chance + t2Chance) return 2;
-    if (r < t6Chance + t5Chance + t4Chance + t3Chance + t2Chance + t1Chance) return 1;
-    return 0;
-}
-
-// Get random skill for a given tier
-function getRandomSkillForTier(tier) {
-    const pool = SKILL_TIER_POOLS[tier] || SKILL_TIER_POOLS[0];
-    return pool[Math.floor(Math.random() * pool.length)];
+function permanentStatRoll(stat) {
+	const base = baseStatsFor(state.realmIndex, state.realmStage, state.root?.rank || 0);
+	return Math.ceil(base[stat] * (0.005 + Math.random() * 0.01));
 }
 
 function mysteryGood() {
@@ -180,74 +74,25 @@ function mysteryGood() {
 	}
 	// 🌟 Ngọc Linh Đan — tăng tu vi
 	if (r < 0.52) {
-		const val = Math.floor(250 * (1 + state.realmIndex * 0.3));
-		addItemToInventory({
-			name: 'Ngọc Linh Đan',
-			type: 'xp',
-			value: val,
-			desc: 'Dùng tăng tu vi'
-		});
-		log(`✨ Kỳ ngộ nhận được ${val} tu vi!`);
+		addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 3, desc: 'Bằng 3 giờ bế quan' });
 	}
 	// 🌟 Trấn Pháp — tăng sức mạnh vĩnh viễn
 	else if (r < 0.62) {
-		const atk = Math.floor(8 + state.realmIndex * 2.5 + Math.random() * 12);
-		addItemToInventory({
-			name: 'Trấn Pháp',
-			type: 'power',
-			value: atk,
-			desc: 'Dùng tăng sức mạnh vĩnh viễn'
-		});
-		log(`⚡ Kỳ ngộ tăng ${atk} sức mạnh!`);
+		addItemToInventory({ name: 'Trấn Pháp', type: 'power', value: permanentStatRoll('power'), desc: 'Dùng tăng sức mạnh vĩnh viễn' });
 	}
 	// 🌟 Đan Sinh Mệnh — tăng tuổi thọ
 	else if (r < 0.70) {
-		const life = Math.floor(80 + state.realmIndex * 30);
-		addItemToInventory({
-			name: 'Đan Sinh Mệnh',
-			type: 'life',
-			value: life,
-			desc: 'Dùng tăng tuổi thọ'
-		});
-		log(`🌿 Kỳ ngộ tăng ${life} tuổi thọ!`);
+		addItemToInventory({ name: 'Đan Sinh Mệnh', type: 'life', value: 30 + state.realmIndex * 20, desc: 'Dùng tăng tuổi thọ' });
 	}
 	// 🌟 Huyền Giáp — tăng phòng thủ vĩnh viễn
 	else if (r < 0.78) {
-		const def = Math.floor(6 + state.realmIndex * 2.5 + Math.random() * 10);
-		addItemToInventory({
-			name: 'Huyền Giáp',
-			type: 'defense',
-			value: def,
-			desc: 'Dùng tăng phòng thủ vĩnh viễn'
-		});
-		log(`🛡️ Kỳ ngộ tăng ${def} phòng thủ!`);
-	}
-	// 🌟 Skill manual - TIER-BASED with realm scaling
-	else if (r < 0.88) {
-		const skillTier = getSkillTierFromRealm(state.realmIndex);
-		const skill = getRandomSkillForTier(skillTier);
-		const tierName = (typeof LB_SKILL_TIER_NAMES !== 'undefined')
-			? LB_SKILL_TIER_NAMES[skillTier] || `${skillTier + 1}st`
-			: `${skillTier + 1}st`;
-		addItemToInventory({
-			name: skill.name,
-			type: 'manual',
-			skillId: skill.skillId,
-			skillTier: skillTier,
-			tierName: tierName,
-			maxFusionTier: null, // No fusion limit for exploration skills - can be fused once
-			element: skill.element || null,
-			desc: skill.desc
-		});
-		log(`✨ Kỳ ngộ nhận được bí kíp: ${skill.name} [${tierName}]!`);
+		addItemToInventory({ name: 'Huyền Giáp', type: 'defense', value: permanentStatRoll('defense'), desc: 'Dùng tăng phòng thủ vĩnh viễn' });
 	}
 	// 💰 Gold
 	else {
-		// 🎮 REWARD SCALING: Modest scaling - 6% increase per realm
-		const realmMultiplier = Math.pow(1.06, state.realmIndex);
-		const gold = Math.floor((250 + Math.random() * 250) * realmMultiplier);
+		const gold = goldRef(state.realmIndex) * (3 + Math.floor(Math.random() * 4));
 		state.gold += gold;
-		log(`💰 Nhặt được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
+		log(`💰 Nhặt được ${formatNumber(gold)} Linh Thạch!`);
 	}
 
 	// small chance Hỗn Nguyên top
@@ -275,13 +120,11 @@ function mysteryTreasureVault() {
 		{
 			type: 'gold',
 			name: '💎 Tiên Cung Bảo Tàng',
-			desc: 'Nhận 5000+ Linh Thạch',
+			desc: 'Nhận một kho linh thạch',
 			apply: () => {
-				// 🎮 REWARD SCALING: Modest 10% increase per realm
-				const realmMultiplier = Math.pow(1.1, state.realmIndex);
-				const gold = Math.floor((5000 + Math.random() * 3000) * realmMultiplier);
+				const gold = goldRef(state.realmIndex) * 30;
 				state.gold += gold;
-				log(`💰 Nhận được ${gold.toLocaleString()} Linh Thạch! (x${realmMultiplier.toFixed(1)} Cảnh ${state.realmIndex})`);
+				log(`💰 Nhận được ${formatNumber(gold)} Linh Thạch!`);
 			}
 		},
 		{
@@ -294,30 +137,7 @@ function mysteryTreasureVault() {
 				}
 			}
 		},
-		{
-			type: 'skill',
-			name: '📜 Tiên Cung Bí Kíp',
-			desc: 'Nhận 1 bí kíp cao cấp',
-			apply: () => {
-				const skillTier = Math.min(6, getSkillTierFromRealm(state.realmIndex) + 2); // Bonus tier for vault
-				const skill = getRandomSkillForTier(skillTier);
-				const tierName = (typeof LB_SKILL_TIER_NAMES !== 'undefined')
-					? LB_SKILL_TIER_NAMES[skillTier] || `${skillTier + 1}st`
-					: `${skillTier + 1}st`;
-				addItemToInventory({
-					name: skill.name,
-					type: 'manual',
-					skillId: skill.skillId,
-					skillTier: skillTier,
-					tierName: tierName,
-					maxFusionTier: null,
-					element: skill.element || null,
-					desc: skill.desc
-				});
-				log(`📜 Nhận được: ${skill.name} [${tierName}]!`);
-			}
-		}
-	];
+		];
 
 	if (typeof showDialog === 'function') {
 		showDialog({
@@ -348,19 +168,17 @@ function mysteryDilemma() {
 			desc: 'Có cơ hội nhận gấp 3 phần thưởng, nhưng cũng có thể mất nhiều hơn',
 			apply: () => {
 				if (Math.random() < 0.6) {
-					const realmMult = Math.pow(1.08, state.realmIndex);
-					const xp = Math.floor(getNeed() * 0.3 * realmMult);
-					const gold = Math.floor((500 + Math.random() * 500) * realmMult);
-					gainXP(xp);
+					const gold = goldRef(state.realmIndex) * 8;
+					const xp = gainCultivationHours(12);
 					state.gold += gold;
-					log(`✅ May mắn! Nhận được ${xp} tu vi và ${gold.toLocaleString()} Linh Thạch!`);
+					log(`✅ May mắn! Nhận được ${formatNumber(xp)} tu vi và ${formatNumber(gold)} Linh Thạch!`);
 					if (Math.random() < 0.3 && typeof grantLinhBaoDrop === 'function') {
 						grantLinhBaoDrop({ source: 'Thử thách', gradeBonus: 1 });
 					}
 				} else {
-					const loseXP = Math.floor(getNeed() * 0.15);
+					const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 6 * 3600);
 					state.xp = Math.max(0, state.xp - loseXP);
-					log(`❌ Thất bại! Mất ${loseXP} tu vi!`);
+					log(`❌ Thất bại! Mất ${formatNumber(loseXP)} tu vi!`);
 				}
 			}
 		},
@@ -368,12 +186,10 @@ function mysteryDilemma() {
 			name: '🛡️ Chơi an toàn',
 			desc: 'Nhận phần thưởng nhỏ nhưng chắc chắn',
 			apply: () => {
-				const realmMult = Math.pow(1.06, state.realmIndex);
-				const xp = Math.floor(getNeed() * 0.1 * realmMult);
-				gainXP(xp);
-				const gold = Math.floor(150 * realmMult);
+				const xp = gainCultivationHours(3);
+				const gold = goldRef(state.realmIndex) * 2;
 				state.gold += gold;
-				log(`✅ Nhận được ${xp} tu vi và ${gold.toLocaleString()} Linh Thạch (an toàn)!`);
+				log(`✅ Nhận được ${formatNumber(xp)} tu vi và ${formatNumber(gold)} Linh Thạch (an toàn)!`);
 			}
 		}
 	];
@@ -406,23 +222,23 @@ function mysteryBlessing() {
 		{
 			name: '🌟 Thiên phúc tăng sức',
 			apply: () => {
-				const p = Math.floor(15 + state.realmIndex * 3);
+				const p = permanentStatRoll('power');
 				state.power += p;
-				log(`⚡ ${blessing.name} — Sức mạnh +${p}!`);
+				log(`⚡ ${blessing.name} — Sức mạnh +${formatNumber(p)}!`);
 			}
 		},
 		{
 			name: '🛡️ Địa phúc tăng thủ',
 			apply: () => {
-				const d = Math.floor(12 + state.realmIndex * 2.5);
+				const d = permanentStatRoll('defense');
 				state.defense += d;
-				log(`🛡️ ${blessing.name} — Phòng thủ +${d}!`);
+				log(`🛡️ ${blessing.name} — Phòng thủ +${formatNumber(d)}!`);
 			}
 		},
 		{
 			name: '💚 Thọ phúc tăng thọ',
 			apply: () => {
-				const l = Math.floor(100 + state.realmIndex * 40);
+				const l = 30 + state.realmIndex * 20;
 				state.maxAge += l;
 				log(`💚 ${blessing.name} — Tuổi thọ +${l}!`);
 			}
@@ -430,16 +246,14 @@ function mysteryBlessing() {
 		{
 			name: '🍀 Vận phúc tăng may',
 			apply: () => {
-				state.luckBonus = (state.luckBonus || 0) + 0.08;
-				log(`🍀 ${blessing.name} — May mắn +8%!`);
+				state.luckBonus = (state.luckBonus || 0) + 0.01;
+				log(`🍀 ${blessing.name} — May mắn +1%!`);
 			}
 		},
 		{
 			name: '⚔️ Khí phúc tăng công',
 			apply: () => {
-				const atk = Math.floor(10 + state.realmIndex * 2);
-				addItemToInventory({ name: 'Trấn Pháp', type: 'power', value: atk, desc: 'Tăng sức mạnh' });
-				log(`⚔️ ${blessing.name} — Nhận Trấn Pháp +${atk}!`);
+				addItemToInventory({ name: 'Trấn Pháp', type: 'power', value: permanentStatRoll('power'), desc: 'Tăng sức mạnh' });
 			}
 		},
 		{
@@ -468,30 +282,10 @@ function mysteryBlessing() {
 
 // 🌟 Equipment drop (weapon or armor)
 function mysteryEquipment() {
-	const isWeapon = Math.random() < 0.5;
-	const realmTier = Math.floor(state.realmIndex / 4);
-
-	if (isWeapon) {
-		const atkBase = 15 + realmTier * 8 + Math.floor(Math.random() * 12);
-		addItemToInventory({
-			name: `Tiên Kiếm Cấp ${realmTier + 1}`,
-			type: 'weapon',
-			atk: atkBase,
-			desc: `ATK +${atkBase}`
-		});
-		log(`⚔️ Kỳ ngộ nhận được Tiên Kiếm (+${atkBase} ATK)!`);
-	} else {
-		const defBase = 10 + realmTier * 6 + Math.floor(Math.random() * 10);
-		const hpBase = 30 + realmTier * 20 + Math.floor(Math.random() * 25);
-		addItemToInventory({
-			name: `Tiên Giáp Cấp ${realmTier + 1}`,
-			type: 'armor',
-			def: defBase,
-			hp: hpBase,
-			desc: `DEF +${defBase}, HP +${hpBase}`
-		});
-		log(`🛡️ Kỳ ngộ nhận được Tiên Giáp (+${defBase} DEF, +${hpBase} HP)!`);
-	}
+	const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
+	const gear = makeGearItem(state.realmIndex, slot, Math.random() < 0.2 ? 2 : 1);
+	addItemToInventory(gear);
+	log(`⚔️ Kỳ ngộ nhận được ${gear.name}!`);
 	renderInventory();
 }
 
@@ -502,13 +296,13 @@ function mysteryBad() {
 		state.maxAge = Math.max(1, state.maxAge - loseAge);
 		log(`Kỳ ngộ xấu: mất ${loseAge} tuổi thọ!`);
 	} else if (r < 0.85) {
-		const loseXP = Math.floor(getNeed() * 0.12);
+		const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 3 * 3600);
 		state.xp = Math.max(0, state.xp - loseXP);
-		log(`Kỳ ngộ xấu: mất ${loseXP} tu vi!`);
+		log(`Kỳ ngộ xấu: mất ${formatNumber(loseXP)} tu vi!`);
 	} else {
-		const loseHp = Math.floor(50 + state.realmIndex * 20);
+		const loseHp = Math.floor((state.totalMaxHp || state.maxHp) * 0.3);
 		state.hp = Math.max(1, state.hp - loseHp);
-		log(`Kỳ ngộ xấu: bị thương, mất ${loseHp} HP!`);
+		log(`Kỳ ngộ xấu: bị thương, mất ${formatNumber(loseHp)} HP!`);
 	}
 	renderAll();
 }
@@ -542,22 +336,20 @@ async function mysteryNpc(m) {
 
 		if (choice === 1) {
 			if (Math.random() < 0.7) {
-				const xp = Math.floor(120 + state.realmIndex * 60);
-				gainXP(xp);
+				gainCultivationHours(2);
 				log('NPC chỉ điểm: tu vi tăng!');
 			} else {
-				const p = Math.floor(8 + state.realmIndex * 3);
-				state.power += p;
+				state.power += permanentStatRoll('power');
 				log('NPC truyền công, sức mạnh tăng!');
 			}
 		} else if (choice === 2) {
-			const cost = Math.floor(80 + state.realmIndex * 30);
+			const cost = goldRef(state.realmIndex) * 10;
 			if (state.gold >= cost) {
 				state.gold -= cost;
 				addItemToInventory({
 					name: 'Bảo Vật Giao Dịch',
 					type: 'power',
-					value: Math.floor(10 + state.realmIndex * 5),
+					value: permanentStatRoll('power') * 2,
 					desc: 'Tăng sức mạnh'
 				});
 				log('Giao dịch thành công với NPC.');
@@ -611,48 +403,25 @@ async function mysteryNpc(m) {
 			const realmOffset = Math.floor(Math.random() * 3) - 1; // -1, 0 hoặc +1
 			const npcRealmIndex = Math.max(0, Math.min(REALMS.length - 1, state.realmIndex + realmOffset));
 
-			// 🔮 Hệ số sức mạnh dựa theo người chơi
-			const playerFactor = Math.max(1.0, (state.totalPower + state.totalDef) / 900);
-			const realmGap = npcRealmIndex - state.realmIndex;
-
-			const realmFactor = 1 + realmGap * 0.25;
-
-			const randomVar = 0.85 + Math.random() * 0.25;
-
-			const powerScale = 0.8;   // sức mạnh gốc giảm còn 80%
-			const hpScale = 0.85;     // máu gốc giảm còn 85%
-			const defScale = 0.8;     // phòng thủ gốc giảm còn 80%
-
-			const npcEnemy = {
+			const npcEnemy = buildEnemy({
 				name: chosenTemplate.name,
 				realmIndex: npcRealmIndex,
-				tier: "Bình thường",
 				realmStage: Math.floor(Math.random() * 4),
-
-				str: Math.floor(state.totalPower * chosenTemplate.strMul * realmFactor * randomVar * powerScale),
-
-				hp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
-				maxHp: Math.floor(state.totalMaxHp * chosenTemplate.hpMul * realmFactor * randomVar * hpScale),
-
-				def: Math.floor(state.totalDef * chosenTemplate.defMul * realmFactor * randomVar * defScale),
-
-				xp: Math.floor(80 * (1 + npcRealmIndex * 0.3) * chosenTemplate.rootRank),
-				gold: Math.floor(40 * (1 + npcRealmIndex * 0.25) * chosenTemplate.rootRank),
-
-				elements: chosenTemplate.elements,
-				rootRank: chosenTemplate.rootRank,
-				baseTemplate: ENEMY_TEMPLATES[0],
-				style: chosenTemplate.style
-			};
+				tier: 'Tinh anh',
+				elements: chosenTemplate.elements
+			});
+			npcEnemy.str = Math.floor(npcEnemy.str * chosenTemplate.strMul);
+			npcEnemy.def = Math.floor(npcEnemy.def * chosenTemplate.defMul);
+			npcEnemy.hp = npcEnemy.maxHp = Math.floor(npcEnemy.maxHp * chosenTemplate.hpMul);
+			npcEnemy.style = chosenTemplate.style;
 			window._battleActive = true;
 			state.currentEnemy = npcEnemy;
-			activatePassiveSkills();
-			
-		
+
+
 			// ✨ Hiển thị thông tin ra log
 			log(`🌌 ${npcEnemy.name} (${REALMS[npcEnemy.realmIndex]}) xuất hiện!`);
 			log(`💠 Linh căn: ${npcEnemy.elements.join('+')} — ${ROOT_RANKS[npcEnemy.rootRank]} (${npcEnemy.style})`);
-			log(`⚔️ HP: ${npcEnemy.hp}, ATK: ${npcEnemy.str}, DEF: ${npcEnemy.def}`);
+			log(`⚔️ HP: ${formatNumber(npcEnemy.hp)}, ATK: ${formatNumber(npcEnemy.str)}, DEF: ${formatNumber(npcEnemy.def)}`);
 		}
 
 		else {
