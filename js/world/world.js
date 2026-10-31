@@ -12,6 +12,16 @@ const HUNT_MASTERY_DECAY = 0.99;
 const HUNT_XP_PER_SEARCH_MINUTE = 0.5;
 const EXPLORE_SECONDS = 15 * 60;
 const BASE_TRAVEL_SPEED = 1;
+const TRAVEL_TIME_DIVISOR = 6;
+const ROAD_EVENT_INTERVAL = 5;
+const ROAD_EVENT_BASE_CHANCE = 0.005;
+const ROAD_EVENT_LUCK_FACTOR = 0.1;
+const ROAD_EVENT_MAX_CHANCE = 0.08;
+const ROAD_BANDIT_XP_MINUTES = 1;
+const ROAD_BANDITS = {
+    pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Vực Đạo Tặc', thien: 'Thiên Ngoại Đạo Tặc',
+    hondon: 'Hỗn Độn Đạo Tặc', hongmong: 'Hồng Mông Đạo Tặc', chungnguyen: 'Chung Yên Đạo Tặc'
+};
 const BOUNTY_KILLS = 5;
 
 let worldLastTick = Date.now();
@@ -77,6 +87,7 @@ function worldTick() {
     const realDt = Math.min(5, (now - worldLastTick) / 1000);
     worldLastTick = now;
     advanceWorld(realDt * (state.testSpeed || 1));
+    tickRoadEvents(realDt);
     worldUiAccum += TICK_MS;
     if (worldUiAccum >= 500) {
         worldUiAccum = 0;
@@ -180,7 +191,7 @@ function renderActivityBar() {
     const pct = Math.max(0, Math.min(100, 100 * (1 - remaining / a.total)));
     const canCancel = a.type !== 'rest';
     el.innerHTML = `<div class="activity-row">
-        <b>${a.label}</b> <span class="small">còn ${formatRealDuration(remaining / (state.testSpeed || 1))} · không tu luyện được</span>
+        <b>${a.label}</b> <span class="small">còn ${formatRealDuration(remaining / (state.testSpeed || 1))} · không tu luyện được${a.type === 'travel' ? ` · kỳ ngộ ${(roadEventChance() * 100).toFixed(1)}% mỗi ${ROAD_EVENT_INTERVAL} giây` : ''}</span>
         ${canCancel ? '<button class="mini-btn" onclick="cancelActivity()">Dừng</button>' : ''}
     </div><div class="bar"><i style="width:${pct}%"></i></div>`;
 }
@@ -203,9 +214,10 @@ function travelSpeed() {
 
 function edgeSeconds(from, to) {
     const a = LOCATIONS[from], b = LOCATIONS[to];
-    if (a.gate && a.gate.to === to) return a.gate.minutes * 60 / travelSpeed();
+    const speed = travelSpeed() * TRAVEL_TIME_DIVISOR;
+    if (a.gate && a.gate.to === to) return a.gate.minutes * 60 / speed;
     const distance = Math.hypot(a.x - b.x, a.y - b.y);
-    return distance * worldOf(from).travelScale * 60 / travelSpeed();
+    return distance * worldOf(from).travelScale * 60 / speed;
 }
 
 function neighbors(id) {
@@ -242,6 +254,71 @@ function travelTo(id) {
     const legs = route.path.slice(1).map((to, i) => ({ from: route.path[i], to, seconds: edgeSeconds(route.path[i], to), left: edgeSeconds(route.path[i], to) }));
     startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs, leg: 0, dest: id });
     log(`🛤️ Khởi hành tới ${LOCATIONS[id].name}, mất ${formatRealDuration(route.seconds)}. Trên đường không thể tu luyện.`);
+}
+
+/* ---------- kỳ ngộ trên đường: mỗi 5 giây thực tung một lần, chỉ khi đang mở game ---------- */
+function roadEventChance() {
+    return Math.min(ROAD_EVENT_MAX_CHANCE, ROAD_EVENT_BASE_CHANCE + (state.luckBonus || 0) * ROAD_EVENT_LUCK_FACTOR);
+}
+
+function tickRoadEvents(realDt) {
+    const a = state.activity;
+    if (!a || a.type !== 'travel' || window._battleActive) return;
+    a.eventClock = (a.eventClock || 0) + realDt;
+    if (a.eventClock < ROAD_EVENT_INTERVAL) return;
+    a.eventClock -= ROAD_EVENT_INTERVAL;
+    if (Math.random() < roadEventChance()) triggerRoadEvent();
+}
+
+function triggerRoadEvent(kind = null) {
+    const luck = state.luckBonus || 0;
+    const roll = Math.random();
+    const type = kind || (roll < 0.10 + luck ? 'master' : (roll < 0.55 ? 'item' : 'bandit'));
+    if (type === 'master') roadMaster();
+    else if (type === 'item') roadItem();
+    else roadBandit();
+}
+
+function roadBandit() {
+    const worldId = worldTierOfRealm(state.realmIndex).id;
+    const enemy = buildEnemy({
+        name: ROAD_BANDITS[worldId],
+        realmIndex: state.realmIndex,
+        realmStage: Math.min(state.realmStage, randomRealmStage()),
+        tier: Math.random() < 0.15 ? 'Tinh anh' : 'Thường'
+    });
+    enemy.xpMinutes = enemy.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * ROAD_BANDIT_XP_MINUTES;
+    log(`🏴 ${enemy.name} chặn đường!`);
+    showToast(`${enemy.name} chặn đường!`, 'warn');
+    startEncounter(enemy);
+}
+
+function roadItem() {
+    const realm = state.realmIndex;
+    const roll = Math.random();
+    if (roll < 0.5) {
+        const gold = goldRef(realm) * (2 + Math.floor(Math.random() * 3));
+        state.gold += gold;
+        log(`💰 Nhặt được túi linh thạch ven đường: +${formatNumber(gold)}.`);
+    } else if (roll < 0.8) {
+        grantMaterial(worldTierOfRealm(realm).id, 2);
+    } else if (roll < 0.95) {
+        addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 1, desc: 'Bằng 1 giờ bế quan' });
+    } else {
+        const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
+        addItemToInventory(makeGearItem(realm, slot, 1));
+    }
+    showToast('Nhặt được vật phẩm trên đường!', 'info');
+    renderAll();
+}
+
+function roadMaster() {
+    const dest = LOCATIONS[state.activity.dest];
+    playDialogue([['narr', `Một vị cao nhân cưỡi mây đi ngang, phất tay áo: "Thuận đường, ta đưa ngươi một đoạn." Chớp mắt ngươi đã đứng tại ${dest.name}.`]]);
+    log(`🌤️ Gặp cao nhân, được đưa thẳng tới ${dest.name}.`);
+    state.location = dest.id;
+    state.activity = null;
+    checkArrival();
 }
 
 function checkArrival() {
