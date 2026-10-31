@@ -68,9 +68,9 @@ function profileToken() {
     return token;
 }
 
-function reportRenown() {
-    const score = state.renown?.[state.location] || 0;
-    if (score > 0) wsSend({ type: 'tianjiao_report', loc: state.location, score, token: profileToken() });
+function reportRenown(loc = state.location) {
+    const score = state.renown?.[loc] || 0;
+    if (score > 0) wsSend({ type: 'tianjiao_report', loc, score, token: profileToken() });
 }
 
 function cleanName(name) {

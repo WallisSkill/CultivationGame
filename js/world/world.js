@@ -936,11 +936,15 @@ function clearBossStep(bossId) {
     });
 }
 
+function enemyRenownPoints(enemy) {
+    return [enemy, ...(enemy.escorts || [])].reduce((sum, unit) => sum + renownPoints(unit.realmIndex), 0);
+}
+
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
     const killed = [enemy, ...(enemy.escorts || [])];
     if (enemy.hunted) {
-        const earned = killed.reduce((sum, unit) => sum + renownPoints(unit.realmIndex), 0);
+        const earned = enemyRenownPoints(enemy);
         state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
         state.renown[state.location] = (state.renown[state.location] || 0) + earned;
         log(`🏆 Thiên kiêu +${formatNumber(earned)} điểm tại ${currentLocation().name}.`);

@@ -16,6 +16,7 @@ const COOP_HELP_TIMEOUT_MS = 180000;
 const COOP_REWARD_SHARE = 0.5;
 const COOP_PVP_ASSIST_MULT = 0.6;
 const COOP_MAX_SLOTS = 6;
+const COOP_MAX_PACK = 3;
 const COOP_PEER_LIMIT = 20;
 
 const ROOM_MAX_MEMBERS = 3;
@@ -178,7 +179,10 @@ function coopFinish(win, reward = null) {
 }
 
 function coopBattleEnd(result, enemy) {
-    const reward = result === 'win' && enemy ? { gold: enemy.gold || 0, xpMinutes: enemy.xpMinutes || 0, realm: enemy.realmIndex } : null;
+    const reward = result === 'win' && enemy ? {
+        gold: enemy.gold || 0, xpMinutes: enemy.xpMinutes || 0, realm: enemy.realmIndex,
+        renown: enemy.hunted ? { loc: state.location, points: enemyRenownPoints(enemy) } : null
+    } : null;
     coopFinish(result === 'win', reward);
 }
 
@@ -425,6 +429,14 @@ function coopOnEnd(data) {
     state.gold += Math.floor(gold);
     const xp = gainCultivationSeconds(battleXpSeconds(minutes));
     log(`🤝 Hỗ trợ thành công: +${formatNumber(gold)} linh thạch, +${formatNumber(xp)} tu vi.`);
+    const renown = reward.renown;
+    if (Object.hasOwn(LOCATIONS, renown?.loc ?? '')) {
+        const cap = renownPoints(LOCATIONS[renown.loc].maxR) * COOP_MAX_PACK;
+        const points = Math.min(cap, Math.max(0, Math.floor(Number(renown.points) || 0)));
+        state.renown[renown.loc] = (state.renown[renown.loc] || 0) + points;
+        log(`🏆 Thiên kiêu +${formatNumber(points)} điểm tại ${LOCATIONS[renown.loc].name}.`);
+        reportRenown(renown.loc);
+    }
     renderAll();
 }
 
