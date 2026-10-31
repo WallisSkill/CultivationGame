@@ -7,6 +7,8 @@
     - PvP: trận theo lượt giữa hai máy, người hỗ trợ đánh thêm một đòn trợ chiến mỗi lượt của chủ phòng.
     - Phòng tổ đội: chủ phòng mời người vào; thành viên sẵn sàng tự vào mọi trận của chủ phòng,
       kể cả săn quái. Thành viên gửi chỉ số định kỳ, chủ phòng phát danh sách định kỳ.
+    - Đưa đi: người cùng phòng cảnh giới cao hơn nhận lời thì ta đi với thời gian của họ,
+      họ dịch chuyển được tới đó thì ta tới ngay. Chỗ ta chưa đủ cảnh giới vẫn không vào được.
     - Tin nhắn đi qua pvp_relay (sessionId 'coop').
 =========================== */
 const COOP_SESSION = 'coop';
@@ -22,8 +24,9 @@ const COOP_PEER_LIMIT = 20;
 const ROOM_MAX_MEMBERS = 3;
 const ROOM_SYNC_MS = 3000;
 const ROOM_STALE_MS = 12000;
+const RIDE_WAIT_MS = 60000;
 
-const coop = { pending: null, helpers: [], helping: null, tickAt: 0, room: null, joined: null, seenInvite: {} };
+const coop = { pending: null, helpers: [], helping: null, tickAt: 0, room: null, joined: null, seenInvite: {}, ride: null, rideAsked: {} };
 
 function coopRelay(to, kind, data) {
     return wsSend({ type: 'pvp_relay', to, sessionId: COOP_SESSION, kind, data });
@@ -80,9 +83,9 @@ function coopClosePrompt() {
     if (modal) modal.style.display = 'none';
 }
 
-function coopGate(title, start) {
-    if (coopPullRoom()) return start(null);
-    const peers = coopPeers();
+function coopGate(title, start, opponentId = null) {
+    if (coopPullRoom(opponentId)) return start(null);
+    const peers = coopPeers().filter(id => id !== opponentId);
     if (!peers.length) return start(null);
     coop.pending = { id: `${state.profileId}_${Date.now().toString(36)}`, title, start, peers, called: false };
     openWorldModal('coopModal', `🤝 ${sectEscape(title)}`, `<div class="small">${peers.length} đạo hữu có thể hỗ trợ.</div>
@@ -186,6 +189,13 @@ function coopBattleEnd(result, enemy) {
     coopFinish(result === 'win', reward);
 }
 
+/* Đối thủ PvP không thể đồng thời là người hỗ trợ của trận đó, ghép ngẫu nhiên chỉ biết tên đối thủ lúc này */
+function coopDropOpponent(opponentId) {
+    if (coop.helping?.host === opponentId) coopCloseWatch();
+    coop.helpers.filter(h => h.id === opponentId).forEach(h => coopRelay(h.id, 'end', { id: h.sid, win: false }));
+    coop.helpers = coop.helpers.filter(h => h.id !== opponentId);
+}
+
 /* Đòn trợ chiến PvP cộng vào đòn của chủ phòng */
 function coopPvpAssist(opponent) {
     let total = 0;
@@ -275,10 +285,10 @@ function roomOnAlly(msg, name) {
 }
 
 /* Kéo thành viên sẵn sàng vào trận sắp bắt đầu; trả về true nếu có ai vào */
-function coopPullRoom() {
+function coopPullRoom(excludeId = null) {
     if (!coop.room || coop.helpers.length) return coop.helpers.length > 0;
     const sid = `${state.profileId}_${Date.now().toString(36)}`;
-    coop.helpers = coop.room.members.filter(m => m.ready && m.ally).map(m => ({ id: m.id, sid, ...m.ally }));
+    coop.helpers = coop.room.members.filter(m => m.ready && m.ally && m.id !== excludeId).map(m => ({ id: m.id, sid, ...m.ally }));
     coop.helpers.forEach(h => coopRelay(h.id, 'start', { id: sid, title: state.currentEnemy?.name || 'Trận của tổ đội' }));
     return coop.helpers.length > 0;
 }
@@ -288,8 +298,8 @@ function roomSync() {
     if (coop.room) {
         const before = coop.room.members.length;
         coop.room.members = coop.room.members.filter(m => now - m.seen < ROOM_STALE_MS);
-        const names = coop.room.members.map(m => ({ name: m.ally.name, ready: m.ready }));
-        coop.room.members.forEach(m => coopRelay(m.id, 'room_roster', { members: names }));
+        const names = coop.room.members.map(m => ({ id: m.id, name: m.ally.name, ready: m.ready, realmIndex: m.ally.realmIndex }));
+        coop.room.members.forEach(m => coopRelay(m.id, 'room_roster', { members: names, hostRealm: state.realmIndex }));
         if (before !== coop.room.members.length) renderRoomPanel();
     }
     if (coop.joined) {
@@ -326,6 +336,75 @@ function renderRoomPanel() {
     el.innerHTML = `<div class="small">Thành viên ${coop.room.members.length}/${ROOM_MAX_MEMBERS} · 🟢 sẵn sàng 🟡 đang bận</div>${members}
         ${invites ? `<div class="small">Người có thể mời</div>${invites}` : ''}
         <button class="mini-btn" onclick="roomClose()">Giải tán</button>`;
+}
+
+/* ---------- đưa đi ---------- */
+function roomMates() {
+    if (coop.room) return coop.room.members.map(m => ({ id: m.id, name: m.ally.name, realmIndex: m.ally.realmIndex }));
+    if (!coop.joined) return [];
+    const host = { id: coop.joined.host, name: sectEscape(coop.joined.hostName), realmIndex: coop.joined.hostRealm || 0 };
+    return [host, ...coop.joined.members.filter(m => m.id !== state.profileId)];
+}
+
+function roomCarriers() {
+    return roomMates().filter(m => m.realmIndex > (state.realmIndex || 0));
+}
+
+function rideAsk(dest) {
+    if (!requireFree()) return;
+    const carriers = roomCarriers();
+    if (!carriers.length || !findPath(state.location, dest)) return;
+    const id = `${state.profileId}_${Date.now().toString(36)}`;
+    coop.ride = { id, dest, carriers: carriers.map(m => m.id), at: Date.now() };
+    carriers.forEach(m => coopRelay(m.id, 'ride_ask', { id, from: state.location, dest }));
+    openWorldModal('coopModal', `🤝 Nhờ đưa tới ${LOCATIONS[dest].name}`, `<div class="small">Đang đợi ${carriers.map(m => m.name).join(', ')} nhận lời...</div>
+        <div class="loc-actions"><button onclick="rideCancel()">Thôi không đợi</button></div>`);
+}
+
+function rideCancel() {
+    coop.ride = null;
+    coopClosePrompt();
+}
+
+/* Người đưa tính thời gian bằng tốc độ của chính họ */
+function rideSeconds(from, dest) {
+    return canTeleport(dest) ? 0 : findPath(from, dest)?.seconds ?? null;
+}
+
+function rideOnAsk(msg, name) {
+    const { id, from, dest } = msg.data || {};
+    const refuse = () => coopRelay(msg.from, 'ride_no', { id });
+    if (typeof id !== 'string' || !Object.hasOwn(LOCATIONS, from ?? '') || !Object.hasOwn(LOCATIONS, dest ?? '')) return;
+    if (!roomMates().some(m => m.id === msg.from) || coop.rideAsked[msg.from]) return;
+    if (window._battleActive || coop.helping) return refuse();
+    coop.rideAsked[msg.from] = true;
+    showDialog({
+        message: `🤝 ${sectEscape(name)} nhờ đưa từ ${LOCATIONS[from].name} tới ${LOCATIONS[dest].name}.`,
+        buttons: [{ text: 'Từ chối', value: false }, { text: 'Đưa đi', value: true, variant: 'primary' }]
+    }).then(ok => {
+        delete coop.rideAsked[msg.from];
+        const seconds = ok ? rideSeconds(from, dest) : null;
+        if (seconds == null) return refuse();
+        coopRelay(msg.from, 'ride_ok', { id, seconds });
+        log(`🤝 Đưa ${sectEscape(name)} tới ${LOCATIONS[dest].name}.`);
+    });
+}
+
+function rideRefused(msg) {
+    const ride = coop.ride;
+    if (!ride || ride.id !== msg.data?.id) return;
+    ride.carriers = ride.carriers.filter(id => id !== msg.from);
+    if (ride.carriers.length) return;
+    rideCancel();
+    showToast('Không ai đưa đi được.', 'warn');
+}
+
+function rideOnOk(msg, name) {
+    const ride = coop.ride;
+    const seconds = Number(msg.data?.seconds);
+    if (!ride || ride.id !== msg.data?.id || !ride.carriers.includes(msg.from) || !Number.isFinite(seconds)) return;
+    rideCancel();
+    carriedTravel(ride.dest, seconds, sectEscape(name));
 }
 
 /* ---------- phía người hỗ trợ ---------- */
@@ -442,10 +521,14 @@ function coopOnEnd(data) {
 
 function coopWatchdog() {
     if (coop.helping && Date.now() - coop.helping.at > COOP_HELP_TIMEOUT_MS) coopCloseWatch();
+    if (coop.ride && Date.now() - coop.ride.at > RIDE_WAIT_MS) {
+        rideCancel();
+        showToast('Không ai nhận lời đưa đi.', 'warn');
+    }
 }
 
 function handleCoopRelay(msg) {
-    const known = onlinePlayers.get(msg.from) || friendsState.friends.find(f => f.id === msg.from);
+    const known = onlinePlayers.get(msg.from) || friendsState.friends.find(f => f.id === msg.from) || roomMates().find(m => m.id === msg.from);
     if (!known) return;
     const helping = coop.helping && coop.helping.host === msg.from && coop.helping.sid === msg.data?.id;
     switch (msg.kind) {
@@ -468,10 +551,17 @@ function handleCoopRelay(msg) {
         case 'room_roster':
             if (coop.joined?.host === msg.from && Array.isArray(msg.data?.members)) {
                 coop.joined.seen = Date.now();
-                coop.joined.members = msg.data.members.slice(0, ROOM_MAX_MEMBERS).map(m => ({ name: sectEscape(String(m?.name).slice(0, 60)), ready: !!m?.ready }));
+                coop.joined.hostRealm = lbClamp(Number(msg.data.hostRealm) || 0, 0, REALMS.length - 1);
+                coop.joined.members = msg.data.members.slice(0, ROOM_MAX_MEMBERS).map(m => ({
+                    id: String(m?.id), name: sectEscape(String(m?.name).slice(0, 60)), ready: !!m?.ready,
+                    realmIndex: lbClamp(Number(m?.realmIndex) || 0, 0, REALMS.length - 1)
+                }));
                 renderRoomPanel();
             }
             break;
+        case 'ride_ask': rideOnAsk(msg, known.name); break;
+        case 'ride_ok': rideOnOk(msg, known.name); break;
+        case 'ride_no': rideRefused(msg); break;
         case 'ask': coopOnAsk(msg, known.name); break;
         case 'accept': coopOnAccept(msg); break;
         case 'start':
@@ -509,4 +599,4 @@ function handleCoopRelay(msg) {
 setInterval(coopWatchdog, COOP_TICK_MS * 10);
 setInterval(roomSync, ROOM_SYNC_MS);
 
-if (typeof window !== 'undefined') Object.assign(window, { coopCallHelp, coopGoSolo, roomCreate, roomInvite, roomKick, roomClose, roomLeave });
+if (typeof window !== 'undefined') Object.assign(window, { coopCallHelp, coopGoSolo, rideAsk, rideCancel, roomCreate, roomInvite, roomKick, roomClose, roomLeave });

@@ -334,12 +334,34 @@ function findPath(from, to) {
     return { path, legs, seconds: legs.reduce((sum, l) => sum + l.seconds, 0) };
 }
 
+function beginRoute(id, route) {
+    startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
+}
+
+/* Đồng đội đưa đi: không bao giờ chậm hơn tự đi */
+function carriedTravel(id, seconds, carrier) {
+    if (!requireFree()) return;
+    const route = findPath(state.location, id);
+    if (!route) return;
+    if (seconds <= 0) {
+        state.location = id;
+        log(`⚡ ${carrier} đưa ngươi tới ngay ${LOCATIONS[id].name}.`);
+        checkArrival();
+        return;
+    }
+    const scale = Math.min(1, seconds / route.seconds);
+    route.legs.forEach(l => { l.seconds *= scale; l.left = l.seconds; });
+    route.seconds *= scale;
+    beginRoute(id, route);
+    log(`🤝 ${carrier} đưa ngươi tới ${LOCATIONS[id].name}, mất ${formatRealDuration(route.seconds)}.`);
+}
+
 function travelTo(id) {
     if (!requireFree()) return;
     if (id === state.location) return;
     const route = findPath(state.location, id);
     if (!route) { showToast('Chưa có đường tới đó.', 'warn'); return; }
-    startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
+    beginRoute(id, route);
     log(`🛤️ Khởi hành tới ${LOCATIONS[id].name}, mất ${formatRealDuration(route.seconds)}. Trên đường không thể tu luyện.`);
     const escort = renownTravelMult(route.path[0]);
     if (escort < 1) log(`🐎 Người trong khu vực nể danh thiên kiêu, đưa đường: thời gian đi x${escort}.`);
@@ -531,10 +553,11 @@ function renderMapDestination() {
         ? `<button class="primary" onclick="teleportTo('${loc.id}')">⚡ Dịch chuyển</button>`
         : '';
     const blocked = teleportBlockReason(mapSelected);
+    const carry = route && roomCarriers().length ? `<button onclick="rideAsk('${loc.id}')">🤝 Nhờ đồng đội đưa đi</button>` : '';
     return `<div class="map-dest">
         <div><b>${loc.icon} ${loc.name}</b> <span class="small">linh khí x${loc.qi.toFixed(2)} · ${REALMS[loc.minR]} trở lên</span>
         <div class="small">${loc.desc}</div>${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}</div>
-        <div class="map-dest-actions">${teleport}
+        <div class="map-dest-actions">${teleport}${carry}
         ${route ? `<button onclick="travelTo('${loc.id}')">Đi (${formatRealDuration(route.seconds)})</button>` : '<span class="small">Chưa có đường</span>'}</div>
     </div>`;
 }

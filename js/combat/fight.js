@@ -469,6 +469,7 @@ function initPvPTurnOrder(opp) {
 
 function startPvPBattle(oppProfile) {
     const me = buildPublicProfile();
+    coopDropOpponent(oppProfile.id);
     pvpSession.active = true;
     pvpSession.opponentId = oppProfile.id;
     pvpSession.sessionId = deriveSessionId(me.id, oppProfile.id);

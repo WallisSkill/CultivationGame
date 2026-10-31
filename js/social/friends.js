@@ -212,7 +212,7 @@ function inviteFriendToPvP(friendId, friendName) {
             fromProfile: myProfile
         });
         log(`⚔️ Đã gửi lời mời PvP đến ${friendName}.`);
-    });
+    }, friendId);
 }
 
 // Xử lý tin nhắn từ server
