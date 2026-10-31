@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Tu Tiên Hồng Hoang Chi Giới</title>
-    <link rel="stylesheet" href="style.css?v=20261031_141315_FV2Kp0">
+    <link rel="stylesheet" href="style.css?v=20261031_141527_Fsonns">
 </head>
 
-<body data-game-version="20261031_141315_FV2Kp0">
+<body data-game-version="20261031_141527_Fsonns">
     <div id="toastLayer" aria-live="polite"></div>
     <div id="confirmLayer"></div>
     <div class="app">
@@ -37,13 +37,8 @@
         <div class="activity-bar" id="activityBar" role="status"></div>
 
         <div class="controls">
-            <button id="toggleAuto" class="primary">🧘 Bế quan tu luyện</button>
-            <button id="explore">🧭 Thám hiểm</button>
-            <button id="runBtn">Chạy khỏi trận</button>
-            <button id="findMatch">Tìm đối thủ PvP</button>
             <button id="saveBtn">Lưu</button>
             <button id="loadBtn">Tải</button>
-            <button id="openShop">Cửa hàng</button>
             <button id="openLook">Ngoại hình</button>
             <button onclick="toggleTestPanel()">🧪 Test</button>
             <button id="clearStorage">Bắt đầu lại</button>
@@ -64,6 +59,7 @@
 
                 <div class="panel panel-combat" style="margin-top:12px">
                     <strong>Chiến đấu</strong>
+                    <button id="runBtn" class="mini-btn" style="display:none">Chạy khỏi trận</button>
                     <div class="small">Kẻ thù hiện tại:</div>
                     <div id="currentEnemy" class="enemy-box">Không có</div>
                     <div style="margin-top:8px" id="battleInfo" class="small"></div>
@@ -114,30 +110,30 @@
 
     </div>
     <div id="dialogueLayer"></div>
-    <script src="js/world/balance.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/avatar.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/atlas.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/storyline.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/renown.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/base/cultivation.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/exploring/shop.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/combat/enemy.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/combat/bonus.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/combat/dmgCalculate.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/combat/fight.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/combat/board.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/exploring/explore.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/exploring/saint.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/base/story.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/social/chat.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/social/playersect.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/social/presence.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/social/coop.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/social/friends.js?v=20261031_141315_FV2Kp0"></script>
+    <script src="js/world/balance.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/avatar.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/atlas.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/storyline.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/renown.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/base/cultivation.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/exploring/shop.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/combat/enemy.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/combat/bonus.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/combat/dmgCalculate.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/combat/fight.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/combat/board.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/exploring/explore.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/exploring/saint.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/base/story.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/social/chat.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/social/playersect.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/social/presence.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/social/coop.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/social/friends.js?v=20261031_141527_Fsonns"></script>
 
-    <script src="js/base/core.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/world.js?v=20261031_141315_FV2Kp0"></script>
-    <script src="js/world/scene.js?v=20261031_141315_FV2Kp0"></script>
+    <script src="js/base/core.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/world.js?v=20261031_141527_Fsonns"></script>
+    <script src="js/world/scene.js?v=20261031_141527_Fsonns"></script>
 </body>
 
 </html>

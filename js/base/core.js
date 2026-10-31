@@ -1665,26 +1665,15 @@ function loadProgress(isBoot = false) {
     else if (typeof buildPublicProfile === 'function') buildPublicProfile();
 
     initWorldState();
-    syncCultivationButton();
     if (isBoot) applyOfflineProgress();
     log('Tải tiến trình thành công.');
     renderAll();
 }
 
-function syncCultivationButton() {
-    const btn = $('toggleAuto');
-    if (btn) btn.innerText = state.autoTrain ? '🧘 Xuất quan' : '🧘 Bế quan tu luyện';
-}
 
 /* ===========================
     UI HOOKS
 =========================== */
-$('toggleAuto').onclick = () => {
-    state.autoTrain = !state.autoTrain;
-    syncCultivationButton();
-    log(state.autoTrain ? '🧘 Bắt đầu bế quan. Tu vi tăng theo thời gian thực, kể cả khi đóng game.' : '🚪 Xuất quan.');
-    renderAll();
-};
 // autoFight button removed - only set onclick if element exists
 const autoFightBtn = $('autoFight');
 if (autoFightBtn) {
@@ -1693,7 +1682,6 @@ if (autoFightBtn) {
         else { autoFightBtn.innerText = 'Tắt auto chiến'; window.startAutoFight && window.startAutoFight(); }
     };
 }
-$('explore').onclick = () => startExplore();
 // fightNow button removed - only set onclick if element exists
 const fightNowBtn = $('fightNow');
 if (fightNowBtn) {
@@ -1705,14 +1693,8 @@ if (fightNowBtn) {
 }
 $('runBtn').onclick = () => { if (typeof forfeitBoardBattle === 'function') forfeitBoardBattle(); runFromBattle(); };
 // changed to window-safe call to avoid "findMatchPvP is not defined"
-$('findMatch').onclick = () => {
-    if (window._findingMatch) return window.findMatchPvP();
-    coopGate('Tìm đối thủ PvP', () => window.findMatchPvP());
-};
 $('saveBtn').onclick = () => saveProgress();
 $('loadBtn').onclick = () => loadProgress();
-const shopBtn = $('openShop');
-if (shopBtn) shopBtn.onclick = () => openServiceShop();
 $('openLook').onclick = () => openLookModal();
 const clearBtn = $('clearStorage');
 if (clearBtn) clearBtn.onclick = () => clearSavedProfile();

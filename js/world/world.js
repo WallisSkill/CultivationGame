@@ -154,6 +154,7 @@ function hastedSeconds(seconds) {
 }
 
 function startActivity(activity) {
+    standUp();
     const seconds = activity.type === 'travel' ? activity.seconds : hastedSeconds(activity.seconds);
     state.activity = { ...activity, total: seconds, remaining: seconds, seconds };
     renderAll();
@@ -206,7 +207,7 @@ function renderActivityBar() {
         const q = currentLocationQi();
         el.innerHTML = state.autoTrain
             ? `<b>🧘 Đang bế quan</b> <span class="small">tại ${currentLocation().name} · linh khí x${q.toFixed(2)} · ${formatNumber(Math.floor(getEstimatedXpPerSecond()))} tu vi/giây</span>`
-            : `<b>🚶 Rảnh rỗi</b> <span class="small">— không tu luyện, tu vi đứng yên</span>`;
+            : `<b>🚶 Rảnh rỗi</b> <span class="small">— tới chỗ Bế quan trong khu vực và ngồi xuống để tu luyện</span>`;
         return;
     }
     const remaining = activityRemaining();
@@ -1035,28 +1036,6 @@ function renderLocationPanel() {
     const el = $('locationPanel');
     if (!el) return;
     const loc = currentLocation();
-    const busy = isBusy() ? 'disabled' : '';
-    const sideOffers = SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
-        && !state.questActive.some(rt => rt.id === q.id) && needsMet(q));
-    const buttons = [];
-    buttons.push(`<button onclick="openTianjiaoBoard()">🏆 Thiên Kiêu (${tianjiaoRank(loc.id) ? `hạng ${tianjiaoRank(loc.id)}` : 'chưa xếp'})</button>`);
-    if ((loc.enemies || []).length) {
-        buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (~${formatRealDuration(hastedSeconds(huntSeconds()))})</button>`);
-        buttons.push(`<button class="${state.autoHunt ? 'primary' : ''}" onclick="toggleAutoHunt()">🔁 ${state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục'}</button>`);
-    }
-    buttons.push(`<button ${busy} onclick="startExplore()">🧭 Thám hiểm (${formatRealDuration(hastedSeconds(EXPLORE_SECONDS))})</button>`);
-    if (loc.type === 'sect' && state.sect !== loc.id && !state.ownSect) buttons.push(`<button ${busy} onclick="joinSect('${loc.id}')">⛩️ Nhập ${loc.name}</button>`);
-    if (loc.path) {
-        if (state.daoPath !== loc.path) buttons.push(`<button ${busy} onclick="setDaoPath('${loc.path}')">${DAO_PATHS[loc.path].icon} Chuyển ${DAO_PATHS[loc.path].name} (${formatNumber(goldRef(state.realmIndex) * 10)})</button>`);
-        buttons.push(`<button onclick="openDaoHall()">📜 Truyền thừa</button>`);
-    }
-    if (hasService('shop')) buttons.push(`<button onclick="hireGuard()">🤝 Thuê hộ pháp ${state.hired}/${HIRE_MAX} (${formatNumber(goldRef(state.realmIndex) * HIRE_COST)})</button>`);
-    if (hasService('shop')) buttons.push(`<button onclick="openServiceShop()">🏪 Cửa hàng</button>`);
-    if (hasService('forge')) buttons.push(`<button onclick="openForge()">🔨 Lò rèn</button>`);
-    if (hasService('board') && !state.bounty) buttons.push(`<button onclick="acceptBounty()">📜 Nhận treo thưởng</button>`);
-    const sides = sideOffers.map(q => `<div class="quest-card">
-        <div class="side-offer">${npcAvatarSvg(NPCS[q.npc])}<div><b>${NPCS[q.npc].name}</b><div class="small">${q.title}</div></div></div>
-        <button class="mini-btn" onclick="acceptSideQuest('${q.id}')">Nhận</button></div>`).join('');
     const mats = worldTierOfRealm(state.realmIndex).id;
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
@@ -1064,8 +1043,7 @@ function renderLocationPanel() {
         ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[loc.minR]} – ${REALMS[loc.maxR]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}</div>` : ''}
         <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
-        ${forgeQueueHTML()}
-        <div class="loc-actions">${buttons.join('')}</div>${sides}`;
+        ${forgeQueueHTML()}`;
 }
 
 function renderAppearancePanel() {
@@ -1100,7 +1078,6 @@ function renderWorldPanels() {
     renderActivityBar();
     renderTestPanel();
     renderSectPanel();
-    syncCultivationButton();
     syncBattleOverlay();
     if (typeof refreshSceneSpots === 'function' && sceneState.canvas) {
         refreshSceneSpots();

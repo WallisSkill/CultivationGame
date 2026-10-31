@@ -14,35 +14,72 @@ const SCENE_AVATAR_W = 52;
 const SCENE_AVATAR_H = 70;
 const SCENE_DECOR_COUNT = 46;
 const SCENE_MAX_DT = 0.05;
+const SCENE_INNER_RING = 0.68;
 
 const sceneState = {
     view: 'scene', locId: null, x: SCENE_W / 2, y: SCENE_H - 150, tx: null, ty: null,
     keys: new Set(), spots: [], decor: [], nearest: null, lastFrame: 0, bubble: null, canvas: null, ctx: null, images: new Map()
 };
 
+function findMatchFromScene() {
+    if (window._findingMatch) return window.findMatchPvP();
+    coopGate('Tìm đối thủ PvP', () => window.findMatchPvP());
+}
+
 function sceneSpots(loc) {
     const spots = [];
-    const add = (icon, label, action, available = true) => { if (available) spots.push({ icon, label, action }); };
-    const main = mainQuestRuntime();
-    add('🧘', 'Bế quan', () => $('toggleAuto').click());
+    const add = (icon, label, action, available = true, id = null) => { if (available) spots.push({ icon, label, action, id }); };
+    const huntable = (loc.enemies || []).length > 0;
+    add('🧘', state.autoTrain ? 'Đứng dậy' : 'Ngồi bế quan', () => toggleMeditate(), true, 'meditate');
     add('🏆', 'Thiên Kiêu Bảng', () => openTianjiaoBoard());
-    add('🗡️', 'Săn quái', () => startHunt(), (loc.enemies || []).length > 0);
+    add('🗡️', 'Săn quái', () => startHunt(), huntable);
+    add('🔁', state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục', () => toggleAutoHunt(), huntable);
     add('🧭', 'Thám hiểm', () => startExplore());
     add('🏪', 'Cửa hàng', () => openServiceShop(), hasService('shop'));
     add('🔨', 'Lò rèn', () => openForge(), hasService('forge'));
-    add('📜', 'Bảng treo thưởng', () => acceptBounty(), hasService('board'));
-    add('🤝', 'Thuê hộ pháp', () => hireGuard(), hasService('shop'));
+    add('📜', 'Bảng treo thưởng', () => acceptBounty(), hasService('board') && !state.bounty);
+    add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop'));
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), !!loc.path);
-    add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!main);
+    add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), !!loc.path && state.daoPath !== loc.path);
+    add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường PvP', () => findMatchFromScene(), loc.type === 'town' || loc.type === 'sect');
+    SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
+        && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
+        .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
+    add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
     const radiusX = SCENE_W / 2 - 170, radiusY = SCENE_H / 2 - 140;
     spots.forEach((spot, i) => {
-        const angle = Math.PI * (1.08 + 0.84 * (spots.length > 1 ? i / (spots.length - 1) : 0.5)) ;
-        spot.x = SCENE_W / 2 + Math.cos(angle) * radiusX;
-        spot.y = SCENE_H / 2 + 40 + Math.sin(angle) * radiusY;
+        const angle = Math.PI * (1.08 + 0.84 * (spots.length > 1 ? i / (spots.length - 1) : 0.5));
+        const ring = i % 2 ? SCENE_INNER_RING : 1;
+        spot.x = SCENE_W / 2 + Math.cos(angle) * radiusX * ring;
+        spot.y = SCENE_H / 2 + 40 + Math.sin(angle) * radiusY * ring;
     });
     spots.push({ icon: '🚪', label: 'Ra bản đồ', action: () => setWorldView('map'), x: SCENE_W / 2, y: SCENE_H - 60 });
     return spots;
+}
+
+function meditateSpot() {
+    return sceneState.spots.find(spot => spot.id === 'meditate');
+}
+
+function toggleMeditate() {
+    if (state.autoTrain) return standUp();
+    if (window._battleActive) return;
+    if (state.activity) { showToast(`Đang bận: ${state.activity.label}.`, 'warn'); return; }
+    const spot = meditateSpot();
+    sceneState.x = spot.x;
+    sceneState.y = spot.y + 46;
+    sceneState.tx = sceneState.ty = null;
+    state.autoTrain = true;
+    log('🧘 Ngồi xuống bế quan. Tu vi tăng theo thời gian thực, kể cả khi đóng game.');
+    renderAll();
+}
+
+function standUp() {
+    if (!state.autoTrain) return;
+    state.autoTrain = false;
+    log('🚶 Đứng dậy, dừng bế quan.');
+    renderAll();
 }
 
 function sceneDecor(locId, spots) {
@@ -67,6 +104,11 @@ function enterScene() {
     sceneState.tx = sceneState.ty = null;
     refreshSceneSpots();
     sceneState.decor = sceneDecor(loc.id, sceneState.spots);
+    const seat = meditateSpot();
+    if (state.autoTrain) {
+        sceneState.x = seat.x;
+        sceneState.y = seat.y + 46;
+    }
 }
 
 function refreshSceneSpots() {
@@ -94,6 +136,7 @@ function sceneMove(dt) {
     }
     const len = Math.hypot(dx, dy);
     if (!len || window._battleActive || state.activity?.type === 'travel') return;
+    standUp();
     const step = SCENE_SPEED * dt / len;
     const nx = s.x + dx * step, ny = s.y + dy * step;
     const movedX = !sceneBlocked(nx, s.y);
@@ -231,6 +274,11 @@ function drawScene() {
         const look = playerLook();
         drawUnit(ctx, sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name })), s.x, s.y, state.name || '', '#ffe9a0');
         if (s.bubble && Date.now() < s.bubble.until) drawBubble(ctx, s.x, s.y, s.bubble.text);
+        if (state.autoTrain) {
+            ctx.font = '22px serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🧘', s.x + 34, s.y - 34);
+        }
     } });
     units.sort((a, b) => a.y - b.y).forEach(u => u.draw());
     ctx.restore();
@@ -306,6 +354,7 @@ function syncBattleOverlay() {
     const fighting = !!state.currentEnemy;
     if (fighting === panel.classList.contains('battle-overlay')) return;
     if (fighting) {
+        standUp();
         panel.dataset.homeReady = '1';
         panel.__home = panel.__home || { parent: panel.parentNode, next: panel.nextElementSibling };
         setWorldView('scene');
@@ -314,6 +363,7 @@ function syncBattleOverlay() {
         panel.__home.parent.insertBefore(panel, panel.__home.next);
     }
     panel.classList.toggle('battle-overlay', fighting);
+    $('runBtn').style.display = fighting ? 'inline-block' : 'none';
 }
 
 function isTypingTarget(target) {
