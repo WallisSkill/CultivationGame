@@ -32,12 +32,12 @@ function npcTianjiao(locId) {
     return [3, 2, 1].map((weight, i) => ({
         id: `npc_${locId}_${i}`,
         name: TIANJIAO_NAMES[(seed + i * 7) % TIANJIAO_NAMES.length],
-        score: TIANJIAO_BASE_SCORE * (loc.minR + 1) * weight
+        score: TIANJIAO_BASE_SCORE * renownPoints(loc.maxR) * weight
     }));
 }
 
 function tianjiaoBoard(locId) {
-    const me = { id: 'me', name: state.name, score: state.mastery?.[locId] || 0, isMe: true };
+    const me = { id: 'me', name: state.name, score: state.renown?.[locId] || 0, isMe: true };
     const others = knownPlayerScores(locId);
     return [...npcTianjiao(locId), ...others, me]
         .sort((a, b) => b.score - a.score || (b.isMe ? 1 : 0) - (a.isMe ? 1 : 0))
@@ -45,7 +45,7 @@ function tianjiaoBoard(locId) {
 }
 
 function tianjiaoRank(locId) {
-    if (!(state.mastery?.[locId] > 0)) return 0;
+    if (!(state.renown?.[locId] > 0)) return 0;
     return tianjiaoBoard(locId).findIndex(entry => entry.isMe) + 1;
 }
 
@@ -97,7 +97,7 @@ function openTianjiaoBoard() {
     const needed = npcTianjiao(locId)[2].score;
     const hint = rank >= 1 && rank <= 3
         ? `<div class="small"><b>Ưu đãi hạng ${rank} tại đây:</b></div>${perks}`
-        : `<div class="small">Săn tại đây để tăng điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
+        : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
     openWorldModal('tianjiaoModal', `🏆 Thiên Kiêu Bảng — ${LOCATIONS[locId].name}`, `${hint}${rows}`);
 }
 

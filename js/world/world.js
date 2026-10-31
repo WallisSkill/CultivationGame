@@ -58,6 +58,7 @@ function initWorldState() {
     state.mats = state.mats || {};
     state.flags = state.flags || {};
     state.mastery = state.mastery || {};
+    state.renown = state.renown || { ...state.mastery };
     syncStorySect();
     state.questDone = state.questDone || [];
     state.questActive = state.questActive || [];
@@ -615,7 +616,43 @@ function openForge() {
             <button onclick="startForge('${slot}')" ${have < matCost || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
-    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. 15% ra phẩm Tiên.</div>${forgeQueueHTML()}${rows}`);
+    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. 15% ra phẩm Tiên.</div>${forgeQueueHTML()}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+}
+
+function gearUpgradeCost(item) {
+    const next = (item.plus || 0) + 1;
+    return { gold: goldRef(item.reqRealm || 0) * 2 * next, mats: next };
+}
+
+function upgradeGear(uidIndex) {
+    const item = state.inventory[uidIndex];
+    if (!item?.slot) return;
+    const plus = item.plus || 0;
+    if (plus >= gearUpgradeCap(item.reqRealm || 0)) { showToast('Đã đạt giới hạn nâng cấp.', 'warn'); return; }
+    const worldId = worldTierOfRealm(item.reqRealm || 0).id;
+    const cost = gearUpgradeCost(item);
+    if ((state.mats[worldId] || 0) < cost.mats || state.gold < cost.gold) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
+    state.mats[worldId] -= cost.mats;
+    state.gold -= cost.gold;
+    Object.assign(item, applyGearUpgrade(item, plus + 1));
+    log(`🔨 Nâng cấp thành công: ${item.name}.`);
+    openForge();
+    renderAll();
+}
+
+function gearUpgradeRows() {
+    return state.inventory.map((item, index) => ({ item, index })).filter(({ item }) => item.equipped && item.slot).map(({ item, index }) => {
+        const plus = item.plus || 0;
+        const cap = gearUpgradeCap(item.reqRealm || 0);
+        const step = Math.round(gearUpgradeStep(item.reqRealm || 0) * 1000) / 10;
+        if (plus >= cap) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">${gearStatText(item)} · tối đa +${cap}</div></div></div>`;
+        const cost = gearUpgradeCost(item);
+        const worldId = worldTierOfRealm(item.reqRealm || 0).id;
+        return `<div class="shop-item forge-row">
+            <div><b>${item.name}</b><div class="small">${gearStatText(item)} · +${plus}/${cap} · mỗi cấp +${step}%</div>
+            <div class="small">${formatNumber(cost.gold)} linh thạch, ${cost.mats} ${MATERIAL_NAMES[worldId]}</div></div>
+            <button onclick="upgradeGear(${index})">Nâng cấp</button></div>`;
+    }).join('');
 }
 
 function startForge(slot) {
@@ -903,7 +940,10 @@ function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
     const killed = [enemy, ...(enemy.escorts || [])];
     if (enemy.hunted) {
+        const earned = killed.reduce((sum, unit) => sum + renownPoints(unit.realmIndex), 0);
         state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
+        state.renown[state.location] = (state.renown[state.location] || 0) + earned;
+        log(`🏆 Thiên kiêu +${formatNumber(earned)} điểm tại ${currentLocation().name}.`);
         reportRenown();
     }
     killed.forEach(unit => {
@@ -1078,6 +1118,7 @@ function renderWorldPanels() {
     renderActivityBar();
     renderTestPanel();
     renderSectPanel();
+    renderRoomPanel();
     syncBattleOverlay();
     if (typeof refreshSceneSpots === 'function' && sceneState.canvas) {
         refreshSceneSpots();
@@ -1226,6 +1267,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

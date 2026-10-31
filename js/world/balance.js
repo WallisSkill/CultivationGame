@@ -178,6 +178,27 @@ function pathDamageMult(attacker, defender) {
     return 1;
 }
 
+/* --------- nâng cấp trang bị: đồ cảnh giới cao có giới hạn cao hơn, mỗi cấp tăng nhiều hơn --------- */
+function gearUpgradeCap(reqRealm) {
+    return 5 + reqRealm;
+}
+
+function gearUpgradeStep(reqRealm) {
+    return 0.04 + reqRealm * 0.003;
+}
+
+function applyGearUpgrade(item, plus) {
+    const base = item.base || { name: item.name, atk: item.atk, def: item.def, hp: item.hp };
+    const k = 1 + plus * gearUpgradeStep(item.reqRealm || 0);
+    return {
+        base, plus,
+        name: `${base.name} +${plus}`,
+        atk: Math.floor(base.atk * k),
+        def: Math.floor(base.def * k),
+        hp: Math.floor(base.hp * k)
+    };
+}
+
 /* --------- kinh tế --------- */
 function goldRef(realm) {
     return Math.floor(60 * Math.pow(1.75, realm));
@@ -228,6 +249,11 @@ function enemyStatsFor(realm, stage, tierName = 'Thường', scale = 1) {
         xpMinutes: tier.xpMinutes,
         gold: goldRef(realm) * tier.goldMult
     };
+}
+
+/* Điểm thiên kiêu của một con quái theo cảnh giới của nó: 1, 3, 10, 32, 100... */
+function renownPoints(realm) {
+    return Math.round(Math.pow(10, realm / 2));
 }
 
 /* Một bầy n mục tiêu: mỗi con yếu đi, tổng thể nguy hiểm hơn một con đơn lẻ */

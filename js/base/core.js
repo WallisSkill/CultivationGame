@@ -1482,7 +1482,7 @@ function equipForRealm() {
 }
 
 function gearSellValue(item) {
-    return goldRef(item.reqRealm || 0) * ((item.quality || 0) + 1);
+    return goldRef(item.reqRealm || 0) * ((item.quality || 0) + 1 + (item.plus || 0));
 }
 
 function outdatedGear() {

@@ -48,7 +48,7 @@ function saveRenownCache() {
 }
 
 function sharedRenown() {
-    const entries = Object.entries(state.mastery || {}).sort((a, b) => b[1] - a[1]).slice(0, RENOWN_SHARED_LOCATIONS);
+    const entries = Object.entries(state.renown || {}).sort((a, b) => b[1] - a[1]).slice(0, RENOWN_SHARED_LOCATIONS);
     return Object.fromEntries(entries);
 }
 
@@ -69,7 +69,7 @@ function profileToken() {
 }
 
 function reportRenown() {
-    const score = state.mastery?.[state.location] || 0;
+    const score = state.renown?.[state.location] || 0;
     if (score > 0) wsSend({ type: 'tianjiao_report', loc: state.location, score, token: profileToken() });
 }
 
