@@ -452,4 +452,78 @@ const SIDE_QUESTS = [
     { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [26, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
 ];
 
+/* Xuất thân: nơi bắt đầu, hệ tu đầu tiên và chương mở đầu riêng; tất cả hội tụ tại Thanh Vân Tông */
+const ORIGINS = {
+    thuy: { name: 'Đứa trẻ Thanh Thủy Thôn', loc: 'thanh_thuy', path: 'phap' },
+    kim: {
+        name: 'Kiếm đồng giữ mộ', loc: 'kiem_trung', path: 'kiem', title: 'Kẻ Lau Kiếm',
+        boss: { id: 'kiem_no_truong', name: 'Kiếm Nô Trưởng', look: NPC_LOOK('m', 4, '#c9c9d6', '#55524a', { weapon: 'sword', weaponColor: '#b8c0c8' }) },
+        steps: [
+            { go: 'kiem_trung', say: [['narr', 'Ngươi lớn lên giữa ba ngàn thanh kiếm cắm trên mộ, công việc mỗi ngày là lau sạch rỉ sét.'], ['narr', 'Đêm nay những thanh kiếm rung lên. Có kiếm hồn đã thức.']] },
+            { hunt: { loc: 'kiem_trung', name: 'Kiếm Hồn', n: 2 }, say: [['mac', 'Lão đi ngang quét lá thôi. Ngươi cầm kiếm như cầm chổi, thế mà lại đúng.']] },
+            { boss: 'kiem_no_truong', say: [['mac', 'Kiếm Trủng không giữ được ngươi nữa. Đến Thanh Vân Tông đi, nói là Lão Mặc giới thiệu.']] }
+        ]
+    },
+    moc: {
+        name: 'Đứa trẻ thú nuôi', loc: 'van_thu', path: 'yeu', title: 'Tiếng Gầm Trên Vạn Thú Sơn',
+        boss: { id: 'ho_vuong', kind: 'beast', name: 'Bạch Ngạch Hổ Vương' },
+        steps: [
+            { go: 'van_thu', say: [['narr', 'Một con sói cái nhặt ngươi về từ xác đoàn thương nhân. Ngươi biết gầm trước khi biết nói.']] },
+            { hunt: { loc: 'van_thu', name: 'Hổ Yêu', n: 2 }, say: [['narr', 'Bầy hổ tràn qua lãnh địa. Mẹ sói của ngươi không trở về nữa.']] },
+            { boss: 'ho_vuong', say: [['mac', 'Một đứa bé cắn chết hổ vương. Thú rừng không dạy được ngươi điều tiếp theo. Xuống núi, tìm Thanh Vân Tông.']] }
+        ]
+    },
+    hoa: {
+        name: 'Huyết nô bỏ trốn', loc: 'huyet_sat', path: 'ma', title: 'Đêm Vỡ Xiềng',
+        boss: { id: 'huyet_do', name: 'Huyết Đồ Quản Sự', look: NPC_LOOK('m', 4, '#7a1f2b', '#2b2b35', { weapon: 'spear', weaponColor: '#a8342a', eyes: '#a8342a' }) },
+        steps: [
+            { go: 'huyet_sat', say: [['narr', 'Huyết Sát Giáo trích máu ngươi từ năm năm tuổi. Máu ngươi mang hỏa linh căn, nên ngươi được sống lâu hơn những đứa khác.']] },
+            { hunt: { loc: 'huyet_sat', name: 'Huyết Nô Vệ', n: 2 }, say: [['narr', 'Xiềng đứt. Thứ công pháp ngươi trộm nghe qua vách đá đang nóng lên trong mạch máu.']] },
+            { boss: 'huyet_do', say: [['mac', 'Công pháp tà, nhưng tay ngươi không run. Thanh Vân Tông sẽ không hỏi ngươi từ đâu đến nếu ngươi không nói.']] }
+        ]
+    },
+    tho: {
+        name: 'Con trai thợ mỏ', loc: 'thiet_cot', path: 'the', title: 'Sập Hầm',
+        boss: { id: 'quang_vuong', kind: 'golem', name: 'Quặng Khôi Vương' },
+        steps: [
+            { go: 'thiet_cot', say: [['narr', 'Cha ngươi đào quặng cho Thiết Cốt Môn. Ngươi vác đá từ khi vai còn chưa rộng bằng cái giỏ.'], ['narr', 'Hôm nay hầm sập, và thứ dưới đáy hầm đang bò lên.']] },
+            { hunt: { loc: 'thiet_cot', name: 'Quặng Khôi', n: 2 } },
+            { boss: 'quang_vuong', say: [['mac', 'Tay không đập vỡ khôi lỗi. Ngươi không cần pháp bảo để sống, nhưng cần thầy. Tới Thanh Vân Tông.']] }
+        ]
+    },
+    phap: {
+        name: 'Thiên tài thế gia', loc: 'huyen_phap', path: 'phap', title: 'Bài Thi Cuối',
+        boss: { id: 'tham_giao', name: 'Thẩm Giáo Tập', look: NPC_LOOK('m', 0, '#c9c9d6', '#6b4a8f', { weapon: 'staff', weaponColor: '#d59bff', beard: true }) },
+        steps: [
+            { go: 'huyen_phap', say: [['narr', 'Sinh ra đã mang linh căn hiếm, ngươi được gửi vào Huyền Pháp Các với ba mươi người hầu. Không ai dám đánh thật với ngươi.']] },
+            { hunt: { loc: 'huyen_phap', name: 'Thí Pháp Khôi Lỗi', n: 2 } },
+            { boss: 'tham_giao', say: [['mac', 'Lão quét sân ở đây ba mươi năm rồi. Đây là lần đầu có đứa thắng thật. Muốn biết mình giỏi thật không thì đến Thanh Vân Tông, nơi không ai biết họ của ngươi.']] }
+        ]
+    }
+};
+
+function originFor(root) {
+    if ((root?.rank || 0) >= 6) return 'phap';
+    return { Kim: 'kim', 'Mộc': 'moc', 'Thủy': 'thuy', 'Hỏa': 'hoa', 'Thổ': 'tho' }[root?.elements?.[0]] || 'thuy';
+}
+
+Object.values(ORIGINS).forEach(o => {
+    if (!o.boss) return;
+    const { id, ...def } = o.boss;
+    BOSSES[id] = def.look ? { npc: { name: def.name, look: def.look }, realm: 0, stage: 1 } : { kind: def.kind, name: def.name, realm: 0, stage: 1 };
+});
+
+Object.assign(BOSSES.thong_thien, { path: 'kiem' });
+Object.assign(BOSSES.kiem_khi, { path: 'kiem' });
+Object.assign(BOSSES.thai_thanh, { path: 'phap' });
+Object.assign(BOSSES.nguyen_thuy, { path: 'phap' });
+Object.assign(BOSSES.nguyen_thuy_phan, { path: 'phap' });
+Object.assign(BOSSES.nu_oa_thu, { path: 'yeu' });
+Object.assign(BOSSES.chuan_tiep, { path: 'the' });
+Object.assign(BOSSES.ma_quan, { path: 'ma', adds: { name: 'Vực Ma', kind: 'demon', n: 2 } });
+Object.assign(BOSSES.lang_phong_2, { path: 'ma' });
+Object.assign(BOSSES.nam_mon, { adds: { name: 'Thiên Binh', kind: 'human', n: 3 } });
+Object.assign(BOSSES.tien_de, { path: 'kiem', adds: { name: 'Kim Giáp Tiên Tướng', kind: 'human', n: 2 } });
+Object.assign(BOSSES.than_dinh_ve, { adds: { name: 'Thiên Phạt Sứ', kind: 'golem', n: 2 } });
+
 const QUEST_INDEX = [...MAIN_QUESTS, ...SIDE_QUESTS].reduce((m, q) => (m[q.id] = q, m), {});

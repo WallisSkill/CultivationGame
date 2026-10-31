@@ -6,18 +6,33 @@
      Đang có hoạt động thì KHÔNG tu luyện được.
 =========================================================== */
 const TICK_MS = 250;
-const HUNT_BASE_SECONDS = 2 * 60;
-const HUNT_MIN_SECONDS = 20;
+const HUNT_BASE_SECONDS = 10;
+const HUNT_MIN_SECONDS = 3;
 const HUNT_MASTERY_DECAY = 0.99;
 const HUNT_XP_PER_SEARCH_MINUTE = 0.5;
-const EXPLORE_SECONDS = 15 * 60;
+const EXPLORE_SECONDS = 210;
+const GATHER_TIME_DIVISOR = 60;
+const HIRE_MAX = 2;
+const HIRE_COST = 3;
+const HUNT_PACK_CHANCE = { 2: 0.25, 3: 0.1 };
 const BASE_TRAVEL_SPEED = 1;
-const TRAVEL_TIME_DIVISOR = 6;
+/* Phút cho một chặng chuẩn theo cảnh giới; từ Kim Đan trở lên cùng một mốc */
+const TRAVEL_LEG_MINUTES = [60, 30, 1];
+const TRAVEL_LEG_PIXELS = 250;
+const TRAVEL_GATE_PIXELS = 500;
+/* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
+const TRAVEL_DISTANCE_EXPONENT = 1.5;
+/* Dịch chuyển: cần tông môn + cảnh giới tối thiểu của cõi đích */
+const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 17, thien: 22 };
+/* Cõi cuối: cảnh giới cao hơn cõi thì tới tức thì, thấp hơn thì mất ngàn giờ cho mỗi bậc thiếu */
+const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
+const INSTANT_LEG_SECONDS = 1;
+const LOW_REALM_HOURS_PER_STEP = 1000;
 const ROAD_EVENT_INTERVAL = 5;
 const ROAD_EVENT_BASE_CHANCE = 0.005;
 const ROAD_EVENT_LUCK_FACTOR = 0.1;
 const ROAD_EVENT_MAX_CHANCE = 0.08;
-const ROAD_BANDIT_XP_MINUTES = 1;
+const ROAD_BANDIT_XP_MINUTES = 0.5;
 const ROAD_BANDITS = {
     pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Vực Đạo Tặc', thien: 'Thiên Ngoại Đạo Tặc',
     hondon: 'Hỗn Độn Đạo Tặc', hongmong: 'Hồng Mông Đạo Tặc', chungnguyen: 'Chung Yên Đạo Tặc'
@@ -34,7 +49,7 @@ function currentLocation() {
 }
 
 function currentLocationQi() {
-    return currentLocation().qi || 1;
+    return (currentLocation().qi || 1) * sectLocationQiMult(state.location);
 }
 
 function initWorldState() {
@@ -43,8 +58,14 @@ function initWorldState() {
     state.mats = state.mats || {};
     state.flags = state.flags || {};
     state.mastery = state.mastery || {};
+    syncStorySect();
     state.questDone = state.questDone || [];
     state.questActive = state.questActive || [];
+    state.forgeQueue = state.forgeQueue || [];
+    state.hired = state.hired || 0;
+    state.origin = state.origin || 'thuy';
+    state.daoPath = state.daoPath || ORIGINS[state.origin].path;
+    applyOriginQuest();
     state.activity = state.activity || null;
     state.testSpeed = state.testSpeed || 1;
     state.lastSeen = state.lastSeen || Date.now();
@@ -52,8 +73,11 @@ function initWorldState() {
 
 /* ---------- đồng hồ ---------- */
 function advanceWorld(sec) {
-    if (window._battleActive || state.dead || !state.root?.elements) return;
+    if (state.dead || !state.root?.elements) return;
+    advanceForgeQueue(sec);
+    if (window._battleActive) return;
     state.age += sec / SECONDS_PER_DAY;
+    accrueSectIncome(sec);
     let left = sec;
     while (left > 0 && state.activity) {
         const a = state.activity;
@@ -158,16 +182,13 @@ function finishActivity() {
             log(`📍 Đã tới ${currentLocation().name}.`);
             break;
         case 'hunt':
-            spawnEnemyWithRules(a.total);
+            spawnEnemyWithRules(a.total, a.pack || 1);
             break;
         case 'explore':
             window.exploreOriginalImpl();
             break;
         case 'gather':
             completeGather(a.questId);
-            break;
-        case 'forge':
-            finishForge(a);
             break;
         default:
             log(`✅ ${a.label} xong.`);
@@ -205,6 +226,51 @@ function worldUnlocked(worldId) {
     return worldId === 'pham' || !!state.flags['world_' + worldId];
 }
 
+function syncStorySect() {
+    if (!state.sect && state.questDone?.includes('m02')) state.sect = 'thanh_van';
+}
+
+function absoluteLegSeconds(to) {
+    const tier = worldOf(to);
+    if (!ABSOLUTE_WORLDS.includes(tier.id)) return null;
+    const realm = state.realmIndex || 0;
+    if (realm > tier.to) return INSTANT_LEG_SECONDS;
+    if (realm < tier.from) return (tier.from - realm) * LOW_REALM_HOURS_PER_STEP * 3600;
+    return null;
+}
+
+function teleportBlockReason(id) {
+    const tier = worldOf(id);
+    const minRealm = TELEPORT_MIN_REALM[tier.id];
+    if (minRealm == null) return '';
+    const missing = [];
+    if (!state.sect) missing.push('nhập tông môn');
+    if ((state.realmIndex || 0) < minRealm) missing.push(`đạt ${REALMS[minRealm]}`);
+    return missing.length ? `Dịch chuyển trong ${tier.name}: cần ${missing.join(' và ')}.` : '';
+}
+
+function canTeleport(id) {
+    return id in LOCATIONS && TELEPORT_MIN_REALM[LOCATIONS[id].world] != null
+        && worldUnlocked(LOCATIONS[id].world) && !teleportBlockReason(id);
+}
+
+function teleportTo(id) {
+    if (!requireFree() || !canTeleport(id)) return;
+    state.location = id;
+    log(`⚡ Dịch chuyển tới ${LOCATIONS[id].name}.`);
+    checkArrival();
+}
+
+function joinSect(id) {
+    if (!requireFree()) return;
+    if (state.ownSect) { showToast('Chưởng môn không thể nhập tông khác.', 'warn'); return; }
+    const previous = sectName();
+    leaveJoinedSect();
+    state.sect = id;
+    log(previous ? `⛩️ Rời ${previous}, gia nhập ${LOCATIONS[id].name}.` : `⛩️ Gia nhập ${LOCATIONS[id].name}.`);
+    renderAll();
+}
+
 function travelSpeed() {
     const realm = state.realmIndex || 0;
     const tier = worldTierOfRealm(realm);
@@ -212,12 +278,17 @@ function travelSpeed() {
     return (BASE_TRAVEL_SPEED + (realm - tier.from) * 0.15 + boots) * realmHaste(realm);
 }
 
+function travelUnitSeconds() {
+    const minutes = TRAVEL_LEG_MINUTES[Math.min(state.realmIndex || 0, TRAVEL_LEG_MINUTES.length - 1)];
+    return minutes * 60 / travelSpeed();
+}
+
 function edgeSeconds(from, to) {
     const a = LOCATIONS[from], b = LOCATIONS[to];
-    const speed = travelSpeed() * TRAVEL_TIME_DIVISOR;
-    if (a.gate && a.gate.to === to) return a.gate.minutes * 60 / speed;
-    const distance = Math.hypot(a.x - b.x, a.y - b.y);
-    return distance * worldOf(from).travelScale * 60 / speed;
+    const absolute = absoluteLegSeconds(to);
+    if (absolute != null) return absolute;
+    const pixels = a.gate && a.gate.to === to ? TRAVEL_GATE_PIXELS : Math.hypot(a.x - b.x, a.y - b.y);
+    return travelUnitSeconds() * pixels / TRAVEL_LEG_PIXELS;
 }
 
 function neighbors(id) {
@@ -243,7 +314,13 @@ function findPath(from, to) {
     if (dist[to] == null) return null;
     const path = [to];
     while (path[0] !== from) path.unshift(prev[path[0]]);
-    return { path, seconds: dist[to] };
+    const legs = path.slice(1).map((next, i) => ({ from: path[i], to: next, seconds: edgeSeconds(path[i], next) }));
+    const normal = legs.filter(l => absoluteLegSeconds(l.to) == null);
+    const units = normal.reduce((sum, l) => sum + l.seconds, 0) / travelUnitSeconds();
+    const stretch = units > 1 ? Math.pow(units, TRAVEL_DISTANCE_EXPONENT - 1) : 1;
+    normal.forEach(l => { l.seconds *= stretch; });
+    legs.forEach(l => { l.left = l.seconds; });
+    return { path, legs, seconds: legs.reduce((sum, l) => sum + l.seconds, 0) };
 }
 
 function travelTo(id) {
@@ -251,8 +328,7 @@ function travelTo(id) {
     if (id === state.location) return;
     const route = findPath(state.location, id);
     if (!route) { showToast('Chưa có đường tới đó.', 'warn'); return; }
-    const legs = route.path.slice(1).map((to, i) => ({ from: route.path[i], to, seconds: edgeSeconds(route.path[i], to), left: edgeSeconds(route.path[i], to) }));
-    startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs, leg: 0, dest: id });
+    startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
     log(`🛤️ Khởi hành tới ${LOCATIONS[id].name}, mất ${formatRealDuration(route.seconds)}. Trên đường không thể tu luyện.`);
 }
 
@@ -279,15 +355,27 @@ function triggerRoadEvent(kind = null) {
     else roadBandit();
 }
 
+function rollPackSize(bonus = 0) {
+    const roll = Math.random();
+    const luck = (state.luckBonus || 0) * 0.5 + bonus;
+    if (roll < HUNT_PACK_CHANCE[3] + luck / 2) return 3;
+    if (roll < HUNT_PACK_CHANCE[3] + HUNT_PACK_CHANCE[2] + luck) return 2;
+    return 1;
+}
+
 function roadBandit() {
     const worldId = worldTierOfRealm(state.realmIndex).id;
-    const enemy = buildEnemy({
-        name: ROAD_BANDITS[worldId],
-        realmIndex: state.realmIndex,
-        realmStage: Math.min(state.realmStage, randomRealmStage()),
-        tier: Math.random() < 0.15 ? 'Tinh anh' : 'Thường'
-    });
-    enemy.xpMinutes = enemy.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * ROAD_BANDIT_XP_MINUTES;
+    const makeUnit = () => {
+        const unit = buildEnemy({
+            name: ROAD_BANDITS[worldId],
+            realmIndex: state.realmIndex,
+            realmStage: Math.min(state.realmStage, randomRealmStage()),
+            tier: Math.random() < 0.15 ? 'Tinh anh' : 'Thường'
+        });
+        unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * ROAD_BANDIT_XP_MINUTES;
+        return unit;
+    };
+    const enemy = spawnEnemyPack(makeUnit, rollPackSize(0.15));
     log(`🏴 ${enemy.name} chặn đường!`);
     showToast(`${enemy.name} chặn đường!`, 'warn');
     startEncounter(enemy);
@@ -420,10 +508,15 @@ function renderMapDestination() {
     if (!mapSelected || mapSelected === state.location) return '';
     const loc = LOCATIONS[mapSelected];
     const route = findPath(state.location, mapSelected);
+    const teleport = canTeleport(mapSelected)
+        ? `<button class="primary" onclick="teleportTo('${loc.id}')">⚡ Dịch chuyển</button>`
+        : '';
+    const blocked = teleportBlockReason(mapSelected);
     return `<div class="map-dest">
         <div><b>${loc.icon} ${loc.name}</b> <span class="small">linh khí x${loc.qi.toFixed(2)} · ${REALMS[loc.minR]} trở lên</span>
-        <div class="small">${loc.desc}</div></div>
-        ${route ? `<button class="primary" onclick="travelTo('${loc.id}')">Đi (${formatRealDuration(route.seconds)})</button>` : '<span class="small">Chưa có đường</span>'}
+        <div class="small">${loc.desc}</div>${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}</div>
+        <div class="map-dest-actions">${teleport}
+        ${route ? `<button onclick="travelTo('${loc.id}')">Đi (${formatRealDuration(route.seconds)})</button>` : '<span class="small">Chưa có đường</span>'}</div>
     </div>`;
 }
 
@@ -447,7 +540,9 @@ function huntSeconds() {
 function startHunt() {
     if (!requireFree()) return;
     if (!(currentLocation().enemies || []).length) return;
-    startActivity({ type: 'hunt', label: '🗡️ Lùng sục con mồi', seconds: huntSeconds() });
+    const pack = rollPackSize();
+    const seconds = huntSeconds() * (0.4 + Math.random()) / Math.sqrt(pack);
+    startActivity({ type: 'hunt', label: '🗡️ Lùng sục con mồi', seconds, pack });
 }
 
 function startExplore() {
@@ -496,32 +591,53 @@ function openForge() {
     const worldId = worldTierOfRealm(realm).id;
     const have = state.mats[worldId] || 0;
     const price = gearPrice(realm, 2);
+    const matCost = forgeMaterialCost();
     const rows = GEAR_SLOT_IDS.map(slot => {
         const it = makeGearItem(realm, slot, 2);
         return `<div class="shop-item forge-row">
             <div><b style="color:${GEAR_QUALITIES[2].color}">${GEAR_SLOTS[slot].icon} ${it.name}</b><div class="small">${gearStatText(it)}</div></div>
-            <button onclick="startForge('${slot}')" ${have < FORGE_MATERIAL_COST || state.gold < price ? 'disabled' : ''}>Rèn</button>
+            <button onclick="startForge('${slot}')" ${have < matCost || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
-    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${FORGE_MATERIAL_COST} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}. 15% ra phẩm Tiên.</div>${rows}`);
+    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. 15% ra phẩm Tiên.</div>${forgeQueueHTML()}${rows}`);
 }
 
 function startForge(slot) {
-    if (!requireFree()) return;
     const realm = state.realmIndex;
     const worldId = worldTierOfRealm(realm).id;
     const price = gearPrice(realm, 2);
-    if ((state.mats[worldId] || 0) < FORGE_MATERIAL_COST || state.gold < price) return;
-    state.mats[worldId] -= FORGE_MATERIAL_COST;
+    const matCost = forgeMaterialCost();
+    if ((state.mats[worldId] || 0) < matCost || state.gold < price) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
+    state.mats[worldId] -= matCost;
     state.gold -= price;
-    document.getElementById('forgeModal').style.display = 'none';
-    startActivity({ type: 'forge', label: '🔨 Rèn trang bị', seconds: FORGE_HOURS * 3600, slot, realm });
+    const seconds = hastedSeconds(FORGE_HOURS * 3600);
+    state.forgeQueue.push({ slot, realm, total: seconds, remaining: seconds });
+    log(`🔨 Giao thợ rèn ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
+    openForge();
+    renderAll();
 }
 
-function finishForge(a) {
-    const gear = makeGearItem(a.realm, a.slot, Math.random() < 0.15 ? 3 : 2);
+function advanceForgeQueue(sec) {
+    if (!state.forgeQueue?.length) return;
+    state.forgeQueue.forEach(job => { job.remaining -= sec; });
+    state.forgeQueue.filter(job => job.remaining <= 0).forEach(finishForge);
+    if (state.forgeQueue.some(job => job.remaining <= 0)) {
+        state.forgeQueue = state.forgeQueue.filter(job => job.remaining > 0);
+        renderAll();
+    }
+}
+
+function finishForge(job) {
+    const gear = makeGearItem(job.realm, job.slot, Math.random() < 0.15 ? 3 : 2);
     addItemToInventory(gear);
-    log(`🔨 Rèn xong ${gear.name}!`);
+    log(`🔨 Thợ rèn giao ${gear.name}!`);
+    showToast(`Rèn xong ${gear.name}`, 'info');
+}
+
+function forgeQueueHTML() {
+    if (!state.forgeQueue.length) return '';
+    return `<div class="small">🔨 Đang rèn: ${state.forgeQueue.map(job =>
+        `${GEAR_SLOTS[job.slot].label} (${formatRealDuration(job.remaining / (state.testSpeed || 1))})`).join(', ')}</div>`;
 }
 
 function acceptBounty() {
@@ -564,6 +680,65 @@ function nextMainQuest() {
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
     return q && !state.questDone.includes(q.id) ? q : null;
+}
+
+function pickOrigin() {
+    return originFor(state.root);
+}
+
+function applyStartingOrigin() {
+    state.origin = pickOrigin();
+    state.location = ORIGINS[state.origin].loc;
+    state.daoPath = ORIGINS[state.origin].path;
+    log(`🌱 Xuất thân: ${ORIGINS[state.origin].name}.`);
+}
+
+function applyOriginQuest() {
+    const origin = ORIGINS[state.origin];
+    if (!origin.steps) return;
+    const quest = MAIN_QUESTS[0];
+    quest.title = origin.title;
+    quest.steps = origin.steps;
+}
+
+function setDaoPath(path) {
+    if (!requireFree()) return;
+    const cost = goldRef(state.realmIndex) * 10;
+    if (state.gold < cost) { showToast('Không đủ linh thạch.', 'warn'); return; }
+    state.gold -= cost;
+    state.daoPath = path;
+    log(`🧭 Chuyển sang ${DAO_PATHS[path].name}. ${DAO_PATHS[path].desc}.`);
+    renderAll();
+}
+
+function openDaoHall() {
+    const path = currentLocation().path;
+    if (!path) return;
+    const grade = maxLinhBaoGradeForRealm(state.realmIndex);
+    const rows = LINH_BAO.filter(lb => lb.path === path).map(lb => `<div class="shop-item forge-row">
+        <div><b>${lbEffectIcons(lb)} ${lb.name}</b> <span class="small">${LB_GRADE_NAMES[grade]}</span>
+        <div class="small">${lbEffectSummary(lb)} · ${lb.desc}</div></div>
+        <button onclick="buyDaoSkill('${lb.id}')">${formatNumber(lbShopPrice(lb.cost, grade))}</button></div>`).join('');
+    openWorldModal('daoHallModal', `📜 Truyền thừa ${DAO_PATHS[path].name}`, rows);
+}
+
+function buyDaoSkill(id) {
+    const grade = maxLinhBaoGradeForRealm(state.realmIndex);
+    const price = lbShopPrice(LINH_BAO_MAP[id].cost, grade);
+    if (state.gold < price) { showToast('Không đủ linh thạch.', 'warn'); return; }
+    state.gold -= price;
+    addItemToInventory(makeLinhBao(id, grade, 1));
+    log(`📜 Học được ${LINH_BAO_MAP[id].name}.`);
+}
+
+function hireGuard() {
+    const cost = goldRef(state.realmIndex) * HIRE_COST;
+    if (state.hired >= HIRE_MAX) { showToast('Đã đủ hộ pháp.', 'warn'); return; }
+    if (state.gold < cost) { showToast('Không đủ linh thạch.', 'warn'); return; }
+    state.gold -= cost;
+    state.hired++;
+    log(`🤝 Thuê hộ pháp cho trận kế tiếp (${state.hired}/${HIRE_MAX}).`);
+    renderAll();
 }
 
 function startMainStory() {
@@ -634,6 +809,7 @@ function grantQuestReward(q) {
         state.maxHp = Math.floor(state.maxHp * (1 + r.statBless));
         log(`🌟 Đạo cơ thăng hoa: chỉ số bản thể +${Math.round(r.statBless * 100)}%.`);
     }
+    syncStorySect();
     if (r.flag) {
         state.flags[r.flag] = true;
         const w = WORLD_TIERS.find(x => 'world_' + x.id === r.flag);
@@ -663,7 +839,7 @@ function questAction(id) {
     if (step.gather) {
         if (state.location !== step.gather.loc) return travelTo(step.gather.loc);
         if (!requireFree()) return;
-        return startActivity({ type: 'gather', label: `🌿 ${step.gather.label}`, seconds: step.gather.hours * 3600, questId: id });
+        return startActivity({ type: 'gather', label: `🌿 ${step.gather.label}`, seconds: gatherSeconds(step), questId: id });
     }
     if (step.boss) {
         if (!requireFree()) return;
@@ -681,10 +857,18 @@ function spawnBoss(id, quest) {
     }
     const enemy = buildEnemy({
         name: npc?.name || b.name, kind: b.kind, look: npc?.look || null, tier: 'Boss', scale: b.scale || 1,
-        boardSize: b.board || 4, realmIndex: realm, realmStage: stage, elements: b.elements,
+        boardSize: b.board || 4, realmIndex: realm, realmStage: stage, elements: b.elements, path: b.path,
         rootRank: Math.min(ROOT_RANKS.length - 1, (state.root?.rank || 0) + 1)
     });
     enemy.bossId = id;
+    if (b.adds) {
+        enemy.escorts = Array.from({ length: b.adds.n }, () => {
+            const add = buildEnemy({ name: b.adds.name, kind: b.adds.kind, realmIndex: realm, realmStage: stage, boardSize: 1 });
+            add.str = Math.floor(add.str * 0.5);
+            add.hp = add.maxHp = Math.floor(add.maxHp * 0.3);
+            return add;
+        });
+    }
     enemy.scriptedLoss = !!b.scriptedLoss;
     startEncounter(enemy);
 }
@@ -697,18 +881,21 @@ function clearBossStep(bossId) {
 
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
-    if (enemy.hunted) state.mastery[state.location] = (state.mastery[state.location] || 0) + 1;
-    state.questActive.slice().forEach(rt => {
-        const hunt = questStep(rt)?.hunt;
-        if (hunt && hunt.name === enemy.name && hunt.loc === state.location) {
-            rt.n++;
-            if (rt.n >= hunt.n) completeStep(rt);
+    const killed = [enemy, ...(enemy.escorts || [])];
+    if (enemy.hunted) state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
+    killed.forEach(unit => {
+        state.questActive.slice().forEach(rt => {
+            const hunt = questStep(rt)?.hunt;
+            if (hunt && hunt.name === unit.name && hunt.loc === state.location) {
+                rt.n++;
+                if (rt.n >= hunt.n) completeStep(rt);
+            }
+        });
+        if (state.bounty && state.bounty.name === unit.name && state.bounty.loc === state.location) {
+            state.bounty.done++;
+            if (state.bounty.done >= state.bounty.need) finishBounty();
         }
     });
-    if (state.bounty && state.bounty.name === enemy.name && state.bounty.loc === state.location) {
-        state.bounty.done++;
-        if (state.bounty.done >= state.bounty.need) finishBounty();
-    }
     if (state.autoHunt) setTimeout(() => { if (state.autoHunt && !isBusy()) startHunt(); }, 800);
 }
 
@@ -725,11 +912,15 @@ function acceptSideQuest(id) {
     renderAll();
 }
 
+function gatherSeconds(step) {
+    return step.gather.hours * 3600 / GATHER_TIME_DIVISOR;
+}
+
 function questStepText(rt) {
     const step = questStep(rt);
     if (step.go) return `Đi tới ${LOCATIONS[step.go].name}`;
     if (step.hunt) return `Diệt ${step.hunt.name} tại ${LOCATIONS[step.hunt.loc].name} (${rt.n}/${step.hunt.n})`;
-    if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${formatRealDuration(hastedSeconds(step.gather.hours * 3600))})`;
+    if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${formatRealDuration(hastedSeconds(gatherSeconds(step)))})`;
     if (step.boss) {
         const b = BOSSES[step.boss];
         const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
@@ -827,10 +1018,16 @@ function renderLocationPanel() {
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q));
     const buttons = [];
     if ((loc.enemies || []).length) {
-        buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (${formatRealDuration(hastedSeconds(huntSeconds()))})</button>`);
+        buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (~${formatRealDuration(hastedSeconds(huntSeconds()))})</button>`);
         buttons.push(`<button class="${state.autoHunt ? 'primary' : ''}" onclick="toggleAutoHunt()">🔁 ${state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục'}</button>`);
     }
     buttons.push(`<button ${busy} onclick="startExplore()">🧭 Thám hiểm (${formatRealDuration(hastedSeconds(EXPLORE_SECONDS))})</button>`);
+    if (loc.type === 'sect' && state.sect !== loc.id && !state.ownSect) buttons.push(`<button ${busy} onclick="joinSect('${loc.id}')">⛩️ Nhập ${loc.name}</button>`);
+    if (loc.path) {
+        if (state.daoPath !== loc.path) buttons.push(`<button ${busy} onclick="setDaoPath('${loc.path}')">${DAO_PATHS[loc.path].icon} Chuyển ${DAO_PATHS[loc.path].name} (${formatNumber(goldRef(state.realmIndex) * 10)})</button>`);
+        buttons.push(`<button onclick="openDaoHall()">📜 Truyền thừa</button>`);
+    }
+    if (hasService('shop')) buttons.push(`<button onclick="hireGuard()">🤝 Thuê hộ pháp ${state.hired}/${HIRE_MAX} (${formatNumber(goldRef(state.realmIndex) * HIRE_COST)})</button>`);
     if (hasService('shop')) buttons.push(`<button onclick="openServiceShop()">🏪 Cửa hàng</button>`);
     if (hasService('forge')) buttons.push(`<button onclick="openForge()">🔨 Lò rèn</button>`);
     if (hasService('board') && !state.bounty) buttons.push(`<button onclick="acceptBounty()">📜 Nhận treo thưởng</button>`);
@@ -841,7 +1038,9 @@ function renderLocationPanel() {
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
         <div class="small">${loc.desc}</div>
+        <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
+        ${forgeQueueHTML()}
         <div class="loc-actions">${buttons.join('')}</div>${sides}`;
 }
 
@@ -857,7 +1056,11 @@ function renderAppearancePanel() {
             <div><div class="small">${GEAR_SLOTS[slot].label}${stale ? ' · lỗi thời' : ''}</div><b style="color:${color}">${it ? it.name.replace(` ${GEAR_SLOTS[slot].label}`, '') : '—'}</b></div>
         </div>`;
     }).join('');
-    el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg()}</div><div class="gear-slots">${slots}</div></div>`;
+    const path = DAO_PATHS[state.daoPath];
+    const beatenBy = Object.values(DAO_PATHS).find(p => p.beats === state.daoPath);
+    el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg()}</div><div class="gear-slots">${slots}</div></div>
+        <div class="small">${path.icon} <b>${path.name}</b> · ${path.desc}</div>
+        <div class="small">Khắc ${DAO_PATHS[path.beats].name} (+25%) · bị ${beatenBy.name} khắc (-20%)</div>`;
 }
 
 function renderWorldPanels() {
@@ -867,6 +1070,7 @@ function renderWorldPanels() {
     renderAppearancePanel();
     renderActivityBar();
     renderTestPanel();
+    renderSectPanel();
     syncCultivationButton();
 }
 
@@ -928,6 +1132,7 @@ function testJumpRealm() {
     const doneUntil = firstOpen < 0 ? MAIN_QUESTS.length - 1 : firstOpen - 1;
     state.questDone = state.questDone.filter(id => id[0] !== 'm');
     state.flags = {};
+    state.forgeQueue = state.forgeQueue || [];
     MAIN_QUESTS.forEach((q, i) => {
         if (i < doneUntil) {
             state.questDone.push(q.id);
@@ -939,6 +1144,10 @@ function testJumpRealm() {
         state.location = Object.values(LOCATIONS).find(l => l.world === tier.id).id;
     }
     state.flags['world_' + tier.id] = true;
+    if (!state.ownSect && !state.sectInfo) {
+        state.sect = null;
+        syncStorySect();
+    }
     mapViewWorld = tier.id;
     advanceMainQuest();
     recalculateStats();
@@ -990,7 +1199,7 @@ function testFinishActivity() {
 
 function testWinBattle() {
     const b = window.__boardBattle;
-    if (b && b.running) b.enemy.hp = 0;
+    if (b && b.running) b.foes.forEach(c => { c.hp = 0; });
 }
 
 function testRich() {
@@ -1004,7 +1213,7 @@ setInterval(worldTick, TICK_MS);
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    travelTo, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

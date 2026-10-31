@@ -448,6 +448,11 @@ function setupFriendsEventListeners() {
             return;
         }
 
+        if (msg.type === 'pvp_relay' && msg.sessionId === SECT_SESSION) {
+            handleSectRelay(msg);
+            return;
+        }
+
         // Gọi handler cũ cho các message khác
         if (originalOnMatchMessage) {
             originalOnMatchMessage.call(this, ev);

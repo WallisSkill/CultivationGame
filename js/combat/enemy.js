@@ -7,7 +7,11 @@ function rollEnemyRootRank(bonus = 0) {
     return Math.max(0, Math.min(ROOT_RANKS.length - 1, base + swing + bonus));
 }
 
-function buildEnemy({ name, realmIndex, realmStage = 0, tier = 'Thường', scale = 1, elements, rootRank, kind = 'human', look = null, boardSize = 3 }) {
+function randomHumanPath() {
+    return ['kiem', 'phap', 'the', 'ma'][Math.floor(Math.random() * 4)];
+}
+
+function buildEnemy({ name, realmIndex, realmStage = 0, tier = 'Thường', scale = 1, elements, rootRank, kind = 'human', look = null, boardSize = 3, path = null }) {
     const stats = enemyStatsFor(realmIndex, realmStage, tier, scale);
     return {
         name,
@@ -15,6 +19,7 @@ function buildEnemy({ name, realmIndex, realmStage = 0, tier = 'Thường', scal
         kind,
         look,
         boardSize,
+        path: path || KIND_PATHS[kind] || randomHumanPath(),
         realmIndex,
         realmStage,
         elements: elements && elements.length ? elements : randomHybridElements(realmIndex, false),
@@ -38,32 +43,52 @@ function randomRealmStage() {
     return 3;
 }
 
-function spawnEnemyWithRules(huntedSeconds = 0) {
+/* Dựng bầy: con đầu là thủ lĩnh, các con sau là escorts; phần thưởng cộng dồn vào thủ lĩnh */
+function applyPackScale(unit, count) {
+    const k = PACK_SCALE[count];
+    unit.str = Math.floor(unit.str * k.atk);
+    unit.hp = unit.maxHp = Math.floor(unit.maxHp * k.hp);
+    unit.boardSize = count > 1 ? 2 : unit.boardSize;
+}
+
+function spawnEnemyPack(makeUnit, count) {
+    const members = Array.from({ length: count }, () => makeUnit());
+    members.forEach(unit => applyPackScale(unit, count));
+    const [leader, ...escorts] = members;
+    leader.escorts = escorts;
+    leader.gold = members.reduce((sum, m) => sum + m.gold, 0);
+    leader.xpMinutes = members.reduce((sum, m) => sum + m.xpMinutes, 0);
+    return leader;
+}
+
+function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     const loc = currentLocation();
     const pool = loc.enemies || [];
     if (!pool.length) { log(`${loc.name} yên bình, không có gì để săn.`); return; }
     const wanted = (state.questActive || []).map(rt => questStep(rt)?.hunt).find(h => h && h.loc === loc.id);
-    const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
-    const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
-    const enemy = buildEnemy({
-        name: pick.name,
-        kind: pick.kind,
-        realmIndex: Math.max(loc.minR, Math.min(loc.maxR, state.realmIndex)),
-        realmStage: Math.min(state.realmStage, randomRealmStage()),
-        tier: rollEnemyTier()
-    });
-    if (huntedSeconds) {
-        const normal = ENEMY_TIERS['Thường'].xpMinutes;
-        enemy.hunted = true;
-        enemy.xpMinutes = enemy.xpMinutes / normal * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
-    }
+    const makeUnit = () => {
+        const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
+        const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
+        const unit = buildEnemy({
+            name: pick.name,
+            kind: pick.kind,
+            realmIndex: Math.max(loc.minR, Math.min(loc.maxR, state.realmIndex)),
+            realmStage: Math.min(state.realmStage, randomRealmStage()),
+            tier: rollEnemyTier()
+        });
+        if (huntedSeconds) unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
+        return unit;
+    };
+    const enemy = spawnEnemyPack(makeUnit, count);
+    if (huntedSeconds) enemy.hunted = true;
     startEncounter(enemy);
 }
 
 function startEncounter(enemy) {
     state.currentEnemy = enemy;
     window._battleActive = true;
-    log(`⚔️ Gặp ${enemy.name} (${enemy.tier}) — ${REALMS[enemy.realmIndex]} ${STAGES[enemy.realmStage]} · Linh căn: ${enemy.elements.map(colorizeElement).join(' ')}`);
+    const extra = enemy.escorts?.length ? ` cùng ${enemy.escorts.length} đồng bọn` : '';
+    log(`⚔️ Gặp ${enemy.name}${extra} (${enemy.tier}) — ${REALMS[enemy.realmIndex]} ${STAGES[enemy.realmStage]} · Linh căn: ${enemy.elements.map(colorizeElement).join(' ')}`);
     renderAllImmediate();
 }
 
@@ -113,7 +138,7 @@ function renderCurrentEnemy() {
         : 'Không rõ';
 
     div.innerHTML = colorizeWithMap(`
-        <div><b>${e.name}</b> (${e.tier || ''})</div>
+        <div><b>${e.name}</b> (${e.tier || ''})${e.escorts?.length ? ` + ${e.escorts.length} đồng bọn` : ''} ${e.path ? `· ${DAO_PATHS[e.path].icon} ${DAO_PATHS[e.path].name}` : ''}</div>
         <div>Cảnh giới: ${REALMS[e.realmIndex]} <span class="badge">${stageName}</span></div>
         <div>HP ${formatNumber(Math.floor(e.hp))}/${formatNumber(Math.floor(e.maxHp))}, ATK ${formatNumber(e.str)}, DEF ${formatNumber(e.def)}</div>
         <div class="small">Linh căn: ${elementsText} (${ROOT_RANKS[e.rootRank || 0]})</div>

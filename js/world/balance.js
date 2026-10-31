@@ -11,19 +11,19 @@
    - realmShare(x): phần trăm sức mạnh đến từ BẢN THỂ, còn lại từ TRANG BỊ.
      Hạ/trung kỳ tụt dần (đồ áp đảo), từ Thánh cảnh đảo chiều, Chung Nguyên 94%.
 =========================================================== */
-const REALM_REAL_DAYS = 90;
+const REALM_REAL_DAYS = 30;
 const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
 
 const WORLD_TIERS = [
-    { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, travelScale: 0.30, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
-    { id: 'tien', name: 'Tiên Giới', from: 9, to: 15, travelScale: 0.40, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
-    { id: 'thanh', name: 'Thánh Vực', from: 16, to: 19, travelScale: 0.50, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
-    { id: 'thien', name: 'Thiên Ngoại', from: 20, to: 25, travelScale: 0.60, palette: ['#22123f', '#46238a', '#c7a1ff'] },
-    { id: 'hondon', name: 'Hỗn Độn Hải', from: 26, to: 26, travelScale: 0.80, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
-    { id: 'hongmong', name: 'Hồng Mông', from: 27, to: 27, travelScale: 1.00, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
-    { id: 'chungnguyen', name: 'Chung Nguyên', from: 28, to: 28, travelScale: 1.20, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
+    { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
+    { id: 'tien', name: 'Tiên Giới', from: 9, to: 15, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
+    { id: 'thanh', name: 'Thánh Vực', from: 16, to: 19, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
+    { id: 'thien', name: 'Thiên Ngoại', from: 20, to: 25, palette: ['#22123f', '#46238a', '#c7a1ff'] },
+    { id: 'hondon', name: 'Hỗn Độn Hải', from: 26, to: 26, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
+    { id: 'hongmong', name: 'Hồng Mông', from: 27, to: 27, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
+    { id: 'chungnguyen', name: 'Chung Nguyên', from: 28, to: 28, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
 ];
 
 function worldTierOfRealm(realm) {
@@ -151,6 +151,25 @@ function realmHaste(realm) {
     return 1 + realm * REALM_HASTE_PER_REALM;
 }
 
+/* --------- hệ tu: vòng khắc chế --------- */
+const DAO_PATHS = {
+    kiem: { name: 'Kiếm tu', icon: '🗡️', beats: 'phap', desc: 'Sát thương +15%, đòn đơn thể +15%' },
+    phap: { name: 'Pháp tu', icon: '🔮', beats: 'the', desc: 'Kỹ năng diện rộng +30%, hồi chiêu -10%' },
+    the: { name: 'Thể tu', icon: '💪', beats: 'yeu', desc: 'HP +30%, phòng thủ +20%' },
+    yeu: { name: 'Yêu tu', icon: '🐾', beats: 'ma', desc: 'Hồi 1% HP mỗi giây, sát thương +5%' },
+    ma: { name: 'Ma tu', icon: '🩸', beats: 'kiem', desc: 'Mọi đòn hút máu 10%' }
+};
+const PATH_COUNTER_BONUS = 1.25;
+const PATH_COUNTERED_PENALTY = 0.8;
+const KIND_PATHS = { beast: 'yeu', dragon: 'yeu', demon: 'ma', golem: 'the', spirit: 'phap', chaos: 'ma' };
+
+function pathDamageMult(attacker, defender) {
+    if (!attacker || !defender) return 1;
+    if (DAO_PATHS[attacker].beats === defender) return PATH_COUNTER_BONUS;
+    if (DAO_PATHS[defender].beats === attacker) return PATH_COUNTERED_PENALTY;
+    return 1;
+}
+
 /* --------- kinh tế --------- */
 function goldRef(realm) {
     return Math.floor(60 * Math.pow(1.75, realm));
@@ -165,7 +184,7 @@ const MATERIAL_NAMES = {
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
 };
 const FORGE_MATERIAL_COST = 20;
-const FORGE_HOURS = 2;
+const FORGE_HOURS = 0.25;
 
 /* --------- pháp bảo --------- */
 const LB_GRADE_POWER = [1, 1.4, 1.9, 2.6, 3.5, 4.6, 6, 7.5, 9, 10, 10.8, 11.4, 12];
@@ -203,6 +222,9 @@ function enemyStatsFor(realm, stage, tierName = 'Thường', scale = 1) {
     };
 }
 
+/* Một bầy n mục tiêu: mỗi con yếu đi, tổng thể nguy hiểm hơn một con đơn lẻ */
+const PACK_SCALE = { 1: { atk: 1, hp: 1 }, 2: { atk: 0.7, hp: 0.7 }, 3: { atk: 0.55, hp: 0.6 } };
+
 /* --------- thời gian thực --------- */
 function formatRealDuration(seconds) {
     if (!Number.isFinite(seconds) || seconds <= 0) return '—';
@@ -219,7 +241,7 @@ function formatRealDuration(seconds) {
 if (typeof module !== 'undefined') {
     module.exports = {
         REALM_REAL_DAYS, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
-        LB_GRADE_POWER, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
+        LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
         makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, goldRef, gearPrice, realmProgress
     };
 }

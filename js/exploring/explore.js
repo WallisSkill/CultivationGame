@@ -74,7 +74,7 @@ function mysteryGood() {
 	}
 	// 🌟 Ngọc Linh Đan — tăng tu vi
 	if (r < 0.52) {
-		addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 3, desc: 'Bằng 3 giờ bế quan' });
+		addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 0.5, desc: 'Bằng 30 phút bế quan' });
 	}
 	// 🌟 Trấn Pháp — tăng sức mạnh vĩnh viễn
 	else if (r < 0.62) {
@@ -169,14 +169,14 @@ function mysteryDilemma() {
 			apply: () => {
 				if (Math.random() < 0.6) {
 					const gold = goldRef(state.realmIndex) * 8;
-					const xp = gainCultivationHours(12);
+					const xp = gainCultivationHours(3);
 					state.gold += gold;
 					log(`✅ May mắn! Nhận được ${formatNumber(xp)} tu vi và ${formatNumber(gold)} Linh Thạch!`);
 					if (Math.random() < 0.3 && typeof grantLinhBaoDrop === 'function') {
 						grantLinhBaoDrop({ source: 'Thử thách', gradeBonus: 1 });
 					}
 				} else {
-					const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 6 * 3600);
+					const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 2 * 3600);
 					state.xp = Math.max(0, state.xp - loseXP);
 					log(`❌ Thất bại! Mất ${formatNumber(loseXP)} tu vi!`);
 				}
@@ -186,7 +186,7 @@ function mysteryDilemma() {
 			name: '🛡️ Chơi an toàn',
 			desc: 'Nhận phần thưởng nhỏ nhưng chắc chắn',
 			apply: () => {
-				const xp = gainCultivationHours(3);
+				const xp = gainCultivationHours(1);
 				const gold = goldRef(state.realmIndex) * 2;
 				state.gold += gold;
 				log(`✅ Nhận được ${formatNumber(xp)} tu vi và ${formatNumber(gold)} Linh Thạch (an toàn)!`);
@@ -296,7 +296,7 @@ function mysteryBad() {
 		state.maxAge = Math.max(1, state.maxAge - loseAge);
 		log(`Kỳ ngộ xấu: mất ${loseAge} tuổi thọ!`);
 	} else if (r < 0.85) {
-		const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 3 * 3600);
+		const loseXP = Math.floor(cultivationRate(state.realmIndex, state.root) * 1 * 3600);
 		state.xp = Math.max(0, state.xp - loseXP);
 		log(`Kỳ ngộ xấu: mất ${formatNumber(loseXP)} tu vi!`);
 	} else {
@@ -336,7 +336,7 @@ async function mysteryNpc(m) {
 
 		if (choice === 1) {
 			if (Math.random() < 0.7) {
-				gainCultivationHours(2);
+				gainCultivationHours(0.5);
 				log('NPC chỉ điểm: tu vi tăng!');
 			} else {
 				state.power += permanentStatRoll('power');

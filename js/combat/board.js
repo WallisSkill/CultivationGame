@@ -182,6 +182,23 @@ const LINH_BAO = [
     { id: 'can_khon', name: 'Thần Thông · Càn Khôn Nhất Kích', element: 'Mộc', cooldown: 3.8, cost: 1200, effects: [{ action: 'damage', magnitude: 2.4 }, { action: 'stun', magnitude: 1.0 }], desc: 'Một kích chấn động càn khôn, uy lực kinh người.' },
     { id: 'hon_don', name: 'Thần Thông · Hỗn Độn Thôn Thiên', element: 'Thủy', cooldown: 4.5, cost: 1500, effects: [{ action: 'damage', magnitude: 2.0 }, { action: 'lifesteal', magnitude: 0.5 }, { action: 'freeze', magnitude: 1.5 }], desc: 'Nuốt trọn thiên địa, hút máu và phong ấn địch.' }
 ];
+/* Kỹ năng theo hệ: path = hệ tu, target 'aoe' = đánh toàn bộ phe địch */
+LINH_BAO.push(
+    { id: 'van_kiem', name: 'Vạn Kiếm Quy Tông', element: 'Kim', cooldown: 3.2, cost: 700, path: 'kiem', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.1 }], desc: 'Vạn kiếm trút xuống toàn bộ kẻ địch.' },
+    { id: 'tuyet_kiem', name: 'Nhất Kiếm Tuyệt Trần', element: 'Kim', cooldown: 4.0, cost: 720, path: 'kiem', effects: [{ action: 'damage', magnitude: 3.0 }], desc: 'Một kiếm dồn hết vào một mục tiêu.' },
+    { id: 'kim_than', name: 'Kim Thân Chấn Địa', element: 'Thổ', cooldown: 3.8, cost: 700, path: 'the', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'stun', magnitude: 0.6 }], desc: 'Giậm đất chấn động, làm choáng cả bầy.' },
+    { id: 'ba_the', name: 'Bá Thể Quyền', element: 'Thổ', cooldown: 3.0, cost: 680, path: 'the', effects: [{ action: 'damage', magnitude: 1.8 }, { action: 'shield', magnitude: 0.1 }], desc: 'Vừa đấm vừa vận khí hộ thân.' },
+    { id: 'huyet_hai', name: 'Huyết Hải Ma Công', element: 'Hỏa', cooldown: 3.6, cost: 720, path: 'ma', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'lifesteal', magnitude: 0.2 }, { action: 'burn', magnitude: 0.2 }], desc: 'Biển máu nhấn chìm kẻ địch, hút sinh lực.' },
+    { id: 'phe_tam', name: 'Phệ Tâm Chưởng', element: 'Hỏa', cooldown: 3.0, cost: 690, path: 'ma', effects: [{ action: 'damage', magnitude: 1.7 }, { action: 'lifesteal', magnitude: 0.4 }], desc: 'Một chưởng nuốt tâm mạch mục tiêu.' },
+    { id: 'thien_loi', name: 'Thiên Lôi Đại Trận', element: 'Thủy', cooldown: 3.8, cost: 720, path: 'phap', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.2 }], desc: 'Trận sét phủ toàn chiến trường.' },
+    { id: 'bang_thuat', name: 'Băng Phong Thuật', element: 'Thủy', cooldown: 4.2, cost: 700, path: 'phap', target: 'aoe', effects: [{ action: 'freeze', magnitude: 1.2 }, { action: 'damage', magnitude: 0.7 }], desc: 'Đóng băng cả bầy địch.' },
+    { id: 'van_thu', name: 'Vạn Thú Hống', element: 'Mộc', cooldown: 3.4, cost: 690, path: 'yeu', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'buffAtk', magnitude: 0.04 }], desc: 'Tiếng gầm xé tai, càng gầm càng hăng.' },
+    { id: 'yeu_trao', name: 'Yêu Trảo', element: 'Mộc', cooldown: 2.4, cost: 660, path: 'yeu', effects: [{ action: 'damage', magnitude: 1.4 }, { action: 'burn', magnitude: 0.2 }], desc: 'Vuốt yêu xé rách, vết thương âm ỉ.' }
+);
+[['phi_kiem', 'kiem'], ['cuong_phong', 'kiem'], ['vo_cuc', 'kiem'], ['loi_dinh', 'phap'], ['huyen_bang', 'phap'], ['tu_linh', 'phap'],
+ ['hau_tho', 'the'], ['huyen_vu', 'the'], ['kim_cang', 'the'], ['huyet_sat', 'ma'], ['huyet_ma', 'ma'], ['cuu_u', 'ma'],
+ ['thanh_moc', 'yeu'], ['thai_at', 'yeu'], ['can_khon', 'yeu']].forEach(([id, path]) => { LINH_BAO.find(lb => lb.id === id).path = path; });
+['phan_thien', 'huyen_bang', 'vo_cuc', 'hon_don', 'tu_linh'].forEach(id => { LINH_BAO.find(lb => lb.id === id).target = 'aoe'; });
 const LINH_BAO_MAP = LINH_BAO.reduce((m, x) => (m[x.id] = x, m), {});
 
 /* fallback "bare-hands" artifact so a player with an empty board can still fight */
@@ -288,8 +305,15 @@ function lbItemIcon(item) {
 function lbEffectIcons(item) {
     return lbEffectList(item).map(e => LB_ACTIONS[e.action] ? LB_ACTIONS[e.action].icon : '❔').join('');
 }
+function lbDefOf(item) {
+    return LINH_BAO_MAP[item.linhBaoId || item.id] || item;
+}
+function lbIsAoe(item) { return lbDefOf(item).target === 'aoe'; }
+function lbPathOf(item) { return lbDefOf(item).path || null; }
 function lbEffectSummary(item) {
-    return lbEffectList(item).map(e => LB_ACTIONS[e.action] ? LB_ACTIONS[e.action].label : e.action).join(' + ');
+    const effects = lbEffectList(item).map(e => LB_ACTIONS[e.action] ? LB_ACTIONS[e.action].label : e.action).join(' + ');
+    const path = lbPathOf(item);
+    return `${path ? `${DAO_PATHS[path].icon} ` : ''}${effects} · ${lbIsAoe(item) ? 'Diện rộng' : 'Đơn thể'}`;
 }
 // Icons for legendary grades (6-12)
 const LB_GRADE_ICONS = ['', '', '', '', '', '',
@@ -630,7 +654,9 @@ function grantStartingLinhBao() {
     const matching = LINH_BAO.filter(lb => playerElements.includes(lb.element) && lb.cost <= 620);
     const offensive = matching.find(lb => lb.effects.some(e => e.action === 'damage')) || LINH_BAO_MAP.phi_kiem;
     const support = matching.find(lb => lb !== offensive) || LINH_BAO_MAP.thanh_moc;
-    return [offensive, support].map((def, i) => {
+    const startPath = ORIGINS[originFor(state.root)].path;
+    const pathAoe = LINH_BAO.find(lb => lb.path === startPath && lb.target === 'aoe' && lb.cost >= 660 && lb.effects.some(e => e.action === 'damage'));
+    return [offensive, support, pathAoe].map((def, i) => {
         const lb = makeLinhBao(def.id, 0, 1);
         state.inventory.push(lb);
         state.board[i] = lb.uid;
@@ -1022,6 +1048,16 @@ function calcLinhBaoElementMod(source, target, linhBaoElement) {
     return Math.max(0.3, Math.min(2.0, mod)); // clamp between 30% and 200%
 }
 
+function lbApplyPathPassive(c) {
+    switch (c.path) {
+        case 'kiem': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.15); c.singleBonus = 1.15; break;
+        case 'phap': c.aoeBonus = 1.3; c.slots.forEach(slot => { slot.cooldown *= 0.9; }); break;
+        case 'the': c.maxHp = Math.floor(c.maxHp * 1.3); c.hp = Math.floor(c.hp * 1.3); c.def = Math.floor(c.def * 1.2); break;
+        case 'yeu': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.05); c.regen = 0.01; break;
+        case 'ma': c.lifesteal = 0.1; break;
+    }
+}
+
 function lbBuildPlayerCombatant() {
     if (typeof recalculateStats === 'function') recalculateStats();
     let atk = state.totalPower || state.power || 10;
@@ -1029,15 +1065,45 @@ function lbBuildPlayerCombatant() {
     let maxHp = state.totalMaxHp || state.maxHp || 100;
     const placed = boardItems().filter(Boolean);
     const defs = placed.length ? placed : [LB_DEFAULT_ATTACK];
-    return Object.assign(lbBaseCombatant(), {
+    const c = Object.assign(lbBaseCombatant(), {
         side: 'player',
         name: state.name || 'Ngươi',
+        path: state.daoPath || null,
         hp: Math.max(1, Math.min(state.hp || maxHp, maxHp)), maxHp,
         baseAtk: atk, atk, def,
         elements: state.root?.elements || [], rootRank: state.root?.rank || 0,
         realmIndex: state.realmIndex || 0, realmStage: state.realmStage || 0,
         slots: defs.map(lbMakeSlot), avatar: playerAvatarSvg()
     });
+    lbApplyPathPassive(c);
+    return c;
+}
+
+/* Đồng đội: đệ tử của tông môn và hộ pháp thuê theo trận */
+const LB_ALLY_MAX = 3;
+const LB_ALLY_STAT = { atk: 0.35, hp: 0.4, def: 0.6 };
+
+function lbMakeAlly(player, name) {
+    const attack = { ...LB_DEFAULT_ATTACK, name: 'Hộ Trận Kích', flatPower: true };
+    return Object.assign(lbBaseCombatant(), {
+        side: 'player', name, path: player.path,
+        hp: Math.floor(player.maxHp * LB_ALLY_STAT.hp), maxHp: Math.floor(player.maxHp * LB_ALLY_STAT.hp),
+        baseAtk: Math.floor(player.atk * LB_ALLY_STAT.atk), atk: Math.floor(player.atk * LB_ALLY_STAT.atk),
+        def: Math.floor(player.def * LB_ALLY_STAT.def),
+        elements: player.elements, rootRank: player.rootRank, realmIndex: player.realmIndex, realmStage: player.realmStage,
+        slots: [lbMakeSlot(attack)],
+        avatar: humanoidSvg({ robe: '#3f6f9e', hairStyle: 4, weapon: 'sword' }, { title: name })
+    });
+}
+
+function lbBuildAllies(player) {
+    const disciples = Math.min(LB_ALLY_MAX, state.ownSect?.disciples || 0);
+    const hired = Math.min(LB_ALLY_MAX - disciples, state.hired || 0);
+    state.hired = 0;
+    return [
+        ...Array.from({ length: disciples }, (_, i) => lbMakeAlly(player, `Đệ tử ${i + 1}`)),
+        ...Array.from({ length: hired }, (_, i) => lbMakeAlly(player, `Hộ pháp ${i + 1}`))
+    ];
 }
 
 function lbBuildEnemyCombatant(enemy) {
@@ -1045,6 +1111,7 @@ function lbBuildEnemyCombatant(enemy) {
     return Object.assign(lbBaseCombatant(), {
         side: 'enemy',
         name: enemy.name || 'Địch',
+        path: enemy.path || null,
         hp: Math.max(1, enemy.hp || enemy.maxHp || 100),
         maxHp: Math.max(1, enemy.maxHp || enemy.hp || 100),
         baseAtk: enemy.str || 10, atk: enemy.str || 10, def: enemy.def || 0,
@@ -1071,98 +1138,123 @@ function lbApplyDamage(target, amount) {
     return dmg;
 }
 
+/* ---------- chọn mục tiêu ---------- */
+const LB_AOE_MULT = 0.6;
+const LB_PATH_SKILL_BONUS = 1.2;
+
+function lbAlive(team) { return team.filter(c => c.hp > 0); }
+
+function lbPickTarget(source, foes) {
+    if (source.side === 'player') return foes.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
+    return foes[Math.floor(Math.random() * foes.length)];
+}
+
 /* ---------- a linh bảo fires ALL of its effects ---------- */
-function lbFire(battle, source, target, slot) {
+function lbFire(battle, source, slot) {
     const item = slot.def;
     const effects = lbEffectList(item);
     const now = performance.now();
     const dmgScale = source.side === 'enemy' ? LB_ENEMY_DMG_SCALE : 1;
+    const ownTeam = source.side === 'player' ? battle.allies : battle.foes;
+    const foes = lbAlive(source.side === 'player' ? battle.foes : battle.allies);
+    if (!foes.length) return;
 
-    // Calculate element modifier: buff if source's Linh căn matches, weaken if target's Linh căn counters
-    const elemMod = calcLinhBaoElementMod(source, target, item.element);
+    const aoe = lbIsAoe(item);
+    const targets = aoe ? foes : [lbPickTarget(source, foes)];
+    const skillPath = lbPathOf(item);
+    const pathSkill = skillPath && skillPath === source.path ? LB_PATH_SKILL_BONUS : 1;
+    const reach = (aoe ? LB_AOE_MULT * (source.aoeBonus || 1) : (source.singleBonus || 1)) * pathSkill;
 
     let dealt = 0;
+    targets.forEach(target => {
+        const elemMod = calcLinhBaoElementMod(source, target, item.element);
+        const counter = pathDamageMult(source.path, target.path);
+        let hit = 0;
+        for (const ef of effects) {
+            if (ef.action !== 'damage') continue;
+            const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach;
+            const d = computeDamage(
+                basePower, source.elements, source.rootRank, source.realmIndex, source.realmStage,
+                target.def, target.elements, target.rootRank, target.realmIndex, target.realmStage
+            );
+            hit += lbApplyDamage(target, d.final);
+        }
+        if (hit > 0) lbFloat(target, `-${fmtVal(hit)}`, counter > 1 ? 'crit' : 'dmg');
+        dealt += hit;
 
-    // 1) direct damage (summed) - apply element modifier
-    for (const ef of effects) {
-        if (ef.action !== 'damage') continue;
-        const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod;
-        const d = computeDamage(
-            basePower, source.elements, source.rootRank, source.realmIndex, source.realmStage,
-            target.def, target.elements, target.rootRank, target.realmIndex, target.realmStage
-        );
-        dealt += lbApplyDamage(target, d.final);
-    }
-    if (dealt > 0) lbFloat(battle, target.side, `-${fmtVal(dealt)}`, 'dmg');
+        for (const ef of effects) {
+            switch (ef.action) {
+                case 'burn': {
+                    const dps = Math.max(1, source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach);
+                    target.burns.push({ dps, remaining: LB_BURN_SECS });
+                    lbFloat(target, '🔥', 'burn');
+                    break;
+                }
+                case 'freeze': {
+                    target.freezeUntil = Math.max(target.freezeUntil, now + lbDurMag(ef.magnitude, item) * 1000);
+                    lbFloat(target, '❄️', 'freeze');
+                    break;
+                }
+                case 'stun': {
+                    if (Math.random() < LB_STUN_CHANCE && now >= target.stunImmuneUntil) {
+                        const dur = lbDurMag(ef.magnitude, item);
+                        target.stunUntil = now + dur * 1000;
+                        target.stunImmuneUntil = target.stunUntil + LB_STUN_IMMUNE * 1000;
+                        lbFloat(target, '💫', 'stun');
+                    }
+                    break;
+                }
+            }
+        }
+    });
 
     const gemMods = lbGemMods(item);
+    const selfMod = calcLinhBaoElementMod(source, targets[0], item.element);
 
-    // 2) lifesteal from the damage just dealt (effects + Hấp Ngọc gems) - apply element modifier
-    let lsFrac = gemMods.leech;
-    for (const ef of effects) if (ef.action === 'lifesteal') lsFrac += ef.magnitude * elemMod;
+    let lsFrac = gemMods.leech + (source.lifesteal || 0);
+    for (const ef of effects) if (ef.action === 'lifesteal') lsFrac += ef.magnitude * selfMod;
     if (lsFrac > 0 && dealt > 0) {
         const heal = Math.floor(dealt * lsFrac);
-        if (heal > 0) { source.hp = Math.min(source.maxHp, source.hp + heal); lbFloat(battle, source.side, `+${fmtVal(heal)}`, 'heal'); }
+        if (heal > 0) { source.hp = Math.min(source.maxHp, source.hp + heal); lbFloat(source, `+${fmtVal(heal)}`, 'heal'); }
     }
 
-    // Hộ Ngọc gems grant parry on every fire
     if (gemMods.guard > 0) {
         source.parryFrac = Math.max(source.parryFrac, gemMods.guard);
         source.parryUntil = now + LB_PARRY_SECS * 1000;
     }
 
-    // 3) the rest - apply element modifier to damage/healing effects
+    const supportTargets = aoe ? lbAlive(ownTeam) : [source];
     for (const ef of effects) {
         switch (ef.action) {
-            case 'burn': {
-                const dps = Math.max(1, source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod);
-                target.burns.push({ dps, remaining: LB_BURN_SECS });
-                lbFloat(battle, target.side, '🔥', 'burn');
+            case 'heal':
+                supportTargets.forEach(unit => {
+                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * (aoe ? LB_AOE_MULT : 1));
+                    unit.hp = Math.min(unit.maxHp, unit.hp + amt);
+                    lbFloat(unit, `+${fmtVal(amt)}`, 'heal');
+                });
                 break;
-            }
-            case 'heal': {
-                const amt = Math.floor(source.maxHp * lbEffMag(ef.magnitude, item) * elemMod);
-                source.hp = Math.min(source.maxHp, source.hp + amt);
-                lbFloat(battle, source.side, `+${fmtVal(amt)}`, 'heal');
+            case 'shield':
+                supportTargets.forEach(unit => {
+                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * (aoe ? LB_AOE_MULT : 1));
+                    unit.shield += amt;
+                    lbFloat(unit, `🛡️${fmtVal(amt)}`, 'shield');
+                });
                 break;
-            }
-            case 'shield': {
-                const amt = Math.floor(source.maxHp * lbEffMag(ef.magnitude, item) * elemMod);
-                source.shield += amt;
-                lbFloat(battle, source.side, `🛡️${fmtVal(amt)}`, 'shield');
-                break;
-            }
-            case 'freeze': {
-                const dur = lbDurMag(ef.magnitude, item);
-                target.freezeUntil = Math.max(target.freezeUntil, now + dur * 1000);
-                lbFloat(battle, target.side, '❄️', 'freeze');
-                break;
-            }
-            case 'stun': {
-                if (Math.random() < LB_STUN_CHANCE && now >= target.stunImmuneUntil) {
-                    const dur = lbDurMag(ef.magnitude, item);
-                    target.stunUntil = now + dur * 1000;
-                    target.stunImmuneUntil = target.stunUntil + LB_STUN_IMMUNE * 1000;
-                    lbFloat(battle, target.side, '💫', 'stun');
-                }
-                break;
-            }
-            case 'parry': {
+            case 'parry':
                 source.parryFrac = Math.max(source.parryFrac, ef.magnitude);
                 source.parryUntil = now + LB_PARRY_SECS * 1000;
-                lbFloat(battle, source.side, '🛡', 'parry');
+                lbFloat(source, '🛡', 'parry');
                 break;
-            }
             case 'buffAtk': {
                 const before = source.atk;
-                source.atk = Math.floor(source.atk * (1 + lbEffMag(ef.magnitude, item) * elemMod));
-                lbFloat(battle, source.side, `⬆️${fmtVal(source.atk - before)}`, 'buff');
+                source.atk = Math.floor(source.atk * (1 + lbEffMag(ef.magnitude, item) * selfMod));
+                lbFloat(source, `⬆️${fmtVal(source.atk - before)}`, 'buff');
                 break;
             }
         }
     }
 
-    log(`${lbItemIcon(item)} ${source.name} · ${item.name}${dealt > 0 ? ` gây ${fmtVal(dealt)} sát thương` : ''}.`);
+    log(`${lbItemIcon(item)} ${source.name} · ${item.name}${dealt > 0 ? ` gây ${fmtVal(dealt)} sát thương${aoe ? ` lên ${targets.length} mục tiêu` : ''}` : ''}.`);
 }
 
 /* ---------- the battle loop ---------- */
@@ -1172,26 +1264,30 @@ function runBoardBattle() {
     if (window.__boardBattle && window.__boardBattle.running) return;
 
     ensureBoardState();
-    if (typeof syncEnemyToRealm === 'function') syncEnemyToRealm(state.currentEnemy);
 
     window._battleActive = true;
     if (window.stopAutoTrainingHard) window.stopAutoTrainingHard();
 
-    const battle = {
-        running: true, elapsedMs: 0,
-        player: lbBuildPlayerCombatant(),
-        enemy: lbBuildEnemyCombatant(state.currentEnemy),
-        dom: {}, timer: null
-    };
+    const enemy = state.currentEnemy;
+    const player = lbBuildPlayerCombatant();
+    const allies = [player, ...lbBuildAllies(player)];
+    const foes = [enemy, ...(enemy.escorts || [])].map(lbBuildEnemyCombatant);
+    const battle = { running: true, elapsedMs: 0, player, allies, foes, enemy: foes[0], timer: null };
     window.__boardBattle = battle;
 
     lbBuildArenaDOM(battle);
-    log(`🎴 Bố trí trận pháp — ${battle.player.slots.length} vs ${battle.enemy.slots.length} pháp bảo. Khai chiến!`);
+    log(`🎴 Khai chiến: ${allies.length} đấu ${foes.length}!`);
 
     battle.timer = setInterval(() => lbStep(battle), LB_TICK_MS);
     lbUpdateArena(battle);
 }
 if (typeof window !== 'undefined') window.runBoardBattle = runBoardBattle;
+
+function lbBattleResult(battle) {
+    if (battle.player.hp <= 0) return 'lose';
+    if (!lbAlive(battle.foes).length) return 'win';
+    return null;
+}
 
 function lbStep(battle) {
     if (!battle.running) return;
@@ -1199,13 +1295,8 @@ function lbStep(battle) {
     const tickSec = LB_TICK_MS / 1000;
     battle.elapsedMs += LB_TICK_MS;
 
-    const sides = [
-        { self: battle.player, foe: battle.enemy },
-        { self: battle.enemy, foe: battle.player }
-    ];
-
-    for (const { self, foe } of sides) {
-        if (self.hp <= 0 || foe.hp <= 0) continue;
+    for (const self of [...battle.allies, ...battle.foes]) {
+        if (self.hp <= 0) continue;
         const stunned = now < self.stunUntil;
         const frozen = now < self.freezeUntil;
         const slow = stunned ? 0 : (frozen ? LB_FREEZE_SLOW : 1);
@@ -1214,17 +1305,17 @@ function lbStep(battle) {
             slot.elapsed += LB_TICK_MS * slow;
             if (slot.elapsed >= slot.cooldown * 1000) {
                 slot.elapsed -= slot.cooldown * 1000;
-                lbFire(battle, self, foe, slot);
-                lbLunge(battle, self.side);
-                if (foe.hp <= 0 || self.hp <= 0) break;
+                lbFire(battle, self, slot);
+                lbLunge(self);
+                const result = lbBattleResult(battle);
+                if (result) return lbEndBattle(battle, result);
             }
         }
-        // End battle immediately if either combatant is dead after attacks
-        if (battle.player.hp <= 0) { lbEndBattle(battle, 'lose'); return; }
-        if (battle.enemy.hp <= 0) { lbEndBattle(battle, 'win'); return; }
     }
 
-    for (const c of [battle.player, battle.enemy]) {
+    for (const c of [...battle.allies, ...battle.foes]) {
+        if (c.hp <= 0) continue;
+        if (c.regen) c.hp = Math.min(c.maxHp, c.hp + c.maxHp * c.regen * tickSec);
         if (!c.burns.length) continue;
         for (const b of c.burns) { lbApplyDamage(c, b.dps * tickSec); b.remaining -= tickSec; }
         c.burns = c.burns.filter(b => b.remaining > 0 && c.hp > 0);
@@ -1232,18 +1323,18 @@ function lbStep(battle) {
 
     lbUpdateArena(battle);
 
-    const timeout = battle.elapsedMs >= LB_MAX_SECONDS * 1000;
-    if (battle.enemy.hp <= 0) return lbEndBattle(battle, 'win');
-    if (battle.player.hp <= 0) return lbEndBattle(battle, 'lose');
-    if (timeout) {
+    const result = lbBattleResult(battle);
+    if (result) return lbEndBattle(battle, result);
+    if (battle.elapsedMs >= LB_MAX_SECONDS * 1000) {
         const pPct = battle.player.hp / battle.player.maxHp;
-        const ePct = battle.enemy.hp / battle.enemy.maxHp;
-        return lbEndBattle(battle, pPct >= ePct ? 'win' : 'lose');
+        const foeHp = battle.foes.reduce((sum, c) => sum + Math.max(0, c.hp), 0);
+        const foeMax = battle.foes.reduce((sum, c) => sum + c.maxHp, 0);
+        return lbEndBattle(battle, pPct >= foeHp / foeMax ? 'win' : 'lose');
     }
 }
 
-function lbLunge(battle, side) {
-    const node = battle.dom?.[side]?.avatar;
+function lbLunge(unit) {
+    const node = unit.dom?.avatar;
     if (!node) return;
     node.classList.remove('lb-lunge');
     void node.offsetWidth;
@@ -1258,13 +1349,12 @@ function lbEndBattle(battle, result) {
 
     const enemy = state.currentEnemy;
     state.hp = Math.max(0, Math.floor(battle.player.hp));
-    if (enemy) enemy.hp = Math.max(0, Math.floor(battle.enemy.hp));
+    if (enemy) enemy.hp = Math.max(0, Math.floor(battle.foes.reduce((sum, c) => sum + Math.max(0, c.hp), 0)));
 
     lbUpdateArena(battle);
 
     if (result === 'win') {
         if (typeof winBattle === 'function' && enemy) winBattle(enemy);
-        state.totalMaxHp = (state.maxHp || 0) + (typeof getEquippedHp === 'function' ? getEquippedHp() : 0);
         state.hp = state.totalMaxHp;
         state.currentEnemy = null;
         log('🔥 Khí huyết sôi trào — HP hồi phục toàn phần sau chiến thắng!');
@@ -1317,22 +1407,27 @@ function lbSlotTileHTML(slot, idx, side) {
         </div>`;
 }
 
-function lbSideHTML(c, side) {
-    const tiles = c.slots.map((s, i) => lbSlotTileHTML(s, i, side)).join('');
-    return `
-        <div class="lb-side lb-side-${side}">
-            <div class="lb-side-head">
-                <span class="lb-side-name">${c.name}</span>
-                <span class="lb-side-hp-txt" data-hp="${side}"></span>
-            </div>
-            <div class="lb-hpbar"><div class="lb-hpfill lb-hpfill-${side}" data-hpfill="${side}"></div>
-                <div class="lb-shieldfill" data-shield="${side}"></div></div>
-            <div class="lb-duel">
-                <div class="lb-avatar" data-avatar="${side}">${c.avatar || ''}</div>
-                <div class="lb-board" data-board="${side}">${tiles}</div>
-            </div>
-            <div class="lb-float" data-float="${side}"></div>
-        </div>`;
+function lbUnitHTML(c, side, idx, team) {
+    const full = idx === 0 || team.length <= 3 && side === 'enemy';
+    const tiles = full ? c.slots.map((s, i) => lbSlotTileHTML(s, i, side)).join('') : '';
+    const path = c.path ? `<span class="small" title="${DAO_PATHS[c.path].name}">${DAO_PATHS[c.path].icon}</span>` : '';
+    return `<div class="lb-unit ${full ? '' : 'lb-unit-mini'}" data-unit="${side}${idx}">
+        <div class="lb-side-head">
+            <span class="lb-side-name">${c.name} ${path}</span>
+            <span class="lb-side-hp-txt" data-role="hp"></span>
+        </div>
+        <div class="lb-hpbar"><div class="lb-hpfill lb-hpfill-${side}" data-role="hpfill"></div>
+            <div class="lb-shieldfill" data-role="shield"></div></div>
+        <div class="lb-duel">
+            <div class="lb-avatar" data-role="avatar">${c.avatar || ''}</div>
+            <div class="lb-board" data-role="board">${tiles}</div>
+        </div>
+        <div class="lb-float" data-role="float"></div>
+    </div>`;
+}
+
+function lbTeamHTML(team, side) {
+    return `<div class="lb-side lb-side-${side}">${team.map((c, i) => lbUnitHTML(c, side, i, team)).join('')}</div>`;
 }
 
 function lbBuildArenaDOM(battle) {
@@ -1340,41 +1435,38 @@ function lbBuildArenaDOM(battle) {
     if (!el) return;
     el.classList.add('lb-active');
     el.innerHTML = `
-        ${lbSideHTML(battle.enemy, 'enemy')}
-        <div class="lb-vs">⚔️ Đấu Pháp Bảo</div>
-        ${lbSideHTML(battle.player, 'player')}`;
+        ${lbTeamHTML(battle.foes, 'enemy')}
+        <div class="lb-vs">⚔️ ${battle.allies.length} đấu ${battle.foes.length}</div>
+        ${lbTeamHTML(battle.allies, 'player')}`;
 
-    ['player', 'enemy'].forEach(side => {
-        const c = battle[side];
-        const board = el.querySelector(`[data-board="${side}"]`);
-        c.slots.forEach((slot, i) => {
-            const tile = board.children[i];
-            slot.tileNode = tile;
-            slot.fillNode = tile ? tile.querySelector('.lb-tile-fill') : null;
+    [[battle.foes, 'enemy'], [battle.allies, 'player']].forEach(([team, side]) => {
+        team.forEach((c, i) => {
+            const root = el.querySelector(`[data-unit="${side}${i}"]`);
+            const role = name => root.querySelector(`[data-role="${name}"]`);
+            const board = role('board');
+            c.slots.forEach((slot, s) => {
+                const tile = board.children[s] || null;
+                slot.tileNode = tile;
+                slot.fillNode = tile ? tile.querySelector('.lb-tile-fill') : null;
+            });
+            c.dom = { root, hpTxt: role('hp'), hpFill: role('hpfill'), shield: role('shield'), float: role('float'), avatar: role('avatar') };
         });
-        battle.dom[side] = {
-            hpTxt: el.querySelector(`[data-hp="${side}"]`),
-            hpFill: el.querySelector(`[data-hpfill="${side}"]`),
-            shield: el.querySelector(`[data-shield="${side}"]`),
-            float: el.querySelector(`[data-float="${side}"]`),
-            avatar: el.querySelector(`[data-avatar="${side}"]`)
-        };
     });
 }
 
 function lbUpdateArena(battle) {
-    if (!battle || !battle.dom) return;
+    if (!battle) return;
     const now = performance.now();
-    ['player', 'enemy'].forEach(side => {
-        const c = battle[side];
-        const d = battle.dom[side];
+    [...battle.allies, ...battle.foes].forEach(c => {
+        const d = c.dom;
         if (!d) return;
         const pct = Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100));
         const shieldPct = Math.max(0, Math.min(100, (c.shield / c.maxHp) * 100));
+        d.root.classList.toggle('lb-dead', c.hp <= 0);
         if (d.hpFill) d.hpFill.style.width = pct + '%';
         if (d.shield) d.shield.style.width = shieldPct + '%';
         if (d.hpTxt) d.hpTxt.textContent =
-            `${fmtVal(Math.ceil(c.hp))}/${fmtVal(c.maxHp)}${c.shield > 0 ? ` 🛡️${fmtVal(Math.ceil(c.shield))}` : ''}`;
+            `${fmtVal(Math.ceil(Math.max(0, c.hp)))}/${fmtVal(c.maxHp)}${c.shield > 0 ? ` 🛡️${fmtVal(Math.ceil(c.shield))}` : ''}`;
         const stunned = now < c.stunUntil;
         const frozen = now < c.freezeUntil;
         c.slots.forEach(slot => {
@@ -1391,8 +1483,8 @@ function lbUpdateArena(battle) {
 }
 
 let _lbFloatSeq = 0;
-function lbFloat(battle, side, text, kind) {
-    const host = battle.dom?.[side]?.float;
+function lbFloat(unit, text, kind) {
+    const host = unit.dom?.float;
     if (!host) return;
     const span = document.createElement('span');
     span.className = `lb-float-item lb-float-${kind}`;

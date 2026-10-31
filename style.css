@@ -1521,3 +1521,13 @@ footer {
 .chat-msg.mine { align-self: flex-end; background: rgba(123, 228, 163, 0.18); }
 .chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
 .chat-input-row input { flex: 1; min-width: 0; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: #fff; }
+.map-dest-actions { display: flex; gap: 6px; flex: none; flex-wrap: wrap; }
+.sect-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; }
+.sect-row .mini-btn { flex: none; }
+
+.lb-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; position: static; }
+.lb-unit { position: relative; min-width: 0; }
+.lb-unit-mini .lb-duel { grid-template-columns: 56px; }
+.lb-unit-mini .lb-avatar { height: 72px; }
+.lb-unit.lb-dead { opacity: .3; filter: grayscale(1); }
+.lb-float-crit { color: #ffd54f; font-size: 1.15em; font-weight: 800; }

@@ -59,4 +59,47 @@ const LOCATIONS = {
     chung_dai: { world: 'chungnguyen', name: 'Chung Nguyên Đài', icon: '⚪', x: 780, y: 300, type: 'dungeon', qi: 2.0, minR: 28, maxR: 28, links: ['truong_ha'], desc: 'Điểm kết của mọi đạo. Có một người đang ngồi đợi.', enemies: [E('Chung Yên Chi Ảnh', 'chaos')] }
 };
 
+/* ---- Đạo tràng các hệ tu: bái nhập, học truyền thừa, săn quái cùng hệ ---- */
+const DAO_SITES = {
+    kiem_trung: { world: 'pham', path: 'kiem', name: 'Kiếm Trủng', icon: '🗡️', x: 470, y: 250, qi: 1.1, minR: 0, maxR: 5, links: ['thanh_van', 'xich_diem'], desc: 'Mộ kiếm ngàn đời, kiếm hồn chưa tan.', enemies: [E('Kiếm Hồn', 'spirit'), E('Kiếm Nô', 'human')] },
+    thiet_cot: { world: 'pham', path: 'the', name: 'Thiết Cốt Môn', icon: '💪', x: 230, y: 500, qi: 1.05, minR: 0, maxR: 5, links: ['thanh_thuy', 'van_long'], desc: 'Môn phái luyện thể dưới chân mỏ quặng.', enemies: [E('Thiết Cốt Thủ', 'human'), E('Quặng Khôi', 'golem')] },
+    huyet_sat: { world: 'pham', path: 'ma', name: 'Huyết Sát Giáo', icon: '🩸', x: 700, y: 260, qi: 1.1, minR: 0, maxR: 7, links: ['xich_diem', 'ma_uyen'], desc: 'Ma giáo nuôi người như gia súc.', enemies: [E('Huyết Nô Vệ', 'human'), E('Huyết Ma', 'demon')] },
+    huyen_phap: { world: 'pham', path: 'phap', name: 'Huyền Pháp Các', icon: '🔮', x: 640, y: 510, qi: 1.15, minR: 0, maxR: 6, links: ['van_long', 'bang_phong'], desc: 'Học phủ pháp tu dành cho con nhà thế gia.', enemies: [E('Thí Pháp Khôi Lỗi', 'golem'), E('Pháp Linh', 'spirit')] },
+    van_thu: { world: 'pham', path: 'yeu', name: 'Vạn Thú Sơn', icon: '🐾', x: 150, y: 90, qi: 1.05, minR: 0, maxR: 5, links: ['hac_phong', 'vu_moc_lam'], desc: 'Núi của yêu thú, kẻ hiểu tiếng thú mới sống sót.', enemies: [E('Hổ Yêu', 'beast'), E('Yêu Lang', 'beast')] },
+
+    tru_tien: { world: 'tien', path: 'kiem', name: 'Tru Tiên Đài', icon: '🗡️', x: 410, y: 280, qi: 1.25, minR: 9, maxR: 15, links: ['van_tien', 'thien_ha'], desc: 'Đài chém tiên, kiếm khí nghìn năm chưa tắt.', enemies: [E('Tiên Kiếm Linh', 'spirit')] },
+    bat_hoang: { world: 'tien', path: 'the', name: 'Bát Hoang Đấu Trường', icon: '💪', x: 130, y: 470, qi: 1.2, minR: 9, maxR: 15, links: ['phi_thang_tri', 'van_tien'], desc: 'Tiên nô thoát xích luyện thân bằng đòn của nhau.', enemies: [E('Đấu Nô', 'human'), E('Tiên Cương Khôi', 'golem')] },
+    u_minh: { world: 'tien', path: 'ma', name: 'U Minh Ngục', icon: '🩸', x: 770, y: 480, qi: 1.25, minR: 10, maxR: 15, links: ['dao_tri', 'nam_thien_mon'], desc: 'Ngục tối Thiên Đình giam những tiên nhân nhập ma.', enemies: [E('Đọa Tiên', 'demon')] },
+    thai_ho: { world: 'tien', path: 'phap', name: 'Thái Hư Thư Các', icon: '🔮', x: 710, y: 90, qi: 1.3, minR: 10, maxR: 15, links: ['thien_ha', 'lang_tieu'], desc: 'Kho pháp quyết của Thiên Đình, cửa khép hờ.', enemies: [E('Thư Linh', 'spirit')] },
+    yeu_ha: { world: 'tien', path: 'yeu', name: 'Yêu Hà', icon: '🐾', x: 90, y: 110, qi: 1.2, minR: 9, maxR: 15, links: ['tien_khoang', 'phi_thang_tri'], desc: 'Con sông của yêu tiên không chịu cúi đầu.', enemies: [E('Yêu Tiên', 'beast'), E('Hà Giao', 'dragon')] },
+
+    thanh_the: { world: 'thanh', path: 'the', name: 'Bất Hoại Phong', icon: '💪', x: 310, y: 80, qi: 1.3, minR: 16, maxR: 19, links: ['tu_tieu', 'bat_canh'], desc: 'Ngọn núi do một Thánh thể tọa hóa mà thành.', enemies: [E('Thánh Thể Tàn Khu', 'golem')] },
+    thanh_ma: { world: 'thanh', path: 'ma', name: 'Vô Gián Hải', icon: '🩸', x: 640, y: 250, qi: 1.3, minR: 16, maxR: 19, links: ['da_bao', 'ngoc_hu'], desc: 'Biển máu của Tu La, Thánh Nhân cũng tránh xa.', enemies: [E('A Tu La', 'demon')] },
+    van_yeu: { world: 'thanh', path: 'yeu', name: 'Vạn Yêu Quốc', icon: '🐾', x: 310, y: 470, qi: 1.3, minR: 16, maxR: 19, links: ['oa_hoang', 'cuc_lac'], desc: 'Vương quốc yêu tộc dưới bóng Nữ Oa.', enemies: [E('Yêu Thánh Vệ', 'beast')] },
+
+    thien_kiem: { world: 'thien', path: 'kiem', name: 'Đoạn Thiên Nhai', icon: '🗡️', x: 600, y: 60, qi: 1.35, minR: 20, maxR: 25, links: ['vo_cuong', 'khai_thien'], desc: 'Vết chém của một kiếm tu đã cắt cả Thiên Đạo.', enemies: [E('Đoạn Thiên Kiếm Ý', 'spirit')] },
+    bat_diet: { world: 'thien', path: 'the', name: 'Bất Diệt Sơn', icon: '💪', x: 630, y: 470, qi: 1.35, minR: 20, maxR: 25, links: ['luan_hoi', 'than_dinh'], desc: 'Xác một vị thần chưa chịu chết.', enemies: [E('Bất Diệt Tàn Thể', 'golem')] },
+    ma_vuc: { world: 'thien', path: 'ma', name: 'Vô Thiên Ma Vực', icon: '🩸', x: 130, y: 470, qi: 1.35, minR: 20, maxR: 25, links: ['van_gioi', 'luan_hoi'], desc: 'Nơi ma tu các vũ trụ tụ về.', enemies: [E('Vô Thiên Ma', 'demon')] },
+    phap_gioi: { world: 'thien', path: 'phap', name: 'Pháp Tắc Hải', icon: '🔮', x: 830, y: 120, qi: 1.4, minR: 21, maxR: 25, links: ['khai_thien', 'than_dinh'], desc: 'Biển quy tắc rò ra từ cỗ máy Thiên Đạo.', enemies: [E('Pháp Tắc Linh', 'spirit')] },
+    yeu_tinh: { world: 'thien', path: 'yeu', name: 'Thôn Tinh Sào', icon: '🐾', x: 140, y: 90, qi: 1.35, minR: 20, maxR: 25, links: ['van_gioi', 'vo_cuong'], desc: 'Tổ của loài yêu thú ăn sao.', enemies: [E('Thôn Tinh Thú', 'beast')] },
+
+    hon_kiem: { world: 'hondon', path: 'kiem', name: 'Khai Hỗn Kiếm Bích', icon: '🗡️', x: 680, y: 100, qi: 1.5, minR: 26, maxR: 26, links: ['dao_gia_am', 'hai_tam'], desc: 'Vách đá còn in nhát kiếm từ trước khai thiên.', enemies: [E('Hỗn Độn Kiếm Linh', 'spirit')] },
+    hon_the: { world: 'hondon', path: 'the', name: 'Thái Sơ Cốt Nguyên', icon: '💪', x: 700, y: 460, qi: 1.5, minR: 26, maxR: 26, links: ['ma_than_mo', 'hai_tam'], desc: 'Đồng hài cốt của sinh linh lớn hơn tinh hệ.', enemies: [E('Thái Sơ Cốt Thú', 'golem')] },
+    hon_yeu: { world: 'hondon', path: 'yeu', name: 'Hỗn Độn Thú Uyên', icon: '🐾', x: 240, y: 490, qi: 1.45, minR: 26, maxR: 26, links: ['bo_hondon', 'ma_than_mo'], desc: 'Vực của Hỗn Độn Hung Thú.', enemies: [E('Hỗn Độn Hung Thú', 'beast')] },
+
+    hm_kiem: { world: 'hongmong', path: 'kiem', name: 'Sơ Kiếm Nguyên', icon: '🗡️', x: 330, y: 110, qi: 1.65, minR: 27, maxR: 27, links: ['tu_khi', 'co_thu'], desc: 'Nơi ý niệm về "chém" lần đầu xuất hiện.', enemies: [E('Sơ Kiếm Ý', 'spirit')] },
+    hm_ma: { world: 'hongmong', path: 'ma', name: 'Sơ Ác Uyên', icon: '🩸', x: 330, y: 480, qi: 1.65, minR: 27, maxR: 27, links: ['tu_khi', 'co_thu'], desc: 'Giọt ác đầu tiên của vạn vật rơi ở đây.', enemies: [E('Sơ Ác Thể', 'demon')] },
+    hm_the: { world: 'hongmong', path: 'the', name: 'Sơ Thể Đỉnh', icon: '💪', x: 680, y: 110, qi: 1.7, minR: 27, maxR: 27, links: ['co_thu', 'chua_te'], desc: 'Hình hài đầu tiên được nặn từ Tử Khí.', enemies: [E('Sơ Thể Khôi', 'golem')] },
+    hm_phap: { world: 'hongmong', path: 'phap', name: 'Sơ Pháp Đình', icon: '🔮', x: 680, y: 480, qi: 1.7, minR: 27, maxR: 27, links: ['co_thu', 'chua_te'], desc: 'Nơi quy tắc đầu tiên được viết ra.', enemies: [E('Sơ Pháp Linh', 'spirit')] },
+
+    van_dao_bi: { world: 'chungnguyen', name: 'Vạn Đạo Bi', icon: '🪦', x: 500, y: 110, type: 'wild', qi: 1.9, minR: 28, maxR: 28, links: ['truong_ha', 'chung_dai'], desc: 'Bia khắc tên mọi con đường từng tồn tại.', enemies: [E('Đạo Bi Linh', 'spirit')] },
+    quy_khu: { world: 'chungnguyen', name: 'Quy Khư', icon: '🕳️', x: 500, y: 480, type: 'wild', qi: 1.9, minR: 28, maxR: 28, links: ['truong_ha', 'chung_dai'], desc: 'Nơi mọi thứ bị lãng quên trôi về.', enemies: [E('Quy Khư Ảnh', 'chaos')] }
+};
+
+Object.entries(DAO_SITES).forEach(([id, site]) => {
+    LOCATIONS[id] = { type: 'sect', ...site };
+    site.links.forEach(other => LOCATIONS[other].links.push(id));
+});
+Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am: 'phap', co_thu: 'yeu' }).forEach(([id, path]) => { LOCATIONS[id].path = path; });
+
 Object.keys(LOCATIONS).forEach(id => { LOCATIONS[id].id = id; });

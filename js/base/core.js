@@ -1533,6 +1533,7 @@ function initStarter() {
     state.board = [null, null, null, null, null, null];
     if (typeof grantStartingLinhBao === 'function') grantStartingLinhBao();
 
+    applyStartingOrigin();
     initWorldState();
     recalculateStats();
     state.hp = state.totalMaxHp;

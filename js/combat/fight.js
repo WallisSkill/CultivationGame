@@ -167,6 +167,9 @@ function attackTurn() {
     renderAll();
 }
 
+const RUN_REST_SECONDS = 60;
+const LOSE_REST_SECONDS = 180;
+
 function runFromBattle() {
     if (!state.currentEnemy) { log('Không có kẻ thù để chạy.'); return; }
     if (state.currentEnemy.isPvP && pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
@@ -177,8 +180,8 @@ function runFromBattle() {
     window._battleActive = false;
     const name = state.currentEnemy?.name || 'đối thủ';
     state.currentEnemy = null;
-    log(`🏃 Chạy khỏi ${name}. Cần điều dưỡng ${formatRealDuration(hastedSeconds(1800))}.`);
-    startActivity({ type: 'rest', label: 'Điều dưỡng', seconds: 1800 });
+    log(`🏃 Chạy khỏi ${name}. Cần điều dưỡng ${formatRealDuration(hastedSeconds(RUN_REST_SECONDS))}.`);
+    startActivity({ type: 'rest', label: 'Điều dưỡng', seconds: RUN_REST_SECONDS });
     renderAll();
 }
 
@@ -243,8 +246,8 @@ function loseBattle() {
     const lost = Math.floor(state.xp * 0.05);
     state.xp = Math.max(0, state.xp - lost);
     state.hp = Math.max(1, Math.floor((state.totalMaxHp || state.maxHp) * 0.25));
-    log(`💀 Bại dưới tay ${killInfo?.enemyName || 'kẻ thù'}! Mất ${formatNumber(lost)} tu vi, cần dưỡng thương ${formatRealDuration(hastedSeconds(7200))}.`);
-    startActivity({ type: 'rest', label: 'Dưỡng thương', seconds: 7200 });
+    log(`💀 Bại dưới tay ${killInfo?.enemyName || 'kẻ thù'}! Mất ${formatNumber(lost)} tu vi, cần dưỡng thương ${formatRealDuration(hastedSeconds(LOSE_REST_SECONDS))}.`);
+    startActivity({ type: 'rest', label: 'Dưỡng thương', seconds: LOSE_REST_SECONDS });
 }
 
 /* update battle info display */

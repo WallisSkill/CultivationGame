@@ -13,7 +13,7 @@ vm.createContext(ctx);
 });
 vm.runInContext(`
 var INFO = {
-  LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  ORIGINS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage
 };`, ctx);
 const G = ctx.INFO;
@@ -39,6 +39,13 @@ for (const q of Object.values(G.QUEST_INDEX)) {
             else if (!loc.enemies.some(e => e.name === s.hunt.name)) fail.push(`${q.id}: ${loc.name} không có ${s.hunt.name}`);
         }
         (s.say || []).forEach(([who]) => { if (who !== 'me' && !G.NPCS[who]) fail.push(`${q.id}: speaker ${who}`); });
+    });
+}
+for (const [id, o] of Object.entries(G.ORIGINS)) {
+    if (!G.LOCATIONS[o.loc]) fail.push(`origin ${id}: loc ${o.loc}`);
+    (o.steps || []).forEach(s => {
+        if (s.boss && !G.BOSSES[s.boss]) fail.push(`origin ${id}: boss ${s.boss}`);
+        if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
     });
 }
 for (let r = 1; r < 29; r++) if (!G.MAIN_QUESTS.some(q => q.unlock === r)) fail.push(`thiếu quest mở khóa realm ${r}`);
