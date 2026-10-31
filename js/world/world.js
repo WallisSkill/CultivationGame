@@ -6,7 +6,10 @@
      Đang có hoạt động thì KHÔNG tu luyện được.
 =========================================================== */
 const TICK_MS = 250;
-const HUNT_SECONDS = 5 * 60;
+const HUNT_BASE_SECONDS = 2 * 60;
+const HUNT_MIN_SECONDS = 20;
+const HUNT_MASTERY_DECAY = 0.99;
+const HUNT_XP_PER_SEARCH_MINUTE = 0.5;
 const EXPLORE_SECONDS = 15 * 60;
 const BASE_TRAVEL_SPEED = 1;
 const BOUNTY_KILLS = 5;
@@ -29,6 +32,7 @@ function initWorldState() {
     state.look = { ...defaultLook(), ...(state.look || {}) };
     state.mats = state.mats || {};
     state.flags = state.flags || {};
+    state.mastery = state.mastery || {};
     state.questDone = state.questDone || [];
     state.questActive = state.questActive || [];
     state.activity = state.activity || null;
@@ -109,8 +113,13 @@ function requireFree() {
     return true;
 }
 
+function hastedSeconds(seconds) {
+    return seconds / realmHaste(state.realmIndex || 0);
+}
+
 function startActivity(activity) {
-    state.activity = { total: activity.seconds, remaining: activity.seconds, ...activity };
+    const seconds = activity.type === 'travel' ? activity.seconds : hastedSeconds(activity.seconds);
+    state.activity = { ...activity, total: seconds, remaining: seconds, seconds };
     renderAll();
 }
 
@@ -138,7 +147,7 @@ function finishActivity() {
             log(`📍 Đã tới ${currentLocation().name}.`);
             break;
         case 'hunt':
-            spawnEnemyWithRules();
+            spawnEnemyWithRules(a.total);
             break;
         case 'explore':
             window.exploreOriginalImpl();
@@ -189,7 +198,7 @@ function travelSpeed() {
     const realm = state.realmIndex || 0;
     const tier = worldTierOfRealm(realm);
     const boots = (typeof equippedInSlot === 'function' ? equippedInSlot('boots')?.speed : 0) || 0;
-    return BASE_TRAVEL_SPEED + (realm - tier.from) * 0.15 + boots;
+    return (BASE_TRAVEL_SPEED + (realm - tier.from) * 0.15 + boots) * realmHaste(realm);
 }
 
 function edgeSeconds(from, to) {
@@ -353,10 +362,15 @@ function setMapWorld(id) {
 }
 
 /* ---------- săn / thám hiểm / dịch vụ ---------- */
+function huntSeconds() {
+    const points = state.mastery[state.location] || 0;
+    return Math.max(HUNT_MIN_SECONDS, HUNT_BASE_SECONDS * Math.pow(HUNT_MASTERY_DECAY, points));
+}
+
 function startHunt() {
     if (!requireFree()) return;
     if (!(currentLocation().enemies || []).length) return;
-    startActivity({ type: 'hunt', label: '🗡️ Lùng sục con mồi', seconds: HUNT_SECONDS });
+    startActivity({ type: 'hunt', label: '🗡️ Lùng sục con mồi', seconds: huntSeconds() });
 }
 
 function startExplore() {
@@ -412,7 +426,7 @@ function openForge() {
             <button onclick="startForge('${slot}')" ${have < FORGE_MATERIAL_COST || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
-    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${FORGE_MATERIAL_COST} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${FORGE_HOURS} giờ. 15% ra phẩm Tiên.</div>${rows}`);
+    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${FORGE_MATERIAL_COST} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}. 15% ra phẩm Tiên.</div>${rows}`);
 }
 
 function startForge(slot) {
@@ -606,6 +620,7 @@ function clearBossStep(bossId) {
 
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
+    if (enemy.hunted) state.mastery[state.location] = (state.mastery[state.location] || 0) + 1;
     state.questActive.slice().forEach(rt => {
         const hunt = questStep(rt)?.hunt;
         if (hunt && hunt.name === enemy.name && hunt.loc === state.location) {
@@ -637,7 +652,7 @@ function questStepText(rt) {
     const step = questStep(rt);
     if (step.go) return `Đi tới ${LOCATIONS[step.go].name}`;
     if (step.hunt) return `Diệt ${step.hunt.name} tại ${LOCATIONS[step.hunt.loc].name} (${rt.n}/${step.hunt.n})`;
-    if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${step.gather.hours} giờ)`;
+    if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${formatRealDuration(hastedSeconds(step.gather.hours * 3600))})`;
     if (step.boss) {
         const b = BOSSES[step.boss];
         const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
@@ -735,10 +750,10 @@ function renderLocationPanel() {
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q));
     const buttons = [];
     if ((loc.enemies || []).length) {
-        buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (${formatRealDuration(HUNT_SECONDS)})</button>`);
+        buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (${formatRealDuration(hastedSeconds(huntSeconds()))})</button>`);
         buttons.push(`<button class="${state.autoHunt ? 'primary' : ''}" onclick="toggleAutoHunt()">🔁 ${state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục'}</button>`);
     }
-    buttons.push(`<button ${busy} onclick="startExplore()">🧭 Thám hiểm (${formatRealDuration(EXPLORE_SECONDS)})</button>`);
+    buttons.push(`<button ${busy} onclick="startExplore()">🧭 Thám hiểm (${formatRealDuration(hastedSeconds(EXPLORE_SECONDS))})</button>`);
     if (hasService('shop')) buttons.push(`<button onclick="openServiceShop()">🏪 Cửa hàng</button>`);
     if (hasService('forge')) buttons.push(`<button onclick="openForge()">🔨 Lò rèn</button>`);
     if (hasService('board') && !state.bounty) buttons.push(`<button onclick="acceptBounty()">📜 Nhận treo thưởng</button>`);
@@ -749,6 +764,7 @@ function renderLocationPanel() {
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
         <div class="small">${loc.desc}</div>
+        ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
         <div class="loc-actions">${buttons.join('')}</div>${sides}`;
 }
 

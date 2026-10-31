@@ -36,6 +36,7 @@ function useItem(index) {
     if (it.type === 'xp') {
         const gained = gainCultivationHours(it.hours || 1);
         log(`📘 Dùng ${it.name}, tu vi +${formatNumber(gained)}.`);
+        needsFullRender = true;
     }
 
     else if (it.type === 'power') {

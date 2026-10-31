@@ -25,6 +25,8 @@ function initFriendsSystem() {
         }
     }
     
+    initChat();
+
     // 🆕 Tự động kết nối WebSocket khi khởi động
     if (typeof connectMatchWS === 'function') {
         connectMatchWS().then(connected => {
@@ -315,6 +317,7 @@ function handleFriendsMessage(msg) {
                 
                 saveFriendsToStorage();
                 renderFriendsUI();
+                flushPendingChat(profileId);
             }
             break;
         }
@@ -440,6 +443,11 @@ function setupFriendsEventListeners() {
             return;
         }
 
+        if (msg.type === 'pvp_relay' && msg.sessionId === CHAT_SESSION) {
+            handleChatRelay(msg);
+            return;
+        }
+
         // Gọi handler cũ cho các message khác
         if (originalOnMatchMessage) {
             originalOnMatchMessage.call(this, ev);
@@ -450,6 +458,8 @@ function setupFriendsEventListeners() {
 // 🆕 Callback khi WebSocket kết nối
 window.onFriendsWSConnected = function() {
     renderFriendsUI();
+    flushPendingChat();
+    setTimeout(() => { if (window.matchConnected) registerProfile(); }, CHAT_REREGISTER_MS);
 };
 
 // Render UI
@@ -542,6 +552,7 @@ function renderFriendsUI() {
                             <div class="small">Linh căn: ${colorizeWithMap(ROOT_RANKS[friend.rootRank] || 'Phế Phẩm')}</div>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:6px;">
+                            <button onclick="openChat('${friend.id}')" style="padding:6px 12px; font-size:0.85em;">💬 Chat${chatState.unread[friend.id] ? ` (${chatState.unread[friend.id]})` : ''}</button>
                             ${friend.online ? `<button onclick="inviteFriendToPvP('${friend.id}', '${friend.name}')" style="padding:6px 12px; font-size:0.85em;">⚔️ PvP</button>` : ''}
                             <button onclick="removeFriend('${friend.id}', '${friend.name}')" style="padding:6px 12px; font-size:0.85em; background:#f44336;">🗑️</button>
                         </div>

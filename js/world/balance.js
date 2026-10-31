@@ -144,6 +144,13 @@ function makeGearItem(realm, slot, quality = 0) {
     };
 }
 
+/* --------- cảnh giới rút ngắn mọi hoạt động (trừ bế quan) --------- */
+const REALM_HASTE_PER_REALM = 0.05;
+
+function realmHaste(realm) {
+    return 1 + realm * REALM_HASTE_PER_REALM;
+}
+
 /* --------- kinh tế --------- */
 function goldRef(realm) {
     return Math.floor(60 * Math.pow(1.75, realm));

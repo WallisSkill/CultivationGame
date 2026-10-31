@@ -1514,3 +1514,10 @@ footer {
 #start-screen h1 { margin-top: 0; }
 #creatorHost { flex: none; width: 100%; }
 #introNarration:empty { display: none; }
+
+.chat-box { display: flex; flex-direction: column; height: 70vh; }
+.chat-messages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 4px; }
+.chat-msg { align-self: flex-start; max-width: 80%; padding: 6px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); overflow-wrap: anywhere; }
+.chat-msg.mine { align-self: flex-end; background: rgba(123, 228, 163, 0.18); }
+.chat-input-row { display: flex; gap: 8px; margin-top: 8px; }
+.chat-input-row input { flex: 1; min-width: 0; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #1a1a1a; color: #fff; }

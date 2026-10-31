@@ -58,6 +58,7 @@ function checkRealmProgress() {
             smallStageGain();
             log(`Đột phá tiểu kỳ: ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}`);
             if (typeof onRealmChanged === 'function') onRealmChanged();
+            renderAll();
             continue;
         }
         if (state.realmIndex >= REALMS.length - 1) {

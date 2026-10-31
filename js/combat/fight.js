@@ -177,7 +177,7 @@ function runFromBattle() {
     window._battleActive = false;
     const name = state.currentEnemy?.name || 'đối thủ';
     state.currentEnemy = null;
-    log(`🏃 Chạy khỏi ${name}. Thương thế cần 30 phút điều dưỡng.`);
+    log(`🏃 Chạy khỏi ${name}. Cần điều dưỡng ${formatRealDuration(hastedSeconds(1800))}.`);
     startActivity({ type: 'rest', label: 'Điều dưỡng', seconds: 1800 });
     renderAll();
 }
@@ -243,7 +243,7 @@ function loseBattle() {
     const lost = Math.floor(state.xp * 0.05);
     state.xp = Math.max(0, state.xp - lost);
     state.hp = Math.max(1, Math.floor((state.totalMaxHp || state.maxHp) * 0.25));
-    log(`💀 Bại dưới tay ${killInfo?.enemyName || 'kẻ thù'}! Mất ${formatNumber(lost)} tu vi, cần dưỡng thương 2 giờ.`);
+    log(`💀 Bại dưới tay ${killInfo?.enemyName || 'kẻ thù'}! Mất ${formatNumber(lost)} tu vi, cần dưỡng thương ${formatRealDuration(hastedSeconds(7200))}.`);
     startActivity({ type: 'rest', label: 'Dưỡng thương', seconds: 7200 });
 }
 
@@ -366,14 +366,14 @@ function connectMatchWS() {
         };
         window.matchWS.onclose = () => {
             window.matchConnected = false;
-            $('toggleAuto').innerText = 'Dừng tu luyện auto';
             log('🔌 Kết nối PvP đã đóng.');
             // nếu đang tìm thì trả nút về trạng thái mặc định
             if (window._findingMatch) {
                 window._findingMatch = false;
                 const b = $('findMatch'); if (b) b.innerText = 'Tìm đối thủ PvP';
             }
-            window._battleActive = false;
+            if (state.currentEnemy?.isPvP) window._battleActive = false;
+            if (typeof renderFriendsUI === 'function') renderFriendsUI();
         };
         window.matchWS.onerror = () => { window.matchConnected = false; log('❌ Lỗi kết nối PvP.'); };
         window.matchWS.onmessage = onMatchMessage;

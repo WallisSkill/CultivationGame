@@ -38,20 +38,26 @@ function randomRealmStage() {
     return 3;
 }
 
-function spawnEnemyWithRules() {
+function spawnEnemyWithRules(huntedSeconds = 0) {
     const loc = currentLocation();
     const pool = loc.enemies || [];
     if (!pool.length) { log(`${loc.name} yên bình, không có gì để săn.`); return; }
     const wanted = (state.questActive || []).map(rt => questStep(rt)?.hunt).find(h => h && h.loc === loc.id);
     const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
     const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
-    startEncounter(buildEnemy({
+    const enemy = buildEnemy({
         name: pick.name,
         kind: pick.kind,
         realmIndex: Math.max(loc.minR, Math.min(loc.maxR, state.realmIndex)),
         realmStage: Math.min(state.realmStage, randomRealmStage()),
         tier: rollEnemyTier()
-    }));
+    });
+    if (huntedSeconds) {
+        const normal = ENEMY_TIERS['Thường'].xpMinutes;
+        enemy.hunted = true;
+        enemy.xpMinutes = enemy.xpMinutes / normal * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
+    }
+    startEncounter(enemy);
 }
 
 function startEncounter(enemy) {
