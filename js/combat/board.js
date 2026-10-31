@@ -1073,7 +1073,7 @@ function lbBuildPlayerCombatant() {
         baseAtk: atk, atk, def,
         elements: state.root?.elements || [], rootRank: state.root?.rank || 0,
         realmIndex: state.realmIndex || 0, realmStage: state.realmStage || 0,
-        slots: defs.map(lbMakeSlot), avatar: playerAvatarSvg()
+        slots: defs.map(lbMakeSlot), viewLook: playerLook(), avatar: playerAvatarSvg()
     });
     lbApplyPathPassive(c);
     return c;
@@ -1081,18 +1081,22 @@ function lbBuildPlayerCombatant() {
 
 /* Đồng đội: đệ tử của tông môn và hộ pháp thuê theo trận */
 const LB_ALLY_MAX = 3;
+const LB_ALLY_SKILLS = 3;
+const LB_ALLY_LOOK = { robe: '#3f6f9e', hairStyle: 4, weapon: 'sword' };
 const LB_ALLY_STAT = { atk: 0.35, hp: 0.4, def: 0.6 };
 
 function lbMakeAlly(player, name) {
-    const attack = { ...LB_DEFAULT_ATTACK, name: 'Hộ Trận Kích', flatPower: true };
+    const skills = LINH_BAO.filter(lb => lb.path === player.path).slice(0, LB_ALLY_SKILLS)
+        .map(lb => ({ ...lb, grade: maxLinhBaoGradeForRealm(player.realmIndex), level: 1, flatPower: true }));
     return Object.assign(lbBaseCombatant(), {
         side: 'player', name, path: player.path,
         hp: Math.floor(player.maxHp * LB_ALLY_STAT.hp), maxHp: Math.floor(player.maxHp * LB_ALLY_STAT.hp),
         baseAtk: Math.floor(player.atk * LB_ALLY_STAT.atk), atk: Math.floor(player.atk * LB_ALLY_STAT.atk),
         def: Math.floor(player.def * LB_ALLY_STAT.def),
         elements: player.elements, rootRank: player.rootRank, realmIndex: player.realmIndex, realmStage: player.realmStage,
-        slots: [lbMakeSlot(attack)],
-        avatar: humanoidSvg({ robe: '#3f6f9e', hairStyle: 4, weapon: 'sword' }, { title: name })
+        slots: (skills.length ? skills : [{ ...LB_DEFAULT_ATTACK, flatPower: true }]).map(lbMakeSlot),
+        viewLook: LB_ALLY_LOOK,
+        avatar: humanoidSvg(LB_ALLY_LOOK, { title: name })
     });
 }
 
@@ -1281,6 +1285,7 @@ function runBoardBattle() {
 
     syncBattleOverlay();
     lbBuildArenaDOM(battle);
+    coopBroadcastArena(battle);
     log(`🎴 Khai chiến: ${allies.length} đấu ${foes.length}!`);
 
     battle.timer = setInterval(() => lbStep(battle), LB_TICK_MS);
@@ -1414,8 +1419,10 @@ function lbSlotTileHTML(slot, idx, side) {
         </div>`;
 }
 
+const LB_FULL_TEAM_SIZE = 3;
+
 function lbUnitHTML(c, side, idx, team) {
-    const full = idx === 0 || team.length <= 3 && side === 'enemy';
+    const full = idx === 0 || team.length <= LB_FULL_TEAM_SIZE;
     const tiles = full ? c.slots.map((s, i) => lbSlotTileHTML(s, i, side)).join('') : '';
     const path = c.path ? `<span class="small" title="${DAO_PATHS[c.path].name}">${DAO_PATHS[c.path].icon}</span>` : '';
     return `<div class="lb-unit ${full ? '' : 'lb-unit-mini'}" data-unit="${side}${idx}">
@@ -1507,7 +1514,7 @@ function lbFloat(unit, text, kind) {
 function renderBoardArena() {
     const el = lbArenaEl();
     if (!el) return;
-    if (window.__boardBattle && window.__boardBattle.running) return;
+    if ((window.__boardBattle && window.__boardBattle.running) || coop.helping?.arena) return;
 
     el.classList.remove('lb-active');
     ensureBoardState();

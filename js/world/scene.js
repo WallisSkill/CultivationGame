@@ -351,7 +351,7 @@ function syncBattleOverlay() {
     const panel = document.querySelector('.panel-combat');
     const stage = $('sceneHost');
     if (!panel || !stage) return;
-    const fighting = !!state.currentEnemy;
+    const fighting = !!state.currentEnemy || !!coop.helping?.arena;
     if (fighting === panel.classList.contains('battle-overlay')) return;
     if (fighting) {
         standUp();
@@ -363,7 +363,7 @@ function syncBattleOverlay() {
         panel.__home.parent.insertBefore(panel, panel.__home.next);
     }
     panel.classList.toggle('battle-overlay', fighting);
-    $('runBtn').style.display = fighting ? 'inline-block' : 'none';
+    $('runBtn').style.display = state.currentEnemy ? 'inline-block' : 'none';
 }
 
 function isTypingTarget(target) {

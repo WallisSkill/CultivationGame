@@ -10,7 +10,8 @@
     - Tin nhắn đi qua pvp_relay (sessionId 'coop').
 =========================== */
 const COOP_SESSION = 'coop';
-const COOP_TICK_MS = 400;
+const COOP_TICK_MS = 250;
+const COOP_WATCH_LIMIT = 10;
 const COOP_HELP_TIMEOUT_MS = 180000;
 const COOP_REWARD_SHARE = 0.5;
 const COOP_PVP_ASSIST_MULT = 0.6;
@@ -131,22 +132,44 @@ function coopHelperCombatants() {
             side: 'player', name: h.name, path: h.path, hp: h.hp, maxHp: h.hp, baseAtk: h.atk, atk: h.atk, def: h.def,
             elements: h.elements, rootRank: h.rootRank, realmIndex: h.realmIndex, realmStage: h.realmStage,
             slots: (defs.length ? defs : [LB_DEFAULT_ATTACK]).map(lbMakeSlot),
+            viewLook: { ...h.look, weapon: 'sword' },
             avatar: humanoidSvg({ ...h.look, weapon: 'sword' }, { title: h.name })
         });
+    }).map(c => {
+        lbApplyPathPassive(c);
+        return c;
     });
 }
 
-function coopTick(units) {
+function coopTick(units, kind = 'tick') {
     const now = Date.now();
     if (!coop.helpers.length || now - coop.tickAt < COOP_TICK_MS) return;
     coop.tickAt = now;
-    coop.helpers.forEach(h => coopRelay(h.id, 'tick', { id: h.sid, units }));
+    coop.helpers.forEach(h => coopRelay(h.id, kind, { id: h.sid, units }));
+}
+
+function coopUnitSpec(c) {
+    return {
+        side: c.side, name: c.name, path: c.path, maxHp: c.maxHp, kind: c.ref?.kind || null,
+        look: c.ref ? c.ref.look || null : c.viewLook || null, realmIndex: c.realmIndex,
+        slots: c.slots.map(slot => ({
+            id: slot.def.linhBaoId || slot.def.id, grade: lbGradeOf(slot.def), level: slot.def.level || 1, cooldown: slot.cooldown
+        }))
+    };
+}
+
+function coopBroadcastArena(battle) {
+    const units = [...battle.allies, ...battle.foes].map(coopUnitSpec);
+    coop.helpers.forEach(h => coopRelay(h.id, 'arena', { id: h.sid, units }));
 }
 
 function coopBattleTick(battle) {
+    const now = performance.now();
     coopTick([...battle.allies, ...battle.foes].map(c => ({
-        name: c.name, side: c.side, hp: Math.max(0, Math.round(c.hp)), max: c.maxHp
-    })));
+        hp: Math.max(0, Math.round(c.hp)), shield: Math.round(c.shield),
+        stun: now < c.stunUntil ? 1 : 0, freeze: now < c.freezeUntil ? 1 : 0,
+        elapsed: c.slots.map(slot => Math.round(slot.elapsed))
+    })), 'arena_tick');
 }
 
 function coopFinish(win, reward = null) {
@@ -325,9 +348,71 @@ function coopRenderWatch(title, units = []) {
 }
 
 function coopCloseWatch() {
+    const hadArena = !!coop.helping?.arena;
     coop.helping = null;
     const modal = document.getElementById('coopWatchModal');
     if (modal) modal.style.display = 'none';
+    if (hadArena) {
+        syncBattleOverlay();
+        renderBoardArena();
+    }
+}
+
+/* Người hỗ trợ dựng lại đúng khung chiến đấu của chủ phòng từ dữ liệu phát sang */
+function coopMirrorUnit(spec) {
+    const side = spec?.side === 'enemy' ? 'enemy' : 'player';
+    const realmIndex = lbClamp(Number(spec?.realmIndex) || 0, 0, REALMS.length - 1);
+    const name = sectEscape(String(spec?.name ?? '').replace(/<[^>]*>/g, '').slice(0, 40));
+    const look = spec?.look ? coopCleanLook(spec.look) : null;
+    const kind = MONSTER_DRAW[spec?.kind] ? spec.kind : 'human';
+    const slots = (Array.isArray(spec?.slots) ? spec.slots : []).slice(0, COOP_WATCH_LIMIT).map(slot => {
+        const base = LINH_BAO_MAP[slot?.id] || LB_DEFAULT_ATTACK;
+        const def = { ...base, grade: lbClamp(Number(slot?.grade) || 0, 0, LB_MAX_GRADE), level: 1 };
+        return { def, cooldown: Math.max(0.25, Number(slot?.cooldown) || 2), elapsed: 0, fillNode: null, tileNode: null };
+    });
+    return Object.assign(lbBaseCombatant(), {
+        side, name, path: DAO_PATHS[spec?.path] ? spec.path : null,
+        hp: Math.max(1, Number(spec?.maxHp) || 1), maxHp: Math.max(1, Number(spec?.maxHp) || 1), slots,
+        avatar: side === 'enemy' ? enemyAvatarSvg({ name, kind, look, realmIndex }) : humanoidSvg(look || defaultLook(), { title: name })
+    });
+}
+
+function coopOnArena(data) {
+    const units = (Array.isArray(data?.units) ? data.units : []).slice(0, COOP_WATCH_LIMIT).map(coopMirrorUnit);
+    const allies = units.filter(u => u.side === 'player');
+    const foes = units.filter(u => u.side === 'enemy');
+    if (!allies.length || !foes.length) return;
+    const modal = document.getElementById('coopWatchModal');
+    if (modal) modal.style.display = 'none';
+    coop.helping.arena = { allies, foes, units };
+    syncBattleOverlay();
+    lbBuildArenaDOM(coop.helping.arena);
+    lbUpdateArena(coop.helping.arena);
+}
+
+function coopOnArenaTick(data) {
+    const mirror = coop.helping.arena;
+    if (!mirror || !Array.isArray(data?.units)) return;
+    coop.helping.at = Date.now();
+    const now = performance.now();
+    mirror.units.forEach((unit, i) => {
+        const next = data.units[i];
+        if (!next) return;
+        const hp = Math.max(0, Number(next.hp) || 0);
+        const delta = Math.round(hp - unit.hp);
+        if (delta < 0) lbFloat(unit, `${fmtVal(delta)}`, 'dmg');
+        else if (delta > 0) lbFloat(unit, `+${fmtVal(delta)}`, 'heal');
+        unit.hp = hp;
+        unit.shield = Math.max(0, Number(next.shield) || 0);
+        unit.stunUntil = next.stun ? now + COOP_TICK_MS * 2 : 0;
+        unit.freezeUntil = next.freeze ? now + COOP_TICK_MS * 2 : 0;
+        unit.slots.forEach((slot, s) => {
+            const elapsed = Number(next.elapsed?.[s]) || 0;
+            if (elapsed < slot.elapsed) lbLunge(unit);
+            slot.elapsed = elapsed;
+        });
+    });
+    lbUpdateArena(mirror);
 }
 
 function coopOnEnd(data) {
@@ -390,6 +475,12 @@ function handleCoopRelay(msg) {
         case 'full':
         case 'cancel':
             if (helping && !coop.helping.started) coop.helping = null;
+            break;
+        case 'arena':
+            if (helping) coopOnArena(msg.data);
+            break;
+        case 'arena_tick':
+            if (helping) coopOnArenaTick(msg.data);
             break;
         case 'tick':
             if (helping && Array.isArray(msg.data.units)) {
