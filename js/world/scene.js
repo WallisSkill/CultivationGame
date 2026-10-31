@@ -293,9 +293,27 @@ function renderWorldViewTabs() {
     const here = playersHere().length;
     tabs.innerHTML = `<button class="filter-chip ${sceneState.view === 'scene' ? 'active' : ''}" onclick="setWorldView('scene')">🚶 Bên trong</button>
         <button class="filter-chip ${sceneState.view === 'map' ? 'active' : ''}" onclick="setWorldView('map')">🗺️ Thiên Hạ Đồ</button>
-        <span class="small">👥 ${here + 1} người tại đây · ${onlinePlayers.size + 1} online</span>`;
+        <span class="small">👥 ${here + 1} người tại đây · ${Math.max(worldServer.online, onlinePlayers.size + 1)} online</span>`;
     $('sceneHost').style.display = sceneState.view === 'scene' ? 'block' : 'none';
     $('worldMap').style.display = sceneState.view === 'map' ? 'block' : 'none';
+}
+
+/* Khi có trận, khung chiến đấu được đưa vào khung thế giới, đè lên cảnh bên trong */
+function syncBattleOverlay() {
+    const panel = document.querySelector('.panel-combat');
+    const stage = $('sceneHost');
+    if (!panel || !stage) return;
+    const fighting = !!state.currentEnemy;
+    if (fighting === panel.classList.contains('battle-overlay')) return;
+    if (fighting) {
+        panel.dataset.homeReady = '1';
+        panel.__home = panel.__home || { parent: panel.parentNode, next: panel.nextElementSibling };
+        setWorldView('scene');
+        stage.appendChild(panel);
+    } else {
+        panel.__home.parent.insertBefore(panel, panel.__home.next);
+    }
+    panel.classList.toggle('battle-overlay', fighting);
 }
 
 function isTypingTarget(target) {
@@ -339,4 +357,4 @@ function initScene() {
     requestAnimationFrame(sceneFrame);
 }
 
-if (typeof window !== 'undefined') Object.assign(window, { setWorldView, sceneInteract, initScene });
+if (typeof window !== 'undefined') Object.assign(window, { setWorldView, sceneInteract, initScene, syncBattleOverlay });

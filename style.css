@@ -1536,3 +1536,6 @@ footer {
 #sceneCanvas { display: block; width: 100%; height: auto; margin-top: 8px; border-radius: 10px; outline: none; touch-action: none; cursor: pointer; }
 #sceneCanvas:focus-visible { box-shadow: 0 0 0 2px #ffe9a0; }
 .tj-me { background: rgba(255, 233, 160, 0.14); border-radius: 4px; padding: 2px 6px; }
+
+#sceneHost { position: relative; }
+.panel-combat.battle-overlay { position: absolute; inset: 8px 0 auto 0; margin: 0 !important; max-height: 100%; overflow-y: auto; z-index: 5; background: rgba(9, 14, 24, 0.97); }

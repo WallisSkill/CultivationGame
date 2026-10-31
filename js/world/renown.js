@@ -88,6 +88,7 @@ function renownPerkLines(rank) {
 
 function openTianjiaoBoard() {
     const locId = state.location;
+    requestTianjiaoBoard(locId);
     const rows = tianjiaoBoard(locId).map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
         <span>${i < 3 ? ['🥇', '🥈', '🥉'][i] : `${i + 1}.`} ${sectEscape(entry.name)}</span>
         <b>${formatNumber(entry.score)}</b></div>`).join('');

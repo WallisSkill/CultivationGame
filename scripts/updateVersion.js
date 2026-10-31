@@ -60,7 +60,9 @@ function resolveVersion() {
  */
 function updateIndex(version) {
     const html = fs.readFileSync(indexPath, 'utf8');
-    const updated = html.replace(/data-game-version="[^"]*"/, `data-game-version="${version}"`);
+    const updated = html
+        .replace(/data-game-version="[^"]*"/, `data-game-version="${version}"`)
+        .replace(/((?:src|href)="(?:js\/[^"?]+\.js|style\.css))(?:\?v=[^"]*)?"/g, `$1?v=${version}"`);
     if (html !== updated) {
         fs.writeFileSync(indexPath, updated);
         console.log(`✨ Game version updated to ${version}`);

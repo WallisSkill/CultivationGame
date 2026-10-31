@@ -439,6 +439,10 @@ function setupFriendsEventListeners() {
 
         if (msg.type === 'info' && msg.message === 'Đã đăng ký hồ sơ.') return;
         if (msg.type === 'friend_online') noteProfile(msg.profile);
+        if (msg.type?.startsWith('world_') || msg.type === 'tianjiao_board') {
+            handleWorldMessage(msg);
+            return;
+        }
         if (msg.type === 'pvp_relay' && msg.sessionId === WORLD_SESSION) {
             handleWorldRelay(msg);
             return;
@@ -472,7 +476,8 @@ function setupFriendsEventListeners() {
 window.onFriendsWSConnected = function() {
     renderFriendsUI();
     flushPendingChat();
-    setTimeout(() => { if (window.matchConnected) registerProfile(); }, CHAT_REREGISTER_MS);
+    sendPresence();
+    setTimeout(sendPresence, CHAT_REREGISTER_MS);
 };
 
 // Render UI

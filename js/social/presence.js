@@ -5,6 +5,8 @@
     - Máy chủ không báo khi người lạ rời đi: quá hạn không nghe tin thì coi như đã rời.
     - Vị trí và lời nói gửi qua pvp_relay (sessionId 'world') tới người cùng địa điểm.
     - Điểm của người khác nhớ cục bộ để bảng thiên kiêu còn hiện khi họ offline.
+   - Máy chủ mới có phòng theo địa điểm và bảng thiên kiêu chung: khi nhận được
+     world_players thì chuyển sang dùng các lệnh world_*, máy chủ cũ vẫn chạy kiểu relay.
 =========================== */
 const WORLD_SESSION = 'world';
 const PRESENCE_INTERVAL_MS = 15000;
@@ -17,7 +19,11 @@ const RENOWN_SHARED_LOCATIONS = 12;
 const RENOWN_CACHE_KEY = 'tt_renown_cache';
 const RENOWN_CACHE_MS = 7 * 86400 * 1000;
 
+const TOKEN_KEY = 'tt_token';
+
 const onlinePlayers = new Map();
+const serverBoards = {};
+const worldServer = { active: false, online: 0 };
 let renownCache = {};
 let positionSentAt = 0;
 
@@ -47,7 +53,24 @@ function sharedRenown() {
 }
 
 function sendPresence() {
-    if (window.matchConnected && state.root?.elements) registerProfile();
+    if (!window.matchConnected || !state.root?.elements) return;
+    registerProfile();
+    wsSend({ type: 'world_enter', loc: state.location });
+    reportRenown();
+}
+
+function profileToken() {
+    let token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+        token = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join('');
+        localStorage.setItem(TOKEN_KEY, token);
+    }
+    return token;
+}
+
+function reportRenown() {
+    const score = state.mastery?.[state.location] || 0;
+    if (score > 0) wsSend({ type: 'tianjiao_report', loc: state.location, score, token: profileToken() });
 }
 
 function cleanName(name) {
@@ -76,18 +99,76 @@ function noteProfile(profile) {
 }
 
 function expirePlayers() {
+    if (worldServer.active) return;
     const limit = Date.now() - PRESENCE_EXPIRE_MS;
     onlinePlayers.forEach((player, id) => { if (player.lastSeen < limit) onlinePlayers.delete(id); });
 }
 
 function playersHere() {
-    return [...onlinePlayers.values()].filter(p => p.loc === state.location && Date.now() - p.lastSeen < PRESENCE_EXPIRE_MS);
+    return [...onlinePlayers.values()].filter(p => p.loc === state.location
+        && (worldServer.active || Date.now() - p.lastSeen < PRESENCE_EXPIRE_MS));
 }
 
 function knownPlayerScores(locId) {
+    if (serverBoards[locId]) return serverBoards[locId].filter(entry => entry.id !== state.profileId);
     return Object.entries(renownCache)
         .filter(([, entry]) => entry.renown?.[locId] > 0)
         .map(([id, entry]) => ({ id, name: entry.name, score: entry.renown[locId] }));
+}
+
+function requestTianjiaoBoard(locId) {
+    wsSend({ type: 'tianjiao_get', loc: locId });
+}
+
+function roomPlayer(data) {
+    if (!/^[\w-]{1,64}$/.test(data?.id || '') || data.id === state.profileId) return null;
+    const player = onlinePlayers.get(data.id) || { x: null, y: null, tx: null, ty: null };
+    Object.assign(player, {
+        id: data.id, name: cleanName(data.name ?? player.name), look: data.look ?? player.look ?? null, loc: state.location,
+        realmIndex: Number(data.realmIndex ?? player.realmIndex) || 0, realmStage: Number(data.realmStage ?? player.realmStage) || 0,
+        lastSeen: Date.now()
+    });
+    if (Number.isFinite(data.x) && Number.isFinite(data.y)) {
+        if (player.x == null) { player.x = data.x; player.y = data.y; }
+        player.tx = data.x;
+        player.ty = data.y;
+    }
+    onlinePlayers.set(data.id, player);
+    return player;
+}
+
+function handleWorldMessage(msg) {
+    switch (msg.type) {
+        case 'world_players':
+            worldServer.active = true;
+            worldServer.online = Number(msg.online) || 0;
+            if (msg.loc === state.location) {
+                onlinePlayers.forEach((p, id) => { if (p.loc === state.location) onlinePlayers.delete(id); });
+                (msg.players || []).forEach(roomPlayer);
+                serverBoards[msg.loc] = msg.board || [];
+            }
+            break;
+        case 'world_join':
+            roomPlayer(msg.player);
+            break;
+        case 'world_leave':
+            onlinePlayers.delete(msg.id);
+            break;
+        case 'world_pos':
+            roomPlayer({ id: msg.id, x: msg.x, y: msg.y });
+            break;
+        case 'world_say': {
+            const player = onlinePlayers.get(msg.id);
+            if (player && typeof msg.text === 'string') {
+                showSceneBubble(player, msg.text);
+                log(`💬 ${sectEscape(player.name)}: ${sectEscape(msg.text)}`);
+            }
+            break;
+        }
+        case 'tianjiao_board':
+            serverBoards[msg.loc] = msg.board || [];
+            break;
+    }
 }
 
 function relayWorld(to, kind, data) {
@@ -102,15 +183,20 @@ function sendPosition(x, y) {
     const now = Date.now();
     if (now - positionSentAt < POSITION_SEND_MS) return;
     positionSentAt = now;
+    if (worldServer.active) {
+        wsSend({ type: 'world_pos', x: Math.round(x), y: Math.round(y) });
+        return;
+    }
     broadcastHere('pos', { x: Math.round(x), y: Math.round(y), loc: state.location });
 }
 
 function sendSay(text) {
     const clean = text.trim().slice(0, SAY_MAX_LENGTH);
     if (!clean) return;
-    broadcastHere('say', { text: clean, loc: state.location });
+    if (worldServer.active) wsSend({ type: 'world_say', text: clean });
+    else broadcastHere('say', { text: clean, loc: state.location });
     showSceneBubble(null, clean);
-    log(`💬 ${state.name}: ${clean}`);
+    log(`💬 ${sectEscape(state.name)}: ${sectEscape(clean)}`);
 }
 
 function handleWorldRelay(msg) {
@@ -126,7 +212,7 @@ function handleWorldRelay(msg) {
     } else if (msg.kind === 'say' && typeof data.text === 'string') {
         const text = data.text.slice(0, SAY_MAX_LENGTH);
         showSceneBubble(player, text);
-        log(`💬 ${player.name}: ${sectEscape(text)}`);
+        log(`💬 ${sectEscape(player.name)}: ${sectEscape(text)}`);
     }
 }
 

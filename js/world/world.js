@@ -896,7 +896,10 @@ function clearBossStep(bossId) {
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
     const killed = [enemy, ...(enemy.escorts || [])];
-    if (enemy.hunted) state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
+    if (enemy.hunted) {
+        state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
+        reportRenown();
+    }
     killed.forEach(unit => {
         state.questActive.slice().forEach(rt => {
             const hunt = questStep(rt)?.hunt;
@@ -1093,6 +1096,7 @@ function renderWorldPanels() {
     renderTestPanel();
     renderSectPanel();
     syncCultivationButton();
+    syncBattleOverlay();
     if (typeof refreshSceneSpots === 'function' && sceneState.canvas) {
         refreshSceneSpots();
         renderWorldViewTabs();

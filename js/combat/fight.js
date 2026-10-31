@@ -274,7 +274,7 @@ function updateBattleInfo(dmgData, enemy = false) {
 (function initPvpGlobals() {
     if (!('matchWS' in window)) window.matchWS = null;
     if (!('matchConnected' in window)) window.matchConnected = false;
-    if (!('MATCH_WS_URL' in window)) window.MATCH_WS_URL = 'wss://cultivationserver.onrender.com';
+    if (!('MATCH_WS_URL' in window)) window.MATCH_WS_URL = location.hostname === '127.0.0.1' && new URLSearchParams(location.search).get('ws') || 'wss://cultivationserver.onrender.com';
     if (!('_findingMatch' in window)) window._findingMatch = false; // finding toggle
 })();
 const matchURL = window.MATCH_WS_URL;

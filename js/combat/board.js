@@ -1277,6 +1277,7 @@ function runBoardBattle() {
     const battle = { running: true, elapsedMs: 0, player, allies, foes, enemy: foes[0], timer: null };
     window.__boardBattle = battle;
 
+    syncBattleOverlay();
     lbBuildArenaDOM(battle);
     log(`🎴 Khai chiến: ${allies.length} đấu ${foes.length}!`);
 
