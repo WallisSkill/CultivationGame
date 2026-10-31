@@ -18,6 +18,8 @@ function buildShopStock() {
         { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 30 + realm * 20, price: g * 20 },
         { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.01, price: g * 200 }
     );
+    const discount = renownShopMult();
+    stock.forEach(item => { item.price = Math.floor(item.price * discount); });
     return stock;
 }
 

@@ -3,7 +3,7 @@
    File này không đụng DOM để scripts/simulateBalance.js chạy được.
 
    TRỤC THỜI GIAN
-   - REALM_REAL_DAYS: số ngày đời thực bế quan liên tục cho 1 đại cảnh giới.
+   - REALM_FIRST_MINUTES / REALM_LAST_DAYS: thời gian bế quan của cảnh giới đầu và cuối.
    - 1 ngày đời thực = 1 năm trong game (tuổi thọ).
 
    TRỤC SỨC MẠNH
@@ -11,7 +11,8 @@
    - realmShare(x): phần trăm sức mạnh đến từ BẢN THỂ, còn lại từ TRANG BỊ.
      Hạ/trung kỳ tụt dần (đồ áp đảo), từ Thánh cảnh đảo chiều, Chung Nguyên 94%.
 =========================================================== */
-const REALM_REAL_DAYS = 30;
+const REALM_FIRST_MINUTES = 5;
+const REALM_LAST_DAYS = 30;
 const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
@@ -33,12 +34,19 @@ function worldTierOfRealm(realm) {
 /* --------- tu vi --------- */
 const ROOT_SPEED = [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.30, 1.40];
 
+/* Luyện Khí vài phút, tăng theo cấp số nhân tới Chung Nguyên */
+function realmRealSeconds(realm) {
+    const first = REALM_FIRST_MINUTES * 60;
+    const last = REALM_LAST_DAYS * SECONDS_PER_DAY;
+    return first * Math.pow(last / first, realm / (REALM_COUNT - 1));
+}
+
 function baseXpRate(realm) {
     return 10 * Math.pow(1.6, realm);
 }
 
 function xpNeedFor(realm, stage) {
-    return Math.floor(baseXpRate(realm) * REALM_REAL_DAYS * SECONDS_PER_DAY * (STAGE_SHARE[stage] || STAGE_SHARE[0]));
+    return Math.floor(baseXpRate(realm) * realmRealSeconds(realm) * (STAGE_SHARE[stage] || STAGE_SHARE[0]));
 }
 
 function rootSpeedMult(root) {
@@ -104,9 +112,9 @@ const GEAR_SLOTS = {
 const GEAR_SLOT_IDS = Object.keys(GEAR_SLOTS);
 
 const GEAR_QUALITIES = [
-    { name: 'Phàm', mult: 0.60, color: '#b8c0c8', price: 40 },
-    { name: 'Linh', mult: 0.80, color: '#7be4a3', price: 90 },
-    { name: 'Bảo', mult: 1.00, color: '#6db8ff', price: 160 },
+    { name: 'Phàm', mult: 0.60, color: '#b8c0c8', price: 4 },
+    { name: 'Linh', mult: 0.80, color: '#7be4a3', price: 10 },
+    { name: 'Bảo', mult: 1.00, color: '#6db8ff', price: 25 },
     { name: 'Tiên', mult: 1.25, color: '#d59bff', price: 0 },
     { name: 'Thần', mult: 1.60, color: '#ffc14d', price: 0 }
 ];
@@ -184,7 +192,7 @@ const MATERIAL_NAMES = {
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
 };
 const FORGE_MATERIAL_COST = 20;
-const FORGE_HOURS = 0.25;
+const FORGE_HOURS = 0.05;
 
 /* --------- pháp bảo --------- */
 const LB_GRADE_POWER = [1, 1.4, 1.9, 2.6, 3.5, 4.6, 6, 7.5, 9, 10, 10.8, 11.4, 12];
@@ -240,7 +248,7 @@ function formatRealDuration(seconds) {
 
 if (typeof module !== 'undefined') {
     module.exports = {
-        REALM_REAL_DAYS, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
+        realmRealSeconds, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
         LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
         makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, goldRef, gearPrice, realmProgress
     };

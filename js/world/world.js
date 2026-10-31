@@ -17,7 +17,7 @@ const HIRE_COST = 3;
 const HUNT_PACK_CHANCE = { 2: 0.25, 3: 0.1 };
 const BASE_TRAVEL_SPEED = 1;
 /* Phút cho một chặng chuẩn theo cảnh giới; từ Kim Đan trở lên cùng một mốc */
-const TRAVEL_LEG_MINUTES = [60, 30, 1];
+const TRAVEL_LEG_MINUTES = [3, 2, 1];
 const TRAVEL_LEG_PIXELS = 250;
 const TRAVEL_GATE_PIXELS = 500;
 /* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
@@ -49,7 +49,7 @@ function currentLocation() {
 }
 
 function currentLocationQi() {
-    return (currentLocation().qi || 1) * sectLocationQiMult(state.location);
+    return (currentLocation().qi || 1) * sectLocationQiMult(state.location) * renownQiMult();
 }
 
 function initWorldState() {
@@ -239,6 +239,13 @@ function absoluteLegSeconds(to) {
     return null;
 }
 
+/* Vùng đất có cấp: chưa đủ cảnh giới thì không đặt chân tới được.
+   Các cõi cuối đi theo luật riêng trong absoluteLegSeconds. */
+function canEnterLocation(id) {
+    const loc = LOCATIONS[id];
+    return ABSOLUTE_WORLDS.includes(loc.world) || (state.realmIndex || 0) >= loc.minR;
+}
+
 function teleportBlockReason(id) {
     const tier = worldOf(id);
     const minRealm = TELEPORT_MIN_REALM[tier.id];
@@ -250,7 +257,7 @@ function teleportBlockReason(id) {
 }
 
 function canTeleport(id) {
-    return id in LOCATIONS && TELEPORT_MIN_REALM[LOCATIONS[id].world] != null
+    return id in LOCATIONS && canEnterLocation(id) && TELEPORT_MIN_REALM[LOCATIONS[id].world] != null
         && worldUnlocked(LOCATIONS[id].world) && !teleportBlockReason(id);
 }
 
@@ -295,7 +302,7 @@ function neighbors(id) {
     const loc = LOCATIONS[id];
     const out = [...loc.links];
     if (loc.gate && (!loc.gate.flag || state.flags[loc.gate.flag]) && worldUnlocked(LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
-    return out;
+    return out.filter(canEnterLocation);
 }
 
 function findPath(from, to) {
@@ -318,7 +325,8 @@ function findPath(from, to) {
     const normal = legs.filter(l => absoluteLegSeconds(l.to) == null);
     const units = normal.reduce((sum, l) => sum + l.seconds, 0) / travelUnitSeconds();
     const stretch = units > 1 ? Math.pow(units, TRAVEL_DISTANCE_EXPONENT - 1) : 1;
-    normal.forEach(l => { l.seconds *= stretch; });
+    const escort = renownTravelMult(from);
+    normal.forEach(l => { l.seconds *= stretch * escort; });
     legs.forEach(l => { l.left = l.seconds; });
     return { path, legs, seconds: legs.reduce((sum, l) => sum + l.seconds, 0) };
 }
@@ -364,12 +372,11 @@ function rollPackSize(bonus = 0) {
 }
 
 function roadBandit() {
-    const worldId = worldTierOfRealm(state.realmIndex).id;
+    const worldId = currentLocation().world;
     const makeUnit = () => {
         const unit = buildEnemy({
             name: ROAD_BANDITS[worldId],
-            realmIndex: state.realmIndex,
-            realmStage: Math.min(state.realmStage, randomRealmStage()),
+            ...rollLocationRealm(currentLocation()),
             tier: Math.random() < 0.15 ? 'Tinh anh' : 'Thường'
         });
         unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * ROAD_BANDIT_XP_MINUTES;
@@ -413,6 +420,8 @@ function checkArrival() {
     mapViewWorld = currentLocation().world;
     mapSelected = null;
     questsOnLocation();
+    sendPresence();
+    if (typeof setWorldView === 'function') setWorldView('scene');
     renderAll();
 }
 
@@ -481,7 +490,8 @@ function renderMap() {
     const nodes = locs.map(l => {
         const here = l.id === state.location;
         const selected = l.id === mapSelected;
-        return `<g class="map-node ${here ? 'here' : ''}" role="button" tabindex="0" aria-label="${l.name}" onclick="selectMapNode('${l.id}')" onkeydown="if(event.key==='Enter')selectMapNode('${l.id}')">
+        const locked = !canEnterLocation(l.id);
+        return `<g class="map-node ${here ? 'here' : ''} ${locked ? 'locked' : ''}" role="button" tabindex="0" aria-label="${l.name}" onclick="selectMapNode('${l.id}')" onkeydown="if(event.key==='Enter')selectMapNode('${l.id}')">
             <circle cx="${l.x}" cy="${l.y}" r="27" fill="${selected ? '#ffe9a0' : '#0b1220'}" fill-opacity="${selected ? 1 : 0.8}" stroke="${here ? '#ffe9a0' : pal[2]}" stroke-width="3"/>
             <text x="${l.x}" y="${l.y + 9}" text-anchor="middle" font-size="24">${l.icon}</text>
             <text x="${l.x}" y="${l.y + 47}" text-anchor="middle" font-size="17" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" font-weight="600">${l.name}</text>
@@ -508,6 +518,10 @@ function renderMapDestination() {
     if (!mapSelected || mapSelected === state.location) return '';
     const loc = LOCATIONS[mapSelected];
     const route = findPath(state.location, mapSelected);
+    if (!canEnterLocation(mapSelected)) {
+        return `<div class="map-dest"><div><b>${loc.icon} ${loc.name}</b>
+            <div class="small">🔒 Cần đạt ${REALMS[loc.minR]} mới có thể đặt chân tới.</div></div></div>`;
+    }
     const teleport = canTeleport(mapSelected)
         ? `<button class="primary" onclick="teleportTo('${loc.id}')">⚡ Dịch chuyển</button>`
         : '';
@@ -641,7 +655,7 @@ function forgeQueueHTML() {
 }
 
 function acceptBounty() {
-    const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && l.minR <= state.realmIndex);
+    const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && l.minR <= state.realmIndex && l.maxR >= state.realmIndex - 1);
     const loc = pool[Math.floor(Math.random() * pool.length)];
     const pick = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
     state.bounty = { loc: loc.id, name: pick.name, need: BOUNTY_KILLS, done: 0 };
@@ -858,7 +872,7 @@ function spawnBoss(id, quest) {
     const enemy = buildEnemy({
         name: npc?.name || b.name, kind: b.kind, look: npc?.look || null, tier: 'Boss', scale: b.scale || 1,
         boardSize: b.board || 4, realmIndex: realm, realmStage: stage, elements: b.elements, path: b.path,
-        rootRank: Math.min(ROOT_RANKS.length - 1, (state.root?.rank || 0) + 1)
+        rootRank: rollEnemyRootRank(realm, 1)
     });
     enemy.bossId = id;
     if (b.adds) {
@@ -1017,6 +1031,7 @@ function renderLocationPanel() {
     const sideOffers = SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q));
     const buttons = [];
+    buttons.push(`<button onclick="openTianjiaoBoard()">🏆 Thiên Kiêu (${tianjiaoRank(loc.id) ? `hạng ${tianjiaoRank(loc.id)}` : 'chưa xếp'})</button>`);
     if ((loc.enemies || []).length) {
         buttons.push(`<button ${busy} onclick="startHunt()">🗡️ Săn (~${formatRealDuration(hastedSeconds(huntSeconds()))})</button>`);
         buttons.push(`<button class="${state.autoHunt ? 'primary' : ''}" onclick="toggleAutoHunt()">🔁 ${state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục'}</button>`);
@@ -1038,6 +1053,7 @@ function renderLocationPanel() {
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
         <div class="small">${loc.desc}</div>
+        ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[loc.minR]} – ${REALMS[loc.maxR]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}</div>` : ''}
         <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
         ${forgeQueueHTML()}
@@ -1059,6 +1075,11 @@ function renderAppearancePanel() {
     const path = DAO_PATHS[state.daoPath];
     const beatenBy = Object.values(DAO_PATHS).find(p => p.beats === state.daoPath);
     el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg()}</div><div class="gear-slots">${slots}</div></div>
+        <div class="loc-actions">
+            <button class="mini-btn" onclick="equipForRealm()">Đúng cảnh giới</button>
+            <button class="mini-btn" onclick="equipAll()">Mạnh nhất</button>
+            <button class="mini-btn" onclick="sellOutdatedGear()">Bán lỗi thời (${outdatedGear().length})</button>
+        </div>
         <div class="small">${path.icon} <b>${path.name}</b> · ${path.desc}</div>
         <div class="small">Khắc ${DAO_PATHS[path.beats].name} (+25%) · bị ${beatenBy.name} khắc (-20%)</div>`;
 }
@@ -1072,6 +1093,10 @@ function renderWorldPanels() {
     renderTestPanel();
     renderSectPanel();
     syncCultivationButton();
+    if (typeof refreshSceneSpots === 'function' && sceneState.canvas) {
+        refreshSceneSpots();
+        renderWorldViewTabs();
+    }
 }
 
 /* ---------- chế độ test ---------- */
@@ -1091,9 +1116,9 @@ function renderTestPanel() {
     const stageOpts = STAGES.map((s, i) => `<option value="${i}" ${i === state.realmStage ? 'selected' : ''}>${s}</option>`).join('');
     const locOpts = Object.values(LOCATIONS).map(l => `<option value="${l.id}" ${l.id === state.location ? 'selected' : ''}>${l.name}</option>`).join('');
     const speedBtns = TEST_SPEEDS.map(s => `<button class="filter-chip ${s === state.testSpeed ? 'active' : ''}" onclick="setTestSpeed(${s})">x${s.toLocaleString()}</button>`).join('');
-    const realmSeconds = REALM_REAL_DAYS * SECONDS_PER_DAY / (state.testSpeed || 1);
+    const realmSeconds = realmRealSeconds(state.realmIndex) / (state.testSpeed || 1);
     el.innerHTML = `<strong>🧪 Bảng test</strong>
-        <div class="small">Tốc độ thời gian (1 cảnh giới ≈ ${formatRealDuration(realmSeconds)})</div>
+        <div class="small">Tốc độ thời gian (cảnh giới này ≈ ${formatRealDuration(realmSeconds)})</div>
         <div class="filter-chips">${speedBtns}</div>
         <div class="test-row"><select id="testRealm" aria-label="Cảnh giới">${realmOpts}</select><select id="testStage" aria-label="Tiểu cảnh">${stageOpts}</select><button onclick="testJumpRealm()">Nhảy tới</button></div>
         <div class="test-row"><select id="testLoc" aria-label="Địa điểm">${locOpts}</select><button onclick="testTeleport()">Dịch chuyển</button></div>
@@ -1210,6 +1235,7 @@ function testRich() {
 
 /* ---------- khởi động ---------- */
 setInterval(worldTick, TICK_MS);
+window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {

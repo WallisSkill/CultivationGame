@@ -443,12 +443,12 @@ const ENDINGS = [
 ];
 
 const SIDE_QUESTS = [
-    { id: 's_thuoc', loc: 'thanh_thuy', npc: 'thuy_ba', title: 'Thảo Dược Cho Làng', needs: [0, 0], steps: [{ gather: { loc: 'vu_moc_lam', hours: 2, label: 'Hái linh thảo' } }, { go: 'thanh_thuy', say: [['thuy_ba', 'Con vẫn nhớ đường về. Cầm lấy, gói bánh và chút bạc của làng.']] }], reward: { hours: 4, goldRefs: 8 } },
+    { id: 's_thuoc', loc: 'thanh_thuy', npc: 'thuy_ba', title: 'Thảo Dược Cho Làng', needs: [1, 0], steps: [{ gather: { loc: 'vu_moc_lam', hours: 2, label: 'Hái linh thảo' } }, { go: 'thanh_thuy', say: [['thuy_ba', 'Con vẫn nhớ đường về. Cầm lấy, gói bánh và chút bạc của làng.']] }], reward: { hours: 4, goldRefs: 8 } },
     { id: 's_khoi', loc: 'thanh_van', npc: 'to_dao', title: 'Luyện Kiếm Cùng Sư Tỷ', needs: [1, 0], steps: [{ hunt: { loc: 'thanh_van', name: 'Khôi Lỗi Thí Luyện', n: 5 }, say: [['to_dao', 'Khá hơn rồi. Cái này ta giữ từ hồi Trúc Cơ, cho đệ.']] }], reward: { hours: 8, goldRefs: 10, gear: ['amulet', 1] } },
     { id: 's_bang', loc: 'bang_phong', npc: 'han_bang', title: 'Băng Hồn Không Yên', needs: [5, 0], steps: [{ hunt: { loc: 'bang_phong', name: 'Băng Hồn', n: 6 }, say: [['han_bang', 'Họ từng là đệ tử của ta. Cảm ơn ngươi đã tiễn họ.']] }], reward: { hours: 12, goldRefs: 20, gear: ['boots', 2] } },
     { id: 's_thu', loc: 'van_tien', npc: 'van_nguyet', title: 'Thư Về Phàm Giới', needs: [10, 0], steps: [{ gather: { loc: 'thien_ha', hours: 4, label: 'Tìm khe truyền âm' }, say: [['to_dao', '(Giọng nói vọng từ rất xa) Đệ còn sống là được rồi. Thanh Vân vẫn còn lửa.']] }], reward: { hours: 16, goldRefs: 30, statBless: 0.02 } },
     { id: 's_cho', loc: 'da_bao', npc: 'da_bao', title: 'Món Nợ Của Đa Bảo', needs: [16, 2], steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 6 }, say: [['da_bao', 'Làm ăn phải sòng phẳng. Đây là phần của ngươi.']] }], reward: { hours: 24, goldRefs: 80, gear: ['ring', 3] } },
-    { id: 's_quan', loc: 'vo_cuong', npc: 'ly_khach', title: 'Bữa Cơm Ở Vô Cương', needs: [21, 0], steps: [{ hunt: { loc: 'khai_thien', name: 'Hư Không Thú', n: 6 }, say: [['ly_khach', 'Thịt dai, nhưng ít ra là thật. Ngồi xuống ăn đi.']] }], reward: { hours: 36, goldRefs: 100, statBless: 0.02 } },
+    { id: 's_quan', loc: 'vo_cuong', npc: 'ly_khach', title: 'Bữa Cơm Ở Vô Cương', needs: [22, 0], steps: [{ hunt: { loc: 'khai_thien', name: 'Hư Không Thú', n: 6 }, say: [['ly_khach', 'Thịt dai, nhưng ít ra là thật. Ngồi xuống ăn đi.']] }], reward: { hours: 36, goldRefs: 100, statBless: 0.02 } },
     { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [26, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
 ];
 

@@ -43,10 +43,42 @@ for (const q of Object.values(G.QUEST_INDEX)) {
 }
 for (const [id, o] of Object.entries(G.ORIGINS)) {
     if (!G.LOCATIONS[o.loc]) fail.push(`origin ${id}: loc ${o.loc}`);
+    if (!(G.LOCATIONS[o.loc].services || []).includes('shop')) fail.push(`origin ${id}: không có cửa hàng`);
     (o.steps || []).forEach(s => {
         if (s.boss && !G.BOSSES[s.boss]) fail.push(`origin ${id}: boss ${s.boss}`);
         if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
     });
+}
+const ABSOLUTE = ['hondon', 'hongmong', 'chungnguyen'];
+function reachable(start, realm) {
+    const seen = new Set([start]);
+    const queue = [start];
+    while (queue.length) {
+        G.LOCATIONS[queue.pop()].links.forEach(n => {
+            const l = G.LOCATIONS[n];
+            if (!seen.has(n) && (ABSOLUTE.includes(l.world) || realm >= l.minR)) { seen.add(n); queue.push(n); }
+        });
+    }
+    return seen;
+}
+for (const [id, o] of Object.entries(G.ORIGINS)) {
+    if (!reachable(o.loc, 0).has('thanh_van')) fail.push(`origin ${id}: không tới được Thanh Vân ở Luyện Khí`);
+}
+for (const q of Object.values(G.QUEST_INDEX)) {
+    q.steps.forEach(s => {
+        const id = s.go || s.hunt?.loc || s.gather?.loc;
+        if (!id) return;
+        const l = G.LOCATIONS[id];
+        if (!ABSOLUTE.includes(l.world) && l.minR > q.needs[0]) fail.push(`${q.id}: ${l.name} cần cảnh giới ${l.minR} > ${q.needs[0]}`);
+    });
+}
+for (const w of G.WORLD_TIERS) {
+    const list = Object.values(G.LOCATIONS).filter(l => l.world === w.id);
+    for (let r = w.from; r <= w.to; r++) {
+        const open = list.filter(l => ABSOLUTE.includes(w.id) || r >= l.minR);
+        const seen = reachable(open[0].id, r);
+        open.forEach(l => { if (!seen.has(l.id)) fail.push(`${w.name} cảnh giới ${r}: ${l.name} bị cô lập`); });
+    }
 }
 for (let r = 1; r < 29; r++) if (!G.MAIN_QUESTS.some(q => q.unlock === r)) fail.push(`thiếu quest mở khóa realm ${r}`);
 G.MAIN_QUESTS.forEach((q, i) => {

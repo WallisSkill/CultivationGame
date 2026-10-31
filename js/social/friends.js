@@ -26,6 +26,7 @@ function initFriendsSystem() {
     }
     
     initChat();
+    initPresence();
 
     // 🆕 Tự động kết nối WebSocket khi khởi động
     if (typeof connectMatchWS === 'function') {
@@ -435,6 +436,13 @@ function setupFriendsEventListeners() {
     window.onMatchMessage = function(ev) {
         let msg = {};
         try { msg = JSON.parse(ev.data || '{}'); } catch { return; }
+
+        if (msg.type === 'info' && msg.message === 'Đã đăng ký hồ sơ.') return;
+        if (msg.type === 'friend_online') noteProfile(msg.profile);
+        if (msg.type === 'pvp_relay' && msg.sessionId === WORLD_SESSION) {
+            handleWorldRelay(msg);
+            return;
+        }
 
         // 🆕 Thêm pvp_accept và pvp_decline vào danh sách xử lý
         if (['friend_request', 'friend_request_sent', 'friend_accept', 'friend_reject', 'friend_remove', 

@@ -1531,3 +1531,8 @@ footer {
 .lb-unit-mini .lb-avatar { height: 72px; }
 .lb-unit.lb-dead { opacity: .3; filter: grayscale(1); }
 .lb-float-crit { color: #ffd54f; font-size: 1.15em; font-weight: 800; }
+.map-node.locked { opacity: .4; }
+
+#sceneCanvas { display: block; width: 100%; height: auto; margin-top: 8px; border-radius: 10px; outline: none; touch-action: none; cursor: pointer; }
+#sceneCanvas:focus-visible { box-shadow: 0 0 0 2px #ffe9a0; }
+.tj-me { background: rgba(255, 233, 160, 0.14); border-radius: 4px; padding: 2px 6px; }

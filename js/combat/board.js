@@ -1098,10 +1098,12 @@ function lbMakeAlly(player, name) {
 
 function lbBuildAllies(player) {
     const disciples = Math.min(LB_ALLY_MAX, state.ownSect?.disciples || 0);
-    const hired = Math.min(LB_ALLY_MAX - disciples, state.hired || 0);
+    const locals = Math.min(LB_ALLY_MAX - disciples, renownFreeGuards());
+    const hired = Math.min(LB_ALLY_MAX - disciples - locals, state.hired || 0);
     state.hired = 0;
     return [
         ...Array.from({ length: disciples }, (_, i) => lbMakeAlly(player, `Đệ tử ${i + 1}`)),
+        ...Array.from({ length: locals }, (_, i) => lbMakeAlly(player, `Hộ pháp khu vực ${i + 1}`)),
         ...Array.from({ length: hired }, (_, i) => lbMakeAlly(player, `Hộ pháp ${i + 1}`))
     ];
 }

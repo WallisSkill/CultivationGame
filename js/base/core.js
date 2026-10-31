@@ -239,7 +239,7 @@ window.addEventListener("load", () => {
         startRootElement = randomElements();
         state.root.elements = startRootElement;
         state.root.rank = startRootRank;
-        state.gold = goldRef(0) * 4;
+        state.gold = goldRef(0) * 30;
         if (state.name && ADMIN_NAMES.includes(state.name)) {
             state.name = "Thiên Đạo Chí Tôn";
             state.gold = 9999999999999;
@@ -1109,6 +1109,7 @@ function closeStatDetailModal() {
 }
 
 if (typeof window !== 'undefined') {
+    Object.assign(window, { equipAll, equipForRealm, sellOutdatedGear });
     window.showStatDetails = showStatDetails;
     window.closeStatDetailModal = closeStatDetailModal;
 }
@@ -1298,7 +1299,9 @@ function renderInventory() {
                         <button class="filter-chip ${inventoryFilter === 'lb_grade_5' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_5')">🔮 Tiên+</button>
                     </div>
                 </div>
-                <button class="equip-all-btn" onclick="equipAll()">🧤 Mặc tất cả</button>
+                <button class="equip-all-btn" onclick="equipForRealm()">🧤 Mặc đồ đúng cảnh giới</button>
+                <button class="equip-all-btn" onclick="equipAll()">⚔️ Mặc đồ mạnh nhất</button>
+                <button class="equip-all-btn" onclick="sellOutdatedGear()">💰 Bán đồ lỗi thời</button>
                 <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()" style="background:#5c3d11;color:#ffd700;margin-left:8px">🌟 Nâng Cấp Linh Bảo Theo Tu Vi</button>
             `;
 
@@ -1462,13 +1465,45 @@ function gearScore(item) {
     return (item.atk || 0) / b.atk + (item.def || 0) / b.def + (item.hp || 0) / b.hp;
 }
 
-function equipAll() {
+function equipByRank(compare) {
     GEAR_SLOT_IDS.forEach(slot => {
         const best = state.inventory
             .filter(it => it.slot === slot && (it.reqRealm || 0) <= state.realmIndex)
-            .sort((a, b) => gearScore(b) - gearScore(a))[0];
+            .sort(compare)[0];
         if (best && !best.equipped) useItem(state.inventory.indexOf(best));
     });
+    renderAll();
+}
+
+function equipAll() {
+    equipByRank((a, b) => gearScore(b) - gearScore(a));
+}
+
+function equipForRealm() {
+    equipByRank((a, b) => (b.reqRealm || 0) - (a.reqRealm || 0) || gearScore(b) - gearScore(a));
+}
+
+function gearSellValue(item) {
+    return goldRef(item.reqRealm || 0) * ((item.quality || 0) + 1);
+}
+
+function outdatedGear() {
+    return state.inventory.filter(it => {
+        if (!it.slot || it.equipped) return false;
+        const worn = equippedInSlot(it.slot);
+        return worn && gearScore(it) <= gearScore(worn);
+    });
+}
+
+async function sellOutdatedGear() {
+    const items = outdatedGear();
+    if (!items.length) { showToast('Không có đồ lỗi thời.', 'info'); return; }
+    const total = items.reduce((sum, it) => sum + gearSellValue(it), 0);
+    const ok = await showConfirm(`Bán ${items.length} món yếu hơn đồ đang mặc, nhận ${formatNumber(total)} linh thạch?`);
+    if (!ok) return;
+    state.inventory = state.inventory.filter(it => !items.includes(it));
+    state.gold += total;
+    log(`💰 Bán ${items.length} món đồ lỗi thời, +${formatNumber(total)} linh thạch.`);
     renderAll();
 }
 

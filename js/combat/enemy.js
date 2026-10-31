@@ -1,10 +1,16 @@
 /* ===========================
     ENEMY: dựng kẻ địch từ bảng chuẩn trong balance.js
 =========================== */
-function rollEnemyRootRank(bonus = 0) {
-    const base = state.root?.rank || 0;
-    const swing = Math.floor(Math.random() * 3) - 1;
-    return Math.max(0, Math.min(ROOT_RANKS.length - 1, base + swing + bonus));
+/* Đa phần phẩm thấp và trung, phẩm cao cực hiếm; cảnh giới của quái nâng dần mặt bằng */
+const ENEMY_ROOT_WEIGHTS = [40, 30, 20, 7, 2, 0.7, 0.2, 0.07, 0.03, 0];
+const ENEMY_ROOT_REALMS_PER_RANK = 4;
+
+function rollEnemyRootRank(realm, bonus = 0) {
+    const total = ENEMY_ROOT_WEIGHTS.reduce((a, b) => a + b, 0);
+    let roll = Math.random() * total;
+    let rank = ENEMY_ROOT_WEIGHTS.findIndex(weight => (roll -= weight) <= 0);
+    rank += Math.floor(realm / ENEMY_ROOT_REALMS_PER_RANK) + bonus;
+    return Math.max(0, Math.min(ROOT_RANKS.length - 1, rank));
 }
 
 function randomHumanPath() {
@@ -23,7 +29,7 @@ function buildEnemy({ name, realmIndex, realmStage = 0, tier = 'Thường', scal
         realmIndex,
         realmStage,
         elements: elements && elements.length ? elements : randomHybridElements(realmIndex, false),
-        rootRank: rootRank != null ? rootRank : rollEnemyRootRank(),
+        rootRank: rootRank != null ? rootRank : rollEnemyRootRank(realmIndex),
         ...stats
     };
 }
@@ -51,6 +57,18 @@ function applyPackScale(unit, count) {
     unit.boardSize = count > 1 ? 2 : unit.boardSize;
 }
 
+/* Kẻ địch thuộc về khu vực: cảnh giới lấy trong khoảng của địa điểm, không theo người chơi */
+const ENEMY_REALM_STEP_CHANCE = 0.25;
+const UNDERLEVEL_XP_MULT = 0.25;
+
+function rollLocationRealm(loc, capRealm = Infinity) {
+    let realm = loc.minR;
+    const top = Math.min(loc.maxR, Math.max(loc.minR, capRealm));
+    while (realm < top && Math.random() < ENEMY_REALM_STEP_CHANCE) realm++;
+    const stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : 3;
+    return { realmIndex: realm, realmStage: Math.min(stageCap, randomRealmStage()) };
+}
+
 function spawnEnemyPack(makeUnit, count) {
     const members = Array.from({ length: count }, () => makeUnit());
     members.forEach(unit => applyPackScale(unit, count));
@@ -69,13 +87,9 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     const makeUnit = () => {
         const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
         const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
-        const unit = buildEnemy({
-            name: pick.name,
-            kind: pick.kind,
-            realmIndex: Math.max(loc.minR, Math.min(loc.maxR, state.realmIndex)),
-            realmStage: Math.min(state.realmStage, randomRealmStage()),
-            tier: rollEnemyTier()
-        });
+        const questCap = wanted && pick.name === wanted.name ? state.realmIndex : Infinity;
+        const unit = buildEnemy({ name: pick.name, kind: pick.kind, ...rollLocationRealm(loc, questCap), tier: rollEnemyTier() });
+        if (unit.realmIndex < state.realmIndex - 1) unit.xpMinutes *= UNDERLEVEL_XP_MULT;
         if (huntedSeconds) unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
         return unit;
     };

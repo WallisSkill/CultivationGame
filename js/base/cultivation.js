@@ -43,10 +43,16 @@ function gainXP(n) {
     checkRealmProgress();
 }
 
-function gainCultivationHours(hours) {
-    const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * hours * 3600);
+function gainCultivationSeconds(seconds) {
+    const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * seconds);
     gainXP(amount);
     return amount;
+}
+
+/* Đan dược, nhiệm vụ, kỳ ngộ: "giờ" tính theo nhịp của cảnh giới cuối, nên giữ nguyên tỷ lệ ở mọi cảnh giới */
+function gainCultivationHours(hours) {
+    const ratio = realmRealSeconds(state.realmIndex || 0) / (REALM_LAST_DAYS * SECONDS_PER_DAY);
+    return gainCultivationSeconds(hours * 3600 * ratio);
 }
 
 function checkRealmProgress() {

@@ -188,11 +188,10 @@ function runFromBattle() {
 function grantBattleRewards(enemy) {
     const tier = ENEMY_TIERS[enemy.tier] || ENEMY_TIERS['Thường'];
     const worldId = worldTierOfRealm(enemy.realmIndex).id;
-    const hours = (enemy.xpMinutes || tier.xpMinutes) / 60;
-    const gold = enemy.gold || goldRef(enemy.realmIndex);
+    const gold = Math.floor((enemy.gold || goldRef(enemy.realmIndex)) * renownGoldMult());
 
     state.gold += gold;
-    const xp = gainCultivationHours(hours);
+    const xp = gainCultivationSeconds((enemy.xpMinutes || tier.xpMinutes) * 60);
     log(`🏵️ Hạ ${enemy.name}! +${formatNumber(xp)} tu vi, +${formatNumber(gold)} linh thạch.`);
 
     if (Math.random() < tier.matChance) grantMaterial(worldId, enemy.tier === 'Thường' ? 1 : 3);
@@ -338,7 +337,9 @@ function buildPublicProfile() {
         str: state.totalPower || state.power || 10,
         def: state.totalDef || state.defense || 5,
         hp: state.totalMaxHp || state.maxHp || 100,
-        look: state.look || null
+        look: state.look || null,
+        loc: state.location || null,
+        renown: sharedRenown()
     };
 }
 
