@@ -711,19 +711,19 @@ function fuseGem(gem1Idx, gem2Idx) {
     const gem1 = state.inventory[gem1Idx];
     const gem2 = state.inventory[gem2Idx];
     if (!gem1 || !gem2 || gem1.type !== 'gem' || gem2.type !== 'gem') {
-        log('⚠️ Vật phẩm không hợp lệ.'); return;
+        showToast('Vật phẩm không hợp lệ.', 'warn'); return;
     }
     if (gem1.gemKind !== gem2.gemKind) {
-        log('⚠️ Hai linh ngọc phải cùng loại để hợp nhất.'); return;
+        showToast('Hai linh ngọc phải cùng loại.', 'warn'); return;
     }
     if (gem1.tier !== gem2.tier) {
-        log('⚠️ Hai linh ngọc phải cùng cấp để hợp nhất.'); return;
+        showToast('Hai linh ngọc phải cùng cấp.', 'warn'); return;
     }
     if (gem1.tier >= 3) {
-        log('⚠️ Linh ngọc đã đạt cấp tối đa, không thể hợp nhất.'); return;
+        showToast('Linh ngọc đã đạt cấp tối đa.', 'warn'); return;
     }
     const newTier = gem1.tier + 1;
-    const newMagnitude = Math.min(1.0, (gem1.magnitude || 0.1) * 1.15); // 15% increase, cap at 1.0
+    const newMagnitude = lbGemMagnitude(gem1.gemKind, newTier);
     const gemDef = LB_GEM_KINDS[gem1.gemKind] || { label: 'Linh Ngọc' };
     const newName = `${gemDef.label} ${GEM_FUSION_NAMES[newTier]}`;
     const newGem = {
@@ -859,7 +859,7 @@ function selectGemForFusion(idx) {
             });
         } else {
             // Attempt fusion
-            fuseGem(selectedGemForFusion, idx);
+            fuseGem(state.inventory.indexOf(gems[selectedGemForFusion]), state.inventory.indexOf(gems[idx]));
         }
     }
 }

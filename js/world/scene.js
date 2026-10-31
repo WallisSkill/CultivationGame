@@ -33,7 +33,6 @@ function sceneSpots(loc) {
     add('🧘', state.autoTrain ? 'Đứng dậy' : 'Ngồi bế quan', () => toggleMeditate(), true, 'meditate');
     add('🏆', 'Thiên Kiêu Bảng', () => openTianjiaoBoard());
     add('🗡️', 'Săn quái', () => startHunt(), huntable);
-    add('🔁', state.autoHunt ? 'Dừng săn liên tục' : 'Săn liên tục', () => toggleAutoHunt(), huntable);
     add('🧭', 'Thám hiểm', () => startExplore());
     add('🏪', 'Cửa hàng', () => openServiceShop(), hasService('shop'));
     add('🔨', 'Lò rèn', () => openForge(), hasService('forge'));
@@ -137,7 +136,7 @@ function sceneMove(dt) {
     const len = Math.hypot(dx, dy);
     if (!len || window._battleActive || state.activity?.type === 'travel') return;
     standUp();
-    const step = SCENE_SPEED * dt / len;
+    const step = SCENE_SPEED * renownWalkMult() * dt / len;
     const nx = s.x + dx * step, ny = s.y + dy * step;
     const movedX = !sceneBlocked(nx, s.y);
     if (movedX) s.x = nx;
@@ -339,8 +338,11 @@ function renderWorldViewTabs() {
     const tabs = $('worldViewTabs');
     if (!tabs) return;
     const here = playersHere().length;
+    const huntable = (currentLocation().enemies || []).length > 0;
+    const autoHunt = huntable ? `<button class="filter-chip ${state.autoHunt ? 'active' : ''}" onclick="toggleAutoHunt()">🔁 Săn liên tục: ${state.autoHunt ? 'ON' : 'OFF'}</button>` : '';
     tabs.innerHTML = `<button class="filter-chip ${sceneState.view === 'scene' ? 'active' : ''}" onclick="setWorldView('scene')">🚶 Bên trong</button>
         <button class="filter-chip ${sceneState.view === 'map' ? 'active' : ''}" onclick="setWorldView('map')">🗺️ Thiên Hạ Đồ</button>
+        ${autoHunt}
         <span class="small">👥 ${here + 1} người tại đây · ${Math.max(worldServer.online, onlinePlayers.size + 1)} online</span>`;
     $('sceneHost').style.display = sceneState.view === 'scene' ? 'block' : 'none';
     $('worldMap').style.display = sceneState.view === 'map' ? 'block' : 'none';

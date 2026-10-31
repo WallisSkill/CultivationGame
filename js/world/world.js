@@ -341,6 +341,8 @@ function travelTo(id) {
     if (!route) { showToast('Chưa có đường tới đó.', 'warn'); return; }
     startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
     log(`🛤️ Khởi hành tới ${LOCATIONS[id].name}, mất ${formatRealDuration(route.seconds)}. Trên đường không thể tu luyện.`);
+    const escort = renownTravelMult(route.path[0]);
+    if (escort < 1) log(`🐎 Người trong khu vực nể danh thiên kiêu, đưa đường: thời gian đi x${escort}.`);
 }
 
 /* ---------- kỳ ngộ trên đường: mỗi 5 giây thực tung một lần, chỉ khi đang mở game ---------- */
@@ -1087,6 +1089,7 @@ function renderLocationPanel() {
         ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[loc.minR]} – ${REALMS[loc.maxR]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}</div>` : ''}
         <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
+        ${renownStatusHTML()}
         ${forgeQueueHTML()}`;
 }
 

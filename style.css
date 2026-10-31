@@ -574,7 +574,7 @@ footer {
     flex-direction: column;
     gap: 10px;
     width: min(92vw, 360px);
-    z-index: 10000;
+    z-index: 10020;
     pointer-events: none;
 }
 

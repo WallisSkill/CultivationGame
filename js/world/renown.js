@@ -71,6 +71,11 @@ function renownTravelMult(fromId) {
     return rankValue(RANK_TRAVEL_MULT, fromId) || 1;
 }
 
+/* Đi trong khu vực mình đứng top 3: nhanh theo đúng hệ số đi đường */
+function renownWalkMult() {
+    return 1 / renownTravelMult(state.location);
+}
+
 function renownFreeGuards() {
     return rankValue(RANK_FREE_GUARDS);
 }
@@ -79,11 +84,17 @@ function renownPerkLines(rank) {
     if (rank < 1 || rank > 3) return [];
     const i = rank - 1;
     const type = currentLocation().type;
-    const lines = [`🤝 ${RANK_FREE_GUARDS[i]} hộ pháp khu vực miễn phí mỗi trận`, `🐎 Rời khu vực nhanh hơn: thời gian đi x${RANK_TRAVEL_MULT[i]}`];
+    const lines = [`🤝 ${RANK_FREE_GUARDS[i]} hộ pháp khu vực miễn phí mỗi trận`, `🐎 Rời khu vực nhanh hơn: thời gian đi x${RANK_TRAVEL_MULT[i]}`, `🏃 Đi trong khu vực nhanh x${(1 / RANK_TRAVEL_MULT[i]).toFixed(2)}`];
     if (type === 'sect') lines.push(`💠 Linh khí +${Math.round(RANK_QI_BONUS[i] * 100)}%`);
     if (type === 'town' || type === 'sect') lines.push(`🏪 Giá cửa hàng -${Math.round(RANK_SHOP_DISCOUNT[i] * 100)}%`);
     if (type === 'wild' || type === 'dungeon') lines.push(`💰 Linh thạch từ săn +${Math.round(RANK_HUNT_GOLD_BONUS[i] * 100)}%`);
     return lines;
+}
+
+function renownStatusHTML() {
+    const rank = tianjiaoRank(state.location);
+    if (rank < 1 || rank > 3) return '';
+    return `<div class="small">🏆 Thiên kiêu hạng ${rank}: đi đường x${RANK_TRAVEL_MULT[rank - 1]} · đi trong khu vực nhanh x${renownWalkMult().toFixed(2)} · ${RANK_FREE_GUARDS[rank - 1]} hộ pháp miễn phí</div>`;
 }
 
 function openTianjiaoBoard() {
