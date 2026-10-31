@@ -43,6 +43,13 @@ function gainXP(n) {
     checkRealmProgress();
 }
 
+/* Một trận không cho quá 5% thời gian của cảnh giới hiện tại */
+const BATTLE_XP_MAX_REALM_SHARE = 0.05;
+
+function battleXpSeconds(minutes) {
+    return Math.min(minutes * 60, realmRealSeconds(state.realmIndex || 0) * BATTLE_XP_MAX_REALM_SHARE);
+}
+
 function gainCultivationSeconds(seconds) {
     const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * seconds);
     gainXP(amount);

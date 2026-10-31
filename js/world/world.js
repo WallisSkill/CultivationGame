@@ -143,6 +143,7 @@ function isBusy() {
 }
 
 function requireFree() {
+    if (coop.helping?.started) { showToast('Đang hỗ trợ đạo hữu.', 'warn'); return false; }
     if (window._battleActive) { showToast('Đang giao chiến.', 'warn'); return false; }
     if (state.activity) { showToast(`Đang bận: ${state.activity.label}.`, 'warn'); return false; }
     return true;
@@ -857,7 +858,11 @@ function questAction(id) {
     }
     if (step.boss) {
         if (!requireFree()) return;
-        spawnBoss(step.boss, QUEST_INDEX[id]);
+        const boss = BOSSES[step.boss];
+        const npc = typeof boss.npc === 'string' ? NPCS[boss.npc] : boss.npc;
+        const start = () => spawnBoss(step.boss, QUEST_INDEX[id]);
+        if (boss.scriptedLoss) start();
+        else coopGate(`Khiêu chiến ${npc?.name || boss.name}`, start);
     }
 }
 

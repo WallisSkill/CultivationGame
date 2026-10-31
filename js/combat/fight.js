@@ -191,7 +191,7 @@ function grantBattleRewards(enemy) {
     const gold = Math.floor((enemy.gold || goldRef(enemy.realmIndex)) * renownGoldMult());
 
     state.gold += gold;
-    const xp = gainCultivationSeconds((enemy.xpMinutes || tier.xpMinutes) * 60);
+    const xp = gainCultivationSeconds(battleXpSeconds(enemy.xpMinutes || tier.xpMinutes));
     log(`🏵️ Hạ ${enemy.name}! +${formatNumber(xp)} tu vi, +${formatNumber(gold)} linh thạch.`);
 
     if (Math.random() < tier.matChance) grantMaterial(worldId, enemy.tier === 'Thường' ? 1 : 3);
@@ -738,7 +738,8 @@ function pvpAttackOrLocal() {
 
         }
 
-    const total = wasDodge ? 0 : (baseDamage + burnExtra);
+    const assist = wasDodge ? 0 : coopPvpAssist(opp);
+    const total = wasDodge ? 0 : (baseDamage + burnExtra + assist);
 
     // Apply locally to opponent
     if (!wasDodge) {
@@ -885,21 +886,11 @@ function endPvPSession() {
     pvpSession.started = false;
     state.currentEnemy = null;
     state.hp = state.totalMaxHp;
-    // NEW: always reset finding state and disconnect WS after a match finishes
     window._findingMatch = false;
+    coopFinish(true);
     try {
         const btn = $('findMatch');
         if (btn) btn.innerText = 'Tìm đối thủ PvP';
-    } catch { }
-    try {
-        // small delay to allow final messages to flush (best-effort)
-        setTimeout(() => {
-            if (window.matchWS) {
-                try { window.matchWS.close(); } catch { }
-                window.matchWS = null;
-                window.matchConnected = false;
-            }
-        }, 200);
     } catch { }
 
     if (typeof resetAllCooldowns === 'function') {

@@ -1705,7 +1705,10 @@ if (fightNowBtn) {
 }
 $('runBtn').onclick = () => { if (typeof forfeitBoardBattle === 'function') forfeitBoardBattle(); runFromBattle(); };
 // changed to window-safe call to avoid "findMatchPvP is not defined"
-$('findMatch').onclick = () => { if (window.findMatchPvP) window.findMatchPvP(); };
+$('findMatch').onclick = () => {
+    if (window._findingMatch) return window.findMatchPvP();
+    coopGate('Tìm đối thủ PvP', () => window.findMatchPvP());
+};
 $('saveBtn').onclick = () => saveProgress();
 $('loadBtn').onclick = () => loadProgress();
 const shopBtn = $('openShop');

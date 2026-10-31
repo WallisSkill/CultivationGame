@@ -1101,7 +1101,9 @@ function lbBuildAllies(player) {
     const locals = Math.min(LB_ALLY_MAX - disciples, renownFreeGuards());
     const hired = Math.min(LB_ALLY_MAX - disciples - locals, state.hired || 0);
     state.hired = 0;
+    const helper = coopHelperCombatant();
     return [
+        ...(helper ? [helper] : []),
         ...Array.from({ length: disciples }, (_, i) => lbMakeAlly(player, `Đệ tử ${i + 1}`)),
         ...Array.from({ length: locals }, (_, i) => lbMakeAlly(player, `Hộ pháp khu vực ${i + 1}`)),
         ...Array.from({ length: hired }, (_, i) => lbMakeAlly(player, `Hộ pháp ${i + 1}`))
@@ -1351,6 +1353,7 @@ function lbEndBattle(battle, result) {
     window._battleActive = false;
 
     const enemy = state.currentEnemy;
+    coopBattleEnd(result, enemy);
     state.hp = Math.max(0, Math.floor(battle.player.hp));
     if (enemy) enemy.hp = Math.max(0, Math.floor(battle.foes.reduce((sum, c) => sum + Math.max(0, c.hp), 0)));
 
@@ -1386,6 +1389,7 @@ function forfeitBoardBattle() {
         battle.running = false;
         if (battle.timer) { clearInterval(battle.timer); battle.timer = null; }
         window.__boardBattle = null;
+        coopFinish(false);
     }
     window._battleActive = false;
 }
@@ -1459,6 +1463,7 @@ function lbBuildArenaDOM(battle) {
 
 function lbUpdateArena(battle) {
     if (!battle) return;
+    coopBattleTick(battle);
     const now = performance.now();
     [...battle.allies, ...battle.foes].forEach(c => {
         const d = c.dom;

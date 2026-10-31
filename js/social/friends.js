@@ -202,17 +202,17 @@ function inviteFriendToPvP(friendId, friendName) {
         return;
     }
 
-    const myProfile = buildPublicProfile();
-    
-    wsSend({
-        type: 'pvp_invite',
-        to: friendId,
-        from: myProfile.id,
-        fromName: myProfile.name,
-        fromProfile: myProfile
+    coopGate(`Thách đấu ${friendName}`, () => {
+        const myProfile = buildPublicProfile();
+        wsSend({
+            type: 'pvp_invite',
+            to: friendId,
+            from: myProfile.id,
+            fromName: myProfile.name,
+            fromProfile: myProfile
+        });
+        log(`⚔️ Đã gửi lời mời PvP đến ${friendName}.`);
     });
-
-    log(`⚔️ Đã gửi lời mời PvP đến ${friendName}.`);
 }
 
 // Xử lý tin nhắn từ server
@@ -462,6 +462,11 @@ function setupFriendsEventListeners() {
 
         if (msg.type === 'pvp_relay' && msg.sessionId === SECT_SESSION) {
             handleSectRelay(msg);
+            return;
+        }
+
+        if (msg.type === 'pvp_relay' && msg.sessionId === COOP_SESSION) {
+            handleCoopRelay(msg);
             return;
         }
 
