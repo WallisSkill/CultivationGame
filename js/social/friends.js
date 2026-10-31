@@ -439,6 +439,10 @@ function setupFriendsEventListeners() {
 
         if (msg.type === 'info' && msg.message === 'Đã đăng ký hồ sơ.') return;
         if (msg.type === 'friend_online') noteProfile(msg.profile);
+        if (msg.type === 'ranked_board' || msg.type === 'ranked_rewards') {
+            handleRankedMessage(msg);
+            return;
+        }
         if (msg.type?.startsWith('world_') || msg.type === 'tianjiao_board') {
             handleWorldMessage(msg);
             return;

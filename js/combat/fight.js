@@ -173,6 +173,7 @@ const LOSE_REST_SECONDS = 180;
 function runFromBattle() {
     if (!state.currentEnemy) { log('Không có kẻ thù để chạy.'); return; }
     if (state.currentEnemy.isPvP && pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
+        reportRankedLoss();
         wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'forfeit' } });
         endPvPSession();
         return;
@@ -467,9 +468,10 @@ function initPvPTurnOrder(opp) {
     return decideFirstTurnByJoin(me.id, opp.id);
 }
 
-function startPvPBattle(oppProfile) {
+function startPvPBattle(oppProfile, matchId = null) {
     const me = buildPublicProfile();
     coopDropOpponent(oppProfile.id);
+    pvpSession.matchId = matchId;
     pvpSession.active = true;
     pvpSession.opponentId = oppProfile.id;
     pvpSession.sessionId = deriveSessionId(me.id, oppProfile.id);
@@ -485,6 +487,7 @@ function startPvPBattle(oppProfile) {
     log(`💠 Linh căn: ${state.currentEnemy.elements.map(colorizeElement).join(' ')} — ${ROOT_RANKS[state.currentEnemy.rootRank]}`);
     log(`⚔️ HP: ${state.currentEnemy.hp}, ATK: ${state.currentEnemy.str}, DEF: ${state.currentEnemy.def}`);
     log(pvpSession.myTurn ? '🎲 Ngươi ra tay trước.' : '🎲 Đối thủ ra tay trước.');
+    if (matchId) log('📊 Trận xếp hạng: kết quả tính vào elo.');
     startPvPHeartbeat();
 }
 
@@ -523,7 +526,7 @@ function onMatchMessage(ev) {
 
     if (msg.type === 'match_found' && msg.opponent) {
         if (!window._findingMatch) { log('ℹ️ Bỏ qua trận PvP không do ngươi tìm.'); return; }
-        startPvPBattle(msg.opponent);
+        startPvPBattle(msg.opponent, msg.matchId);
         return;
     }
 
@@ -563,6 +566,7 @@ function onMatchMessage(ev) {
 
                 if (state.hp <= 0) {
                     log('💀 Ngươi bại trận trong PvP.');
+                    reportRankedLoss();
                     wsSend({
                         type: 'pvp_relay',
                         to: pvpSession.opponentId,
@@ -884,13 +888,14 @@ function findMatchPvP() {
         window._findingMatch = true;
         if (btn) btn.innerText = 'Dừng tìm đối thủ PvP';
         const profile = buildPublicProfile();
-        wsSend({ type: 'find_match', profile });
+        wsSend({ type: 'find_match', profile, token: profileToken() });
         log('🔍 Đang tìm đối thủ PvP (ưu tiên cùng cảnh giới)...');
     });
 }
 
 function endPvPSession() {
     stopPvPHeartbeat();
+    pvpSession.matchId = null;
     pvpSession.active = false;
     pvpSession.sessionId = null;
     pvpSession.opponentId = null;

@@ -41,7 +41,8 @@ function sceneSpots(loc) {
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), !!loc.path);
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), !!loc.path && state.daoPath !== loc.path);
-    add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường PvP', () => findMatchFromScene(), loc.type === 'town' || loc.type === 'sect');
+    add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => findMatchFromScene(), loc.type === 'town' || loc.type === 'sect');
+    add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
         .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
