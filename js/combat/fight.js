@@ -887,6 +887,7 @@ function endPvPSession() {
     pvpSession.started = false;
     state.currentEnemy = null;
     state.hp = state.totalMaxHp;
+    window._battleActive = false;
     window._findingMatch = false;
     coopFinish(true);
     try {
