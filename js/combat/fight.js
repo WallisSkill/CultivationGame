@@ -583,7 +583,7 @@ function onMatchMessage(ev) {
                 const result = msg.data?.result || 'end';
                 if (result === 'win' || result === 'forfeit') {
                     log('🏳️ Đối thủ đã rời trận. Ngươi chiến thắng!');
-                    if (window.grantAllSaintsRewardFree) window.grantAllSaintsRewardFree('pvp_win_remote');
+                    grantPvpWinReward();
                 } else {
                     log('🏁 Trận PvP kết thúc.');
                 }
@@ -788,7 +788,7 @@ function pvpAttackOrLocal() {
 
     if (state.currentEnemy.hp <= 0 && !wasDodge) {
         log('🎉 Ngươi thắng PvP!');
-        if (window.grantAllSaintsRewardFree) window.grantAllSaintsRewardFree('pvp_win_local');
+        grantPvpWinReward();
         if (pvpSession.opponentId && pvpSession.sessionId) {
             wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'defeat' } });
         }

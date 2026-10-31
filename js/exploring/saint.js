@@ -346,40 +346,6 @@ function callSaintOnTalk(saint) {
     };
 })();
 
-// Reward API: grant one free meet for all saints (does not consume max count)
-(function exposeAllSaintsReward() {
-    if (window.grantAllSaintsRewardFree) return;
-
-    window.grantAllSaintsRewardFree = function (reason = 'victory') {
-        try {
-            if (!Array.isArray(SAINTS) || SAINTS.length === 0) return;
-            log(`🎁 Phần thưởng chiến thắng — Lục Thánh giáng lâm (miễn giới hạn).`);
-            SAINTS.forEach(s => {
-                try {
-                    window.callSaintOnTalk(s, { free: true, reason });
-                    log(`✨ ${s.name} ban phúc vô điều kiện, thực lực tăng mạnh.`);
-                } catch { }
-            });
-            log(`🎉 Yến hội Lục Thánh kết thúc.`);
-        } catch { }
-    };
-})();
-
-// Reward: meet all six saints once, for free, without consuming max limit
-window.grantAllSaintsRewardFree = function (reason = 'victory') {
-    try {
-        if (!Array.isArray(SAINTS) || SAINTS.length === 0) return;
-        log(`🎁 Phần thưởng chiến thắng — Lục Thánh giáng lâm (miễn giới hạn).`);
-        SAINTS.forEach(s => {
-            try {
-                window.callSaintOnTalk(s, { free: true, reason });
-                log(`✨ ${s.name} ban phúc vô điều kiện, thực lực tăng mạnh.`);
-            } catch { }
-        });
-        log(`🎉 Yến hội Lục Thánh kết thúc.`);
-    } catch { }
-};
-
 function useRelic(relicName) {
     const relic = state.inventory.find(r => r.name === relicName && r.type === 'relic');
     if (!relic) {

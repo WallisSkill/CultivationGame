@@ -117,6 +117,7 @@ function worldTick() {
     if (worldUiAccum >= 500) {
         worldUiAccum = 0;
         if (state.root?.elements) {
+            if (state.questDone.length) advanceMainQuest();
             updateTrainingUI();
             renderActivityBar();
             updateMapToken();
@@ -965,6 +966,21 @@ function clearBossStep(bossId) {
     state.questActive.slice().forEach(rt => {
         if (questStep(rt)?.boss === bossId) completeStep(rt);
     });
+}
+
+/* Thắng PvP bằng một trận Thống lĩnh ở cảnh giới thấp hơn trong hai bên */
+function grantPvpWinReward() {
+    const realm = Math.min(state.realmIndex || 0, state.currentEnemy?.realmIndex ?? Infinity);
+    const tier = ENEMY_TIERS['Thống lĩnh'];
+    const gold = goldRef(realm) * tier.goldMult;
+    state.gold += gold;
+    const xp = gainCultivationSeconds(battleXpSeconds(tier.xpMinutes));
+    log(`🏆 Thưởng PvP: +${formatNumber(gold)} linh thạch, +${formatNumber(xp)} tu vi.`);
+    grantMaterial(worldTierOfRealm(realm).id, 1);
+    if (Math.random() < tier.gearChance) {
+        const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
+        addItemToInventory(makeGearItem(realm, slot, 1));
+    }
 }
 
 function enemyRenownPoints(enemy) {
