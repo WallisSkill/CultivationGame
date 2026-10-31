@@ -371,7 +371,7 @@ function coopMirrorUnit(spec) {
     const kind = MONSTER_DRAW[spec?.kind] ? spec.kind : 'human';
     const slots = (Array.isArray(spec?.slots) ? spec.slots : []).slice(0, COOP_WATCH_LIMIT).map(slot => {
         const base = LINH_BAO_MAP[slot?.id] || LB_DEFAULT_ATTACK;
-        const def = { ...base, grade: lbClamp(Number(slot?.grade) || 0, 0, LB_MAX_GRADE), level: 1 };
+        const def = { ...base, grade: lbClamp(Number(slot?.grade) || 0, 0, LB_MAX_GRADE), level: lbClamp(Number(slot?.level) || 1, 1, LB_MAX_LEVEL) };
         return { def, cooldown: Math.max(0.25, Number(slot?.cooldown) || 2), elapsed: 0, fillNode: null, tileNode: null };
     });
     return Object.assign(lbBaseCombatant(), {
