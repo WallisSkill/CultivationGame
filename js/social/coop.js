@@ -7,7 +7,7 @@
     - PvP: trận theo lượt giữa hai máy, người hỗ trợ đánh thêm một đòn trợ chiến mỗi lượt của chủ phòng.
     - Phòng tổ đội: chủ phòng mời người vào; thành viên sẵn sàng tự vào mọi trận của chủ phòng,
       kể cả săn quái. Thành viên gửi chỉ số định kỳ, chủ phòng phát danh sách định kỳ.
-    - Đưa đi: người cùng phòng cảnh giới cao hơn nhận lời thì ta đi với thời gian của họ,
+    - Đưa đi: người cùng phòng cảnh giới bằng hoặc cao hơn nhận lời thì ta đi với thời gian của họ, được qua cả vùng chưa đủ cảnh giới,
       họ dịch chuyển được tới đó thì ta tới ngay. Chỗ ta chưa đủ cảnh giới vẫn không vào được.
     - Tin nhắn đi qua pvp_relay (sessionId 'coop').
 =========================== */
@@ -270,9 +270,15 @@ function roomOnInvite(msg, name) {
     });
 }
 
+/* Nút nhờ đưa đi nằm trên bản đồ nên phải vẽ lại khi danh sách người đưa thay đổi */
+function rideRefresh(carriersBefore) {
+    if (roomCarriers().length !== carriersBefore) renderMap();
+}
+
 function roomOnAlly(msg, name) {
     const room = coop.room;
     if (!room) return;
+    const carriers = roomCarriers().length;
     let member = room.members.find(m => m.id === msg.from);
     if (!member) {
         if (msg.kind !== 'room_join' || room.members.length >= ROOM_MAX_MEMBERS) return;
@@ -282,6 +288,7 @@ function roomOnAlly(msg, name) {
     }
     Object.assign(member, { ally: coopCleanAlly(msg.data?.ally), ready: !!msg.data?.ally?.ready, seen: Date.now() });
     renderRoomPanel();
+    rideRefresh(carriers);
 }
 
 /* Kéo thành viên sẵn sàng vào trận sắp bắt đầu; trả về true nếu có ai vào */
@@ -347,13 +354,13 @@ function roomMates() {
 }
 
 function roomCarriers() {
-    return roomMates().filter(m => m.realmIndex > (state.realmIndex || 0));
+    return roomMates().filter(m => m.realmIndex >= (state.realmIndex || 0));
 }
 
 function rideAsk(dest) {
     if (!requireFree()) return;
     const carriers = roomCarriers();
-    if (!carriers.length || !findPath(state.location, dest)) return;
+    if (!carriers.length || !findPath(state.location, dest, true)) return;
     const id = `${state.profileId}_${Date.now().toString(36)}`;
     coop.ride = { id, dest, carriers: carriers.map(m => m.id), at: Date.now() };
     carriers.forEach(m => coopRelay(m.id, 'ride_ask', { id, from: state.location, dest }));
@@ -405,6 +412,7 @@ function rideOnOk(msg, name) {
     if (!ride || ride.id !== msg.data?.id || !ride.carriers.includes(msg.from) || !Number.isFinite(seconds)) return;
     rideCancel();
     carriedTravel(ride.dest, seconds, sectEscape(name));
+    renderMap();
 }
 
 /* ---------- phía người hỗ trợ ---------- */
@@ -550,6 +558,7 @@ function handleCoopRelay(msg) {
             break;
         case 'room_roster':
             if (coop.joined?.host === msg.from && Array.isArray(msg.data?.members)) {
+                const carriers = roomCarriers().length;
                 coop.joined.seen = Date.now();
                 coop.joined.hostRealm = lbClamp(Number(msg.data.hostRealm) || 0, 0, REALMS.length - 1);
                 coop.joined.members = msg.data.members.slice(0, ROOM_MAX_MEMBERS).map(m => ({
@@ -557,6 +566,7 @@ function handleCoopRelay(msg) {
                     realmIndex: lbClamp(Number(m?.realmIndex) || 0, 0, REALMS.length - 1)
                 }));
                 renderRoomPanel();
+                rideRefresh(carriers);
             }
             break;
         case 'ride_ask': rideOnAsk(msg, known.name); break;

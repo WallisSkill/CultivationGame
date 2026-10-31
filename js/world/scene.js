@@ -350,6 +350,7 @@ function renderWorldViewTabs() {
 
 /* Khi có trận, khung chiến đấu được đưa vào khung thế giới, đè lên cảnh bên trong */
 function syncBattleOverlay() {
+    syncPvpAttack();
     const panel = document.querySelector('.panel-combat');
     const stage = $('sceneHost');
     if (!panel || !stage) return;

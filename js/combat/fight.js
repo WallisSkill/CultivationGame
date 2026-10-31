@@ -573,6 +573,7 @@ function onMatchMessage(ev) {
                     endPvPSession();
                 } else {
                     pvpSession.myTurn = true;
+                    syncPvpAttack();
 
                     renderAll();
                 }
@@ -632,6 +633,15 @@ function pvpLogHit(prefix, total, det, burnExtra = 0, wasDodge = false) {
     const elePct = det?.elePercent ?? (((det?.elementFactor || 1) - 1) * 100);
     log(`${prefix} gây ${Number(total).toFixed(2)} sát thương. (Ngũ hành ${Number(elePct).toFixed(2)}%, Phẩm chất x${Number(det?.rankFactor || 1).toFixed(2)}, Cảnh giới x${Number(det?.realmFactor || 1).toFixed(2)})`);
     if (burnExtra > 0) log(`🔥 Thiêu đốt thêm ${burnExtra} sát thương.`);
+}
+
+/* Trận PvP đánh theo lượt nên cần nút ra đòn, các trận khác tự đánh */
+function syncPvpAttack() {
+    const btn = $('pvpAttackBtn');
+    if (!btn) return;
+    btn.style.display = state.currentEnemy?.isPvP ? 'inline-block' : 'none';
+    btn.disabled = !pvpSession.myTurn;
+    btn.innerText = pvpSession.myTurn ? '⚔️ Ra đòn' : '⏳ Lượt đối thủ';
 }
 
 // Attack: PvP path now mirrors attackTurn() effects (element buffs, dodge, burn)
@@ -774,6 +784,7 @@ function pvpAttackOrLocal() {
         });
     }
     pvpSession.myTurn = false;
+    syncPvpAttack();
 
     if (state.currentEnemy.hp <= 0 && !wasDodge) {
         log('🎉 Ngươi thắng PvP!');

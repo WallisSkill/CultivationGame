@@ -301,14 +301,14 @@ function edgeSeconds(from, to) {
     return travelUnitSeconds() * pixels / TRAVEL_LEG_PIXELS;
 }
 
-function neighbors(id) {
+function neighbors(id, carried = false) {
     const loc = LOCATIONS[id];
     const out = [...loc.links];
     if (loc.gate && (!loc.gate.flag || state.flags[loc.gate.flag]) && worldUnlocked(LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
-    return out.filter(canEnterLocation);
+    return carried ? out : out.filter(canEnterLocation);
 }
 
-function findPath(from, to) {
+function findPath(from, to, carried = false) {
     const dist = { [from]: 0 };
     const prev = {};
     const open = new Set([from]);
@@ -316,7 +316,7 @@ function findPath(from, to) {
         const cur = [...open].reduce((a, b) => dist[a] <= dist[b] ? a : b);
         open.delete(cur);
         if (cur === to) break;
-        neighbors(cur).forEach(n => {
+        neighbors(cur, carried).forEach(n => {
             const d = dist[cur] + edgeSeconds(cur, n);
             if (d < (dist[n] ?? Infinity)) { dist[n] = d; prev[n] = cur; open.add(n); }
         });
@@ -338,11 +338,15 @@ function beginRoute(id, route) {
     startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
 }
 
-/* Đồng đội đưa đi: không bao giờ chậm hơn tự đi */
+/* Đồng đội đưa đi: được đi qua vùng chưa đủ cảnh giới, không bao giờ chậm hơn tự đi */
 function carriedTravel(id, seconds, carrier) {
     if (!requireFree()) return;
-    const route = findPath(state.location, id);
+    const route = findPath(state.location, id, true);
     if (!route) return;
+    if (seconds >= route.seconds && findPath(state.location, id)) {
+        showToast(`${carrier} không đi nhanh hơn ngươi. Người đưa phải cao cảnh giới hơn hoặc có thể dịch chuyển tới đó.`, 'warn');
+        return;
+    }
     if (seconds <= 0) {
         state.location = id;
         log(`⚡ ${carrier} đưa ngươi tới ngay ${LOCATIONS[id].name}.`);
@@ -553,10 +557,12 @@ function renderMapDestination() {
         ? `<button class="primary" onclick="teleportTo('${loc.id}')">⚡ Dịch chuyển</button>`
         : '';
     const blocked = teleportBlockReason(mapSelected);
-    const carry = route && roomCarriers().length ? `<button onclick="rideAsk('${loc.id}')">🤝 Nhờ đồng đội đưa đi</button>` : '';
+    const carryRoute = findPath(state.location, mapSelected, true);
+    const carry = carryRoute && roomCarriers().length ? `<button onclick="rideAsk('${loc.id}')">🤝 Nhờ đồng đội đưa đi</button>` : '';
+    const carryHint = carryRoute && !carry ? '<div class="small">Muốn được đưa đi: vào chung phòng với người cảnh giới bằng hoặc cao hơn.</div>' : '';
     return `<div class="map-dest">
         <div><b>${loc.icon} ${loc.name}</b> <span class="small">linh khí x${loc.qi.toFixed(2)} · ${REALMS[loc.minR]} trở lên</span>
-        <div class="small">${loc.desc}</div>${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}</div>
+        <div class="small">${loc.desc}</div>${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}${carryHint}</div>
         <div class="map-dest-actions">${teleport}${carry}
         ${route ? `<button onclick="travelTo('${loc.id}')">Đi (${formatRealDuration(route.seconds)})</button>` : '<span class="small">Chưa có đường</span>'}</div>
     </div>`;
