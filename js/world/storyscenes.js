@@ -338,7 +338,7 @@ const LOCATION_NPCS = {};
 Object.values(LOCATIONS).forEach(loc => {
     const seed = NPC_SEED(loc.id);
     NPCS[residentKey(loc.id)] = {
-        name: `${RESIDENT_SURNAMES[seed % RESIDENT_SURNAMES.length]} ${RESIDENT_GIVEN[(seed >> 4) % RESIDENT_GIVEN.length]}`,
+        name: `${RESIDENT_SURNAMES[seed % RESIDENT_SURNAMES.length]} ${RESIDENT_GIVEN[(seed >>> 4) % RESIDENT_GIVEN.length]}`,
         title: RESIDENT_ROLES[loc.type] || 'Người qua đường', look: npcLookFromSeed(seed)
     };
     const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];

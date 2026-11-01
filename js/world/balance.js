@@ -17,7 +17,11 @@ const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
 const START_AGE = 6;
-const AGE_YEARS_PER_DAY = 24;
+const BASE_LIFESPAN = 200;
+const AGE_SPEND_SHARE = 0.15;
+const AGE_MIN_REALM_DAYS = 3;
+const AGE_FLOOR_MAX_SHARE = 0.5;
+const AGE_OFFLINE_MAX_SHARE = 0.9;
 
 const WORLD_TIERS = [
     { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
@@ -41,6 +45,28 @@ function realmRealSeconds(realm) {
     const first = REALM_FIRST_MINUTES * 60;
     const last = REALM_LAST_DAYS * SECONDS_PER_DAY;
     return first * Math.pow(last / first, realm / (REALM_COUNT - 1));
+}
+
+/* Tuổi trôi theo thọ nguyên của cảnh giới: ở một cảnh đủ lâu tiêu một phần cố định của thọ nguyên */
+function realmAgeGain(realm) {
+    return Math.floor(300 * Math.pow(1.85, realm));
+}
+
+function realmLifespan(realm) {
+    let years = BASE_LIFESPAN;
+    for (let r = 1; r <= realm; r++) years += realmAgeGain(r);
+    return years;
+}
+
+function ageYearsPerSecond(realm) {
+    return realmLifespan(realm) * AGE_SPEND_SHARE / Math.max(realmRealSeconds(realm), AGE_MIN_REALM_DAYS * SECONDS_PER_DAY);
+}
+
+/* Tuổi tối thiểu khi đặt chân vào một cảnh giới: những năm bế quan của các cảnh trước */
+function realmEntryAge(realm, maxAge) {
+    let years = START_AGE;
+    for (let r = 0; r < realm; r++) years += realmLifespan(r) * AGE_SPEND_SHARE;
+    return Math.min(years, maxAge * AGE_FLOOR_MAX_SHARE);
 }
 
 function baseXpRate(realm) {
@@ -153,10 +179,10 @@ const GEAR_SUBS = {
 };
 const CRIT_BASE_MULT = 1.5;
 
-function rollGearSubs(realm, quality) {
+function rollGearSubs(realm, quality, chosen = null) {
     if (realm < GEAR_SUB_REALM) return [];
     const q = GEAR_QUALITIES[quality];
-    const kinds = Object.keys(GEAR_SUBS).sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(quality / 2));
+    const kinds = chosen || Object.keys(GEAR_SUBS).sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(quality / 2));
     return kinds.map(kind => {
         const sub = GEAR_SUBS[kind];
         const roll = GEAR_SUB_ROLL[0] + Math.random() * (GEAR_SUB_ROLL[1] - GEAR_SUB_ROLL[0]);
@@ -171,7 +197,7 @@ function gearBudget(realm) {
     return { atk: ref.atk * k, def: ref.def * k, hp: ref.hp * k };
 }
 
-function makeGearItem(realm, slot, quality = 0) {
+function makeGearItem(realm, slot, quality = 0, chosenSubs = null) {
     const s = GEAR_SLOTS[slot];
     const q = GEAR_QUALITIES[quality];
     const b = gearBudget(realm);
@@ -185,7 +211,7 @@ function makeGearItem(realm, slot, quality = 0) {
         def: Math.floor(b.def * s.def * q.mult),
         hp: Math.floor(b.hp * s.hp * q.mult),
         speed: slot === 'boots' ? 0.05 + quality * 0.05 : 0,
-        subs: rollGearSubs(realm, quality),
+        subs: rollGearSubs(realm, quality, chosenSubs),
         desc: `Yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
     };
 }
@@ -290,6 +316,10 @@ const FORGE_GRADES = [
     { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2, wholeWorld: true }
 ];
 
+/* Thần lò cho chọn loại chỉ số phụ, mỗi loại cộng thêm phí; giá trị vẫn ngẫu nhiên */
+const FORGE_SUB_MAX = 3;
+const FORGE_SUB_FEE = 0.5;
+
 function forgeGradeOf(loc) {
     return FORGE_GRADES[loc.forgeGrade || 0];
 }
@@ -306,14 +336,14 @@ function serviceRealmAt(loc, realm) {
     return Math.min(realm, loc.maxR);
 }
 
-function makeForgedGear(realm, slot, gradeIndex = 0) {
+function makeForgedGear(realm, slot, gradeIndex = 0, chosenSubs = null) {
     const grade = FORGE_GRADES[gradeIndex];
     const quality = Math.random() < grade.topChance ? 3 : 2;
     const over = Math.random() < grade.overChance ? 1 + Math.floor(Math.random() * grade.overRealms) : 0;
     const gearRealm = Math.min(REALM_COUNT - 1, worldTierOfRealm(realm).to + 1, realm + over);
-    if (gearRealm === realm) return makeGearItem(realm, slot, quality);
+    if (gearRealm === realm) return makeGearItem(realm, slot, quality, chosenSubs);
     return {
-        ...makeGearItem(gearRealm, slot, quality),
+        ...makeGearItem(gearRealm, slot, quality, chosenSubs),
         name: `⚡ ${GEAR_SERIES[gearRealm]} ${GEAR_SLOTS[slot].label} [${GEAR_QUALITIES[quality].name}] vượt cấp`,
         reqRealm: realm,
         desc: `Rèn vượt ${gearRealm - realm} cảnh giới, yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`

@@ -80,9 +80,9 @@ function initWorldState() {
     state.activity = state.activity || null;
     state.testSpeed = state.testSpeed || 1;
     state.lastSeen = state.lastSeen || Date.now();
-    if (!state.ageRateFixed) {
-        state.age = START_AGE + (state.age - START_AGE) * AGE_YEARS_PER_DAY;
-        state.ageRateFixed = true;
+    if (!state.ageCurveFixed) {
+        state.age = Math.max(state.age, realmEntryAge(state.realmIndex, state.maxAge));
+        state.ageCurveFixed = true;
     }
     migrateStatCurve();
     moveUpToRealmWorld();
@@ -112,7 +112,7 @@ function migrateStatCurve() {
 function advanceWorld(sec) {
     if (state.dead || !state.root?.elements) return;
     advanceForgeQueue(sec);
-    state.age += sec * AGE_YEARS_PER_DAY / SECONDS_PER_DAY;
+    state.age += sec * ageYearsPerSecond(state.realmIndex);
     if (window._battleActive) return;
     accrueSectIncome(sec);
     let left = sec;
@@ -169,7 +169,7 @@ function applyOfflineProgress() {
     if (gap < 60) return;
     const before = { realm: state.realmIndex, stage: state.realmStage, xp: state.xp };
     advanceWorld(gap);
-    state.age = Math.min(state.age, state.maxAge - 1);
+    state.age = Math.min(state.age, state.maxAge * AGE_OFFLINE_MAX_SHARE);
     const moved = before.realm !== state.realmIndex || before.stage !== state.realmStage;
     showToast(`Vắng mặt ${formatRealDuration(gap)}. ${moved ? `Đã đạt ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}.` : ''}`, 'info');
     log(`⏳ Trong ${formatRealDuration(gap)} ngươi vắng mặt, thế giới vẫn tiếp diễn.`);
@@ -775,18 +775,43 @@ function openForge() {
     const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const have = state.mats[worldId] || 0;
-    const price = gearPrice(realm, 2);
     const matCost = forgeMaterialCost();
+    const picking = forgeCanChooseSubs(loc, realm);
+    const price = forgePriceWith(realm, picking ? forgeChosenSubs.length : 0);
     const rows = GEAR_SLOT_IDS.map(slot => {
         const it = makeGearItem(realm, slot, 2);
         return `<div class="shop-item forge-row">
-            <div><b style="color:${GEAR_QUALITIES[2].color}">${GEAR_SLOTS[slot].icon} ${it.name}</b><div class="small">${gearStatText(it)}</div></div>
+            <div><b style="color:${GEAR_QUALITIES[2].color}">${GEAR_SLOTS[slot].icon} ${it.name}</b><div class="small">${gearStatText({ ...it, subs: [] })}</div></div>
             <button onclick="startForge('${slot}')" ${have < matCost || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
     const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[forgeCapAt(loc)]}.` : '';
     const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
-    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+}
+
+let forgeChosenSubs = [];
+
+function forgeCanChooseSubs(loc, realm) {
+    return !!forgeGradeOf(loc).wholeWorld && realm >= GEAR_SUB_REALM;
+}
+
+function forgePriceWith(realm, subCount) {
+    return Math.floor(gearPrice(realm, 2) * (1 + FORGE_SUB_FEE * subCount));
+}
+
+function forgeSubPicker(loc, realm) {
+    if (!forgeGradeOf(loc).wholeWorld) return '';
+    if (!forgeCanChooseSubs(loc, realm)) return `<div class="small">Thần lò chọn được chỉ số phụ cho đồ từ ${REALMS[GEAR_SUB_REALM]} trở lên.</div>`;
+    const chips = Object.entries(GEAR_SUBS).map(([kind, sub]) => `<button class="filter-chip ${forgeChosenSubs.includes(kind) ? 'active' : ''}" onclick="toggleForgeSub('${kind}')">${sub.label}</button>`).join('');
+    return `<div class="small" style="margin-top:8px"><b>Chỉ định thuộc tính</b> (${forgeChosenSubs.length}/${FORGE_SUB_MAX}, mỗi loại +${Math.round(FORGE_SUB_FEE * 100)}% linh thạch, giá trị ngẫu nhiên. Không chọn thì ra ngẫu nhiên.)</div><div class="filter-chips">${chips}</div>`;
+}
+
+function toggleForgeSub(kind) {
+    if (forgeChosenSubs.includes(kind)) forgeChosenSubs = forgeChosenSubs.filter(k => k !== kind);
+    else if (forgeChosenSubs.length < FORGE_SUB_MAX) forgeChosenSubs = [...forgeChosenSubs, kind];
+    else showToast(`Mỗi món tối đa ${FORGE_SUB_MAX} thuộc tính.`, 'warn');
+    openForge();
 }
 
 function gearUpgradeCost(item) {
@@ -831,13 +856,14 @@ function startForge(slot) {
     const loc = currentLocation();
     const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
-    const price = gearPrice(realm, 2);
+    const subs = forgeCanChooseSubs(loc, realm) && forgeChosenSubs.length ? forgeChosenSubs : null;
+    const price = forgePriceWith(realm, subs?.length || 0);
     const matCost = forgeMaterialCost();
     if ((state.mats[worldId] || 0) < matCost || state.gold < price) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
     state.mats[worldId] -= matCost;
     state.gold -= price;
     const seconds = hastedSeconds(FORGE_HOURS * 3600);
-    state.forgeQueue.push({ slot, realm, grade: loc.forgeGrade || 0, total: seconds, remaining: seconds });
+    state.forgeQueue.push({ slot, realm, grade: loc.forgeGrade || 0, subs, total: seconds, remaining: seconds });
     log(`🔨 Giao thợ rèn ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
     openForge();
     renderAll();
@@ -854,7 +880,7 @@ function advanceForgeQueue(sec) {
 }
 
 function finishForge(job) {
-    const gear = makeForgedGear(job.realm, job.slot, job.grade);
+    const gear = makeForgedGear(job.realm, job.slot, job.grade, job.subs);
     addItemToInventory(gear);
     log(`🔨 Thợ rèn giao ${gear.name}!`);
     showToast(`Rèn xong ${gear.name}`, 'info');
@@ -1668,6 +1694,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     goToStageQuest, openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });
