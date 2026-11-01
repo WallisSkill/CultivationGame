@@ -8,13 +8,13 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storyscenes.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`
 var INFO = {
-  ORIGINS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
-  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage
+  ORIGINS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor
 };`, ctx);
 const G = ctx.INFO;
 
@@ -66,7 +66,7 @@ for (const [id, o] of Object.entries(G.ORIGINS)) {
 }
 for (const q of Object.values(G.QUEST_INDEX)) {
     q.steps.forEach(s => {
-        const id = s.go || s.hunt?.loc || s.gather?.loc;
+        const id = s.go || s.loc || s.hunt?.loc || s.gather?.loc;
         if (!id) return;
         const l = G.LOCATIONS[id];
         if (!ABSOLUTE.includes(l.world) && l.minR > q.needs[0]) fail.push(`${q.id}: ${l.name} cần cảnh giới ${l.minR} > ${q.needs[0]}`);
@@ -81,8 +81,15 @@ for (const w of G.WORLD_TIERS) {
     }
 }
 for (let r = 1; r < 29; r++) if (!G.MAIN_QUESTS.some(q => q.unlock === r)) fail.push(`thiếu quest mở khóa realm ${r}`);
+for (let r = 0; r < 29; r++) for (let st = 0; st < 4; st++) if (!G.MAIN_QUESTS.some(q => q.needs[0] === r && q.needs[1] === st)) fail.push(`thiếu hồi truyện ${r}-${st}`);
 G.MAIN_QUESTS.forEach((q, i) => {
-    if (i && (q.needs[0] < G.MAIN_QUESTS[i - 1].needs[0])) fail.push(`${q.id}: needs lùi`);
+    const prev = G.MAIN_QUESTS[i - 1];
+    if (prev && (q.needs[0] < prev.needs[0] || (q.needs[0] === prev.needs[0] && q.needs[1] <= prev.needs[1]))) fail.push(`${q.id}: needs lùi hoặc trùng ${prev.id}`);
+    (q.needsSide || []).forEach(id => {
+        const side = G.QUEST_INDEX[id];
+        if (side.afterMain && G.MAIN_QUESTS.findIndex(m => m.id === side.afterMain) >= i) fail.push(`${q.id}: kẹt vòng với ${id}`);
+    });
+    q.steps.forEach(step => { if (step.talk && !G.LOCATION_NPCS[step.loc].includes(step.talk)) fail.push(`${q.id}: ${step.talk} không có ở ${step.loc}`); });
     if (q.unlock && q.needs[0] !== q.unlock - 1) fail.push(`${q.id}: needs ${q.needs} lệch unlock ${q.unlock}`);
 });
 ['tien', 'thanh', 'thien', 'hondon', 'hongmong', 'chungnguyen'].forEach(w => {
@@ -105,6 +112,17 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     const names = (G.LOCATIONS[step.hunt?.loc]?.enemies || []).map(e => e.name);
     if (step.hunt && !names.includes(step.hunt.name)) fail.push(`${q.id}: ${step.hunt.name} không có ở ${step.hunt.loc}`);
 }));
+
+/* ---- chỉ số phụ: bậc trên thấp nhất vẫn hơn bậc dưới cao nhất ---- */
+for (const kind of Object.keys(G.GEAR_SUBS)) {
+    for (let r = 10; r < 29; r++) {
+        G.GEAR_QUALITIES.forEach((_, q) => {
+            const top = G.gearSubFloor(kind, r, q) * G.GEAR_SUB_ROLL[1];
+            if (r < 28 && G.gearSubFloor(kind, r + 1, q) <= top) fail.push(`chỉ số phụ ${kind}: cảnh ${r + 1} không hơn cảnh ${r}`);
+            if (q < 4 && G.gearSubFloor(kind, r, q + 1) <= top) fail.push(`chỉ số phụ ${kind}: phẩm ${q + 1} không hơn phẩm ${q}`);
+        });
+    }
+}
 
 /* ---- đường cong sức mạnh ---- */
 function playerAt(r, s, gearRealm, quality, lbSlots, rootRank = 3, lbRealm = r) {

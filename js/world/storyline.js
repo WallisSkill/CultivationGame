@@ -8,7 +8,7 @@
 =========================================================== */
 const ACTS = [
     { id: 1, name: 'Hồi I — Phàm Trần', desc: 'Một đứa trẻ mồ côi bước lên đường tu tiên.' },
-    { id: 2, name: 'Hồi II — Tiên Lộ Là Mỏ', desc: 'Phi thăng không phải giải thoát.' },
+    { id: 2, name: 'Hồi II — Tiên Lộ Là Mỏ', desc: 'Phi thăng không phải giải thoát: từ tiên nô dưới mỏ tới tiên quan trên điện Lăng Tiêu.' },
     { id: 3, name: 'Hồi III — Lục Thánh', desc: 'Va chạm với những kẻ viết ra luật trời.' },
     { id: 4, name: 'Hồi IV — Ngoài Thiên Đạo', desc: 'Thánh Nhân chỉ là chấp sự. Ai là chủ?' },
     { id: 5, name: 'Hồi V — Hỗn Độn Đạo Giả', desc: 'Bên ngoài vũ trụ có những kẻ xem vũ trụ như hạt bụi.' },
@@ -189,9 +189,8 @@ const MAIN_QUESTS = [
     {
         id: 'm11', act: 2, title: 'Tiên Nô', unlock: 10, needs: [9, 0],
         steps: [
-            { go: 'phi_thang_tri', say: [['narr', 'Không có tiên nhạc. Chỉ có xiềng xích và một chiếc bàn kiểm kê.'], ['tien_lai', 'Lại một đứa nữa. Đừng chống cự, chúng sẽ chuyển ngươi xuống mỏ thôi.']] },
-            { go: 'tien_khoang', say: [['tien_lai', 'Ba ngàn năm rồi, ta đào linh tủy cho Thiên Đình. Kẻ phi thăng là đồng tiền của họ đó con.']] },
-            { hunt: { loc: 'tien_khoang', name: 'Khoáng Thi', n: 4 } },
+            { go: 'tien_khoang', say: [['tien_lai', 'Kẻ phi thăng là đồng tiền của Thiên Đình đó con. Hôm nay đốc công đánh chết thêm một người, lão không muốn đếm nữa.']] },
+            { hunt: { loc: 'tien_khoang', name: 'Đốc Công Tiên Khoáng', n: 3 } },
             { boss: 'doc_cong', say: [['tien_lai', 'Ngươi... đánh chết đốc công? Đi đi. Vạn Tiên Thành có người muốn gặp kẻ như ngươi.'], ['narr', 'Lời của Cửu U Ma Quân vang lên trong đầu ngươi.']] }
         ],
         reward: { hours: 24, goldRefs: 100, gear: ['ring', 3] }
@@ -223,25 +222,25 @@ const MAIN_QUESTS = [
         reward: { hours: 36, goldRefs: 180, gear: ['helm', 3], lb: 1 }
     },
     {
-        id: 'm15', act: 2, title: 'Công Phá Thiên Binh', unlock: 14, needs: [13, 2],
+        id: 'm15', act: 2, title: 'Đóng Cửa Vô Quang', unlock: 14, needs: [13, 2],
         steps: [
-            { go: 'van_tien', say: [['van_nguyet', 'Tán Tiên Minh xuất quân. Ba ngàn năm, lần đầu tiên.']] },
-            { go: 'thien_ha' },
-            { boss: 'than_ha' }
+            { go: 'van_tien', say: [['van_nguyet', 'Tán Tiên Minh xuất quân. Ba ngàn năm, lần đầu tiên. Phá đoạn ống chính ở Thiên Hà là mỏ Vô Quang chết hẳn.']] },
+            { go: 'thien_ha', say: [['van_nguyet', 'Thiên Bồng đích thân giữ đoạn ống này. Hạ hắn đi.']] },
+            { boss: 'than_ha', say: [['tien_lai', 'Tắt rồi... ba ngàn năm, ngọn đèn hầm mỏ tắt rồi.'], ['van_nguyet', 'Mỏ Tiên Giới đóng từ hôm nay. Nhưng ngươi đã trở thành kẻ Thiên Đình không thể lờ đi được nữa.']] }
         ],
         reward: { hours: 36, goldRefs: 200 }
     },
     {
         id: 'm16', act: 2, title: 'Nam Thiên Môn', unlock: 15, needs: [14, 2],
         steps: [
-            { go: 'nam_thien_mon', say: [['narr', 'Thập vạn thiên binh dàn trận. Sau lưng ngươi là tiên nô cầm cuốc.']] },
+            { go: 'nam_thien_mon', say: [['narr', 'Đêm đổi gác, Tiên Quan mới của Lăng Tiêu tự tay mở chốt cổng. Thập vạn thiên binh dàn trận, sau lưng ngươi là tiên nô cầm cuốc.'], ['van_nguyet', 'Sổ thuế đã tới tay Tán Tiên Minh. Từ đêm nay ngươi không còn là người của triều đình nữa.']] },
             { hunt: { loc: 'nam_thien_mon', name: 'Thiên Binh', n: 6 } },
             { boss: 'nam_mon' }
         ],
         reward: { hours: 48, goldRefs: 250, gear: ['weapon', 3] }
     },
     {
-        id: 'm17', act: 2, title: 'Tiên Đế', unlock: 16, needs: [15, 2],
+        id: 'm17', act: 2, title: 'Ngai Vàng Lăng Tiêu', unlock: 16, needs: [15, 2],
         steps: [
             { go: 'lang_tieu', say: [['tien_de', 'Ngươi tưởng ta thích ngồi đây? Bên trên có sáu người. Ta chỉ là kẻ thu thuế cho họ.']] },
             { boss: 'tien_de', say: [['tien_de', 'Giết ta thì mỏ vẫn chạy. Muốn dừng nó... lên hỏi họ đi.'], ['narr', 'Sau ngai vàng, một phiến ngọc nứt ra. Bên kia là bóng cung điện tím.']] },

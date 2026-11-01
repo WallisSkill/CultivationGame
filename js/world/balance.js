@@ -18,11 +18,13 @@ const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
 const START_AGE = 6;
 const BASE_LIFESPAN = 200;
-const AGE_SPEND_SHARE = 0.05;
+const AGE_SPEND_SHARE = 0.025;
 const LEGACY_AGE_SHARE = 0.15;
 const AGE_MIN_REALM_DAYS = 3;
 const AGE_FLOOR_MAX_SHARE = 0.5;
 const AGE_OFFLINE_MAX_SHARE = 0.9;
+/* Đi đường không tính như bế quan: một phút đường tối đa chừng này năm, ở mọi cảnh giới */
+const AGE_TRAVEL_YEARS_PER_MINUTE = 0.1;
 
 const WORLD_TIERS = [
     { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
@@ -68,6 +70,10 @@ function legacyEntryAge(realm, maxAge) {
     let years = START_AGE;
     for (let r = 0; r < realm; r++) years += realmLifespan(r) * LEGACY_AGE_SHARE;
     return Math.min(years, maxAge * AGE_FLOOR_MAX_SHARE);
+}
+
+function travelAgeYearsPerSecond(realm) {
+    return Math.min(ageYearsPerSecond(realm), AGE_TRAVEL_YEARS_PER_MINUTE / 60);
 }
 
 function baseXpRate(realm) {
@@ -168,26 +174,30 @@ const GEAR_SERIES = [
     'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên'
 ];
 
-/* Chỉ số phụ: đồ từ Địa Tiên trở lên, phẩm càng cao càng nhiều dòng, tổng mỗi loại có trần */
+/* Chỉ số phụ: đồ từ Địa Tiên trở lên, phẩm càng cao càng nhiều dòng, tổng mỗi loại có trần.
+   Biên độ ngẫu nhiên hẹp hơn bước tăng nên giá trị thấp nhất của bậc trên luôn cao hơn giá trị cao nhất của bậc dưới */
 const GEAR_SUB_REALM = 10;
-const GEAR_SUB_ROLL = [0.7, 1.3];
+const GEAR_SUB_ROLL = [1, 1.07];
+const GEAR_SUB_GROWTH = 1.08;
 const GEAR_SUBS = {
-    crit: { label: 'Chí mạng', base: 0.02, perRealm: 0.002, cap: 0.6 },
-    critDmg: { label: 'Sát thương chí mạng', base: 0.1, perRealm: 0.01, cap: 2 },
-    dodge: { label: 'Né tránh', base: 0.015, perRealm: 0.001, cap: 0.4 },
-    lifesteal: { label: 'Hút máu', base: 0.01, perRealm: 0.001, cap: 0.25 },
-    luck: { label: 'May mắn', base: 0.01, perRealm: 0.001, cap: 0.3 }
+    crit: { label: 'Chí mạng', base: 0.02, cap: 0.6 },
+    critDmg: { label: 'Sát thương chí mạng', base: 0.1, cap: 2 },
+    dodge: { label: 'Né tránh', base: 0.015, cap: 0.4 },
+    lifesteal: { label: 'Hút máu', base: 0.01, cap: 0.25 },
+    luck: { label: 'May mắn', base: 0.01, cap: 0.3 }
 };
 const CRIT_BASE_MULT = 1.5;
 
+function gearSubFloor(kind, realm, quality) {
+    return GEAR_SUBS[kind].base * Math.pow(GEAR_SUB_GROWTH, realm - GEAR_SUB_REALM) * GEAR_QUALITIES[quality].mult;
+}
+
 function rollGearSubs(realm, quality, chosen = null) {
     if (realm < GEAR_SUB_REALM) return [];
-    const q = GEAR_QUALITIES[quality];
     const kinds = chosen || Object.keys(GEAR_SUBS).sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(quality / 2));
     return kinds.map(kind => {
-        const sub = GEAR_SUBS[kind];
         const roll = GEAR_SUB_ROLL[0] + Math.random() * (GEAR_SUB_ROLL[1] - GEAR_SUB_ROLL[0]);
-        return { kind, value: +((sub.base + sub.perRealm * (realm - GEAR_SUB_REALM)) * q.mult * roll).toFixed(4) };
+        return { kind, value: +(gearSubFloor(kind, realm, quality) * roll).toFixed(4) };
     });
 }
 

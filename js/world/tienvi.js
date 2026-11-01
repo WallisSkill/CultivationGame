@@ -70,7 +70,7 @@ const LOCATION_BOSS_REALMS = {};
 MAIN_QUESTS.forEach(q => {
     let site = null;
     q.steps.forEach(step => {
-        site = step.go || site;
+        site = step.go || step.loc || site;
         if (step.boss && site) LOCATION_BOSS_REALMS[site] = Math.max(LOCATION_BOSS_REALMS[site] || 0, BOSSES[step.boss].realm);
     });
 });

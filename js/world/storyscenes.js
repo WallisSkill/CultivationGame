@@ -15,11 +15,11 @@ const MAIN_SCENES = {
     m08: { intro: [['narr', 'Cửa vực Vô Tận thở ra gió nóng như hơi thở của con vật đang ngủ.'], ['to_dao', 'Tất cả những gì sư phụ giấu đều dẫn về đây.'], ['me', 'Tỷ ở lại giữ sơn môn. Xuống dưới đó một mình ta là đủ.']], outro: [['narr', 'Dưới đáy Ma Uyên, ngươi tìm thấy một tấm bia. Tên những kẻ phi thăng được khắc kín, tất cả đều bị gạch ngang.']] },
     m09: { intro: [['narr', 'Trời đổi màu từ ba ngày trước. Chim không bay, cá không bơi. Cả Phàm Giới đang nín thở chờ ngươi.'], ['mac', 'Sấm chỉ biết đánh vào kẻ đứng cao nhất. Vậy nên hãy đứng cho vững.']], outro: [['narr', 'Tầng kiếp thứ chín tan đi. Mưa rơi xuống, ấm như nước suối Thanh Thủy.']] },
     m10: { intro: [['narr', 'Trước khi đi, ngươi về Thanh Thủy lần cuối. Mái đình cũ đã được lợp lại, chổi của Lão Mặc dựng ở góc, không thấy người đâu.']], outro: [['to_dao', 'Ta vẫn giữ lửa ở đây. Đừng để ta đợi uổng.'], ['narr', 'Ánh sáng nuốt lấy ngươi. Ngươi không biết rằng cánh cửa phía trên chỉ mở một chiều.']] },
-    m11: { intro: [['narr', 'Tỉnh dậy, cổ tay ngươi đã có dấu ấn nô lệ. Trên đầu không phải trời xanh mà là trần đá của một căn hầm vô tận.'], ['me', 'Đây là Tiên Giới?'], ['tien_lai', 'Phải. Chào mừng tới thiên đường.']], outro: [['tien_lai', 'Ta đào ba ngàn năm mà chưa từng thấy đốc công đổ máu. Hóa ra máu chúng cũng đỏ.'], ['narr', 'Sau lưng ngươi, những chiếc cuốc lần lượt rơi xuống đất.']] },
+    m11: { outro: [['tien_lai', 'Ta đào ba ngàn năm mà chưa từng thấy đốc công đổ máu. Hóa ra máu chúng cũng đỏ.'], ['narr', 'Sau lưng ngươi, những chiếc cuốc lần lượt rơi xuống đất.']] },
     m12: { intro: [['narr', 'Vạn Tiên Thành lộng lẫy như bức tranh. Đi sâu vào ngõ sau là những tiên nhân không còn đan điền, ngồi xin một giọt linh dịch.'], ['van_nguyet', 'Ngươi là kẻ giết đốc công? Theo ta, đừng ngẩng đầu.']], outro: [['van_nguyet', 'Từ giờ ngươi có tên trong danh sách truy nã của Thiên Đình. Chúc mừng, ngươi đã thành người của chúng ta.']] },
     m13: { intro: [['narr', 'Thiên Hà không có nước, chỉ có tinh quang chảy qua những đường ống lớn bằng cả tòa thành.'], ['van_nguyet', 'Tiên Giới rực rỡ nhờ cái thứ chạy trong đó. Và nó được ép ra từ những người như ngươi.']], outro: [['narr', 'Vết kiếm trên ngực ngươi không chảy máu, chỉ phát sáng. Mỗi lần thở, nó lại cắt sâu thêm một chút.']] },
     m14: { intro: [['van_nguyet', 'Kiếm khí của Thánh Nhân sẽ giết ngươi trong bảy ngày. Chỉ có Thánh Mẫu Dao Trì rút được.'], ['me', 'Bà ấy là người của Thiên Đình.'], ['van_nguyet', 'Từng là. Hơn nữa ngươi chẳng còn cách nào khác.']], outro: [['dao_tri_mau', 'Ao sen này trồng bằng nước mắt của ta. Hàng ngàn năm trước ta cũng đã muốn lật đổ một người.']] },
-    m15: { intro: [['narr', 'Khắp Vạn Tiên Thành, những tiên nô phá xiềng đổ về quảng trường. Không ai hô khẩu hiệu. Họ chỉ cầm cuốc.'], ['tien_lai', 'Lão già này đào đất ba ngàn năm. Hôm nay muốn đào thứ khác.']], outro: [['narr', 'Đường ống linh tủy gãy làm đôi. Lần đầu sau vạn năm, đèn của Lăng Tiêu Bảo Điện chập chờn.']] },
+    m15: { intro: [['narr', 'Khắp Vạn Tiên Thành, những tiên nô phá xiềng đổ về quảng trường. Không ai hô khẩu hiệu. Họ chỉ cầm cuốc.'], ['tien_lai', 'Lão già này đào đất ba ngàn năm. Hôm nay muốn đào thứ khác.']], outro: [['narr', 'Đường ống linh tủy gãy làm đôi. Lần đầu sau vạn năm, đèn của Lăng Tiêu Bảo Điện chập chờn.'], ['van_nguyet', 'Chuyện mỏ xong rồi. Giờ tới thứ khó hơn: những kẻ đã hưởng từ nó.']] },
     m16: { intro: [['tien_lai', 'Nếu lão ngã, đừng quay lại. Cuốc này là của ngươi.'], ['me', 'Lão sẽ không ngã.'], ['tien_lai', 'Tiên nô nào cũng ngã, con ạ. Chỉ là được chọn ngã ở đâu.']], outro: [['narr', 'Nam Thiên Môn đổ xuống. Trong đống đá, ngươi nhặt lại một chiếc cuốc cũ, cán đã ướt.']] },
     m17: { intro: [['narr', 'Lăng Tiêu Bảo Điện vắng tanh. Chín ngàn bậc thềm ngọc, giống hệt bậc đá Thanh Vân năm nào.'], ['me', 'Ta đã leo bậc này một lần rồi.']], outro: [['narr', 'Tiên nô quỳ xuống hát một bài ca cũ. Ngươi không ngồi lên ngai vàng. Ngươi đi về phía vết nứt.']] },
     m18: { intro: [['narr', 'Tử Tiêu Cung nằm trên một khoảng trời không có gió. Sáu chiếc ghế đá, sáu hơi thở nặng như sáu thế giới.']], outro: [['da_bao', 'Đã thấy mặt khách hàng lớn của ta rồi đấy. Muốn sống sót, mua đi. Không bán chịu.']] },
@@ -223,12 +223,13 @@ function stageQuest(realm, stage, slot) {
     const loc = sites[(seed + slot * Math.ceil(sites.length / STAGE_QUEST_COUNT)) % sites.length];
     const id = `st_${realm}_${stage}_${slot}`;
     const base = { id, loc: loc.id, npc: 'narr', needs: [realm, stage], until: [realm, stage], stageQuest: true, reward: { hours: 0.5 + stage * 0.25, goldRefs: 3 + stage } };
+    const report = { go: loc.id, say: [['narr', 'Ngươi quay lại báo tin. Người giao việc gật đầu, dúi vào tay ngươi chút lộ phí.']] };
     if (slot === 2) {
         return {
             ...base,
             title: stageFill(STAGE_GATHER_TITLES[seed % STAGE_GATHER_TITLES.length], loc),
             intro: [['narr', stageFill(STAGE_GATHER_INTROS[seed % STAGE_GATHER_INTROS.length], loc)]],
-            steps: [{ gather: { loc: loc.id, hours: 1, label: STAGE_GATHER_LABELS[seed % STAGE_GATHER_LABELS.length] }, say: [['narr', STAGE_GATHER_DONES[seed % STAGE_GATHER_DONES.length]]] }]
+            steps: [{ gather: { loc: loc.id, hours: 1, label: STAGE_GATHER_LABELS[seed % STAGE_GATHER_LABELS.length] }, say: [['narr', STAGE_GATHER_DONES[seed % STAGE_GATHER_DONES.length]]] }, report]
         };
     }
     const enemy = loc.enemies[seed % loc.enemies.length].name;
@@ -236,7 +237,7 @@ function stageQuest(realm, stage, slot) {
         ...base,
         title: stageFill(STAGE_HUNT_TITLES[seed % STAGE_HUNT_TITLES.length], loc, enemy),
         intro: [['narr', stageFill(STAGE_HUNT_INTROS[seed % STAGE_HUNT_INTROS.length], loc, enemy)]],
-        steps: [{ hunt: { loc: loc.id, name: enemy, n: 3 + stage }, say: [['narr', STAGE_HUNT_DONES[seed % STAGE_HUNT_DONES.length]]] }]
+        steps: [{ hunt: { loc: loc.id, name: enemy, n: 3 + stage }, say: [['narr', STAGE_HUNT_DONES[seed % STAGE_HUNT_DONES.length]]] }, report]
     };
 }
 
@@ -358,11 +359,24 @@ function questGiver(q) {
     return q.npc === 'narr' ? residentKey(q.loc) : q.npc;
 }
 
-/* Về đến nơi chưa đủ: bước đi tới của nhiệm vụ phụ phải nói chuyện với người ở đó */
+/* Về đến nơi chưa đủ: bước đi tới có người để gặp thì phải nói chuyện với người đó; nhân vật chính xuất hiện ngay tại nơi của hồi truyện */
+function speakerOfStep(step) {
+    return step.say?.find(line => !['narr', 'me'].includes(line[0]))?.[0];
+}
+
 SIDE_QUESTS.forEach(q => (q.steps || []).forEach(step => {
     if (!step.go) return;
-    const speaker = step.say?.find(line => line[0] !== 'narr')?.[0];
+    const speaker = speakerOfStep(step);
     step.talk = LOCATION_NPCS[step.go]?.includes(speaker) ? speaker : residentKey(step.go);
+    step.loc = step.go;
+    delete step.go;
+}));
+
+MAIN_QUESTS.forEach(q => q.steps.forEach(step => {
+    const speaker = speakerOfStep(step);
+    if (!step.go || !speaker) return;
+    if (!LOCATION_NPCS[step.go].includes(speaker)) LOCATION_NPCS[step.go].unshift(speaker);
+    step.talk = speaker;
     step.loc = step.go;
     delete step.go;
 }));

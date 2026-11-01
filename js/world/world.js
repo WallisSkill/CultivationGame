@@ -57,6 +57,12 @@ function currentLocationQi() {
     return (currentLocation().qi || 1) * sectLocationQiMult(state.location) * renownQiMult();
 }
 
+/* Đồ vượt cấp mang chỉ số của cảnh giới trong tên, cao hơn cảnh giới yêu cầu */
+function gearStatRealm(item) {
+    const name = item.name.replace(/^[^\p{L}]+/u, '');
+    return Math.max(item.reqRealm || 0, GEAR_SERIES.findIndex(series => name.startsWith(`${series} `)));
+}
+
 function initWorldState() {
     state.location = state.location || 'thanh_thuy';
     state.look = { ...defaultLook(), ...(state.look || {}) };
@@ -73,6 +79,12 @@ function initWorldState() {
     state.inventory.forEach(it => {
         if (it.slot && (it.reqRealm || 0) >= GEAR_SUB_REALM && !it.subs) it.subs = rollGearSubs(it.reqRealm, it.quality || 0);
     });
+    if (!state.gearSubsRanked) {
+        state.inventory.filter(it => it.subs?.length).forEach(it => {
+            it.subs = rollGearSubs(gearStatRealm(it), it.quality || 0, it.subs.map(s => s.kind));
+        });
+        state.gearSubsRanked = true;
+    }
     state.race = state.race || (DAO_PATHS[state.daoPath]?.race === 'yeu' ? 'yeu' : 'nhan');
     state.origin = state.origin || 'thuy';
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
@@ -80,6 +92,7 @@ function initWorldState() {
     state.activity = state.activity || null;
     state.testSpeed = state.testSpeed || 1;
     state.lastSeen = state.lastSeen || Date.now();
+    migrateMainChapters();
     if (state.ageCurveFixed) {
         state.age = Math.max(START_AGE, state.age - legacyEntryAge(state.realmIndex, state.maxAge));
         delete state.ageCurveFixed;
@@ -108,11 +121,28 @@ function migrateStatCurve() {
     recalculateStats();
 }
 
+/* Save cũ: bỏ qua hồi nhỏ của các cảnh giới đã qua, cảnh giới đang ở thì đi lại từ đầu cảnh giới */
+function migrateMainChapters() {
+    if (state.mainChaptersSet) return;
+    state.mainChaptersSet = true;
+    if (!state.questDone.length) return;
+    const next = MAIN_QUESTS.find(q => !q.chapter && !state.questDone.includes(q.id));
+    if (!next) return;
+    MAIN_QUESTS.filter(q => q.chapter && q.needs[0] < next.needs[0] && !state.questDone.includes(q.id)).forEach(q => state.questDone.push(q.id));
+    state.questActive = state.questActive.filter(rt => rt.id[0] !== 'm');
+}
+
 /* ---------- đồng hồ ---------- */
+function travelSecondsLeft() {
+    const a = state.activity;
+    return a?.type === 'travel' ? a.legs.slice(a.leg).reduce((sum, leg) => sum + leg.left, 0) : 0;
+}
+
 function advanceWorld(sec) {
     if (state.dead || !state.root?.elements) return;
     advanceForgeQueue(sec);
-    state.age += sec * ageYearsPerSecond(state.realmIndex);
+    const moving = window._battleActive ? 0 : Math.min(sec, travelSecondsLeft());
+    state.age += (sec - moving) * ageYearsPerSecond(state.realmIndex) + moving * travelAgeYearsPerSecond(state.realmIndex);
     if (window._battleActive) return;
     accrueSectIncome(sec);
     let left = sec;
@@ -940,16 +970,6 @@ function mainQuestBlocker(q) {
     return (q.needsSide || []).find(id => !state.questDone.includes(id));
 }
 
-function stageQuestsOpen() {
-    return STAGE_QUESTS.filter(q => !questExpired(q) && !state.questDone.includes(q.id) && !state.questActive.some(rt => rt.id === q.id));
-}
-
-function goToStageQuest(id) {
-    const q = QUEST_INDEX[id];
-    if (state.location === q.loc) return openNpcTalk(questGiver(q));
-    travelTo(q.loc);
-}
-
 function nextMainQuest() {
     return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
 }
@@ -1347,11 +1367,6 @@ function renderQuestPanel() {
     if (descentActive()) {
         cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);
     }
-    stageQuestsOpen().forEach(q => {
-        const here = state.location === q.loc;
-        cards.push(`<div class="quest-card" data-quest="${q.id}"><div class="small">Tiểu cảnh giới · ${LOCATIONS[q.loc].name}</div><b>${q.title}</b>
-            <button class="mini-btn" onclick="goToStageQuest('${q.id}')">${here ? 'Gặp NPC' : 'Đi tới'}</button></div>`);
-    });
     (state.courtOrders || []).forEach(c => {
         cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div></div>`);
     });
@@ -1693,7 +1708,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    goToStageQuest, openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, toggleForgeSub, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });
