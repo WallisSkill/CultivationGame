@@ -702,7 +702,8 @@ function updateTrainingUI() {
     if (predEl) {
         const pred = getRealmPrediction();
         if (state.realmStage === 3 && state.xp >= need && typeof getBreakthroughGate === 'function' && getBreakthroughGate(state.realmIndex + 1)) {
-            writeHtml(predEl, `<span style="color:#ff9f7a">🚧 Bình cảnh: ${getBreakthroughGate(state.realmIndex + 1).title}</span>`);
+            const gateTitle = getBreakthroughGate(state.realmIndex + 1).title;
+            writeHtml(predEl, `<span class="xp-gate">🚧 Bình cảnh: ${gateTitle}</span><span class="xp-gate-full">🚧 Bình cảnh: ${gateTitle}</span>`);
         } else if (pred) {
             let html = '';
             if (pred.small) {

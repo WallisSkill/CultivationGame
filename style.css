@@ -1684,3 +1684,8 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 .activity-bar .activity-row { flex-wrap: nowrap; white-space: nowrap; }
 .activity-bar .activity-row .mini-btn { margin-top: 0; margin-bottom: 0; padding-top: 1px; padding-bottom: 1px; }
 .activity-bar .bar { margin: 3px 0 0; height: 5px; }
+
+/* Bình cảnh dài: giữ một dòng để khung không đổi cỡ, rê chuột hoặc chạm thì hiện đủ đè lên bên dưới */
+.xp-gate { display: block; color: #ff9f7a; overflow: hidden; text-overflow: ellipsis; cursor: help; }
+.xp-gate-full { display: none; position: fixed; z-index: 60; width: 300px; max-width: 80vw; box-sizing: border-box; padding: 6px 8px; margin-top: 2px; border: 1px solid #ff9f7a; border-radius: 6px; background: #14161f; color: #ff9f7a; white-space: normal; }
+#xpPrediction:hover .xp-gate-full { display: block; }
