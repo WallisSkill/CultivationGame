@@ -1678,3 +1678,9 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 .inv-pick-bar { grid-column: 1 / -1; }
 
 #xpPrediction { min-height: 1.4em; }
+
+/* Thanh hoạt động luôn giữ một chỗ cao cố định để khung bên dưới không bị đẩy */
+.activity-bar, .activity-bar:empty { display: block; height: 44px; box-sizing: border-box; overflow: hidden; }
+.activity-bar .activity-row { flex-wrap: nowrap; white-space: nowrap; }
+.activity-bar .activity-row .mini-btn { margin-top: 0; margin-bottom: 0; padding-top: 1px; padding-bottom: 1px; }
+.activity-bar .bar { margin: 3px 0 0; height: 5px; }

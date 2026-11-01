@@ -1325,12 +1325,16 @@ function inventoryFilterHTML() {
 /* Số món mỗi trang lấy theo chỗ trống thật để cả trang hiện đủ, không phải cuộn */
 /* Đổi số món đổi luôn chiều cao dòng: chỉ tăng ở lượt ngoài, lượt lồng chỉ được giảm nên luôn dừng */
 let inventoryFitting = false;
+const INVENTORY_LIST_RESERVE = 84;
+const INVENTORY_LIST_MIN = 90;
 
 function fitInventoryPage(listEl) {
     const pane = listEl.closest('.side-pane');
     if (!pane?.offsetHeight || !listEl.offsetHeight) return;
     const tallest = Math.max(...[...listEl.children].map(child => child.offsetHeight));
-    const free = pane.getBoundingClientRect().bottom - listEl.firstElementChild.getBoundingClientRect().top - 44;
+    const free = Math.max(INVENTORY_LIST_MIN, pane.getBoundingClientRect().bottom - $('inventoryFilter').getBoundingClientRect().bottom - INVENTORY_LIST_RESERVE);
+    listEl.style.maxHeight = `${free}px`;
+    listEl.style.overflowY = 'auto';
     const columns = getComputedStyle(listEl).gridTemplateColumns.split(' ').length;
     const fit = Math.max(1, Math.floor(free / (tallest + 8))) * columns;
     if (fit === inventoryPerPage || inventoryPage > 0) return;
