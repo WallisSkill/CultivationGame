@@ -15,7 +15,9 @@ const REALM_FIRST_MINUTES = 5;
 const REALM_LAST_DAYS = 30;
 const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
-const REALM_COUNT = 32;
+const REALM_COUNT = 33;
+/* Hư Vô Chí Đạo nằm ngoài đường cong sức mạnh để các cảnh giới cũ không đổi */
+const CURVE_LAST_REALM = 31;
 const START_AGE = 6;
 const BASE_LIFESPAN = 200;
 const AGE_SPEND_SHARE = 0.0125;
@@ -33,7 +35,7 @@ const WORLD_TIERS = [
     { id: 'thien', name: 'Thiên Ma Ngoại Vực', from: 23, to: 28, palette: ['#22123f', '#46238a', '#c7a1ff'] },
     { id: 'hondon', name: 'Hỗn Độn Hải', from: 29, to: 29, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
     { id: 'hongmong', name: 'Hồng Mông', from: 30, to: 30, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
-    { id: 'chungnguyen', name: 'Chung Nguyên', from: 31, to: 31, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
+    { id: 'chungnguyen', name: 'Chung Nguyên', from: 31, to: 32, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
 ];
 
 /* Cõi do người chơi tự sáng tạo sau viên mãn Hỗn Độn: không người, không quái, chỉ đi nói chuyện với bên dưới */
@@ -53,7 +55,7 @@ const ROOT_SPEED = [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20, 1.30, 1.40];
 function realmRealSeconds(realm) {
     const first = REALM_FIRST_MINUTES * 60;
     const last = REALM_LAST_DAYS * SECONDS_PER_DAY;
-    return first * Math.pow(last / first, realm / (REALM_COUNT - 1));
+    return first * Math.pow(last / first, realm / CURVE_LAST_REALM);
 }
 
 /* Tuổi trôi theo thọ nguyên của cảnh giới: ở một cảnh đủ lâu tiêu một phần cố định của thọ nguyên */
@@ -177,7 +179,7 @@ const GEAR_SERIES = [
     'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Đế Tôn', 'Lục Nguyên', 'Đại La', 'Chuẩn Thánh',
     'Thánh Nhân', 'Chí Thánh', 'Đại Thánh', 'Chuẩn Thiên',
     'Diệt Thiên', 'Khai Thiên', 'Toàn Thiên', 'Cực Thiên', 'Nghịch Thiên', 'Sáng Thế',
-    'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên'
+    'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên', 'Hư Vô'
 ];
 
 /* Chỉ số phụ: đồ từ Địa Tiên trở lên, phẩm càng cao càng nhiều dòng, tổng mỗi loại có trần.
@@ -376,6 +378,11 @@ function makeForgedGear(realm, slot, gradeIndex = 0, chosenSubs = null) {
         reqRealm: realm,
         desc: `Rèn vượt ${gearRealm - realm} cảnh giới, yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
     };
+}
+
+/* Đồ thần cấp Hư Vô, chỉ nhận ở Đại Kết Cục */
+function makeHuVoGear(slot) {
+    return { ...makeGearItem(REALM_COUNT - 1, slot, GEAR_QUALITIES.length - 1), reqRealm: REALM_COUNT - 2, huVo: true, equipped: true };
 }
 
 /* Bảo vật nhiệm vụ: chỉ số của cảnh giới cao hơn nhưng yêu cầu vẫn là cảnh giới hiện tại */

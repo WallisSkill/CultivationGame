@@ -205,6 +205,9 @@ LINH_BAO.push(
  ['thanh_moc', 'yeu'], ['thai_at', 'yeu'], ['can_khon', 'yeu']].forEach(([id, path]) => { LINH_BAO.find(lb => lb.id === id).path = path; });
 ['phan_thien', 'huyen_bang', 'vo_cuc', 'hon_don', 'tu_linh'].forEach(id => { LINH_BAO.find(lb => lb.id === id).target = 'aoe'; });
 const LINH_BAO_MAP = LINH_BAO.reduce((m, x) => (m[x.id] = x, m), {});
+/* Chỉ có được ở Đại Kết Cục: nằm ngoài LINH_BAO để không rơi, không bán, không vào tay địch */
+const HU_VO_LB = 'chung_nguyen_luc';
+LINH_BAO_MAP[HU_VO_LB] = { id: HU_VO_LB, name: 'Chung Nguyên Chí Cao Chi Lực', element: 'Kim', cooldown: 2.4, cost: 800, target: 'aoe', effects: [{ action: 'damage', magnitude: 1.4 }], desc: 'Sức mạnh của Chung Nguyên Chí Cao, đánh toàn bộ kẻ địch.' };
 
 /* fallback "bare-hands" artifact so a player with an empty board can still fight */
 const LB_DEFAULT_ATTACK = { id: '_basic', name: 'Chân Khí Kích', element: 'Kim', cooldown: 2.2, grade: 0, level: 1, effects: [{ action: 'damage', magnitude: 1.0 }], desc: 'Ngưng tụ chân khí đánh ra.' };
@@ -1223,7 +1226,7 @@ function lbBuildAllies(player) {
 }
 
 function lbBuildEnemyCombatant(enemy) {
-    const defs = buildEnemyBoard(enemy);
+    const defs = enemy.boardDefs || buildEnemyBoard(enemy);
     return Object.assign(lbBaseCombatant(), {
         side: 'enemy',
         name: enemy.name || 'Địch',

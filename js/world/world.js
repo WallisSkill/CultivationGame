@@ -1287,6 +1287,7 @@ function questsOnLocation() {
 function completeStep(rt) {
     const q = QUEST_INDEX[rt.id];
     const step = q.steps[rt.step];
+    if (huVoClaim(step.boss)) { renderAll(); return; }
     rt.step++;
     rt.n = 0;
     if (step.say) playDialogue(step.say);
@@ -1298,9 +1299,18 @@ function completeStep(rt) {
         advanceMainQuest();
     } else {
         const next = q.steps[rt.step];
-        if (next.go === state.location) completeStep(rt);
+        if (next.go === state.location || (BOSSES[next.boss]?.huVoPiece && !huVoPiece(next.boss))) completeStep(rt);
     }
     renderAll();
+}
+
+/* Cảnh giới cuối không đi bằng tu vi: thắng Hư Vô Chí Đạo là bước vào, trò chơi sang endgame */
+function enterFinalRealm() {
+    state.realmIndex = REALM_COUNT - 1;
+    state.realmStage = STAGES.length - 1;
+    state.xp = 0;
+    log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Endgame.`);
+    reportHuVoWin();
 }
 
 function grantQuestReward(q) {
@@ -1351,6 +1361,7 @@ function grantQuestReward(q) {
         log(`🌌 Mở đường tới ${w.name}!`);
     }
     if (r.ending) queueEndingChoice();
+    if (r.finalRealm) enterFinalRealm();
 }
 
 function queueEndingChoice() {
@@ -1380,27 +1391,157 @@ function questAction(id) {
     if (step.boss) {
         if (!requireFree()) return;
         const boss = BOSSES[step.boss];
-        const npc = typeof boss.npc === 'string' ? NPCS[boss.npc] : boss.npc;
+        if (boss.huVoPiece && !huVoPiece(step.boss)) return completeStep(rt);
         const start = () => spawnBoss(step.boss, QUEST_INDEX[id]);
         if (boss.scriptedLoss) start();
-        else coopGate(`Khiêu chiến ${npc?.name || boss.name}`, start);
+        else coopGate(`Khiêu chiến ${bossName(step.boss)}`, start);
     }
+}
+
+/* Đại Kết Cục: món kế tiếp còn chưa tách khỏi người chơi */
+function huVoPiece(id) {
+    const kind = BOSSES[id]?.huVoPiece;
+    if (kind === 'gear') return GEAR_SLOT_IDS.map(equippedInSlot).find(it => it && !it.huVo) || null;
+    if (kind === 'lb') return boardItems().find(it => it && it.linhBaoId !== HU_VO_LB) || null;
+    return null;
+}
+
+function huVoLinhBao() {
+    return makeLinhBao(HU_VO_LB, LB_MAX_GRADE, LB_MAX_LEVEL / 4);
+}
+
+function huVoFill(kind) {
+    if (kind === 'gear') {
+        GEAR_SLOT_IDS.filter(slot => !equippedInSlot(slot)).forEach(slot => state.inventory.push(makeHuVoGear(slot)));
+        return;
+    }
+    state.board = state.board.map(uid => {
+        if (uid) return uid;
+        const lb = huVoLinhBao();
+        state.inventory.push(lb);
+        return lb.uid;
+    });
+}
+
+/* Thắng một món: món đó rời hẳn người chơi, Hư Vô thế chỗ. Trả về true nếu còn món phải đánh */
+function huVoClaim(id) {
+    const kind = BOSSES[id]?.huVoPiece;
+    if (!kind) return false;
+    const piece = huVoPiece(id);
+    if (piece) {
+        (state.huVoParts ||= []).push(piece.type === 'linhbao' ? { name: piece.name, lb: piece } : { name: piece.name });
+        if (kind === 'gear') {
+            state.inventory.push(makeHuVoGear(piece.slot));
+        } else {
+            const lb = huVoLinhBao();
+            state.inventory.push(lb);
+            state.board[state.board.indexOf(piece.uid)] = lb.uid;
+        }
+        state.inventory.splice(state.inventory.indexOf(piece), 1);
+        log(`🌌 ${piece.name} đã rời khỏi ngươi. ${kind === 'gear' ? 'Trang bị Hư Vô' : LINH_BAO_MAP[HU_VO_LB].name} thế chỗ.`);
+        if (huVoPiece(id)) return true;
+    }
+    huVoFill(kind);
+    recalculateStats();
+    return false;
+}
+
+function huVoBoard(piece) {
+    return piece?.type === 'linhbao' ? [{ ...piece, flatPower: true }] : null;
+}
+
+function huVoFinalEscorts(realm, stage) {
+    return (state.huVoParts || []).map(part => {
+        const add = buildEnemy({ name: part.name, kind: 'chaos', realmIndex: realm, realmStage: stage, boardSize: 1 });
+        add.str = Math.floor(add.str * 0.5);
+        add.hp = add.maxHp = Math.floor(add.maxHp * 0.3);
+        const board = huVoBoard(part.lb);
+        if (board) add.boardDefs = board;
+        return add;
+    });
+}
+
+/* Hư Vô Chi Chủ đương nhiệm từ máy chủ; chưa có ai thì trận cuối là chính người chơi */
+let huVoThrone = null;
+
+function huVoHolder() {
+    return huVoThrone && huVoThrone.id !== state.profileId ? huVoThrone : null;
+}
+
+function reportHuVoWin() {
+    recalculateStats();
+    state.huVoPending = true;
+    registerProfile();
+    wsSend({
+        type: 'huvo_win', token: profileToken(), name: state.huVoName || state.name, look: playerLook(),
+        atk: state.totalPower, def: state.totalDef, hp: state.totalMaxHp,
+        elements: state.root?.elements || [], path: state.daoPath || null
+    });
+}
+
+function handleHuVoThrone(msg) {
+    huVoThrone = msg.throne || null;
+    if (huVoThrone?.id === state.profileId) state.huVoPending = false;
+    else if (state.huVoPending) reportHuVoWin();
+    if (msg.news && huVoThrone) {
+        log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
+        showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);
+    }
+    renderAll();
+}
+
+/* Người giữ ngôi là boss cuối: mạnh hơn người thách đấu bao nhiêu thì boss mạnh lên bấy nhiêu, có trần để người sau còn đường thắng */
+function huVoHolderRatio(theirs, mine) {
+    return Math.min(HU_VO_HOLDER_CAP, Math.max(1, theirs / mine));
+}
+
+function applyHuVoHolder(enemy, holder) {
+    recalculateStats();
+    enemy.name = holder.name;
+    enemy.look = holder.look || enemy.look;
+    enemy.str = Math.floor(enemy.str * huVoHolderRatio(holder.atk, state.totalPower));
+    enemy.def = Math.floor(enemy.def * huVoHolderRatio(holder.def, state.totalDef));
+    enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * huVoHolderRatio(holder.hp, state.totalMaxHp));
+    enemy.elements = holder.elements;
+    enemy.path = holder.path;
+    enemy.boardDefs = Array.from({ length: LB_BOARD_SLOTS }, () => ({ ...LINH_BAO_MAP[HU_VO_LB], grade: LB_MAX_GRADE, level: 1, flatPower: true }));
+    log(`🌌 ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, đang đợi ngươi.`);
+}
+
+/* Trận cuối đánh với chính cái tên của người chơi, còn người chơi thành Hư Vô Chi Chủ */
+function takeHuVoName() {
+    if (state.huVoName) return;
+    state.huVoName = state.name;
+    state.name = HU_VO_PLAYER_NAME;
+}
+
+function bossName(id) {
+    const b = BOSSES[id];
+    if (b.huVoFinal) return huVoHolder()?.name || state.huVoName || state.name;
+    const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
+    return huVoPiece(id)?.name || npc?.name || b.name;
 }
 
 function spawnBoss(id, quest) {
     const b = BOSSES[id];
     const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
+    const piece = huVoPiece(id);
+    if (b.huVoFinal) takeHuVoName();
     let realm = b.realm, stage = b.stage || 0;
     if (!b.scriptedLoss && quest && realm >= quest.needs[0]) {
         realm = quest.needs[0];
         stage = Math.min(stage, quest.needs[1]);
     }
     const enemy = buildEnemy({
-        name: npc?.name || b.name, kind: b.kind, look: npc?.look || null, tier: 'Boss', scale: b.scale || 1,
+        name: bossName(id), kind: b.kind, look: b.huVoFinal ? playerLook() : npc?.look || null, tier: 'Boss', scale: b.scale || 1,
         boardSize: b.board || 4, realmIndex: realm, realmStage: stage, elements: b.elements, path: b.path,
         rootRank: rollEnemyRootRank(realm, 1)
     });
     enemy.bossId = id;
+    if (b.hpMult) enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * b.hpMult);
+    if (huVoBoard(piece)) enemy.boardDefs = huVoBoard(piece);
+    if (b.huVoFinal) enemy.escorts = huVoFinalEscorts(realm, stage);
+    if (b.huVoFinal && huVoHolder()) applyHuVoHolder(enemy, huVoHolder());
     if (b.adds) {
         enemy.escorts = Array.from({ length: b.adds.n }, () => {
             const add = buildEnemy({ name: b.adds.name, kind: b.adds.kind, realmIndex: realm, realmStage: stage, boardSize: 1 });
@@ -1490,11 +1631,7 @@ function questStepText(rt) {
     if (step.talk) return `Nói chuyện với ${NPCS[step.talk].name} tại ${LOCATIONS[step.loc].name}`;
     if (step.hunt) return `Diệt ${step.hunt.name} tại ${LOCATIONS[step.hunt.loc].name} (${rt.n}/${step.hunt.n})`;
     if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${formatRealDuration(hastedSeconds(gatherSeconds(step)))})`;
-    if (step.boss) {
-        const b = BOSSES[step.boss];
-        const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
-        return `Khiêu chiến ${npc?.name || b.name}`;
-    }
+    if (step.boss) return `Khiêu chiến ${bossName(step.boss)}`;
     return '';
 }
 
@@ -1517,6 +1654,7 @@ function questRewardText(q) {
     if (r.opens) parts.push(`mở dịch vụ ${LOCATIONS[r.opens].name}`);
     if (r.flag) parts.push(`mở đường tới ${WORLD_TIERS.find(x => 'world_' + x.id === r.flag).name}`);
     if (r.ending) parts.push('kết thúc cốt truyện');
+    if (r.finalRealm) parts.push(`bước vào ${REALMS[REALM_COUNT - 1]}`);
     return parts.join(' · ');
 }
 
@@ -1553,7 +1691,7 @@ function renderQuestPanel() {
         const blocker = q && QUEST_INDEX[mainQuestBlocker(q)];
         if (q) cards.unshift(`<div class="quest-card" data-quest="${q.id}"><div class="small">${ACTS[q.act - 1].name}</div><b>${q.title}</b>
             <div class="small">${blocker && needsMet(q) ? `Trước hết hãy xong "${blocker.title}": gặp ${NPCS[questGiver(blocker)].name} tại ${LOCATIONS[blocker.loc].name}.` : `Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.`}</div>${questRewardHTML(q)}</div>`);
-        else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}</b></div>`);
+        else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>${state.realmIndex === REALM_COUNT - 1 ? `🌌 Endgame: ${REALMS[state.realmIndex]}${huVoThrone ? ` · Hư Vô Chi Chủ: ${huVoThrone.name}` : ''}` : `Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}`}</b></div>`);
     }
     if (descentActive()) {
         cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);

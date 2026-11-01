@@ -7,8 +7,10 @@ const REALMS = [
     'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Tiên Đế', 'Thần Cảnh Lục Nguyên', 'Đại La Kim Tiên', 'Chuẩn Thánh',
     'Thánh Nhân Cảnh', 'Chí Thánh Cảnh', 'Đại Thánh Cảnh', 'Chuẩn Thiên Cảnh',
     'Diệt Thiên Cảnh', 'Khai Thiên Cảnh', 'Toàn Thiên Cảnh', 'Cực Thiên Cảnh', 'Nghịch Thiên Cảnh', 'Sáng Thế Cảnh',
-    'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao'
+    'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao', 'Hư Vô Chí Đạo'
 ];
+const HU_VO_PLAYER_NAME = 'Hư Vô Chi Chủ';
+const HU_VO_HOLDER_CAP = 1.2;
 const STAGES = ['Sơ Kỳ', 'Trung Kỳ', 'Hậu Kỳ', 'Đại Viên Mãn'];
 const GAME_VERSION = '1.0.0';
 // Expose for cross-file access
@@ -43,7 +45,7 @@ const COLOR_MAP = {
     'Chuẩn Thiên Cảnh': '#880e4f', 'Diệt Thiên Cảnh': '#6a1b9a', 'Khai Thiên Cảnh': '#4527a0',
     'Toàn Thiên Cảnh': '#283593', 'Cực Thiên Cảnh': '#1a237e', 'Nghịch Thiên Cảnh': '#d81b60',
     'Sáng Thế Cảnh': '#ff4081', 'Hỗn Độn Đạo Giả': '#00bcd4', 'Hồng Mông Chúa Tể': '#00e5ff',
-    'Chung Nguyên Chí Cao': '#ffffff',
+    'Chung Nguyên Chí Cao': '#ffffff', 'Hư Vô Chí Đạo': '#b388ff',
     'Sơ Kỳ': '#9e9e9e', 'Trung Kỳ': '#4caf50', 'Hậu Kỳ': '#2196f3', 'Đại Viên Mãn': '#ffc107',
     'Phế Phẩm': '#777', 'Hạ Phẩm': '#8d6e63', 'Trung Phẩm': '#00acc1', 'Thượng Phẩm': '#43a047',
     'Huyền Phẩm': '#7e57c2', 'Địa Phẩm': '#8bc34a', 'Thiên Phẩm': '#ffeb3b',
