@@ -53,13 +53,14 @@ function fitBattle() {
 }
 
 function refreshPagers() {
+    if (document.hidden) return;
     document.querySelectorAll(PAGED_SELECTOR).forEach(el => {
         const pager = ensurePager(el);
         const step = el.clientWidth + PAGE_GAP;
         const pages = step > PAGE_GAP ? Math.round((el.scrollWidth + PAGE_GAP) / step) : 1;
         const page = Math.min(pages, Math.round(el.scrollLeft / step) + 1);
         pager.classList.toggle('on', pages > 1);
-        pager.querySelector('span').textContent = `Trang ${page}/${pages}`;
+        writeText(pager.querySelector('span'), `Trang ${page}/${pages}`);
     });
     fitBattle();
 }

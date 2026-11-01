@@ -41,6 +41,7 @@ const GUIDE_SECTIONS = [
             ['Bế quan', 'Ngồi xuống ở chỗ Bế quan trong khu vực. Linh khí nơi đó càng cao tu vi tăng càng nhanh.'],
             ['Trận Pháp Bảo', 'Pháp bảo đặt lên trận sẽ tự đánh theo thời gian hồi.'],
             ['Nâng giai pháp bảo', 'Lên giai vẫn giữ nguyên cấp đang có. Hợp nhất cho ngươi tự chọn vật liệu; pháp bảo đang ở trên trận không bị lấy làm vật liệu.'],
+            ['Linh ngọc', 'Hai viên cùng loại cùng bậc hợp thành một viên bậc trên. Lên Tiên Cảnh mở Tiên Phẩm, Tiên Đế mở Đế Phẩm, Thánh Nhân mở Thánh Phẩm, Đại Thánh mở Đại Thánh Phẩm. Nút Tối ưu ngọc tháo hết ngọc, hợp nhất phần thừa, khảm viên tốt nhất vào pháp bảo trên trận và bán viên dư.'],
             ['Rèn đồ', 'Lò rèn chỉ rèn tới cảnh giới của nơi đó. Thần lò rèn được mọi cấp trong Giới của nó, vượt cấp tối đa tới cảnh giới đầu của Giới sau.'],
             ['Hồng Mông Tử Khí', 'Đủ 6 món đồ cấp Thánh chính là đủ phần Hồng Mông Tử Khí. Chuẩn Thánh phải thu đủ rồi mới lên được Thánh Nhân.'],
             ['Đồ cấp Thiên', 'Tử Tiêu Thị bán từ Đại Thánh. Phải mặc đủ 6 món mới vào được Chuẩn Thiên, từ đó mở ra các cảnh giới Thiên.'],

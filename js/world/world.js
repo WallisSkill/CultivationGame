@@ -222,6 +222,7 @@ function worldTick() {
             updateTrainingUI();
             renderActivityBar();
             updateMapToken();
+            if (state.gemAuto) optimizeGems(true);
             if (typeof checkLongevity === 'function') checkLongevity();
         }
     }
@@ -302,25 +303,26 @@ function finishActivity() {
     renderAll();
 }
 
-function renderActivityBar() {
-    const el = $('activityBar');
-    if (!el) return;
+function activityBarHTML() {
     const a = state.activity;
-    if (window._battleActive) { el.innerHTML = '<b>⚔️ Đang giao chiến</b> <span class="small">— tu vi tạm dừng</span>'; return; }
+    if (window._battleActive) { return '<b>⚔️ Đang giao chiến</b> <span class="small">— tu vi tạm dừng</span>'; }
     if (!a) {
         const q = currentLocationQi();
-        el.innerHTML = state.autoTrain
+        return state.autoTrain
             ? `<b>🧘 Đang bế quan</b> <span class="small">tại ${currentLocation().name} · linh khí x${q.toFixed(2)} · ${formatNumber(Math.floor(getEstimatedXpPerSecond()))} tu vi/giây</span>`
             : `<b>🚶 Rảnh rỗi</b> <span class="small">— tới chỗ Bế quan trong khu vực và ngồi xuống để tu luyện</span>`;
-        return;
     }
     const remaining = activityRemaining();
     const pct = Math.max(0, Math.min(100, 100 * (1 - remaining / a.total)));
     const canCancel = a.type !== 'rest';
-    el.innerHTML = `<div class="activity-row">
+    return `<div class="activity-row">
         <b>${a.label}</b> <span class="small">còn ${formatRealDuration(remaining / (state.testSpeed || 1))} · không tu luyện được${a.type === 'travel' ? ` · kỳ ngộ ${(roadEventChance() * 100).toFixed(1)}% mỗi ${ROAD_EVENT_INTERVAL} giây` : ''}</span>
         ${canCancel ? '<button class="mini-btn" onclick="cancelActivity()">Dừng</button>' : ''}
     </div><div class="bar"><i style="width:${pct}%"></i></div>`;
+}
+
+function renderActivityBar() {
+    writeHtml($('activityBar'), activityBarHTML());
 }
 
 /* ---------- di chuyển ---------- */
@@ -664,7 +666,8 @@ function updateMapToken() {
     const node = $('mapToken');
     if (!node) return;
     const p = mapTokenPosition();
-    node.setAttribute('transform', `translate(${p.x - 26} ${p.y - 74})`);
+    const place = `translate(${p.x - 26} ${p.y - 74})`;
+    if (node.getAttribute('transform') !== place) node.setAttribute('transform', place);
 }
 
 /* ---------- bản đồ ---------- */

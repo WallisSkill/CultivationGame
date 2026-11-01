@@ -58,8 +58,7 @@
     color: #e6f2ea;
     outline: none;
     box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(6px);
-    transition: all 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 #playerNameInput::placeholder {
@@ -184,9 +183,7 @@ body {
     padding: 18px;
     border-radius: 14px;
 
-    background: rgba(10, 20, 30, 0.25);
-    backdrop-filter: blur(8px) saturate(150%);
-    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    background: rgba(10, 20, 30, 0.8);
     box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.6),
         inset 0 0 15px rgba(255, 255, 255, 0.04);
@@ -214,9 +211,7 @@ h1 {
 
 /* 🌙 Ô stat liquid nhẹ */
 .stat {
-    background: rgba(15, 23, 36, 0.35);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    background: rgba(15, 23, 36, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
     padding: 8px;
@@ -244,8 +239,6 @@ h1 {
     font-weight: 600;
     font-size: 12.5px;
     line-height: 1.2em;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
     transition: 0.2s;
 }
 
@@ -290,9 +283,7 @@ button.primary {
 
 /* 💠 Panel liquid */
 .panel {
-    background: rgba(15, 23, 36, 0.25);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    background: rgba(15, 23, 36, 0.82);
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
@@ -434,7 +425,6 @@ footer {
     background: linear-gradient(135deg, rgba(14, 27, 44, 0.82), rgba(12, 32, 40, 0.65));
     color: #cfeee2;
     box-shadow: inset 0 0 12px rgba(123, 228, 163, 0.12);
-    backdrop-filter: blur(6px);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -463,7 +453,7 @@ footer {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
 .filter-chip:hover {
@@ -661,9 +651,7 @@ footer {
 
 /* 🔮 Skill Display Styles - Unified with other panels */
 .panel-skills {
-    background: rgba(15, 23, 36, 0.25);
-    backdrop-filter: blur(10px) saturate(140%);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    background: rgba(15, 23, 36, 0.82);
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.03);
@@ -999,7 +987,6 @@ footer {
         background: linear-gradient(135deg, rgba(14, 27, 44, 0.82), rgba(12, 32, 40, 0.65));
         color: #cfeee2;
         box-shadow: inset 0 0 12px rgba(123, 228, 163, 0.12);
-        backdrop-filter: blur(6px);
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
@@ -1060,8 +1047,6 @@ footer {
         justify-content: center;
         z-index: 10001;
         background: rgba(3, 7, 15, 0.68);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
     }
 
     #confirmLayer .confirm-box {
@@ -1411,7 +1396,7 @@ footer {
     padding: 14px 10px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 .lb-reward-card:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -1433,9 +1418,7 @@ footer {
    THẾ GIỚI: bản đồ, ngoại hình, nhiệm vụ, thoại
    =========================================================== */
 .avatar { display: block; width: 100%; height: 100%; }
-.av-aura { animation: auraPulse 3.2s ease-in-out infinite; transform-origin: 60px 88px; }
-@keyframes auraPulse { 50% { opacity: .55; transform: scale(1.06); } }
-@media (prefers-reduced-motion: reduce) { .av-aura, .lb-lunge { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .lb-lunge { animation: none; } }
 
 .activity-bar { margin: 10px 0; padding: 8px 12px; border-radius: 10px; background: rgba(15, 23, 36, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); min-height: 22px; }
 .activity-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -1682,3 +1665,14 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 #gearTip .tip-head { margin-top: 6px; color: #e6c97a; font-weight: 600; }
 .quest-card[data-quest] { cursor: help; }
 .npc-options { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+
+/* Thanh chạy bằng transform để GPU tự xử, không tính lại bố cục */
+.lb-tile-fill, .lb-hpfill, .lb-shieldfill { width: 100%; transform: scaleX(0); transform-origin: left center; will-change: transform; transition: transform 0.1s linear; }
+#sceneCanvas { will-change: transform; }
+#activityBar { contain: layout paint; }
+.lb-lunge, .lb-float span { will-change: transform; }
+
+.inv-pick { cursor: pointer; outline: 1px dashed rgba(255, 255, 255, 0.2); }
+.inv-pick.picked { outline: 2px solid #ff9f7a; background: rgba(255, 120, 90, 0.14); }
+.inv-pick.locked { cursor: not-allowed; opacity: 0.45; }
+.inv-pick-bar { grid-column: 1 / -1; }

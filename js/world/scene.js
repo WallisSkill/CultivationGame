@@ -5,6 +5,7 @@
 =========================================================== */
 const SCENE_W = 1400;
 const SCENE_H = 900;
+const SCENE_DRAW_MS = 15;
 const SCENE_VIEW_MIN_W = 960;
 let sceneViewW = SCENE_VIEW_MIN_W;
 const SCENE_VIEW_BASE_H = 540;
@@ -226,6 +227,62 @@ function fitSceneView() {
     if (canvas.height !== sceneViewH) canvas.height = sceneViewH;
 }
 
+function drawSpot(ctx, spot, pal, near) {
+    ctx.fillStyle = near ? '#ffe9a0' : 'rgba(11,18,32,.85)';
+    ctx.strokeStyle = pal[2];
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(spot.x, spot.y, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.font = '26px serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.fillText(spot.icon, spot.x, spot.y + 9);
+    ctx.font = 'bold 15px sans-serif';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText(spot.label, spot.x, spot.y + 50);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(spot.label, spot.x, spot.y + 50);
+}
+
+/* Nền và các điểm tương tác vẽ sẵn một lần, mỗi khung chỉ dán lại */
+function sceneBackground(pal) {
+    const s = sceneState;
+    if (s.bgFor === s.spots) return s.bg;
+    s.bgFor = s.spots;
+    s.bg = s.bg || document.createElement('canvas');
+    s.bg.width = SCENE_W;
+    s.bg.height = SCENE_H;
+    const ctx = s.bg.getContext('2d', { alpha: false });
+    ctx.fillStyle = pal[0];
+    ctx.fillRect(0, 0, SCENE_W, SCENE_H);
+    ctx.fillStyle = pal[1];
+    ctx.beginPath();
+    ctx.ellipse(SCENE_W / 2, SCENE_H / 2 + 60, SCENE_W / 2 - 60, SCENE_H / 2 - 70, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(241,227,191,.3)';
+    ctx.fillRect(SCENE_W / 2 - 40, SCENE_H / 2, 80, SCENE_H / 2);
+    s.decor.forEach(d => {
+        ctx.fillStyle = d.k < 0.5 ? pal[0] : pal[2];
+        ctx.globalAlpha = d.k < 0.5 ? 1 : 0.55;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    });
+    s.spots.forEach(spot => drawSpot(ctx, spot, pal, false));
+    return s.bg;
+}
+
+/* Khung chỉ vẽ lại khi có gì đổi; mỗi giây vẽ một lần để bắt ảnh tải xong và bong bóng hết hạn */
+function sceneDrawKey(now) {
+    const s = sceneState;
+    const others = playersHere().map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';');
+    return [Math.round(s.x), Math.round(s.y), s.nearest?.label, s.locId, state.autoTrain, state.activity?.label, Math.floor(now / 1000), others].join('|');
+}
+
 function drawScene() {
     fitSceneView();
     const s = sceneState;
@@ -236,44 +293,8 @@ function drawScene() {
     ctx.save();
     ctx.translate(-camX, -camY);
 
-    ctx.fillStyle = pal[0];
-    ctx.fillRect(0, 0, SCENE_W, SCENE_H);
-    ctx.fillStyle = pal[1];
-    ctx.beginPath();
-    ctx.ellipse(SCENE_W / 2, SCENE_H / 2 + 60, SCENE_W / 2 - 60, SCENE_H / 2 - 70, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = 'rgba(241,227,191,.3)';
-    ctx.fillRect(SCENE_W / 2 - 40, SCENE_H / 2, 80, SCENE_H / 2);
-
-    s.decor.forEach(d => {
-        ctx.fillStyle = d.k < 0.5 ? pal[0] : pal[2];
-        ctx.globalAlpha = d.k < 0.5 ? 1 : 0.55;
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-    });
-
-    s.spots.forEach(spot => {
-        const near = s.nearest === spot;
-        ctx.fillStyle = near ? '#ffe9a0' : 'rgba(11,18,32,.85)';
-        ctx.strokeStyle = pal[2];
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(spot.x, spot.y, 30, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.font = '26px serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#fff';
-        ctx.fillText(spot.icon, spot.x, spot.y + 9);
-        ctx.font = 'bold 15px sans-serif';
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = '#000';
-        ctx.strokeText(spot.label, spot.x, spot.y + 50);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(spot.label, spot.x, spot.y + 50);
-    });
+    ctx.drawImage(sceneBackground(pal), 0, 0);
+    if (s.nearest) drawSpot(ctx, s.nearest, pal, true);
 
     const units = playersHere().filter(p => p.x != null).map(p => {
         const look = p.look || defaultLook();
@@ -329,10 +350,15 @@ function sceneFrame(now) {
         p.y += (p.ty - p.y) * Math.min(1, dt * 8);
     });
     s.nearest = sceneNearest();
+    const key = sceneDrawKey(now);
+    if (key === s.drawKey || now - s.lastDraw < SCENE_DRAW_MS) return;
+    s.drawKey = key;
+    s.lastDraw = now;
     drawScene();
 }
 
 function showSceneBubble(player, text) {
+    sceneState.drawKey = null;
     if (player) {
         player.bubble = text;
         player.bubbleUntil = Date.now() + SAY_SHOW_MS;
@@ -406,7 +432,7 @@ function initScene() {
                 onkeydown="if(event.key==='Enter'){sendSay(this.value);this.value='';}">
         </div>`;
     sceneState.canvas = $('sceneCanvas');
-    sceneState.ctx = sceneState.canvas.getContext('2d');
+    sceneState.ctx = sceneState.canvas.getContext('2d', { alpha: false });
     sceneState.canvas.addEventListener('pointerdown', scenePointer);
     window.addEventListener('keydown', event => {
         if (sceneState.view !== 'scene' || isTypingTarget(event.target)) return;

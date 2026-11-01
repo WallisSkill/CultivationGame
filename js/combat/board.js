@@ -283,18 +283,19 @@ function lbGemMods(item) {
 }
 function lbGemMagnitude(kind, tier) {
     const t = Math.max(0, tier || 0);
+    const step = Math.min(t, GEM_BASE_MAX_TIER) + Math.max(0, t - GEM_BASE_MAX_TIER) * GEM_HIGH_TIER_STEP;
     switch (kind) {
-        case 'power': return +(0.15 + t * 0.1).toFixed(3);
-        case 'haste': return +(0.08 + t * 0.05).toFixed(3);
-        case 'leech': return +(0.10 + t * 0.05).toFixed(3);
-        case 'guard': return +(0.15 + t * 0.08).toFixed(3);
+        case 'power': return +(0.15 + step * 0.1).toFixed(3);
+        case 'haste': return +(0.08 + step * 0.05).toFixed(3);
+        case 'leech': return +(0.10 + step * 0.05).toFixed(3);
+        case 'guard': return +(0.15 + step * 0.08).toFixed(3);
         default: return 0.1;
     }
 }
 function makeGem(kind, tier = 0) {
     const def = LB_GEM_KINDS[kind];
     if (!def) return null;
-    const tierName = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'][Math.min(3, tier)] || 'Thô';
+    const tierName = GEM_FUSION_NAMES[tier] || 'Thô';
     const gem = {
         name: `${def.label} (${tierName})`, type: 'gem', gemKind: kind,
         magnitude: lbGemMagnitude(kind, tier), tier, desc: def.desc
@@ -717,9 +718,82 @@ if (typeof window !== 'undefined') window.detachGems = detachGems;
 /* ===========================
    GEM FUSION SYSTEM
    - 2 gems of same tier & kind → 1 gem of next tier
-   - Max tier: Cực Phẩm (tier 3)
+   - Max tier opens with the realm: GEM_TIER_REALM
 =========================== */
-const GEM_FUSION_NAMES = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'];
+const GEM_FUSION_NAMES = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm', 'Tiên Phẩm', 'Đế Phẩm', 'Thánh Phẩm', 'Đại Thánh Phẩm'];
+const GEM_TIER_REALM = [0, 0, 0, 0, 9, 15, 19, 21];
+const GEM_BASE_MAX_TIER = 3;
+const GEM_HIGH_TIER_STEP = 0.5;
+
+function gemMaxTier() {
+    return GEM_TIER_REALM.filter(realm => (state.realmIndex || 0) >= realm).length - 1;
+}
+
+function gemSellValue(tier) {
+    return Math.floor(goldRef(state.realmIndex || 0) * Math.pow(2, tier) / 10);
+}
+
+function allLinhBao() {
+    return state.inventory.filter(x => x && x.type === 'linhbao');
+}
+
+/* Hợp nhất viên thấp nhất tới khi vừa đủ số ổ trên trận, ngọc thừa thì bán */
+function planGems(sockets) {
+    const pool = [...state.inventory.filter(x => x && x.type === 'gem'), ...allLinhBao().flatMap(lb => lb.gems || [])]
+        .map(g => ({ kind: g.gemKind, tier: g.tier || 0 }));
+    const before = pool.length;
+    const max = gemMaxTier();
+    const fuseOne = () => {
+        for (let tier = 0; tier < max; tier++) {
+            for (const kind of Object.keys(LB_GEM_KINDS)) {
+                const pair = pool.filter(g => g.tier === tier && g.kind === kind).slice(0, 2);
+                if (pair.length < 2) continue;
+                pool.splice(pool.indexOf(pair[0]), 1);
+                pool.splice(pool.indexOf(pair[1]), 1);
+                pool.push({ kind, tier: tier + 1 });
+                return true;
+            }
+        }
+        return false;
+    };
+    let fused = 0;
+    while (pool.length > sockets && fuseOne()) fused++;
+    pool.sort((x, y) => y.tier - x.tier);
+    return { before, fused, kept: pool.slice(0, sockets), sold: pool.slice(sockets) };
+}
+
+function placeGem(gem, board) {
+    const attacker = gem.kind === 'power' || gem.kind === 'leech';
+    const score = lb => lbSockets(lb) - lb.gems.length
+        + (attacker && lbEffectList(lb).some(e => e.action === 'damage') ? board.length * 10 : 0);
+    const target = board.filter(lb => lb.gems.length < lbSockets(lb)).sort((x, y) => score(y) - score(x))[0];
+    const { name, gemKind, magnitude, tier } = makeGem(gem.kind, gem.tier);
+    target.gems.push({ name, gemKind, magnitude, tier });
+}
+
+async function optimizeGems(silent = false) {
+    if (window._battleActive) { if (!silent) log('🔒 Đang giao chiến — không thể tối ưu ngọc.'); return; }
+    ensureBoardState();
+    if (silent && !state.inventory.some(x => x && x.type === 'gem')) return;
+    const board = state.board.map(uid => state.inventory.find(x => x && x.uid === uid)).filter(Boolean);
+    const sockets = board.reduce((sum, lb) => sum + lbSockets(lb), 0);
+    if (!sockets) { if (!silent) showToast('Chưa có pháp bảo nào trên trận.', 'warn'); return; }
+    const plan = planGems(sockets);
+    if (!plan.before) { if (!silent) showToast('Chưa có linh ngọc nào.', 'info'); return; }
+    const gold = plan.sold.reduce((sum, g) => sum + gemSellValue(g.tier), 0);
+    if (!silent && !await showConfirm(`Tháo hết ngọc đang khảm, hợp nhất ${plan.fused} lần, khảm ${plan.kept.length} viên tốt nhất vào pháp bảo trên trận, bán ${plan.sold.length} viên dư được ${formatNumber(gold)} linh thạch?`)) return;
+    state.inventory = state.inventory.filter(x => !(x && x.type === 'gem'));
+    allLinhBao().forEach(lb => { lb.gems = []; });
+    plan.kept.forEach(g => placeGem(g, board));
+    state.gold += gold;
+    log(`✨ Tối ưu ngọc: hợp nhất ${plan.fused} lần, khảm ${plan.kept.length} viên, bán ${plan.sold.length} viên, +${formatNumber(gold)} linh thạch.`);
+    renderAll();
+}
+
+function toggleGemAuto() {
+    state.gemAuto = !state.gemAuto;
+    renderInventory();
+}
 
 function fuseGem(gem1Idx, gem2Idx) {
     if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất ngọc.'); return; }
@@ -734,7 +808,7 @@ function fuseGem(gem1Idx, gem2Idx) {
     if (gem1.tier !== gem2.tier) {
         showToast('Hai linh ngọc phải cùng cấp.', 'warn'); return;
     }
-    if (gem1.tier >= 3) {
+    if (gem1.tier >= gemMaxTier()) {
         showToast('Linh ngọc đã đạt cấp tối đa.', 'warn'); return;
     }
     const newTier = gem1.tier + 1;
@@ -780,7 +854,7 @@ function highlightFusableGems(gem1Idx) {
             return;
         }
         const selected = window.__gemFusionCache?.[gem1Idx];
-        if (selected && selected.gemKind === gem.gemKind && selected.tier === gem.tier && selected.tier < 3) {
+        if (selected && selected.gemKind === gem.gemKind && selected.tier === gem.tier && selected.tier < gemMaxTier()) {
             el.style.opacity = '1';
             el.style.boxShadow = '0 0 8px rgba(255, 215, 0, 0.6)';
         } else {
@@ -818,7 +892,7 @@ function openGemFusionModal() {
                 <b style="color:${gemDef.color}">${gem.name || gemDef.label}</b>
                 <div class="small">${tierName} · +${magnitude}% ${gemDef.desc || ''}</div>
             </div>
-            <span class="small" style="color:#888">${gem.tier >= 3 ? 'MAX' : '🟢 Có thể hợp nhất'}</span>
+            <span class="small" style="color:#888">${gem.tier >= gemMaxTier() ? 'MAX' : '🟢 Có thể hợp nhất'}</span>
         </div>`;
     }).join('') || '<div class="small">Chưa có linh ngọc nào để hợp nhất.</div>';
 
@@ -970,7 +1044,7 @@ function showBoardRewardChoice() {
         if (o.kind === 'gem') {
             const def = LB_GEM_KINDS[o.gemKind];
             const mag = lbGemMagnitude(o.gemKind, o.tier);
-            const tierName = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'][o.tier] || 'Thô';
+            const tierName = GEM_FUSION_NAMES[o.tier] || 'Thô';
             return `<div class="lb-reward-card" onclick="pickBattleReward(${i})" style="border-color:${def.color}">
                 <div style="font-size:1.8em">${def.icon}</div>
                 <div style="font-weight:700;color:${def.color}">${def.label}</div>
@@ -1540,16 +1614,16 @@ function lbUpdateArena(battle) {
         const pct = Math.max(0, Math.min(100, (c.hp / c.maxHp) * 100));
         const shieldPct = Math.max(0, Math.min(100, (c.shield / c.maxHp) * 100));
         d.root.classList.toggle('lb-dead', c.hp <= 0);
-        if (d.hpFill) d.hpFill.style.width = pct + '%';
-        if (d.shield) d.shield.style.width = shieldPct + '%';
-        if (d.hpTxt) d.hpTxt.textContent =
-            `${fmtVal(Math.ceil(Math.max(0, c.hp)))}/${fmtVal(c.maxHp)}${c.shield > 0 ? ` 🛡️${fmtVal(Math.ceil(c.shield))}` : ''}`;
+        if (d.hpFill) d.hpFill.style.transform = `scaleX(${pct / 100})`;
+        if (d.shield) d.shield.style.transform = `scaleX(${shieldPct / 100})`;
+        if (d.hpTxt) writeText(d.hpTxt,
+            `${fmtVal(Math.ceil(Math.max(0, c.hp)))}/${fmtVal(c.maxHp)}${c.shield > 0 ? ` 🛡️${fmtVal(Math.ceil(c.shield))}` : ''}`);
         const stunned = now < c.stunUntil;
         const frozen = now < c.freezeUntil;
         c.slots.forEach(slot => {
             if (slot.fillNode) {
                 const p = Math.max(0, Math.min(100, (slot.elapsed / (slot.cooldown * 1000)) * 100));
-                slot.fillNode.style.width = p + '%';
+                slot.fillNode.style.transform = `scaleX(${p / 100})`;
             }
             if (slot.tileNode) {
                 slot.tileNode.classList.toggle('lb-frozen', frozen && !stunned);

@@ -308,7 +308,7 @@ function updateAgeDisplay() {
     const ageBar = $('ageBar');
 
     if (ageTxt) {
-        ageTxt.textContent = `${Math.floor(state.age)} / ${formatNumber(state.maxAge)}`;
+        writeText(ageTxt, `${Math.floor(state.age)} / ${formatNumber(state.maxAge)}`);
     }
 
     if (ageBar) {
@@ -669,6 +669,17 @@ function startAutoTrain() {
     state.autoTrain = true;
 }
 
+function writeText(el, text) {
+    if (el && el.textContent !== text) el.textContent = text;
+}
+
+function writeHtml(el, html) {
+    if (el && el.__html !== html) {
+        el.__html = html;
+        el.innerHTML = html;
+    }
+}
+
 function updateTrainingUI() {
     // Cập nhật thanh XP
     const need = getNeed();
@@ -678,7 +689,7 @@ function updateTrainingUI() {
     if (xpTxt) {
         const xpGain = Number.isFinite(state.lastXpGain) ? state.lastXpGain : 0;
         const gainLabel = xpGain === 0 ? '' : ` (${xpGain >= 0 ? '+' : ''}${formatNumber(xpGain)})`;
-        xpTxt.textContent = `${formatNumber(state.xp)}${gainLabel} / ${formatNumber(need)}`;
+        writeText(xpTxt, `${formatNumber(state.xp)}${gainLabel} / ${formatNumber(need)}`);
     }
 
     if (xpBar) {
@@ -691,7 +702,7 @@ function updateTrainingUI() {
     if (predEl) {
         const pred = getRealmPrediction();
         if (state.realmStage === 3 && state.xp >= need && typeof getBreakthroughGate === 'function' && getBreakthroughGate(state.realmIndex + 1)) {
-            predEl.innerHTML = `<span style="color:#ff9f7a">🚧 Bình cảnh: ${getBreakthroughGate(state.realmIndex + 1).title}</span>`;
+            writeHtml(predEl, `<span style="color:#ff9f7a">🚧 Bình cảnh: ${getBreakthroughGate(state.realmIndex + 1).title}</span>`);
         } else if (pred) {
             let html = '';
             if (pred.small) {
@@ -701,9 +712,9 @@ function updateTrainingUI() {
             if (pred.big) {
                 html += `<span style="color:#f0c674">→ ${pred.big.nextRealm}: ${pred.big.timeText}</span>`;
             }
-            predEl.innerHTML = html;
+            writeHtml(predEl, html);
         } else {
-            predEl.innerHTML = '';
+            writeHtml(predEl, '');
         }
     }
 
@@ -1210,7 +1221,7 @@ function inventoryFacetGroups() {
     ];
     if (inventoryFilter === 'gem') return [
         { key: 'kind', label: 'Loại', options: Object.entries(LB_GEM_KINDS).map(([id, g]) => ({ id, label: `${g.icon} ${g.label}`, test: item => item.gemKind === id })) },
-        { key: 'tier', label: 'Bậc', options: [0, 1, 2, 3].map(t => ({ id: String(t), label: `Bậc ${t + 1}`, test: item => (item.tier || 0) === t })) }
+        { key: 'tier', label: 'Bậc', options: GEM_FUSION_NAMES.map((name, t) => ({ id: String(t), label: name, test: item => (item.tier || 0) === t })) }
     ];
     if (inventoryFilter === 'use') return [
         { key: 'kind', label: 'Công dụng', options: Object.entries(INV_USE_TYPES).map(([id, label]) => ({ id, label, test: item => item.type === id })) }
@@ -1303,6 +1314,11 @@ function inventoryFilterHTML() {
             <button class="equip-all-btn" onclick="equipAll()">⚔️ Mạnh nhất</button>
             <button class="equip-all-btn" onclick="sellOutdatedGear()">💰 Bán đồ cũ</button>
             <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()">🌟 Nâng Linh Bảo</button>
+            <button class="equip-all-btn" onclick="toggleInvPicking()">${invPicking ? '✖️ Thôi chọn' : '☑️ Chọn để vứt'}</button>
+            ${inventoryFilter === 'gem' ? `<button class="equip-all-btn" onclick="optimizeGems()">✨ Tối ưu ngọc</button>
+            <button class="equip-all-btn" onclick="toggleGemAuto()">🤖 Tự tối ưu: ${state.gemAuto ? 'Bật' : 'Tắt'}</button>` : ''}
+            ${invPicking ? `<button class="equip-all-btn" onclick="pickAllInv()">📦 Chọn hết đang lọc</button>
+            <button class="equip-all-btn inv-pick-bar" onclick="discardPicked()">🗑️ Vứt ${invPicked.size} món đã chọn</button>` : ''}
         </div>`;
 }
 
@@ -1409,6 +1425,50 @@ function doUpgradeLinhBaoByRealm() {
     } else {
         log('❌ Chức năng nâng cấp chưa sẵn sàng. Hãy đợi trò chơi tải xong.');
     }
+}
+
+/* Chọn nhiều món rồi vứt một lần; đồ đang mặc và pháp bảo trên trận được giữ lại */
+let invPicking = false;
+const invPicked = new Set();
+
+function invDiscardable(item) {
+    return !item.equipped && !(item.type === 'linhbao' && state.board.includes(item.uid));
+}
+
+function markInvPick(node, item) {
+    node.querySelector('.inv-buttons')?.remove();
+    const allowed = invDiscardable(item);
+    node.classList.add('inv-pick');
+    node.classList.toggle('locked', !allowed);
+    node.classList.toggle('picked', invPicked.has(item));
+    node.addEventListener('click', event => {
+        event.stopPropagation();
+        if (!allowed) return;
+        if (!invPicked.delete(item)) invPicked.add(item);
+        renderInventory();
+    }, true);
+}
+
+function toggleInvPicking() {
+    invPicking = !invPicking;
+    invPicked.clear();
+    renderInventory();
+}
+
+function pickAllInv() {
+    getFilteredInventory().filter(invDiscardable).forEach(item => invPicked.add(item));
+    renderInventory();
+}
+
+async function discardPicked() {
+    if (!invPicked.size) { showToast('Chưa chọn món nào.', 'info'); return; }
+    const count = invPicked.size;
+    if (!await showConfirm(`Vứt bỏ ${count} món đã chọn? Không lấy lại được.`)) return;
+    state.inventory = state.inventory.filter(item => !invPicked.has(item));
+    invPicked.clear();
+    invPicking = false;
+    log(`🗑️ Vứt bỏ ${count} món.`);
+    renderAll();
 }
 
 function renderInventory() {
@@ -1523,8 +1583,8 @@ function renderInventory() {
             const gemDef = (typeof LB_GEM_KINDS !== 'undefined') ? LB_GEM_KINDS[gemKind] : null;
             const gemIcon = gemDef ? gemDef.icon : '💎';
             const gemColor = gemDef ? gemDef.color : '#ff9800';
-            const tierName = ['Thô', 'Tinh', 'Hoàn Mỹ', 'Cực Phẩm'][item.tier || 0] || 'Thô';
-            const canFuse = (item.tier || 0) < 3;
+            const tierName = GEM_FUSION_NAMES[item.tier || 0] || 'Thô';
+            const canFuse = (item.tier || 0) < gemMaxTier();
             d.innerHTML = `
                 <div><b style="color:${gemColor}">${gemIcon} ${item.name}</b> <span class="small">(${tierName})</span></div>
                 <div class="small" style="color:${gemColor}">+${((item.magnitude || 0.1) * 100).toFixed(0)}% ${gemDef?.desc || 'Tăng sức'}</div>
@@ -1552,6 +1612,7 @@ function renderInventory() {
                     `;
         }
 
+        if (invPicking) markInvPick(d, item);
         listEl.appendChild(d);
     });
 
