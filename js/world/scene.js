@@ -35,6 +35,8 @@ function sceneSpots(loc) {
     add('🔨', forgeGradeOf(loc).name, () => openForge(), hasService('forge'));
     add('📜', 'Bảng treo thưởng', () => acceptBounty(), hasService('board') && !state.bounty);
     add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
+    add('🕯️', 'Chợ Đen', () => openBlackMarket(), !!loc.blackMarket);
+    add('🌌', 'Dùng Tinh Không Thạch', () => useStarStone(), canUseStarStone());
     add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop'));
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), !!loc.path);

@@ -248,3 +248,33 @@ for (let realm = 0; realm <= 28; realm++) {
 }
 SIDE_QUESTS.push(...STAGE_QUESTS);
 STAGE_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
+
+const YEU_QUESTS = [
+    {
+        id: 'open_yeu_do', loc: 'yeu_do', npc: 'narr', title: 'Lệnh Bài Yêu Đô', needs: [10, 0], reward: { hours: 1, goldRefs: 5, opens: 'yeu_do' },
+        intro: [['narr', 'Lính gác nhìn ngươi như nhìn món ăn: "Người muốn mua bán ở Yêu Đô thì phải có công với yêu tộc. Sơn Quân ngoài kia đang cắn nhau, dẹp đi."']],
+        steps: [{ hunt: { loc: 'thap_van_son', name: 'Sơn Quân', n: 6 }, say: [['narr', 'Lính gác ném cho ngươi một miếng xương khắc chữ. Chợ và lò trong đô mở cho ngươi.']] }]
+    },
+    {
+        id: 's_yeu_quan', loc: 'yeu_quan', npc: 'narr', title: 'Đất Của Yêu', needs: [9, 2], reward: { hours: 2, goldRefs: 10 },
+        intro: [['narr', 'Trên cửa quan khắc: "Trời chia người với yêu, ta chia lại." Muốn đi qua thì phải thắng kẻ giữ cửa.']],
+        steps: [{ hunt: { loc: 'yeu_quan', name: 'Lang Tướng', n: 5 }, say: [['narr', 'Yêu binh tránh sang hai bên. Từ đây về nam là đất của chúng, không phải của Thiên Đình.']] }]
+    },
+    {
+        id: 's_thanh_khau', loc: 'thanh_khau', npc: 'narr', title: 'Tiếng Cười Thanh Khâu', needs: [11, 2], reward: { hours: 3, goldRefs: 15 },
+        intro: [['narr', 'Ngươi đi mãi vẫn về chỗ cũ. Có ai đó đang cười sau rặng đào.']],
+        steps: [{ gather: { loc: 'thanh_khau', hours: 2, label: 'Giữ tâm phá ảo trận' } }, { hunt: { loc: 'thanh_khau', name: 'Hồ Mị', n: 6 }, say: [['narr', 'Rừng đào tan. Một con hồ trắng ngồi nhìn ngươi, gật đầu rồi biến mất.']] }]
+    },
+    {
+        id: 's_hoa_long', loc: 'hoa_long_tri', npc: 'narr', title: 'Ao Không Có Đáy', needs: [12, 2], reward: { hours: 4, goldRefs: 20 },
+        intro: [['narr', 'Những con mãng lên bờ đều không còn vảy. Có thứ gì đó dưới ao không muốn thêm rồng mới.']],
+        steps: [{ hunt: { loc: 'hoa_long_tri', name: 'Bán Long', n: 8 }, say: [['narr', 'Nước ao dịu lại. Dưới đáy có vật gì vừa nhắm mắt.']] }]
+    },
+    {
+        id: 's_yeu_hoang', loc: 'yeu_hoang_dien', npc: 'narr', title: 'Diện Kiến Yêu Hoàng', needs: [14, 2], reward: { hours: 6, goldRefs: 30 },
+        intro: [['narr', 'Cửa điện không có lính. Giọng nói từ trong vọng ra: "Tiên cũng dám tới đây. Giỏi. Qua được cận vệ của ta thì nói chuyện."']],
+        steps: [{ hunt: { loc: 'yeu_hoang_dien', name: 'Yêu Thánh Cận Vệ', n: 8 }, say: [['narr', 'Trong bóng tối có tiếng cười nhẹ: "Thiên Đình có một kẻ như ngươi, trẫm ngủ không yên rồi."']] }]
+    }
+];
+SIDE_QUESTS.push(...YEU_QUESTS);
+YEU_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });

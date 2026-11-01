@@ -28,6 +28,11 @@ const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 17, thien: 22 };
 const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
 const LOW_REALM_HOURS_PER_STEP = 1000;
+const STAR_STONE_GOLD_REFS = 40;
+const STAR_STONE_MINUTES = 30;
+const MAP_W = 1000;
+const MAP_H = 560;
+const MAP_DECOR_DENSITY = 70 / (MAP_W * MAP_H);
 const ROAD_EVENT_INTERVAL = 5;
 const ROAD_EVENT_BASE_CHANCE = 0.03;
 const ROAD_EVENT_LUCK_FACTOR = 0.1;
@@ -74,6 +79,7 @@ function initWorldState() {
         state.age = START_AGE + (state.age - START_AGE) * AGE_YEARS_PER_DAY;
         state.ageRateFixed = true;
     }
+    moveUpToRealmWorld();
 }
 
 /* ---------- đồng hồ ---------- */
@@ -121,6 +127,7 @@ function worldTick() {
     if (worldUiAccum >= 500) {
         worldUiAccum = 0;
         if (state.root?.elements) {
+            endDescentIfDue();
             if (state.questDone.length) advanceMainQuest();
             updateTrainingUI();
             renderActivityBar();
@@ -264,13 +271,22 @@ function holdsWorldTop(worldId) {
     return thienHaRank(worldId) === 1;
 }
 
-function descentBlocked(fromWorld, toWorld) {
-    return worldIndex(toWorld) < worldIndex(fromWorld) && !holdsWorldTop(fromWorld);
+function realmWorld() {
+    return worldTierOfRealm(state.realmIndex || 0).id;
+}
+
+function descentActive() {
+    return (state.descentUntil || 0) > Date.now();
+}
+
+function descentBlocked(toWorld) {
+    const home = realmWorld();
+    return worldIndex(toWorld) < worldIndex(home) && !holdsWorldTop(home) && !descentActive();
 }
 
 function teleportBlockReason(id) {
     const tier = worldOf(id);
-    if (descentBlocked(currentLocation().world, tier.id)) return `Không được xuống ${tier.name}: cần đứng đầu Thiên Hạ Bảng ${worldOf(state.location).name}.`;
+    if (descentBlocked(tier.id)) return `Không được xuống ${tier.name}: cần đứng đầu Thiên Hạ Bảng ${worldTierOfRealm(state.realmIndex || 0).name} hoặc dùng Tinh Không Thạch.`;
     const minRealm = TELEPORT_MIN_REALM[tier.id];
     if (minRealm == null) return '';
     const missing = [];
@@ -325,7 +341,7 @@ function neighbors(id, carried = false) {
     const loc = LOCATIONS[id];
     const out = [...loc.links];
     if (loc.gate && (!loc.gate.flag || state.flags[loc.gate.flag]) && worldUnlocked(LOCATIONS[loc.gate.to].world)
-        && !descentBlocked(loc.world, LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
+        && !descentBlocked(LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
     return carried ? out : out.filter(canEnterLocation);
 }
 
@@ -501,18 +517,18 @@ function updateMapToken() {
 }
 
 /* ---------- bản đồ ---------- */
-function seededScatter(seed, count) {
+function seededScatter(seed, count, width, height) {
     const out = [];
     let v = seed;
     const rand = () => (v = (v * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < count; i++) out.push({ x: rand() * 1000, y: rand() * 560, r: 0.6 + rand() * 0.9, k: rand() });
+    for (let i = 0; i < count; i++) out.push({ x: rand() * width, y: rand() * height, r: 0.6 + rand() * 0.9, k: rand() });
     return out;
 }
 
-function terrainDecor(worldId, pal, locs) {
+function terrainDecor(worldId, pal, locs, width, height) {
     const seed = 7919 * (WORLD_TIERS.findIndex(w => w.id === worldId) + 1);
     const clear = p => locs.every(l => Math.hypot(l.x - p.x, l.y - p.y) > 70);
-    return seededScatter(seed, 70).filter(clear).map(p => {
+    return seededScatter(seed, Math.round(MAP_DECOR_DENSITY * width * height), width, height).filter(clear).map(p => {
         const s = p.r;
         if (worldId === 'pham') {
             return p.k < 0.5
@@ -536,6 +552,8 @@ function renderMap() {
     const tier = WORLD_TIERS.find(w => w.id === viewId);
     const locs = Object.values(LOCATIONS).filter(l => l.world === viewId);
     const pal = tier.palette;
+    const mapW = tier.mapW || MAP_W;
+    const mapH = tier.mapH || MAP_H;
     const seen = new Set();
     const roads = locs.flatMap(l => l.links.map(to => {
         const key = [l.id, to].sort().join('|');
@@ -563,10 +581,10 @@ function renderMap() {
         `<button class="filter-chip ${w.id === viewId ? 'active' : ''}" onclick="setMapWorld('${w.id}')">${w.name}</button>`
     ).join('');
     host.innerHTML = `<div class="filter-chips">${tabs}</div>
-        <svg class="map-svg" viewBox="0 0 1000 560" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Bản đồ ${tier.name}">
+        <svg class="map-svg" viewBox="0 0 ${mapW} ${mapH}" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Bản đồ ${tier.name}">
             <defs><linearGradient id="mapBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${pal[1]}"/><stop offset="1" stop-color="${pal[0]}"/></linearGradient></defs>
-            <rect width="1000" height="560" fill="url(#mapBg)"/>
-            ${terrainDecor(viewId, pal, locs)}
+            <rect width="${mapW}" height="${mapH}" fill="url(#mapBg)"/>
+            ${terrainDecor(viewId, pal, locs, mapW, mapH)}
             ${roads}${nodes}${token}
         </svg>${renderMapDestination()}`;
 }
@@ -893,16 +911,72 @@ function advanceMainQuest() {
 }
 
 /* Phi thăng: đột phá sang cảnh giới đầu của Giới mới là đứng ngay ở cửa vào Giới đó */
-function ascendToWorld() {
-    const realm = state.realmIndex || 0;
-    const tier = worldTierOfRealm(realm);
-    if (realm !== tier.from || currentLocation().world === tier.id) return;
-    const entry = Object.values(LOCATIONS).find(l => l.world === tier.id && l.gate && worldIndex(LOCATIONS[l.gate.to].world) < worldIndex(tier.id));
-    if (!entry) return;
+function worldEntry(worldId) {
+    return Object.values(LOCATIONS).find(l => l.world === worldId && l.gate && worldIndex(LOCATIONS[l.gate.to].world) < worldIndex(worldId));
+}
+
+function moveUpToRealmWorld() {
+    const home = realmWorld();
+    if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive()) return null;
+    const entry = worldEntry(home);
+    if (!entry) return null;
     state.activity = null;
     state.location = entry.id;
-    log(`🌠 Phi thăng tới ${tier.name}: ${entry.name}.`);
+    state.flags['world_' + home] = true;
+    return entry;
+}
+
+function ascendToWorld() {
+    const entry = moveUpToRealmWorld();
+    if (!entry) return;
+    log(`🌠 Trở về ${worldOf(entry.id).name}: ${entry.name}.`);
     checkArrival();
+}
+
+/* Chợ Đen bán Tinh Không Thạch: mỗi viên cho xuống Giới dưới một thời gian, hết giờ bị kéo về */
+function starStonePrice() {
+    return goldRef(state.realmIndex) * STAR_STONE_GOLD_REFS;
+}
+
+function canUseStarStone() {
+    return (state.starStones || 0) > 0 && !descentActive() && !!worldEntry(realmWorld()) && currentLocation().world === realmWorld();
+}
+
+function openBlackMarket() {
+    const stones = state.starStones || 0;
+    openWorldModal('blackMarketModal', '🕯️ Chợ Đen', `<div class="small">Tinh Không Thạch xé một khe xuống Giới dưới, giữ được ${STAR_STONE_MINUTES} phút rồi kéo người dùng trở lại.</div>
+        <div>Đang có: <b>${stones}</b> viên</div>
+        <button class="mini-btn" onclick="buyStarStone()">💠 Mua 1 viên (${formatNumber(starStonePrice())} linh thạch)</button>
+        ${canUseStarStone() ? '<button class="mini-btn" onclick="useStarStone()">🌌 Dùng ngay</button>' : ''}`);
+}
+
+function buyStarStone() {
+    if (!currentLocation().blackMarket) return;
+    if (state.gold < starStonePrice()) { showToast('Không đủ linh thạch.', 'warn'); return; }
+    state.gold -= starStonePrice();
+    state.starStones = (state.starStones || 0) + 1;
+    openBlackMarket();
+    renderAll();
+}
+
+function useStarStone() {
+    if (!canUseStarStone()) return;
+    const target = LOCATIONS[worldEntry(realmWorld()).gate.to];
+    state.starStones--;
+    state.descentUntil = Date.now() + STAR_STONE_MINUTES * 60000;
+    state.activity = null;
+    state.location = target.id;
+    state.flags['world_' + target.world] = true;
+    const modal = document.getElementById('blackMarketModal');
+    if (modal) modal.style.display = 'none';
+    log(`🌌 Tinh Không Thạch mở khe xuống ${worldOf(target.id).name}: còn ${STAR_STONE_MINUTES} phút.`);
+    checkArrival();
+}
+
+function endDescentIfDue() {
+    if (!state.descentUntil || descentActive() || window._battleActive) return;
+    state.descentUntil = 0;
+    ascendToWorld();
 }
 
 function onRealmChanged() {
@@ -1140,6 +1214,9 @@ function renderQuestPanel() {
         if (q) cards.unshift(`<div class="quest-card"><div class="small">${ACTS[q.act - 1].name}</div><b>${q.title}</b>
             <div class="small">Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.</div></div>`);
         else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}</b></div>`);
+    }
+    if (descentActive()) {
+        cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);
     }
     stageQuestsOpen().forEach(q => {
         const here = state.location === q.loc;
@@ -1398,7 +1475,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    goToStageQuest, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    goToStageQuest, openBlackMarket, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

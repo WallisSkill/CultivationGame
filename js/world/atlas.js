@@ -106,6 +106,16 @@ const REGION_SITES = {
     dong_thien_mon: { world: 'tien', name: 'Đông Thiên Môn', icon: '🌅', x: 925, y: 380, type: 'dungeon', qi: 1.2, minR: 13, maxR: 15, links: ['nam_thien_mon', 'lang_tieu'], desc: 'Cổng trời phía đông, nơi mặt trời tiên giới mọc lên.', enemies: [E('Kim Ô Vệ', 'beast'), E('Thiên Binh Đông Môn', 'human')] },
     tay_thien_mon: { world: 'tien', name: 'Tây Thiên Môn', icon: '🌇', x: 240, y: 240, type: 'dungeon', qi: 1.15, minR: 10, maxR: 13, links: ['tien_khoang', 'tru_tien'], desc: 'Cổng trời phía tây, canh đường áp giải tiên nô.', enemies: [E('Bạch Hổ Vệ', 'beast'), E('Thiên Binh Tây Môn', 'human')] },
     bac_thien_mon: { world: 'tien', name: 'Bắc Thiên Môn', icon: '❄️', x: 610, y: 60, type: 'dungeon', qi: 1.25, minR: 12, maxR: 15, links: ['thien_ha', 'thai_ho'], desc: 'Cổng trời phía bắc, gió lạnh thổi từ ngoài vũ trụ.', enemies: [E('Huyền Vũ Vệ', 'golem'), E('Thiên Binh Bắc Môn', 'human')] },
+    hac_thi: { world: 'tien', name: 'Hắc Thị', icon: '🕯️', x: 430, y: 590, type: 'town', qi: 1.0, minR: 9, maxR: 15, links: ['van_tien', 'thap_van_son'], blackMarket: true, desc: 'Chợ Đen của Tiên Giới, chỉ họp khi đèn âm thắp lên.', enemies: [E('Kẻ Cướp Hắc Thị', 'human')] },
+    yeu_quan: { world: 'tien', name: 'Vạn Yêu Quan', icon: '🏯', x: 130, y: 640, type: 'dungeon', qi: 1.15, minR: 9, maxR: 11, links: ['bat_hoang', 'thap_van_son'], desc: 'Cửa quan chia đất người và đất yêu.', enemies: [E('Yêu Binh Thủ Quan', 'beast'), E('Lang Tướng', 'beast')] },
+    thap_van_son: { world: 'tien', name: 'Thập Vạn Đại Sơn', icon: '⛰️', x: 300, y: 720, type: 'wild', qi: 1.2, minR: 9, maxR: 12, links: ['yeu_quan', 'yeu_do'], desc: 'Mười vạn ngọn núi, mỗi ngọn có một chủ.', enemies: [E('Sơn Quân', 'beast'), E('Thụ Yêu', 'spirit')] },
+    yeu_do: { world: 'tien', forgeGrade: 1, name: 'Vạn Yêu Đô', icon: '🐯', x: 560, y: 650, type: 'town', qi: 1.25, minR: 10, maxR: 13, links: ['thap_van_son', 'thanh_khau', 'dao_tri'], services: ['shop', 'forge'], desc: 'Kinh đô của yêu tộc, người lạ đi lại phải cúi đầu.', enemies: [E('Yêu Đô Cấm Vệ', 'human')] },
+    thanh_khau: { world: 'tien', name: 'Thanh Khâu Hồ Quốc', icon: '🦊', x: 800, y: 730, type: 'wild', qi: 1.3, minR: 11, maxR: 14, links: ['yeu_do', 'hoa_long_tri'], desc: 'Nước của hồ tộc chín đuôi, đường đi đổi theo tiếng cười.', enemies: [E('Hồ Mị', 'spirit'), E('Cửu Vĩ Vệ', 'beast')] },
+    hoa_long_tri: { world: 'tien', name: 'Hóa Long Trì', icon: '🐲', x: 1030, y: 640, type: 'wild', qi: 1.35, minR: 12, maxR: 14, links: ['thanh_khau', 'u_minh', 'yeu_hoang_dien'], desc: 'Ao nước nơi giao mãng lột xác thành rồng.', enemies: [E('Bán Long', 'dragon'), E('Mãng Tướng', 'beast')] },
+    yeu_hoang_dien: { world: 'tien', name: 'Yêu Hoàng Điện', icon: '👑', x: 1260, y: 710, type: 'dungeon', qi: 1.45, minR: 14, maxR: 15, links: ['hoa_long_tri', 'kim_bang'], desc: 'Nơi ngự của Yêu Hoàng, kẻ ngang hàng Thiên Đế.', enemies: [E('Yêu Thánh Cận Vệ', 'beast'), E('Yêu Hoàng Hộ Long', 'dragon')] },
+    kim_bang: { world: 'tien', name: 'Kim Bằng Nhai', icon: '🦅', x: 1340, y: 500, type: 'wild', qi: 1.35, minR: 13, maxR: 15, links: ['yeu_hoang_dien', 'phu_tang'], desc: 'Vách đá của tộc Kim Sí Đại Bằng.', enemies: [E('Kim Sí Bằng', 'beast')] },
+    phu_tang: { world: 'tien', name: 'Phù Tang Thụ', icon: '🌳', x: 1250, y: 310, type: 'wild', qi: 1.4, minR: 13, maxR: 15, links: ['dong_thien_mon', 'kim_bang', 'bac_minh'], desc: 'Cây thần nơi mười con Kim Ô đậu.', enemies: [E('Kim Ô Non', 'beast'), E('Phù Tang Mộc Linh', 'spirit')] },
+    bac_minh: { world: 'tien', name: 'Bắc Minh Hải', icon: '🐋', x: 1200, y: 110, type: 'wild', qi: 1.3, minR: 13, maxR: 15, links: ['lang_tieu', 'phu_tang'], desc: 'Biển đen phương bắc, Côn Bằng ngủ dưới đáy.', enemies: [E('Côn Ngư', 'beast'), E('Bắc Minh Giao', 'dragon')] },
     quang_han: { world: 'tien', name: 'Quảng Hàn Cung', icon: '🌙', x: 460, y: 490, type: 'wild', qi: 1.3, minR: 11, maxR: 14, links: ['van_tien', 'dao_tri'], desc: 'Cung trăng lạnh, một cây quế chặt mãi không đổ.', enemies: [E('Ngọc Thố Tinh', 'beast'), E('Nguyệt Hồn', 'spirit')] },
 
     linh_son: { world: 'thanh', name: 'Linh Sơn', icon: '🗻', x: 880, y: 470, type: 'wild', qi: 1.4, minR: 18, maxR: 19, links: ['bich_du'], desc: 'Núi thiêng tiếng chuông không dứt.', enemies: [E('Hộ Pháp Kim Cương', 'golem'), E('La Hán Sa Đọa', 'human')] },
@@ -124,9 +134,13 @@ const REGION_SITES = {
     tan_lo: { world: 'chungnguyen', name: 'Tận Lộ', icon: '🛤️', x: 650, y: 420, type: 'wild', qi: 1.95, minR: 28, maxR: 28, links: ['chung_dai', 'quy_khu'], desc: 'Con đường hết chỗ để đi tiếp.', enemies: [E('Tận Lộ Hành Giả', 'human')] }
 };
 
+['thanh_ma', 'ma_vuc', 'ma_than_mo', 'hm_ma', 'quy_khu'].forEach(id => { (DAO_SITES[id] || REGION_SITES[id] || LOCATIONS[id]).blackMarket = true; });
+
 Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
     LOCATIONS[id] = { type: 'sect', ...site };
-    site.links.forEach(other => LOCATIONS[other].links.push(id));
+});
+Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
+    site.links.filter(other => !LOCATIONS[other].links.includes(id)).forEach(other => LOCATIONS[other].links.push(id));
 });
 Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am: 'phap', co_thu: 'yeu' }).forEach(([id, path]) => { LOCATIONS[id].path = path; });
 
