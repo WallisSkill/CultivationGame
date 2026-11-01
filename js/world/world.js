@@ -1523,7 +1523,7 @@ function reportHuVoWin() {
 function handleHuVoThrone(msg) {
     huVoThrone = msg.throne || null;
     if (huVoThrone?.id === state.profileId) state.huVoPending = false;
-    else if (state.huVoPending) reportHuVoWin();
+    else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1)) reportHuVoWin();
     if (msg.news && huVoThrone) {
         log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
         showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);
