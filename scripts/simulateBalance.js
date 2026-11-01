@@ -152,6 +152,17 @@ for (let r = 0; r < 29; r++) {
     if ([4, 12, 17, 22].includes(r) && Math.abs(on.selfShare - 0.4) > 0.05) fail.push(`realm ${r}: giữa Giới bản thể ${(on.selfShare * 100).toFixed(0)}%, cần khoảng 40%`);
 }
 
+/* mười kẻ cảnh dưới vây một người cảnh trên, cùng tiểu kỳ và đủ đồ: người cảnh trên phải thắng */
+const GANG_HITS = 55;
+for (let r = 1; r < 29; r++) {
+    const slots = r < 5 ? 3 : (r < 20 ? 5 : 6);
+    const hi = playerAt(r, 0, r, 2, slots), lo = playerAt(r - 1, 0, r - 1, 2, slots);
+    const el = ['Kim'];
+    const down = G.computeDamage(hi.atk * hi.lb, el, 3, r, 0, lo.def, el, 3, r - 1, 0).final;
+    const up = G.computeDamage(lo.atk * lo.lb, el, 3, r - 1, 0, hi.def, el, 3, r, 0).final;
+    if (down * hi.hp <= GANG_HITS * up * lo.hp) fail.push(`realm ${r}: 10 người cảnh dưới vẫn hạ được 1 người`);
+}
+
 if (fail.length) {
     console.log('\nLỖI:\n' + [...new Set(fail)].join('\n'));
     process.exit(1);

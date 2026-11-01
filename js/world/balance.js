@@ -79,8 +79,20 @@ function realmShare(x) {
     return SHARE_CURVE[SHARE_CURVE.length - 1][1];
 }
 
+/* Mỗi đại cảnh giới gấp REALM_POWER_STEP lần; tiểu kỳ chỉ nhích nhẹ nên đột phá là một bước nhảy lớn */
+const REALM_POWER_STEP = 5;
+const STAGE_POWER_SHARE = 0.1;
+const STAT_CURVE_VERSION = 2;
+const OLD_POWER_STEP = 2.2;
+const OLD_STAGE_SHARE = 0.25;
+const GEAR_MID_STAGE = 1.5;
+
 function refAtk(realm, stage = 0) {
-    return 20 * Math.pow(2.2, realmProgress(realm, stage));
+    return 20 * Math.pow(REALM_POWER_STEP, realm + stage * STAGE_POWER_SHARE);
+}
+
+function oldRefAtk(realm, stage) {
+    return 20 * Math.pow(OLD_POWER_STEP, realm + stage * OLD_STAGE_SHARE);
 }
 
 function refStats(realm, stage = 0) {
@@ -130,7 +142,7 @@ const GEAR_SERIES = [
 ];
 
 function gearBudget(realm) {
-    const midStage = 1.5;
+    const midStage = GEAR_MID_STAGE;
     const ref = refStats(realm, midStage);
     const k = 1 - realmShare(realmProgress(realm, midStage));
     return { atk: ref.atk * k, def: ref.def * k, hp: ref.hp * k };

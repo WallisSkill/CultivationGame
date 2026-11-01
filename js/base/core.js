@@ -1634,6 +1634,7 @@ function initStarter() {
     }
 
     const base = baseStatsFor(0, 0, state.root.rank || 0);
+    state.statCurve = STAT_CURVE_VERSION;
     state.power = base.power;
     state.defense = base.defense;
     state.maxHp = base.hp;

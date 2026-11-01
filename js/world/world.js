@@ -79,7 +79,26 @@ function initWorldState() {
         state.age = START_AGE + (state.age - START_AGE) * AGE_YEARS_PER_DAY;
         state.ageRateFixed = true;
     }
+    migrateStatCurve();
     moveUpToRealmWorld();
+}
+
+/* Save cũ theo đường cong chỉ số trước: giữ nguyên phần cộng thêm, chỉ đổi tỉ lệ theo đường mới */
+function migrateStatCurve() {
+    if (state.statCurve === STAT_CURVE_VERSION) return;
+    state.statCurve = STAT_CURVE_VERSION;
+    if (!state.root?.elements) return;
+    const realm = state.realmIndex || 0, stage = state.realmStage || 0;
+    const body = refAtk(realm, stage) / oldRefAtk(realm, stage);
+    state.power = Math.floor(state.power * body);
+    state.defense = Math.floor(state.defense * body);
+    state.maxHp = Math.floor(state.maxHp * body);
+    state.hp = Math.floor(state.hp * body);
+    (state.inventory || []).filter(it => it && it.slot && it.reqRealm != null).forEach(it => {
+        const gear = refAtk(it.reqRealm, GEAR_MID_STAGE) / oldRefAtk(it.reqRealm, GEAR_MID_STAGE);
+        ['atk', 'def', 'hp'].forEach(key => { if (it[key]) it[key] = Math.floor(it[key] * gear); });
+    });
+    recalculateStats();
 }
 
 /* ---------- đồng hồ ---------- */
