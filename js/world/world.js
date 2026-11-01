@@ -81,6 +81,8 @@ function initWorldState() {
     }
     migrateStatCurve();
     moveUpToRealmWorld();
+    state.intel = state.intel || [];
+    learnIntel(state.location);
 }
 
 /* Save cũ theo đường cong chỉ số trước: giữ nguyên phần cộng thêm, chỉ đổi tỉ lệ theo đường mới */
@@ -508,7 +510,45 @@ function roadMaster() {
     checkArrival();
 }
 
+/* Địa Chí: chỉ biết dịch vụ của nơi đã đặt chân tới hoặc đã dò la được */
+function learnIntel(id) {
+    if (!state.intel.includes(id)) state.intel.push(id);
+}
+
+function intelEntries(loc) {
+    const services = loc.services || [];
+    return [
+        services.includes('forge') && `${forgeGradeOf(loc).wholeWorld ? '🔥' : '🔨'} ${forgeGradeOf(loc).name}`,
+        services.includes('shop') && '🏪 Cửa hàng',
+        services.includes('board') && '📜 Bảng thưởng',
+        loc.blackMarket && '🕯️ Chợ Đen'
+    ].filter(Boolean);
+}
+
+function intelBadge(loc) {
+    if (!state.intel.includes(loc.id)) return '';
+    const icon = loc.blackMarket ? '🕯️' : (loc.services || []).includes('forge') ? (forgeGradeOf(loc).wholeWorld ? '🔥' : '🔨') : '';
+    return icon ? `<text x="${loc.x + 24}" y="${loc.y - 16}" text-anchor="middle" font-size="16">${icon}</text>` : '';
+}
+
+function intelLine(loc) {
+    if (!intelEntries(loc).length && state.intel.includes(loc.id)) return '';
+    return `<div class="small">${state.intel.includes(loc.id) ? intelEntries(loc).join(' · ') : '❔ Chưa rõ nơi này có gì, hãy tới xem hoặc dò la.'}</div>`;
+}
+
+function openAtlasBook() {
+    const worlds = WORLD_TIERS.filter(w => worldUnlocked(w.id)).map(tier => {
+        const sites = Object.values(LOCATIONS).filter(l => l.world === tier.id && intelEntries(l).length);
+        const known = sites.filter(l => state.intel.includes(l.id));
+        const rows = known.map(l => `<div class="guide-row"><b>${l.icon} ${l.name}</b><span>${intelEntries(l).join(' · ')}</span></div>`).join('');
+        const left = sites.length - known.length;
+        return `<div class="market-head">${tier.name} (${known.length}/${sites.length})</div>${rows}${left ? `<div class="small">Còn ${left} nơi chưa rõ: tới tận nơi, hoặc nhận việc Dò La ở ${INTEL_SOURCE_NAMES[tier.id]}.</div>` : ''}`;
+    }).join('');
+    openWorldModal('atlasBookModal', '📖 Địa Chí', worlds);
+}
+
 function checkArrival() {
+    learnIntel(state.location);
     mapViewWorld = currentLocation().world;
     mapSelected = null;
     questsOnLocation();
@@ -589,6 +629,7 @@ function renderMap() {
             <circle cx="${l.x}" cy="${l.y}" r="27" fill="${selected ? '#ffe9a0' : '#0b1220'}" fill-opacity="${selected ? 1 : 0.8}" stroke="${here ? '#ffe9a0' : pal[2]}" stroke-width="3"/>
             <text x="${l.x}" y="${l.y + 9}" text-anchor="middle" font-size="24">${l.icon}</text>
             <text x="${l.x}" y="${l.y + 47}" text-anchor="middle" font-size="17" fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke" font-weight="600">${l.name}</text>
+            ${intelBadge(l)}
         </g>`;
     }).join('');
     const p = mapTokenPosition();
@@ -599,7 +640,7 @@ function renderMap() {
     const tabs = WORLD_TIERS.filter(w => worldUnlocked(w.id)).map(w =>
         `<button class="filter-chip ${w.id === viewId ? 'active' : ''}" onclick="setMapWorld('${w.id}')">${w.name}</button>`
     ).join('');
-    host.innerHTML = `<div class="filter-chips">${tabs}</div>
+    host.innerHTML = `<div class="filter-chips">${tabs}<button class="filter-chip" onclick="openAtlasBook()">📖 Địa Chí</button></div>
         <svg class="map-svg" viewBox="0 0 ${mapW} ${mapH}" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Bản đồ ${tier.name}">
             <defs><linearGradient id="mapBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${pal[1]}"/><stop offset="1" stop-color="${pal[0]}"/></linearGradient></defs>
             <rect width="${mapW}" height="${mapH}" fill="url(#mapBg)"/>
@@ -625,7 +666,7 @@ function renderMapDestination() {
     const carryHint = carryRoute && !carry ? '<div class="small">Muốn được đưa đi: vào chung phòng với người cảnh giới bằng hoặc cao hơn.</div>' : '';
     return `<div class="map-dest">
         <div><b>${loc.icon} ${loc.name}</b> <span class="small">linh khí x${loc.qi.toFixed(2)} · ${REALMS[loc.minR]} trở lên</span>
-        <div class="small">${loc.desc}</div>${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}${carryHint}</div>
+        <div class="small">${loc.desc}</div>${intelLine(loc)}${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}${carryHint}</div>
         <div class="map-dest-actions">${teleport}${carry}
         ${route ? `<button onclick="travelTo('${loc.id}')">Đi (${formatRealDuration(route.seconds)})</button>` : '<span class="small">Chưa có đường</span>'}</div>
     </div>`;
@@ -1047,6 +1088,10 @@ function grantQuestReward(q) {
         log(`🌟 Đạo cơ thăng hoa: chỉ số bản thể +${Math.round(r.statBless * 100)}%.`);
     }
     syncStorySect();
+    if (r.intel) {
+        learnIntel(r.intel);
+        log(`📖 Địa Chí ghi thêm: ${LOCATIONS[r.intel].name}.`);
+    }
     if (r.opens) {
         state.flags[`open_${r.opens}`] = true;
         log(`🔓 ${LOCATIONS[r.opens].name} đã mở dịch vụ cho ngươi.`);
@@ -1486,7 +1531,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    goToStageQuest, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    goToStageQuest, openAtlasBook, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

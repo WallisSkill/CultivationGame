@@ -278,3 +278,35 @@ const YEU_QUESTS = [
 ];
 SIDE_QUESTS.push(...YEU_QUESTS);
 YEU_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
+
+/* Dò la tin tức: mỗi Giới một chuỗi, biết lò thường trước rồi mới lần ra Danh lò, Thần lò và Chợ Đen */
+const INTEL_FORGE_HOURS = [1, 2, 4];
+const INTEL_MARKET_HOURS = 3;
+
+function intelDirection(tier, loc) {
+    const h = loc.x < (tier.mapW || 1000) / 3 ? 'tây' : loc.x > (tier.mapW || 1000) * 2 / 3 ? 'đông' : '';
+    const v = loc.y < (tier.mapH || 560) / 3 ? 'bắc' : loc.y > (tier.mapH || 560) * 2 / 3 ? 'nam' : '';
+    return v || h ? `phía ${[h, v].filter(Boolean).join(' ')}` : 'vùng giữa';
+}
+
+function intelQuest(tier, source, loc, label, hours, after) {
+    return {
+        id: `intel_${loc.id}`, loc: source.id, npc: 'narr', title: `Dò La: ${label}`, needs: [tier.from, 0], after, reward: { hours: 0.5, goldRefs: 2, intel: loc.id },
+        intro: [['narr', `Khách lữ hành ở ${source.name} rỉ tai nhau về một ${label} nằm ở ${intelDirection(tier, loc)} ${tier.name}. Muốn biết chính xác thì phải chịu khó nghe ngóng.`]],
+        steps: [{ gather: { loc: source.id, hours, label: 'Dò la tin tức' }, say: [['narr', `Tìm ra rồi: ${label} ở ${loc.name}. Ngươi ghi vào Địa Chí.`]] }]
+    };
+}
+
+const INTEL_QUESTS = WORLD_TIERS.flatMap(tier => {
+    const sites = Object.values(LOCATIONS).filter(l => l.world === tier.id);
+    const source = sites.reduce((best, l) => l.minR < best.minR ? l : best);
+    const forges = sites.filter(l => (l.services || []).includes('forge')).sort((a, b) => (a.forgeGrade || 0) - (b.forgeGrade || 0));
+    const chain = [
+        ...forges.map(l => ({ loc: l, label: forgeGradeOf(l).name, hours: INTEL_FORGE_HOURS[l.forgeGrade || 0] })),
+        ...sites.filter(l => l.blackMarket).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS }))
+    ];
+    return chain.map((entry, i) => intelQuest(tier, source, entry.loc, entry.label, entry.hours, i ? `intel_${chain[i - 1].loc.id}` : null));
+});
+SIDE_QUESTS.push(...INTEL_QUESTS);
+INTEL_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
+const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => (names[LOCATIONS[q.loc].world] = LOCATIONS[q.loc].name, names), {});

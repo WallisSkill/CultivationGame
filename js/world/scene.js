@@ -45,6 +45,7 @@ function sceneSpots(loc) {
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), loc.type === 'town' || loc.type === 'sect');
     SIDE_QUESTS.filter(q => q.loc === loc.id && !questExpired(q) && !state.questDone.includes(q.id)
+        && (!q.after || state.questDone.includes(q.after))
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
         .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
