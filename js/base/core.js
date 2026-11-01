@@ -124,6 +124,12 @@ const MYSTERIES = [
     { name: 'Lão Sư Ẩn', type: 'npc', desc: 'NPC ẩn có lựa chọn' }
 ];
 const ADMIN_NAMES = ["YYurX1qvIZQQcuUuO4Cg"];
+const ADMIN_DISPLAY_NAME = "Thiên Đạo Chí Tôn";
+
+/* Tên admin bị đổi lúc tạo nhân vật nên phải giữ cờ riêng; save cũ nhận ra bằng tên hiển thị và linh căn Hỗn Độn */
+function isGameAdmin() {
+    return !!state.isAdmin || (state.name === ADMIN_DISPLAY_NAME && state.root?.rank === 9);
+}
 
 
 function randomRootRank() {
@@ -243,7 +249,8 @@ window.addEventListener("load", () => {
         state.root.rank = startRootRank;
         state.gold = goldRef(0) * 30;
         if (state.name && ADMIN_NAMES.includes(state.name)) {
-            state.name = "Thiên Đạo Chí Tôn";
+            state.name = ADMIN_DISPLAY_NAME;
+            state.isAdmin = true;
             state.gold = 9999999999999;
         }
         const script = buildRootStoryScript();

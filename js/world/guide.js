@@ -42,6 +42,7 @@ const GUIDE_SECTIONS = [
             ['Trận Pháp Bảo', 'Pháp bảo đặt lên trận sẽ tự đánh theo thời gian hồi.'],
             ['Nâng giai pháp bảo', 'Lên giai vẫn giữ nguyên cấp đang có. Hợp nhất cho ngươi tự chọn vật liệu; pháp bảo đang ở trên trận không bị lấy làm vật liệu.'],
             ['Rèn đồ', 'Lò rèn chỉ rèn tới cảnh giới của nơi đó. Thần lò rèn được mọi cấp trong Giới của nó, vượt cấp tối đa tới cảnh giới đầu của Giới sau.'],
+            ['Đồ cấp Thánh', 'Chỉ Đa Bảo Thị ở Tiên Giới bán, cạnh Lăng Tiêu Điện, mở từ Tiên Đế và mặc được ngay. Phải mặc đủ 6 món mua ở đây mới đột phá lên Thánh Nhân và vào Thánh Vực. Đồ vượt cấp hay thất truyền không tính. Cửa hàng Thánh Vực không bán trang bị.'],
             ['Chỉ định thuộc tính', 'Ở Thần lò, đồ từ Địa Tiên trở lên có thể chọn tối đa 3 loại chỉ số phụ, mỗi loại cộng 50% linh thạch; giá trị vẫn ngẫu nhiên. Lò rèn và Danh lò ra ngẫu nhiên.'],
             ['Nhiệm vụ tiểu cảnh giới', 'Mỗi tiểu kỳ có 3 việc riêng, phải tới nói chuyện với người trong vùng mới nhận được, xong việc quay lại báo. Qua tiểu kỳ thì việc chưa nhận sẽ mất. Cốt truyện chính cũng chia theo từng tiểu kỳ.'],
             ['Nói chuyện với NPC', 'Mỗi nơi đều có người để hỏi chuyện, nơi có lò thì có cả thợ rèn. Nhiệm vụ phụ phải nhận và báo lại với đúng người, đi tới nơi thôi chưa đủ. Dấu ❗ là người đó có việc cho ngươi.'],

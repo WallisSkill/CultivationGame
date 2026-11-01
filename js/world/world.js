@@ -93,9 +93,10 @@ function initWorldState() {
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
     applyOriginQuest();
     state.activity = state.activity || null;
-    state.testSpeed = state.testSpeed || 1;
+    state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
     migrateMainChapters();
+    if (state.flags.open_da_bao && state.realmIndex >= SAINT_REALM) state.flags.open_thanh_thi = true;
     if (state.ageCurveFixed) {
         state.age = Math.max(START_AGE, state.age - legacyEntryAge(state.realmIndex, state.maxAge));
         delete state.ageCurveFixed;
@@ -990,9 +991,19 @@ function nextMainQuest() {
     return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
 }
 
+function saintGearWorn() {
+    return state.inventory.filter(it => it.equipped && it.saintGear).length;
+}
+
+function saintGearGate(realm) {
+    const worn = saintGearWorn();
+    if (realm !== SAINT_REALM || worn >= GEAR_SLOT_IDS.length) return null;
+    return { id: 'saint_gear', title: `Mặc đủ đồ cấp Thánh mua ở ${LOCATIONS[SAINT_GEAR_SHOP].name} (${worn}/${GEAR_SLOT_IDS.length})` };
+}
+
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : tienViGate(realm);
+    return q && !state.questDone.includes(q.id) ? q : saintGearGate(realm) || tienViGate(realm);
 }
 
 function pickOrigin() {
@@ -1615,6 +1626,7 @@ function renderWorldPanels() {
 const TEST_SPEEDS = [1, 60, 3600, 86400, 259200];
 
 function toggleTestPanel() {
+    if (!isGameAdmin()) return;
     state.testPanel = !state.testPanel;
     renderAll();
 }
@@ -1622,8 +1634,11 @@ function toggleTestPanel() {
 function renderTestPanel() {
     const el = $('testPanel');
     if (!el) return;
-    el.style.display = state.testPanel ? 'block' : 'none';
-    if (!state.testPanel) return;
+    const admin = isGameAdmin();
+    const button = $('testBtn');
+    if (button) button.style.display = admin ? '' : 'none';
+    el.style.display = admin && state.testPanel ? 'block' : 'none';
+    if (!admin || !state.testPanel) return;
     const realmOpts = REALMS.map((r, i) => `<option value="${i}" ${i === state.realmIndex ? 'selected' : ''}>${i}. ${r}</option>`).join('');
     const stageOpts = STAGES.map((s, i) => `<option value="${i}" ${i === state.realmStage ? 'selected' : ''}>${s}</option>`).join('');
     const locOpts = Object.values(LOCATIONS).map(l => `<option value="${l.id}" ${l.id === state.location ? 'selected' : ''}>${l.name}</option>`).join('');

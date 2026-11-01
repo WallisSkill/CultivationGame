@@ -33,7 +33,7 @@ const NPCS = {
     van_nguyet: { name: 'Vân Nguyệt', title: 'Thủ lĩnh Tán Tiên', look: NPC_LOOK('f', 2, '#5b2a86', '#6b4a8f', { weapon: 'fan', weaponColor: '#d59bff', eyes: '#8a4fc0' }) },
     dao_tri_mau: { name: 'Dao Trì Thánh Mẫu', title: 'Chủ Dao Trì', look: NPC_LOOK('f', 3, '#1b1b22', '#dbe8f7', { crown: 'guan', aura: '#ffd9ef' }) },
     tien_de: { name: 'Hạo Thiên Tiên Đế', title: 'Chúa tể Tiên Giới', look: NPC_LOOK('m', 0, '#1b1b22', '#b5832e', { crown: 'guan', crownColor: '#ffd479', weapon: 'sword', weaponColor: '#ffc14d', beard: true, aura: '#ffd76a' }) },
-    da_bao: { name: 'Đa Bảo Đạo Nhân', title: 'Chủ Đa Bảo Thị', look: NPC_LOOK('m', 5, '#1b1b22', '#b5832e', { weapon: 'orb', weaponColor: '#ffc14d' }) },
+    da_bao: { name: 'Đa Bảo Đạo Nhân', title: 'Kẻ duy nhất bán đồ cấp Thánh', look: NPC_LOOK('m', 5, '#1b1b22', '#b5832e', { weapon: 'orb', weaponColor: '#ffc14d' }) },
     thai_thanh: { name: 'Thái Thanh Thánh Nhân', title: 'Đại sư huynh Tam Thanh', look: NPC_LOOK('m', 0, '#f0e6c8', '#e8e4d8', { beard: true, crown: 'halo', crownColor: '#ffe9a0', aura: '#ffe9a0', weapon: 'fan', weaponColor: '#e8e4d8' }) },
     nguyen_thuy: { name: 'Nguyên Thủy Thiên Tôn', title: 'Giáo chủ Xiển Giáo', look: NPC_LOOK('m', 0, '#1b1b22', '#d9d4c5', { beard: true, crown: 'halo', crownColor: '#ffe9a0', aura: '#fff3c4', weapon: 'staff', weaponColor: '#ffd479' }) },
     thong_thien: { name: 'Thông Thiên Giáo Chủ', title: 'Giáo chủ Tiệt Giáo', look: NPC_LOOK('m', 1, '#1b1b22', '#2b2b35', { crown: 'halo', crownColor: '#ff6b6b', aura: '#ff8a4c', weapon: 'sword', weaponColor: '#ff6b6b' }) },
@@ -254,7 +254,7 @@ const MAIN_QUESTS = [
         id: 'm18', act: 3, title: 'Tử Tiêu Nghị Sự', needs: [16, 0],
         steps: [
             { go: 'tu_tieu', say: [['thai_thanh', 'Một Tiên Đế chết, một vị Thánh mới sinh. Thiên Đạo vẫn cân bằng. Ngươi muốn ngồi ghế thứ bảy không?'], ['thong_thien', 'Từ chối đi nhóc, cho vui.'], ['me', 'Dừng mỏ Tiên Giới. Thả tiên nô.'], ['nguyen_thuy', 'Vậy thì đánh đi. Thánh Vực chỉ nghe một ngôn ngữ.']] },
-            { go: 'da_bao', say: [['da_bao', 'Ở đây ai trả tiền cũng là khách. Muốn đánh Thánh Nhân, ngươi cần đồ của Thánh Vực.']] }
+            { go: 'thanh_thi', say: [['narr', 'Tử Tiêu Thị bán đan dược, thư tịch, cả tin tức. Không một quầy nào bán binh giáp. Ở Thánh Vực, đồ tốt đều đã nằm trên người ai đó.']] }
         ],
         reward: { hours: 24, goldRefs: 200, gear: ['ring', 3] }
     },
@@ -446,7 +446,7 @@ const SIDE_QUESTS = [
     { id: 's_khoi', loc: 'thanh_van', npc: 'to_dao', title: 'Luyện Kiếm Cùng Sư Tỷ', needs: [1, 0], steps: [{ hunt: { loc: 'thanh_van', name: 'Khôi Lỗi Thí Luyện', n: 5 }, say: [['to_dao', 'Khá hơn rồi. Cái này ta giữ từ hồi Trúc Cơ, cho đệ.']] }], reward: { hours: 8, goldRefs: 10, gear: ['amulet', 1] } },
     { id: 's_bang', loc: 'bang_phong', npc: 'han_bang', title: 'Băng Hồn Không Yên', needs: [5, 0], steps: [{ hunt: { loc: 'bang_phong', name: 'Băng Hồn', n: 6 }, say: [['han_bang', 'Họ từng là đệ tử của ta. Cảm ơn ngươi đã tiễn họ.']] }], reward: { hours: 12, goldRefs: 20, gear: ['boots', 2] } },
     { id: 's_thu', loc: 'van_tien', npc: 'van_nguyet', title: 'Thư Về Phàm Giới', needs: [10, 0], steps: [{ gather: { loc: 'thien_ha', hours: 4, label: 'Tìm khe truyền âm' }, say: [['to_dao', '(Giọng nói vọng từ rất xa) Đệ còn sống là được rồi. Thanh Vân vẫn còn lửa.']] }], reward: { hours: 16, goldRefs: 30, statBless: 0.02 } },
-    { id: 's_cho', loc: 'da_bao', npc: 'da_bao', title: 'Món Nợ Của Đa Bảo', needs: [16, 2], steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 6 }, say: [['da_bao', 'Làm ăn phải sòng phẳng. Đây là phần của ngươi.']] }], reward: { hours: 24, goldRefs: 80, gear: ['ring', 3] } },
+    { id: 's_cho', loc: 'da_bao', npc: 'da_bao', title: 'Món Nợ Của Đa Bảo', needs: [15, 1], steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 6 }, say: [['da_bao', 'Làm ăn phải sòng phẳng. Đây là phần của ngươi.']] }], reward: { hours: 24, goldRefs: 80, gear: ['ring', 3] } },
     { id: 's_quan', loc: 'vo_cuong', npc: 'ly_khach', title: 'Bữa Cơm Ở Vô Cương', needs: [22, 0], steps: [{ hunt: { loc: 'khai_thien', name: 'Hư Không Thú', n: 6 }, say: [['ly_khach', 'Thịt dai, nhưng ít ra là thật. Ngồi xuống ăn đi.']] }], reward: { hours: 36, goldRefs: 100, statBless: 0.02 } },
     { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [26, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
 ];

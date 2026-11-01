@@ -7,9 +7,16 @@ function buildShopStock() {
     const g = goldRef(realm);
     const base = baseStatsFor(realm, state.realmStage || 0, state.root?.rank || 0);
     const stock = [];
-    [1, 0].forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
-        stock.push({ ...makeGearItem(realm, slot, quality), id: `gear_${slot}_${quality}`, price: gearPrice(realm, quality) });
-    }));
+    const loc = currentLocation();
+    if (loc.id === SAINT_GEAR_SHOP) {
+        SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
+            stock.push({ ...makeSaintGear(slot, quality), id: `saint_${slot}_${quality}`, price: gearPrice(SAINT_REALM, quality) });
+        }));
+    } else if (loc.world !== 'thanh') {
+        [1, 0].forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
+            stock.push({ ...makeGearItem(realm, slot, quality), id: `gear_${slot}_${quality}`, price: gearPrice(realm, quality) });
+        }));
+    }
     stock.push(
         { id: 'pill_heal', name: 'Hồi Thiên Đan', type: 'consumable', healPct: 0.5, price: g * 3 },
         { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', minutes: XP_ITEM_MINUTES, price: g * 60 },
@@ -88,6 +95,10 @@ function useItem(index) {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
         needsFullRender = true;
+        if (it.saintGear && saintGearWorn() === GEAR_SLOT_IDS.length) {
+            delete state.bottleneckNotice;
+            checkRealmProgress();
+        }
     }
 
     else if (it.type === 'root_frag') {

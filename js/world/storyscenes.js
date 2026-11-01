@@ -22,7 +22,7 @@ const MAIN_SCENES = {
     m15: { intro: [['narr', 'Khắp Vạn Tiên Thành, những tiên nô phá xiềng đổ về quảng trường. Không ai hô khẩu hiệu. Họ chỉ cầm cuốc.'], ['tien_lai', 'Lão già này đào đất ba ngàn năm. Hôm nay muốn đào thứ khác.']], outro: [['narr', 'Đường ống linh tủy gãy làm đôi. Lần đầu sau vạn năm, đèn của Lăng Tiêu Bảo Điện chập chờn.'], ['van_nguyet', 'Chuyện mỏ xong rồi. Giờ tới thứ khó hơn: những kẻ đã hưởng từ nó.']] },
     m16: { intro: [['tien_lai', 'Nếu lão ngã, đừng quay lại. Cuốc này là của ngươi.'], ['me', 'Lão sẽ không ngã.'], ['tien_lai', 'Tiên nô nào cũng ngã, con ạ. Chỉ là được chọn ngã ở đâu.']], outro: [['narr', 'Nam Thiên Môn đổ xuống. Trong đống đá, ngươi nhặt lại một chiếc cuốc cũ, cán đã ướt.']] },
     m17: { intro: [['narr', 'Lăng Tiêu Bảo Điện vắng tanh. Chín ngàn bậc thềm ngọc, giống hệt bậc đá Thanh Vân năm nào.'], ['me', 'Ta đã leo bậc này một lần rồi.']], outro: [['narr', 'Tiên nô quỳ xuống hát một bài ca cũ. Ngươi không ngồi lên ngai vàng. Ngươi đi về phía vết nứt.']] },
-    m18: { intro: [['narr', 'Tử Tiêu Cung nằm trên một khoảng trời không có gió. Sáu chiếc ghế đá, sáu hơi thở nặng như sáu thế giới.']], outro: [['da_bao', 'Đã thấy mặt khách hàng lớn của ta rồi đấy. Muốn sống sót, mua đi. Không bán chịu.']] },
+    m18: { intro: [['narr', 'Tử Tiêu Cung nằm trên một khoảng trời không có gió. Sáu chiếc ghế đá, sáu hơi thở nặng như sáu thế giới.']], outro: [['narr', 'Bộ đồ của Đa Bảo trên người ngươi vẫn còn mới. Trên cổ áo có dòng chữ nhỏ: "Hàng đã bán không đổi trả."']] },
     m19: { intro: [['narr', 'Bát Cảnh Cung có một lò đan chưa bao giờ tắt. Một đồng tử quạt lửa, không ngẩng đầu.'], ['me', 'Thái Thanh ở đâu?'], ['narr', 'Đồng tử chỉ tay vào ngọn lửa, rồi lại quạt tiếp.']], outro: [['thai_thanh', 'Hàng ức năm ta không làm gì. Hôm nay ta cho ngươi mượn đồ. Coi như đã làm một việc.']] },
     m20: { intro: [['narr', 'Trên đường tới Ngọc Hư, mỗi bước chân ngươi đều nghe tiếng sổ sách lật. Có ai đó đang đọc số mệnh của ngươi, và đang nhíu mày.']], outro: [['narr', 'Trong thiên thư của Ngọc Hư Cung, trang ghi tên ngươi là một trang trắng, mép giấy bị rọc rất ngay ngắn.']] },
     m21: { intro: [['narr', 'Oa Hoàng Cung không có vách, chỉ có đất ẩm và những tượng người chưa khô.'], ['me', 'Những tượng này là gì?'], ['nu_oa', 'Là những đứa trẻ chưa ra đời. Con cũng từng ở đây.']], outro: [['narr', 'Từ Tiên Giới vọng lên tin: xiềng của tiên nô tự rơi. Bạch Lão Đầu không kịp nghe tin ấy.']] },
@@ -122,9 +122,14 @@ const REGION_QUESTS = [
         steps: [{ hunt: { loc: 'dao_tri', name: 'Dao Trì Hộ Vệ', n: 5 }, say: [['dao_tri_mau', 'Ao đã nhận ngươi. Thần lò từ nay mở cửa.']] }]
     },
     {
-        loc: 'da_bao', npc: 'da_bao', title: 'Tiền Đặt Cọc', needs: [16, 0],
-        intro: [['da_bao', 'Đa Bảo Thị không có khách vãng lai. Đặt cọc bằng đầu bọn đạo tặc, ta cấp lệnh bài.']],
-        steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 5 }, say: [['da_bao', 'Lệnh bài của ngươi đây. Mua nhiều, chết ít.']] }]
+        loc: 'thanh_thi', npc: 'narr', title: 'Lệnh Bài Tử Tiêu Thị', needs: [16, 0],
+        intro: [['narr', 'Người giữ chợ không ngẩng đầu: "Thánh Vực không có khách vãng lai. Tán Đồ đang phá quầy, dẹp đi rồi hãy hỏi mua."']],
+        steps: [{ hunt: { loc: 'thanh_thi', name: 'Thánh Vực Tán Đồ', n: 5 }, say: [['narr', 'Chợ yên trở lại. Lệnh bài bằng ngọc tím rơi vào tay ngươi.']] }]
+    },
+    {
+        loc: 'da_bao', npc: 'da_bao', title: 'Tiền Đặt Cọc', needs: [15, 0],
+        intro: [['da_bao', 'Đồ cấp Thánh ta chỉ bán cho kẻ đã tới Tiên Đế. Đặt cọc bằng đầu bọn đạo tặc Thánh Vực xuống đây trộm hàng, ta cấp lệnh bài.']],
+        steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 5 }, say: [['da_bao', 'Lệnh bài của ngươi đây. Nhớ kỹ: thiếu một món đồ Thánh trên người, Thiên Đạo sẽ không cho ngươi thành Thánh. Mua đủ sáu món, mua nhiều, chết ít.']] }]
     },
     {
         loc: 'bat_canh', npc: 'dong_tu', title: 'Quạt Lò Bát Quái', needs: [16, 0],

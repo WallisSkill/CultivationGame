@@ -113,6 +113,8 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     if (step.hunt && !names.includes(step.hunt.name)) fail.push(`${q.id}: ${step.hunt.name} không có ở ${step.hunt.loc}`);
 }));
 
+if (G.LOCATIONS.da_bao.world !== 'tien' || !G.LOCATIONS.da_bao.services.includes('shop')) fail.push('Đa Bảo Thị phải bán ở Tiên Giới');
+
 /* ---- chỉ số phụ: bậc trên thấp nhất vẫn hơn bậc dưới cao nhất ---- */
 for (const kind of Object.keys(G.GEAR_SUBS)) {
     for (let r = 10; r < 29; r++) {
@@ -167,8 +169,26 @@ for (let r = 0; r < 29; r++) {
     if (a.tKill < 6) fail.push(`realm ${r}: trận quá ngắn ${a.tKill.toFixed(1)}s`);
     if (b.tKill > 80) fail.push(`realm ${r}: boss quá lâu, chạm mốc 90s`);
     if (r <= 26 && duel(on, 'Boss', r + 2, s, 1, bossBoard).win) fail.push(`realm ${r}: thắng boss cao hơn 2 cảnh`);
-    if (r <= 14 && d.win) fail.push(`realm ${r}: không đồ vẫn thắng — đồ chưa đủ quan trọng`);
+    if (r >= 3 && r <= 14 && d.win) fail.push(`realm ${r}: không đồ vẫn thắng — đồ chưa đủ quan trọng`);
     if ([4, 12, 17, 22].includes(r) && Math.abs(on.selfShare - 0.4) > 0.05) fail.push(`realm ${r}: giữa Giới bản thể ${(on.selfShare * 100).toFixed(0)}%, cần khoảng 40%`);
+}
+
+/* nhân vật mới: chỉ có đồ khởi đầu và 3 pháp bảo phải thắng trận đầu dù linh căn kém */
+function newbieAt(r, s, rootRank) {
+    const base = G.baseStatsFor(r, s, rootRank);
+    const kit = ['weapon', 'armor'].map(k => G.makeGearItem(0, k, 0));
+    return {
+        atk: base.power + kit[0].atk + kit[1].atk, def: base.defense + kit[0].def + kit[1].def, hp: base.hp + kit[0].hp + kit[1].hp,
+        lb: G.LB_GRADE_POWER[G.maxLinhBaoGradeForRealm(r)], lbSlots: 3, rootRank, r, s
+    };
+}
+for (const rootRank of [0, 3]) {
+    const p = newbieAt(0, 0, rootRank);
+    [['Thường', 0, 1, 3], ['Thường', 1, 1, 3], ['Tinh anh', 0, 1, 3], ['Boss', 0, 1, 4]].forEach(([tier, stage, scale, board]) => {
+        const fight = duel(p, tier, 0, stage, scale, board);
+        console.log(`tân thủ linh căn ${rootRank}: ${tier} kỳ ${stage} ${fight.win ? 'W' : 'L'} ${fight.tKill.toFixed(0)}s/${fight.tDie.toFixed(0)}s`);
+        if (fight.tDie < fight.tKill * 1.3) fail.push(`tân thủ thua ${tier} kỳ ${stage}`);
+    });
 }
 
 /* mười kẻ cảnh dưới vây một người cảnh trên, cùng tiểu kỳ và đủ đồ: người cảnh trên phải thắng */

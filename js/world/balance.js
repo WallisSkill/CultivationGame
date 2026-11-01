@@ -372,6 +372,15 @@ function makeTreasureGear(realm, slot, quality, bonus) {
     };
 }
 
+/* Đồ cấp Thánh: chỉ Đa Bảo Thị bán, mặc được từ Tiên Đế; đủ bộ mới đột phá lên Thánh Nhân */
+const SAINT_REALM = 16;
+const SAINT_GEAR_SHOP = 'da_bao';
+const SAINT_SHOP_QUALITIES = [2, 1, 0];
+
+function makeSaintGear(slot, quality) {
+    return { ...makeGearItem(SAINT_REALM, slot, quality), reqRealm: SAINT_REALM - 1, saintGear: true, desc: `Đồ cấp Thánh của Đa Bảo Thị, yêu cầu ${GEAR_SERIES[SAINT_REALM - 1]} cảnh trở lên` };
+}
+
 const MATERIAL_NAMES = {
     pham: 'Huyền Thiết Tinh', tien: 'Tiên Kim Sa', thanh: 'Thánh Ngân', thien: 'Thiên Ngoại Vẫn Thiết',
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
@@ -407,9 +416,13 @@ const ENEMY_TIERS = {
     'Boss': { atk: 1.05, hp: 1.50, def: 1.05, xpMinutes: 180, goldMult: 25, matChance: 1, gearChance: 1 }
 };
 
-function enemyStatsFor(realm, stage, tierName = 'Thường', scale = 1) {
+/* Mới vào đạo chưa có đồ: quái ba cảnh giới đầu yếu hơn mức chuẩn */
+const NEWBIE_ENEMY_SCALE = [0.5, 0.7, 0.85];
+
+function enemyStatsFor(realm, stage, tierName = 'Thường', baseScale = 1) {
     const tier = ENEMY_TIERS[tierName] || ENEMY_TIERS['Thường'];
     const ref = refStats(realm, stage);
+    const scale = baseScale * (NEWBIE_ENEMY_SCALE[realm] ?? 1);
     const hp = Math.floor(ref.hp * tier.hp * expectedLinhBaoScale(realm) * scale);
     return {
         str: Math.floor(ref.atk * tier.atk * scale),
