@@ -1055,12 +1055,11 @@ function gateGearWorn(flag) {
 }
 
 function gearGate(realm) {
-    const gate = realm === SAINT_REALM ? { id: 'saint_gear', flag: 'saintGear', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh mua ở', shop: SAINT_GEAR_SHOP }
-        : realm === THIEN_REALM ? { id: 'thien_gear', flag: 'thienGear', title: 'Mặc đủ đồ cấp Thiên mua ở', shop: THIEN_GEAR_SHOP } : null;
-    if (!gate) return null;
-    const worn = gateGearWorn(gate.flag);
+    const tier = gateTierOf(realm);
+    if (!tier) return null;
+    const worn = gateGearWorn(tier.flag);
     if (worn >= GEAR_SLOT_IDS.length) return null;
-    return { id: gate.id, title: `${gate.title} ${LOCATIONS[gate.shop].name} (${worn}/${GEAR_SLOT_IDS.length})` };
+    return { id: `gate_gear_${realm}`, title: `${tier.title}, nhận từ nhiệm vụ phụ hoặc mua ở ${LOCATIONS[tier.shop].name} (${worn}/${GEAR_SLOT_IDS.length})` };
 }
 
 function getBreakthroughGate(realm) {
@@ -1249,6 +1248,7 @@ function grantQuestReward(q) {
         log(`💰 +${formatNumber(gold)} linh thạch`);
     }
     if (r.gear) addItemToInventory(makeGearItem(state.realmIndex, r.gear[0], r.gear[1]));
+    if (r.gateGear) r.gateGear.slots.forEach(slot => addItemToInventory(makeGateGear(gateTierOf(r.gateGear.realm), slot, GATE_QUEST_QUALITY)));
     if (r.treasure) addItemToInventory(makeTreasureGear(state.realmIndex, randomGearSlot(), TREASURE_REWARD.quality, TREASURE_REWARD.bonus));
     if (r.lb) grantLinhBaoDrop({ source: q.title, gradeBonus: 0 });
     if (r.relic) {
@@ -1433,6 +1433,7 @@ function questRewardText(q) {
     if (r.hours) parts.push(`+${formatNumber(cultivationSecondsXp(cultivationHoursToSeconds(r.hours)))} tu vi`);
     if (r.goldRefs) parts.push(`+${formatNumber(goldRef(state.realmIndex) * r.goldRefs)} linh thạch`);
     if (r.gear) parts.push(`${GEAR_SLOTS[r.gear[0]].label} phẩm ${GEAR_QUALITIES[r.gear[1]].name}`);
+    if (r.gateGear) parts.push(`${r.gateGear.slots.map(slot => GEAR_SLOTS[slot].label).join(', ')} cấp ${gateTierOf(r.gateGear.realm).label}`);
     if (r.treasure) parts.push(`1 món ngẫu nhiên phẩm ${GEAR_QUALITIES[TREASURE_REWARD.quality].name}, vượt ${TREASURE_REWARD.bonus} cảnh giới`);
     if (r.lb) parts.push('1 linh bảo ngẫu nhiên');
     if (r.relic) parts.push(r.relic);

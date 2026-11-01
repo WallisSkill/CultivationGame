@@ -14,7 +14,7 @@ vm.createContext(ctx);
 vm.runInContext(`
 var INFO = {
   ORIGINS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
-  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor
+  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS
 };`, ctx);
 const G = ctx.INFO;
 
@@ -112,6 +112,13 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     const names = (G.LOCATIONS[step.hunt?.loc]?.enemies || []).map(e => e.name);
     if (step.hunt && !names.includes(step.hunt.name)) fail.push(`${q.id}: ${step.hunt.name} không có ở ${step.hunt.loc}`);
 }));
+
+G.GATE_TIERS.forEach(tier => {
+    const shop = G.LOCATIONS[tier.shop];
+    if (!shop.services.includes('shop') || shop.minR > tier.realm - 1) fail.push(`mốc ${tier.realm}: ${shop.name} không bán được đồ mốc`);
+    const slots = G.GATE_QUESTS.filter(q => q.reward.gateGear.realm === tier.realm).flatMap(q => q.reward.gateGear.slots);
+    if (slots.length !== G.GEAR_SLOT_IDS.length || G.GEAR_SLOT_IDS.some(k => !slots.includes(k))) fail.push(`mốc ${tier.realm}: nhiệm vụ phụ không đủ bộ đồ`);
+});
 
 if (G.LOCATIONS.da_bao.world !== 'tien' || !G.LOCATIONS.da_bao.services.includes('shop')) fail.push('Đa Bảo Thị phải bán ở Tiên Giới');
 

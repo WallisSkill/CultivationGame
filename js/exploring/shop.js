@@ -8,15 +8,11 @@ function buildShopStock() {
     const base = baseStatsFor(realm, state.realmStage || 0, state.root?.rank || 0);
     const stock = [];
     const loc = currentLocation();
-    if (loc.id === SAINT_GEAR_SHOP) {
-        SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
-            stock.push({ ...makeSaintGear(slot, quality), id: `saint_${slot}_${quality}`, price: gearPrice(SAINT_REALM, quality) });
-        }));
-    } else if (loc.id === THIEN_GEAR_SHOP) {
-        if (state.realmIndex >= THIEN_REALM - 1) SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
-            stock.push({ ...makeThienGear(slot, quality), id: `thien_${slot}_${quality}`, price: gearPrice(THIEN_REALM, quality) });
-        }));
-    } else if (loc.world !== 'thanh') {
+    const gateTier = GATE_TIERS.find(t => t.shop === loc.id && (state.realmIndex || 0) >= t.realm - 1);
+    if (gateTier) SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
+        stock.push({ ...makeGateGear(gateTier, slot, quality), id: `gate_${gateTier.realm}_${slot}_${quality}`, price: gearPrice(gateTier.realm, quality) });
+    }));
+    if (!gateTier?.exclusive && loc.world !== 'thanh') {
         [1, 0].forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
             stock.push({ ...makeGearItem(realm, slot, quality), id: `gear_${slot}_${quality}`, price: gearPrice(realm, quality) });
         }));
@@ -158,7 +154,8 @@ function useItem(index) {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
         needsFullRender = true;
-        if ((it.saintGear || it.thienGear) && gateGearWorn(it.saintGear ? 'saintGear' : 'thienGear') === GEAR_SLOT_IDS.length) {
+        const gateTier = GATE_TIERS.find(t => it[t.flag]);
+        if (gateTier && gateGearWorn(gateTier.flag) === GEAR_SLOT_IDS.length) {
             delete state.bottleneckNotice;
             checkRealmProgress();
         }

@@ -295,6 +295,50 @@ SIDE_QUESTS.push(...INTEL_QUESTS);
 INTEL_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => (names[LOCATIONS[q.loc].world] = LOCATIONS[q.loc].name, names), {});
 
+/* Mỗi cảnh giới mốc có ba nhiệm vụ phụ nối nhau ở Giới trước đó, cộng lại đủ sáu món đồ của mốc */
+const GATE_QUEST_HUNT = 6;
+const GATE_QUEST_SETS = {
+    9: [
+        { loc: 'long_cung', npc: 'narr', title: 'Giáp Vảy Đông Hải', hunt: 'Giao Long', slots: ['armor', 'helm'], intro: 'Phàm cốt không chịu nổi tiên khí đâu. Vảy Giao Long dưới Long Cung may được giáp, ngươi dám xuống lấy không?', done: 'Giáp này tiên khí xuyên không thủng. Mặc vào rồi hẵng nghĩ tới chuyện phi thăng.' },
+        { loc: 'ma_uyen', npc: 'narr', title: 'Thép Tôi Ma Hỏa', hunt: 'Vực Ma', slots: ['weapon', 'ring'], intro: 'Binh khí phàm gặp tiên khí là gãy. Đúc lại bằng ma hỏa của Vực Ma thì may ra chịu được.', done: 'Lửa ma tôi xong thì tiên khí cũng chẳng làm gì nổi. Cầm lấy.' },
+        { loc: 'phi_thang', npc: 'narr', title: 'Lôi Vân Dưới Chân', hunt: 'Lôi Thú', slots: ['boots', 'amulet'], intro: 'Lôi vân trên đài không nhận kẻ thiếu đồ. Hạ Lôi Thú, ta luyện lôi hạch của chúng thành ngọc bội và vân hài.', done: 'Đủ sáu món cấp Tiên rồi. Lôi vân sẽ không đánh nhầm người nữa.' }
+    ],
+    19: [
+        { loc: 'da_bao', npc: 'da_bao', title: 'Trả Công Bằng Tử Khí', hunt: 'Thánh Giới Đạo Tặc', slots: ['armor', 'helm'], intro: 'Hết tiền mua đồ à? Ta không cho không, nhưng ta trả công. Dẹp đạo tặc trước chợ, hai phần tử khí đầu tiên là của ngươi.', done: 'Sòng phẳng. Bốn phần còn lại nằm ở Bắc Minh và Phù Tang.' },
+        { loc: 'bac_minh', npc: 'narr', title: 'Tử Khí Dưới Đáy Bắc Minh', hunt: 'Bắc Minh Giao', slots: ['weapon', 'ring'], intro: 'Đáy biển này có hai sợi tử khí chìm từ thời Tam Thanh còn trẻ. Bọn giao long nuốt hết rồi.', done: 'Tử khí vẫn còn ấm. Rèn vào binh khí đi, nó tự biết đường.' },
+        { loc: 'phu_tang', npc: 'narr', title: 'Tử Khí Trên Cành Phù Tang', hunt: 'Phù Tang Mộc Linh', slots: ['boots', 'amulet'], intro: 'Cây thần giữ hai sợi tử khí cuối. Mộc linh không chịu buông, phải đánh cho chúng buông.', done: 'Đủ sáu phần Hồng Mông Tử Khí. Cửa Thánh giờ không có lý do gì để đóng trước mặt ngươi.' }
+    ],
+    22: [
+        { loc: 'bich_du', npc: 'narr', title: 'Kiếm Ý Tôi Giáp', hunt: 'Tru Tiên Kiếm Linh', slots: ['armor', 'helm'], intro: 'Muốn chạm vào cảnh giới Thiên thì thân phải chịu được kiếm ý của Tru Tiên. Giáp tôi trong đó mới dùng được.', done: 'Kiếm ý không xuyên qua nổi nữa. Cầm lấy, đừng nói ai cho.' },
+        { loc: 'linh_son', npc: 'narr', title: 'Xá Lợi Sa Đọa', hunt: 'La Hán Sa Đọa', slots: ['weapon', 'ring'], intro: 'La Hán sa đọa vẫn còn giữ xá lợi. Thứ đó luyện vào binh khí thì đánh được cả đạo vận cấp Thiên.', done: 'Tiếng chuông trên núi nhẹ đi một chút. Đây là phần của ngươi.' },
+        { loc: 'cuc_lac', npc: 'narr', title: 'Kim Thân Hộ Pháp', hunt: 'Kim Cương Hộ Pháp', slots: ['boots', 'amulet'], intro: 'Hộ pháp ở đây đã mất tâm từ lâu, chỉ còn kim thân. Phá ra, phần vàng ấy đúc được đồ cấp Thiên.', done: 'Đủ sáu món cấp Thiên. Cánh cửa Chuẩn Thiên chỉ đợi tu vi của ngươi thôi.' }
+    ],
+    29: [
+        { loc: 'khai_thien', npc: 'hoang_cong', title: 'Quy Tắc Làm Giáp', hunt: 'Quy Tắc Thể', slots: ['armor', 'helm'], intro: 'Hỗn Độn không có luật, thân không có giáp là tan. Mang Quy Tắc Thể về, ta đóng luật thành giáp cho ngươi.', done: 'Mặc vào đi. Ngoài kia không có gì giữ hình dạng cho ngươi ngoài bộ này.' },
+        { loc: 'hu_nhan', npc: 'narr', title: 'Con Ngươi Của Hư Không', hunt: 'Hư Không Ma Đồng', slots: ['weapon', 'ring'], intro: 'Con mắt này nhìn được Hỗn Độn. Móc đồng tử của nó ra, luyện vào binh khí thì mới đánh trúng thứ không có hình.', done: 'Binh khí này nhìn thấy đường. Tay ngươi chỉ cần đi theo.' },
+        { loc: 'than_dinh', npc: 'narr', title: 'Dấu Ấn Đạo Vệ', hunt: 'Đạo Vệ', slots: ['boots', 'amulet'], intro: 'Đạo Vệ đeo dấu ấn đi lại qua bờ Hỗn Độn. Lấy đủ thì ngươi cũng đi được.', done: 'Đủ sáu món cấp Hỗn Độn. Bờ bên kia không còn là chỗ chết nữa.' }
+    ],
+    30: [
+        { loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Long Cốt Hỗn Độn', hunt: 'Hỗn Độn Cự Long', slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
+        { loc: 'vo_chung_lau', npc: 'narr', title: 'Tầng Không Có Số', hunt: 'Lâu Chủ Tàn Ảnh', slots: ['weapon', 'ring'], intro: 'Tàn ảnh Lâu Chủ giữ thứ binh khí chưa từng được rèn. Hạ đủ bóng của lão, nó sẽ rơi ra.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
+        { loc: 'hai_tam', npc: 'narr', title: 'Hơi Thở Hải Tâm', hunt: 'Hải Tâm Ma Thần', slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ma Thần ở đây đã nuốt no, phải rạch ra mới lấy được.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
+    ]
+};
+
+const GATE_QUESTS = Object.entries(GATE_QUEST_SETS).flatMap(([gate, set]) => set.map((entry, stage) => {
+    const realm = Number(gate) - 1;
+    const speaker = entry.npc === 'narr' ? `dan_${entry.loc}` : entry.npc;
+    return {
+        id: `gate_${gate}_${stage}`, loc: entry.loc, npc: entry.npc, title: entry.title, realmOnly: realm, needs: [realm, stage],
+        after: stage ? `gate_${gate}_${stage - 1}` : null,
+        intro: [[speaker, entry.intro]],
+        steps: [{ hunt: { loc: entry.loc, name: entry.hunt, n: GATE_QUEST_HUNT }, say: [[speaker, entry.done]] }],
+        reward: { hours: 2, goldRefs: 10, gateGear: { realm: Number(gate), slots: entry.slots } }
+    };
+}));
+SIDE_QUESTS.push(...GATE_QUESTS);
+GATE_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
+
 /* Cư dân: mỗi nơi có một người để hỏi chuyện, nơi có lò thêm thợ rèn; nhiệm vụ không có NPC riêng do cư dân giao */
 const NPC_SEED = text => [...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
 const RESIDENT_SURNAMES = ['Lâm', 'Trần', 'Vân', 'Thẩm', 'Mộ', 'Tần', 'Hứa', 'Liễu', 'Phong', 'Bạch', 'Cố', 'Diệp'];

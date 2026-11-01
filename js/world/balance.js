@@ -376,20 +376,27 @@ function makeTreasureGear(realm, slot, quality, bonus) {
     };
 }
 
-/* Đồ cấp Thánh: chỉ Đa Bảo Thị bán, mặc được từ Tiên Đế; đủ bộ mới đột phá lên Thánh Nhân */
+/* Cảnh giới mốc: phải mặc đủ bộ đồ cấp đó mới đột phá được. Đồ mặc được từ cảnh giới ngay trước mốc,
+   nhiệm vụ phụ cấp đủ bộ một lần, cửa hàng bán lại để không bao giờ kẹt nếu lỡ bán mất. exclusive: quầy chỉ bán bộ này */
 const SAINT_REALM = 19;
-const SAINT_GEAR_SHOP = 'da_bao';
-const SAINT_SHOP_QUALITIES = [2, 1, 0];
-/* Đồ cấp Thiên: bán ở Tử Tiêu Thị từ Đại Thánh; đủ bộ mới vào được Chuẩn Thiên, cánh cửa của mọi cảnh giới Thiên */
 const THIEN_REALM = 22;
-const THIEN_GEAR_SHOP = 'thanh_thi';
+const SAINT_SHOP_QUALITIES = [2, 1, 0];
+const GATE_QUEST_QUALITY = 2;
+const GATE_TIERS = [
+    { realm: 9, flag: 'tienGear', label: 'Tiên', title: 'Mặc đủ đồ cấp Tiên', shop: 'phi_thang' },
+    { realm: SAINT_REALM, flag: 'saintGear', label: 'Thánh', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh', shop: 'da_bao', exclusive: true },
+    { realm: THIEN_REALM, flag: 'thienGear', label: 'Thiên', title: 'Mặc đủ đồ cấp Thiên', shop: 'thanh_thi', exclusive: true },
+    { realm: 29, flag: 'hondonGear', label: 'Hỗn Độn', title: 'Mặc đủ đồ cấp Hỗn Độn', shop: 'vo_cuong' },
+    { realm: 30, flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' }
+];
 
-function makeSaintGear(slot, quality) {
-    return { ...makeGearItem(SAINT_REALM, slot, quality), reqRealm: SAINT_REALM - 1, saintGear: true, desc: `Đồ cấp Thánh của Đa Bảo Thị, yêu cầu ${GEAR_SERIES[SAINT_REALM - 1]} cảnh trở lên` };
+function gateTierOf(realm) {
+    return GATE_TIERS.find(t => t.realm === realm) || null;
 }
 
-function makeThienGear(slot, quality) {
-    return { ...makeGearItem(THIEN_REALM, slot, quality), reqRealm: THIEN_REALM - 1, thienGear: true, desc: `Đồ cấp Thiên của Tử Tiêu Thị, yêu cầu ${GEAR_SERIES[THIEN_REALM - 1]} cảnh trở lên` };
+function makeGateGear(tier, slot, quality) {
+    const reqRealm = tier.realm - 1;
+    return { ...makeGearItem(tier.realm, slot, quality), reqRealm, [tier.flag]: true, desc: `Đồ cấp ${tier.label}, yêu cầu ${GEAR_SERIES[reqRealm]} cảnh trở lên` };
 }
 
 const MATERIAL_NAMES = {
