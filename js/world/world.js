@@ -1461,6 +1461,28 @@ function huVoStepEmpty(id) {
     return !!b && ((b.huVoPiece && !huVoPiece(id)) || (b.huVoHolder && !huVoHolder()));
 }
 
+/* Thua trận cuối: mọi thứ trở về như trước Đại Kết Cục, nhiệm vụ làm lại từ đầu.
+   Save cũ không lưu món đã tách ra thì giữ đồ Hư Vô, chỉ làm lại nhiệm vụ */
+function huVoFallBack() {
+    const rt = state.questActive.find(x => x.id === 'm40');
+    if (!rt) return;
+    const parts = state.huVoParts || [];
+    if (parts.every(part => part.item)) {
+        state.inventory = state.inventory.filter(it => !it.huVo && it.linhBaoId !== HU_VO_LB);
+        ensureBoardState();
+        parts.forEach(part => {
+            state.inventory.push(part.item);
+            if (part.at >= 0) state.board[part.at] = part.item.uid;
+        });
+        state.huVoParts = [];
+    }
+    rt.step = 0;
+    rt.n = 0;
+    recalculateStats();
+    log('🌀 Thua trận cuối: trang bị và pháp bảo trở về như cũ, Đại Kết Cục phải đánh lại từ đầu.');
+    questsOnLocation();
+}
+
 function huVoLinhBao() {
     return makeLinhBao(HU_VO_LB, LB_MAX_GRADE, LB_MAX_LEVEL / 4);
 }
@@ -1484,7 +1506,7 @@ function huVoClaim(id) {
     if (!kind) return false;
     const piece = huVoPiece(id);
     if (piece) {
-        (state.huVoParts ||= []).push(piece.type === 'linhbao' ? { name: piece.name, lb: piece } : { name: piece.name });
+        (state.huVoParts ||= []).push({ name: piece.name, item: piece, at: state.board.indexOf(piece.uid) });
         if (kind === 'gear') {
             state.inventory.push(makeHuVoGear(piece.slot));
         } else {
@@ -1510,7 +1532,7 @@ function huVoFinalEscorts(realm, stage) {
         const add = buildEnemy({ name: part.name, kind: 'chaos', realmIndex: realm, realmStage: stage, boardSize: 1 });
         add.str = Math.floor(add.str * 0.5);
         add.hp = add.maxHp = Math.floor(add.maxHp * 0.3);
-        const board = huVoBoard(part.lb);
+        const board = huVoBoard(part.item || part.lb);
         if (board) add.boardDefs = board;
         return add;
     });
@@ -1590,6 +1612,7 @@ function spawnBoss(id, quest) {
         rootRank: rollEnemyRootRank(realm, 1)
     });
     enemy.bossId = id;
+    enemy.huVoEnd = !!(b.huVoSelf || b.huVoHolder);
     enemy.shownRealm = b.shownRealm;
     if (b.hpMult) enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * b.hpMult);
     if (huVoBoard(piece)) enemy.boardDefs = huVoBoard(piece);

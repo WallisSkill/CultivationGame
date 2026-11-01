@@ -181,7 +181,9 @@ function runFromBattle() {
     }
     window._battleActive = false;
     const name = state.currentEnemy?.name || 'đối thủ';
+    const fellBack = state.currentEnemy?.huVoEnd;
     state.currentEnemy = null;
+    if (fellBack) huVoFallBack();
     log(`🏃 Chạy khỏi ${name}. Cần điều dưỡng ${formatRealDuration(hastedSeconds(RUN_REST_SECONDS))}.`);
     startActivity({ type: 'rest', label: 'Điều dưỡng', seconds: RUN_REST_SECONDS });
     renderAll();

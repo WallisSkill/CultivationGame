@@ -1527,6 +1527,7 @@ function lbEndBattle(battle, result) {
         state.currentEnemy = null;
         if (enemy && enemy.scriptedLoss) onScriptedLoss(enemy);
         else loseBattle();
+        if (enemy?.huVoEnd) huVoFallBack();
     }
 
     window.__boardBattle = null;
