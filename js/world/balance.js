@@ -210,16 +210,24 @@ function gearPrice(realm, quality) {
     return goldRef(realm) * GEAR_QUALITIES[quality].price;
 }
 
-/* --------- lò rèn theo nơi: lò và quầy hàng chỉ phục vụ tới cảnh giới cao nhất của nơi đó, lò càng lớn càng dễ ra đồ tốt.
-   Đồ vượt cấp mang chỉ số cảnh giới cao hơn nhưng dùng được ngay ở cảnh giới lúc rèn --------- */
+/* --------- lò rèn theo nơi: lò và quầy hàng chỉ phục vụ tới cảnh giới cao nhất của nơi đó, Thần lò rèn được hết Giới của nó, lò càng lớn càng dễ ra đồ tốt.
+   Đồ vượt cấp mang chỉ số cảnh giới cao hơn, tối đa cảnh giới đầu của Giới kế tiếp, nhưng dùng được ngay ở cảnh giới lúc rèn --------- */
 const FORGE_GRADES = [
     { name: 'Lò rèn', topChance: 0.15, overChance: 0, overRealms: 0 },
     { name: 'Danh lò', topChance: 0.30, overChance: 0.10, overRealms: 1 },
-    { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2 }
+    { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2, wholeWorld: true }
 ];
 
 function forgeGradeOf(loc) {
     return FORGE_GRADES[loc.forgeGrade || 0];
+}
+
+function forgeCapAt(loc) {
+    return forgeGradeOf(loc).wholeWorld ? WORLD_TIERS.find(w => w.id === loc.world).to : loc.maxR;
+}
+
+function forgeRealmAt(loc, realm) {
+    return Math.min(realm, forgeCapAt(loc));
 }
 
 function serviceRealmAt(loc, realm) {
@@ -230,7 +238,7 @@ function makeForgedGear(realm, slot, gradeIndex = 0) {
     const grade = FORGE_GRADES[gradeIndex];
     const quality = Math.random() < grade.topChance ? 3 : 2;
     const over = Math.random() < grade.overChance ? 1 + Math.floor(Math.random() * grade.overRealms) : 0;
-    const gearRealm = Math.min(REALM_COUNT - 1, realm + over);
+    const gearRealm = Math.min(REALM_COUNT - 1, worldTierOfRealm(realm).to + 1, realm + over);
     if (gearRealm === realm) return makeGearItem(realm, slot, quality);
     return {
         ...makeGearItem(gearRealm, slot, quality),

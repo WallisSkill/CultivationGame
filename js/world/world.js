@@ -653,7 +653,7 @@ function openForge() {
     if (!hasService('forge')) { showToast(`${currentLocation().name} không có lò rèn.`, 'warn'); return; }
     const loc = currentLocation();
     const grade = forgeGradeOf(loc);
-    const realm = serviceRealmAt(loc, state.realmIndex);
+    const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const have = state.mats[worldId] || 0;
     const price = gearPrice(realm, 2);
@@ -665,7 +665,7 @@ function openForge() {
             <button onclick="startForge('${slot}')" ${have < matCost || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
-    const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[loc.maxR]}.` : '';
+    const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[forgeCapAt(loc)]}.` : '';
     const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
     openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
 }
@@ -680,7 +680,7 @@ function upgradeGear(uidIndex) {
     if (!item?.slot) return;
     const plus = item.plus || 0;
     if (plus >= gearUpgradeCap(item.reqRealm || 0)) { showToast('Đã đạt giới hạn nâng cấp.', 'warn'); return; }
-    if ((item.reqRealm || 0) > currentLocation().maxR) { showToast('Lò này không đủ sức nâng món đồ đó.', 'warn'); return; }
+    if ((item.reqRealm || 0) > forgeCapAt(currentLocation())) { showToast('Lò này không đủ sức nâng món đồ đó.', 'warn'); return; }
     const worldId = worldTierOfRealm(item.reqRealm || 0).id;
     const cost = gearUpgradeCost(item);
     if ((state.mats[worldId] || 0) < cost.mats || state.gold < cost.gold) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
@@ -698,7 +698,7 @@ function gearUpgradeRows() {
         const cap = gearUpgradeCap(item.reqRealm || 0);
         const step = Math.round(gearUpgradeStep(item.reqRealm || 0) * 1000) / 10;
         if (plus >= cap) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">${gearStatText(item)} · tối đa +${cap}</div></div></div>`;
-        if ((item.reqRealm || 0) > currentLocation().maxR) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">Lò này không đủ sức nâng món đồ này.</div></div></div>`;
+        if ((item.reqRealm || 0) > forgeCapAt(currentLocation())) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">Lò này không đủ sức nâng món đồ này.</div></div></div>`;
         const cost = gearUpgradeCost(item);
         const worldId = worldTierOfRealm(item.reqRealm || 0).id;
         return `<div class="shop-item forge-row">
@@ -710,7 +710,7 @@ function gearUpgradeRows() {
 
 function startForge(slot) {
     const loc = currentLocation();
-    const realm = serviceRealmAt(loc, state.realmIndex);
+    const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const price = gearPrice(realm, 2);
     const matCost = forgeMaterialCost();
