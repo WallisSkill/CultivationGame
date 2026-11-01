@@ -31,6 +31,7 @@ const COURT_RIVAL_MIN = 0.4;
 const COURT_RIVAL_SPREAD = 0.8;
 
 function courtOpenHere() {
+    if (state.realmIndex >= SAINT_REALM) return false;
     if (tienViRegistered() && state.realmIndex >= COURT_ANYWHERE_REALM) return true;
     return currentLocation().world !== 'pham' && hasService('board');
 }
@@ -49,6 +50,7 @@ function tienViName() {
 }
 
 function tienViGate(realm) {
+    if (realm >= SAINT_REALM) return null;
     const need = TIEN_VI.reduce((best, rank, i) => realm >= rank.realm ? i : best, -1);
     if (need < 0 || tienViIndex() >= need) return null;
     return { id: `tienvi_${need}`, title: `Đạt tiên vị ${TIEN_VI[need].name} ở Thiên Đình Điện` };

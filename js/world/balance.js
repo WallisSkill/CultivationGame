@@ -15,7 +15,7 @@ const REALM_FIRST_MINUTES = 5;
 const REALM_LAST_DAYS = 30;
 const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
-const REALM_COUNT = 29;
+const REALM_COUNT = 32;
 const START_AGE = 6;
 const BASE_LIFESPAN = 200;
 const AGE_SPEND_SHARE = 0.0125;
@@ -28,13 +28,17 @@ const AGE_TRAVEL_YEARS_PER_MINUTE = 0.1;
 
 const WORLD_TIERS = [
     { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
-    { id: 'tien', name: 'Tiên Giới', from: 9, to: 15, mapW: 1500, mapH: 840, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
-    { id: 'thanh', name: 'Thánh Vực', from: 16, to: 19, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
-    { id: 'thien', name: 'Thiên Ngoại', from: 20, to: 25, palette: ['#22123f', '#46238a', '#c7a1ff'] },
-    { id: 'hondon', name: 'Hỗn Độn Hải', from: 26, to: 26, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
-    { id: 'hongmong', name: 'Hồng Mông', from: 27, to: 27, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
-    { id: 'chungnguyen', name: 'Chung Nguyên', from: 28, to: 28, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
+    { id: 'tien', name: 'Tiên Giới', from: 9, to: 18, mapW: 1500, mapH: 840, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
+    { id: 'thanh', name: 'Thánh Giới', from: 19, to: 22, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
+    { id: 'thien', name: 'Cực Đạo Vực', from: 23, to: 28, palette: ['#22123f', '#46238a', '#c7a1ff'] },
+    { id: 'hondon', name: 'Hỗn Độn Hải', from: 29, to: 29, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
+    { id: 'hongmong', name: 'Hồng Mông', from: 30, to: 30, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
+    { id: 'chungnguyen', name: 'Chung Nguyên', from: 31, to: 31, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
 ];
+
+/* Cõi do người chơi tự sáng tạo sau viên mãn Hỗn Độn: không người, không quái, chỉ đi nói chuyện với bên dưới */
+const EMPTY_WORLDS = ['hongmong', 'chungnguyen'];
+const OVERSEER_REALM = 30;
 
 function worldTierOfRealm(realm) {
     return WORLD_TIERS.find(w => realm >= w.from && realm <= w.to) || WORLD_TIERS[WORLD_TIERS.length - 1];
@@ -94,7 +98,7 @@ function cultivationRate(realm, root, qi = 1) {
 }
 
 /* --------- chỉ số chuẩn --------- */
-const SHARE_CURVE = [[0, 0.45], [4, 0.34], [8.75, 0.34], [9, 0.35], [12, 0.34], [15.75, 0.34], [16, 0.37], [17.5, 0.34], [19.75, 0.34], [20, 0.37], [22.5, 0.34], [25, 0.40], [26, 0.55], [27, 0.78], [28, 0.94]];
+const SHARE_CURVE = [[0, 0.45], [4, 0.34], [8.75, 0.34], [9, 0.35], [12, 0.34], [18.75, 0.34], [19, 0.37], [20.5, 0.34], [22.75, 0.34], [23, 0.37], [25.5, 0.34], [28, 0.40], [29, 0.55], [30, 0.78], [31, 0.94]];
 const HP_PER_ATK = 30;
 const DEF_PER_ATK = 0.5;
 
@@ -168,7 +172,7 @@ const GEAR_QUALITIES = [
 
 const GEAR_SERIES = [
     'Thanh Đồng', 'Huyền Thiết', 'Xích Kim', 'Nguyên Linh', 'Hóa Thần', 'Hư Không', 'Hợp Đạo', 'Lôi Kiếp', 'Đại Thừa',
-    'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Đế Tôn',
+    'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Đế Tôn', 'Lục Nguyên', 'Đại La', 'Chuẩn Thánh',
     'Thánh Nhân', 'Chí Thánh', 'Đại Thánh', 'Chuẩn Thiên',
     'Diệt Thiên', 'Khai Thiên', 'Toàn Thiên', 'Cực Thiên', 'Nghịch Thiên', 'Sáng Thế',
     'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên'
@@ -373,16 +377,23 @@ function makeTreasureGear(realm, slot, quality, bonus) {
 }
 
 /* Đồ cấp Thánh: chỉ Đa Bảo Thị bán, mặc được từ Tiên Đế; đủ bộ mới đột phá lên Thánh Nhân */
-const SAINT_REALM = 16;
+const SAINT_REALM = 19;
 const SAINT_GEAR_SHOP = 'da_bao';
 const SAINT_SHOP_QUALITIES = [2, 1, 0];
+/* Đồ cấp Thiên: bán ở Tử Tiêu Thị từ Đại Thánh; đủ bộ mới vào được Chuẩn Thiên, cánh cửa của mọi cảnh giới Thiên */
+const THIEN_REALM = 22;
+const THIEN_GEAR_SHOP = 'thanh_thi';
 
 function makeSaintGear(slot, quality) {
     return { ...makeGearItem(SAINT_REALM, slot, quality), reqRealm: SAINT_REALM - 1, saintGear: true, desc: `Đồ cấp Thánh của Đa Bảo Thị, yêu cầu ${GEAR_SERIES[SAINT_REALM - 1]} cảnh trở lên` };
 }
 
+function makeThienGear(slot, quality) {
+    return { ...makeGearItem(THIEN_REALM, slot, quality), reqRealm: THIEN_REALM - 1, thienGear: true, desc: `Đồ cấp Thiên của Tử Tiêu Thị, yêu cầu ${GEAR_SERIES[THIEN_REALM - 1]} cảnh trở lên` };
+}
+
 const MATERIAL_NAMES = {
-    pham: 'Huyền Thiết Tinh', tien: 'Tiên Kim Sa', thanh: 'Thánh Ngân', thien: 'Thiên Ngoại Vẫn Thiết',
+    pham: 'Huyền Thiết Tinh', tien: 'Tiên Kim Sa', thanh: 'Thánh Ngân', thien: 'Cực Đạo Vẫn Thiết',
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
 };
 const FORGE_MATERIAL_COST = 20;

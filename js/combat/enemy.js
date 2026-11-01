@@ -61,10 +61,16 @@ function applyPackScale(unit, count) {
 const ENEMY_REALM_STEP_CHANCE = 0.25;
 const UNDERLEVEL_XP_MULT = 0.25;
 
+function enemyRealmRange(loc) {
+    const top = loc.enemyMax ?? loc.maxR;
+    return [Math.min(loc.minR, top), top];
+}
+
 function rollLocationRealm(loc, capRealm = Infinity) {
     const chosen = state.huntRange?.[loc.id];
-    const [low, high] = chosen || [loc.minR, loc.maxR];
-    const top = Math.min(high, Math.max(loc.minR, capRealm));
+    const range = enemyRealmRange(loc);
+    const [low, high] = chosen || range;
+    const top = Math.min(high, range[1], Math.max(range[0], capRealm));
     let realm = Math.min(low, top);
     if (chosen) realm += Math.floor(Math.random() * (top - realm + 1));
     else while (realm < top && Math.random() < ENEMY_REALM_STEP_CHANCE) realm++;

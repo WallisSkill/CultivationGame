@@ -4,7 +4,7 @@
 /* --- Data: realms, stages, elements, root ranks --- */
 const REALMS = [
     'Luyện Khí', 'Trúc Cơ', 'Kim Đan', 'Nguyên Anh', 'Hóa Thần', 'Luyện Hư', 'Hợp Thể', 'Độ Kiếp', 'Đại Thừa',
-    'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Tiên Đế',
+    'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Tiên Đế', 'Thần Cảnh Lục Nguyên', 'Đại La Kim Tiên', 'Chuẩn Thánh',
     'Thánh Nhân Cảnh', 'Chí Thánh Cảnh', 'Đại Thánh Cảnh', 'Chuẩn Thiên Cảnh',
     'Diệt Thiên Cảnh', 'Khai Thiên Cảnh', 'Toàn Thiên Cảnh', 'Cực Thiên Cảnh', 'Nghịch Thiên Cảnh', 'Sáng Thế Cảnh',
     'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao'
@@ -38,7 +38,7 @@ const COLOR_MAP = {
     'Luyện Khí': '#aaa', 'Trúc Cơ': '#8bc34a', 'Kim Đan': '#ffca28', 'Nguyên Anh': '#ff9800',
     'Hóa Thần': '#e64a19', 'Luyện Hư': '#ff5722', 'Hợp Thể': '#f06292', 'Độ Kiếp': '#ba68c8',
     'Đại Thừa': '#9575cd', 'Tán Tiên': '#4fc3f7', 'Địa Tiên': '#29b6f6', 'Thiên Tiên': '#0288d1',
-    'Chân Tiên': '#0277bd', 'Huyền Tiên': '#0069c0', 'Kim Tiên': '#cddc39', 'Tiên Đế': '#d4af37',
+    'Chân Tiên': '#0277bd', 'Huyền Tiên': '#0069c0', 'Kim Tiên': '#cddc39', 'Tiên Đế': '#d4af37', 'Thần Cảnh Lục Nguyên': '#e0b84a', 'Đại La Kim Tiên': '#f0c75e', 'Chuẩn Thánh': '#ffd98a',
     'Thánh Nhân Cảnh': '#e53935', 'Chí Thánh Cảnh': '#c62828', 'Đại Thánh Cảnh': '#b71c1c',
     'Chuẩn Thiên Cảnh': '#880e4f', 'Diệt Thiên Cảnh': '#6a1b9a', 'Khai Thiên Cảnh': '#4527a0',
     'Toàn Thiên Cảnh': '#283593', 'Cực Thiên Cảnh': '#1a237e', 'Nghịch Thiên Cảnh': '#d81b60',

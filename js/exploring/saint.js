@@ -4,7 +4,7 @@
 const SAINTS = [
     {
         name: "Thái Thanh Thánh Nhân",
-        realm: 18,
+        realm: 21,
         realmStage: 2,
         desc: "Phòng thủ tuyệt đối, phú giáp thiên hạ, có xác suất nhận Thái Cực Đồ (bất tử 3 lần)",
         onTalk: () => {
@@ -39,7 +39,7 @@ const SAINTS = [
     },
     {
         name: "Thông Thiên Giáo Chủ",
-        realm: 18,
+        realm: 21,
         realmStage: 1,
         desc: "Sát thương cực cao, có xác suất nhận Tru Tiên Kiếm (có thể kết liễu tức khắc)",
         onTalk: () => {
@@ -61,7 +61,7 @@ const SAINTS = [
     },
     {
         name: "Nguyên Thủy Thiên Tôn",
-        realm: 18,
+        realm: 21,
         realmStage: 1,
         desc: "Sinh mệnh vô tận, có xác suất nhận Tam Bảo Ngọc Như Ý (phản 75% sát thương 3 lần)",
         onTalk: () => {
@@ -91,7 +91,7 @@ const SAINTS = [
     },
     {
         name: "Nữ Oa Nương Nương",
-        realm: 17,
+        realm: 20,
         realmStage: 2,
         desc: "Tăng Phẩm chất linh căn, có xác suất tăng 2 bậc hoặc hợp nhất thêm linh căn khác, có xác suất nhận Chiêu Yêu Phiến(Phần thưởng quái x2 trong 3 lần)",
         onTalk: () => {
@@ -183,7 +183,7 @@ const SAINTS = [
     ,
     {
         name: "Chuẩn Đề Đạo Nhân",
-        realm: 17,
+        realm: 20,
         realmStage: 1,
         desc: "Giảm chênh lệch cảnh giới (tăng tiểu cảnh giới), có xác suất nhận Thất Bảo Diệu Thọ (thu phục vũ khí địch)",
         onTalk: () => {
@@ -212,7 +212,7 @@ const SAINTS = [
     },
     {
         name: "Tiếp Dẫn Đạo Nhân",
-        realm: 17,
+        realm: 20,
         realmStage: 1,
         desc: "Có 30% cơ hội triệu hồi Tam Thanh hiển linh, nếu không chỉ tăng may mắn +10%",
         onTalk: () => {
@@ -259,7 +259,7 @@ const SAINTS = [
     },
     {
         name: "Đạo Tổ",
-        realm: 25,
+        realm: 28,
         realmStage: 3,
         desc: "🔥 Đấng sáng tạo — Mở rộng Trận Pháp Bảo lên 9 ô ngay lập tức! Cơ hội rất hiếm!",
         onTalk: () => {

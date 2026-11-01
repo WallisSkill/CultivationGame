@@ -108,9 +108,9 @@ function calcRealmBonusFull(attackerRealmIndex, attackerRealmStage, defenderReal
     // Tầng giới (phàm/tiên/thánh...) — vừa phải
     function getRealmTier(index) {
         if (index <= 8) return 0;
-        if (index <= 15) return 1;
-        if (index <= 20) return 2;
-        if (index <= 25) return 3;
+        if (index <= 18) return 1;
+        if (index <= 23) return 2;
+        if (index <= 28) return 3;
         return 4;
     }
     const atkTier = getRealmTier(attackerRealmIndex);
@@ -290,8 +290,8 @@ function calcRootFactorForElement(rank, realm = 0, stage = 0) {
 
     let tierBonus = 1.0;
     if (realm > 9) tierBonus *= Math.pow(1.15, realm - 9);
-    if (realm > 15) tierBonus *= Math.pow(1.18, realm - 15);
-    if (realm > 21) tierBonus *= Math.pow(1.22, realm - 21);
+    if (realm > 18) tierBonus *= Math.pow(1.18, realm - 18);
+    if (realm > 24) tierBonus *= Math.pow(1.22, realm - 24);
 
     const combined = Math.pow(factor, 0.5) * realmScale * tierBonus * stageScale;
     return parseFloat(combined.toFixed(3));
@@ -316,8 +316,8 @@ function calcElementResist(rootRank = 0, realm = 0, stage = 0, targetRealm = rea
 
     let total = Math.pow(resistPower, 0.5) * Math.pow(realmFactor, 1.05) * stageResist * suppression;
 
-    if (realm > 15) total *= Math.pow(1.12, realm - 15);
-    if (realm > 22) total *= Math.pow(1.15, realm - 22);
+    if (realm > 18) total *= Math.pow(1.12, realm - 18);
+    if (realm > 25) total *= Math.pow(1.15, realm - 25);
 
     return parseFloat(total.toFixed(3));
 }

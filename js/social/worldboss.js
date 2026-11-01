@@ -7,8 +7,8 @@
 const WORLD_BOSSES = {
     pham: { name: 'Cửu U Ma Long', kind: 'dragon' },
     tien: { name: 'Thiên Kiếp Kim Long', kind: 'dragon' },
-    thanh: { name: 'Thánh Vực Ma Hoàng', kind: 'demon' },
-    thien: { name: 'Thiên Ngoại Tà Thần', kind: 'demon' },
+    thanh: { name: 'Thánh Giới Ma Hoàng', kind: 'demon' },
+    thien: { name: 'Cực Đạo Tà Thần', kind: 'demon' },
     hondon: { name: 'Hỗn Độn Cự Thú', kind: 'beast' },
     hongmong: { name: 'Hồng Mông Cổ Thần', kind: 'golem' },
     chungnguyen: { name: 'Chung Nguyên Chi Chủ', kind: 'spirit' }

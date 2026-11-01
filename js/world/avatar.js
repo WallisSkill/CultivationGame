@@ -23,11 +23,11 @@ const REALM_AURA = [
     { from: 2, color: '#ffd76a' },
     { from: 5, color: '#ff8a4c' },
     { from: 9, color: '#7fd4ff' },
-    { from: 16, color: '#ffe9a0' },
-    { from: 20, color: '#c58bff' },
-    { from: 26, color: '#5fe6e6' },
-    { from: 27, color: '#ff8ad8' },
-    { from: 28, color: '#ffffff' }
+    { from: 19, color: '#ffe9a0' },
+    { from: 23, color: '#c58bff' },
+    { from: 29, color: '#5fe6e6' },
+    { from: 30, color: '#ff8ad8' },
+    { from: 31, color: '#ffffff' }
 ];
 
 function defaultLook() {

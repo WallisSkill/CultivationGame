@@ -23,7 +23,7 @@ const TRAVEL_GATE_PIXELS = 500;
 /* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
 const TRAVEL_DISTANCE_EXPONENT = 1.5;
 /* Dịch chuyển: cần tông môn + cảnh giới tối thiểu của cõi đích */
-const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 17, thien: 22 };
+const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 30 };
 /* Cõi cuối: cảnh giới cao hơn cõi thì tới tức thì, thấp hơn thì mất ngàn giờ cho mỗi bậc thiếu */
 const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
@@ -39,7 +39,7 @@ const ROAD_EVENT_LUCK_FACTOR = 0.1;
 const ROAD_EVENT_MAX_CHANCE = 0.15;
 const ROAD_BANDIT_XP_MINUTES = 0.5;
 const ROAD_BANDITS = {
-    pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Vực Đạo Tặc', thien: 'Thiên Ngoại Đạo Tặc',
+    pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Giới Đạo Tặc', thien: 'Cực Đạo Tán Tu',
     hondon: 'Hỗn Độn Đạo Tặc', hongmong: 'Hồng Mông Đạo Tặc', chungnguyen: 'Chung Yên Đạo Tặc'
 };
 const BOUNTY_KILLS = 5;
@@ -95,6 +95,7 @@ function initWorldState() {
     state.activity = state.activity || null;
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
+    migrateRealmShift();
     migrateMainChapters();
     if (state.flags.open_da_bao && state.realmIndex >= SAINT_REALM) state.flags.open_thanh_thi = true;
     if (state.ageCurveFixed) {
@@ -122,6 +123,35 @@ function migrateStatCurve() {
         const gear = refAtk(it.reqRealm, GEAR_MID_STAGE) / oldRefAtk(it.reqRealm, GEAR_MID_STAGE);
         ['atk', 'def', 'hp'].forEach(key => { if (it[key]) it[key] = Math.floor(it[key] * gear); });
     });
+    recalculateStats();
+}
+
+/* Save cũ: chèn ba cảnh giới sau Tiên Đế, ai từ Thánh Nhân trở lên dời lên ba bậc */
+const REALM_SHIFT_FROM = 16;
+const REALM_SHIFT = 3;
+
+function migrateRealmShift() {
+    if (state.realmShift) return;
+    state.realmShift = true;
+    if (!state.root?.elements) return;
+    const moved = r => r >= REALM_SHIFT_FROM ? r + REALM_SHIFT : r;
+    if (state.realmIndex >= REALM_SHIFT_FROM) {
+        const realm = state.realmIndex, stage = state.realmStage || 0;
+        const body = refAtk(realm + REALM_SHIFT, stage) / refAtk(realm, stage);
+        ['power', 'defense', 'maxHp', 'hp'].forEach(key => { state[key] = Math.floor(state[key] * body); });
+        state.realmIndex = realm + REALM_SHIFT;
+        (state.inventory || []).filter(it => it && it.slot && it.reqRealm >= REALM_SHIFT_FROM).forEach(it => {
+            const gear = refAtk(it.reqRealm + REALM_SHIFT, GEAR_MID_STAGE) / refAtk(it.reqRealm, GEAR_MID_STAGE);
+            ['atk', 'def', 'hp'].forEach(key => { if (it[key]) it[key] = Math.floor(it[key] * gear); });
+            it.reqRealm += REALM_SHIFT;
+        });
+    }
+    state.questDone = state.questDone.map(id => id.replace(/^(mc|st_)(\d+)_/, (all, head, realm) => `${head}${moved(Number(realm))}_`));
+    state.questActive = state.questActive.filter(rt => !/^(mc|st_|m\d)/.test(rt.id));
+    if (state.bounty?.name === 'Thiên Ngoại Đạo Tặc') state.bounty.name = 'Cực Đạo Tán Tu';
+    if (state.bounty?.name === 'Thánh Vực Đạo Tặc') state.bounty.name = 'Thánh Giới Đạo Tặc';
+    delete state.huntRange;
+    MAIN_QUESTS.filter(q => q.needs[0] < state.realmIndex && !state.questDone.includes(q.id)).forEach(q => state.questDone.push(q.id));
     recalculateStats();
 }
 
@@ -336,14 +366,20 @@ function realmWorld() {
     return worldTierOfRealm(state.realmIndex || 0).id;
 }
 
+/* Cực Đạo Vực và Thánh Giới là một Giới */
+function gioiIndex(worldId) {
+    return worldIndex(worldId === 'thien' ? 'thanh' : worldId);
+}
+
 function descentActive() {
     return (state.descentUntil || 0) > Date.now();
 }
 
 function descentBlocked(toWorld) {
+    if ((state.realmIndex || 0) >= OVERSEER_REALM) return false;
     const home = realmWorld();
-    const floor = Math.min(worldIndex(home), worldIndex(currentLocation().world));
-    return worldIndex(toWorld) < floor && !holdsWorldTop(home) && !descentActive();
+    const floor = Math.min(gioiIndex(home), gioiIndex(currentLocation().world));
+    return gioiIndex(toWorld) < floor && !holdsWorldTop(home) && !descentActive();
 }
 
 function teleportBlockReason(id) {
@@ -356,6 +392,7 @@ function teleportLockReason(id) {
     const tier = worldOf(id);
     const minRealm = TELEPORT_MIN_REALM[tier.id];
     if (minRealm == null) return '';
+    if ((state.realmIndex || 0) >= OVERSEER_REALM) return '';
     const missing = [];
     if (!state.sect) missing.push('nhập tông môn');
     if ((state.realmIndex || 0) < minRealm) missing.push(`đạt ${REALMS[minRealm]}`);
@@ -755,19 +792,20 @@ function startHunt() {
 /* Người chơi tự giới hạn cảnh giới quái khi săn ở từng nơi */
 function openHuntRange() {
     const loc = currentLocation();
-    const [low, high] = state.huntRange?.[loc.id] || [loc.minR, loc.maxR];
-    const realms = Array.from({ length: loc.maxR - loc.minR + 1 }, (_, i) => loc.minR + i);
+    const range = enemyRealmRange(loc);
+    const [low, high] = state.huntRange?.[loc.id] || range;
+    const realms = Array.from({ length: range[1] - range[0] + 1 }, (_, i) => range[0] + i);
     const row = (label, active, pick) => `<div class="small" style="margin-top:8px"><b>${label}</b></div><div class="loc-actions">${realms.map(r => `<button class="mini-btn" ${r === active ? 'disabled' : ''} onclick="setHuntRange(${pick(r)})">${REALMS[r]}</button>`).join('')}</div>`;
     openWorldModal('huntRangeModal', `🎚️ Cấp quái ở ${loc.name}`, `<div class="small">Khi săn ở đây chỉ gặp quái trong khoảng đã chọn.</div>
         ${row('Từ', low, r => `${r}, ${Math.max(r, high)}`)}
         ${row('Đến', high, r => `${Math.min(low, r)}, ${r}`)}
-        <button class="mini-btn" style="margin-top:10px" onclick="setHuntRange(${loc.minR}, ${loc.maxR})">Bỏ giới hạn</button>`);
+        <button class="mini-btn" style="margin-top:10px" onclick="setHuntRange(${range[0]}, ${range[1]})">Bỏ giới hạn</button>`);
 }
 
 function setHuntRange(low, high) {
     const loc = currentLocation();
     state.huntRange = state.huntRange || {};
-    if (low === loc.minR && high === loc.maxR) delete state.huntRange[loc.id];
+    if (low === enemyRealmRange(loc)[0] && high === enemyRealmRange(loc)[1]) delete state.huntRange[loc.id];
     else state.huntRange[loc.id] = [low, high];
     openHuntRange();
     renderAll();
@@ -957,6 +995,7 @@ function acceptBounty() {
     const board = document.getElementById('bountyModal');
     if (board) board.style.display = 'none';
     const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && l.minR <= state.realmIndex && l.maxR >= state.realmIndex - 1);
+    if (!pool.length) { showToast('Cõi này không có sinh linh nào để treo thưởng.', 'warn'); return; }
     const loc = pool[Math.floor(Math.random() * pool.length)];
     const pick = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
     state.bounty = { loc: loc.id, name: pick.name, need: BOUNTY_KILLS, done: 0 };
@@ -1007,19 +1046,22 @@ function nextMainQuest() {
     return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
 }
 
-function saintGearWorn() {
-    return state.inventory.filter(it => it.equipped && it.saintGear).length;
+function gateGearWorn(flag) {
+    return state.inventory.filter(it => it.equipped && it[flag]).length;
 }
 
-function saintGearGate(realm) {
-    const worn = saintGearWorn();
-    if (realm !== SAINT_REALM || worn >= GEAR_SLOT_IDS.length) return null;
-    return { id: 'saint_gear', title: `Mặc đủ đồ cấp Thánh mua ở ${LOCATIONS[SAINT_GEAR_SHOP].name} (${worn}/${GEAR_SLOT_IDS.length})` };
+function gearGate(realm) {
+    const gate = realm === SAINT_REALM ? { id: 'saint_gear', flag: 'saintGear', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh mua ở', shop: SAINT_GEAR_SHOP }
+        : realm === THIEN_REALM ? { id: 'thien_gear', flag: 'thienGear', title: 'Mặc đủ đồ cấp Thiên mua ở', shop: THIEN_GEAR_SHOP } : null;
+    if (!gate) return null;
+    const worn = gateGearWorn(gate.flag);
+    if (worn >= GEAR_SLOT_IDS.length) return null;
+    return { id: gate.id, title: `${gate.title} ${LOCATIONS[gate.shop].name} (${worn}/${GEAR_SLOT_IDS.length})` };
 }
 
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : saintGearGate(realm) || tienViGate(realm);
+    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm);
 }
 
 function pickOrigin() {
@@ -1436,6 +1478,7 @@ function renderQuestPanel() {
     if (descentActive()) {
         cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);
     }
+    if (state.realmIndex >= SAINT_REALM) state.courtOrders = [];
     (state.courtOrders || []).forEach(c => {
         cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div><div class="small">🎁 ${courtRewardText(LOCATIONS[c.loc], c.realm)}</div></div>`);
     });
@@ -1500,7 +1543,7 @@ function renderLocationPanel() {
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
         <div class="small">${loc.desc}</div>
-        ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[loc.minR]} – ${REALMS[loc.maxR]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}${state.huntRange?.[loc.id] ? ` · đang săn ${REALMS[state.huntRange[loc.id][0]]} – ${REALMS[state.huntRange[loc.id][1]]}` : ''} <button class="mini-btn" onclick="openHuntRange()">🎚️ Chọn cấp săn</button></div>` : ''}
+        ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[enemyRealmRange(loc)[0]]} – ${REALMS[enemyRealmRange(loc)[1]]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}${state.huntRange?.[loc.id] ? ` · đang săn ${REALMS[state.huntRange[loc.id][0]]} – ${REALMS[state.huntRange[loc.id][1]]}` : ''} <button class="mini-btn" onclick="openHuntRange()">🎚️ Chọn cấp săn</button></div>` : ''}
         <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
         ${renownStatusHTML()}
@@ -1572,14 +1615,44 @@ function openNpcTalk(key) {
     const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}${questRewardHTML(q)}</button>`).join('');
     const reports = npcReports(key).map(rt => `<button class="mini-btn" onclick="reportToNpc('${rt.id}')">📜 Báo lại: ${QUEST_INDEX[rt.id].title}</button>`).join('');
     openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>
-        <div class="npc-options">${reports}${offers}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
+        <div class="npc-options">${reports}${offers}${npcStoryButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
+}
+
+function npcStoryList(key) {
+    if (NPC_STORIES[key]) return NPC_STORIES[key];
+    const tales = RESIDENT_TALES[currentLocation().world];
+    if (!tales || !key.startsWith('dan_')) return [];
+    return [{ from: 0, lines: [tales[NPC_SEED(key) % tales.length]] }];
+}
+
+function npcStoryNext(key) {
+    const list = npcStoryList(key);
+    const heard = state.npcHeard?.[key] || 0;
+    return list[heard] && (state.realmIndex || 0) >= list[heard].from ? heard : -1;
+}
+
+function npcStoryButton(key) {
+    const list = npcStoryList(key);
+    const next = npcStoryNext(key);
+    if (next >= 0) return `<button class="mini-btn" onclick="talkStory('${key}')">❗ Trò chuyện</button>`;
+    return (state.npcHeard?.[key] || 0) > 0 && list.length ? `<button class="mini-btn" onclick="talkStory('${key}')">💬 Nhắc lại chuyện cũ</button>` : '';
+}
+
+function talkStory(key) {
+    closeNpcTalk();
+    const list = npcStoryList(key);
+    const next = npcStoryNext(key);
+    const story = list[next >= 0 ? next : (state.npcHeard?.[key] || 1) - 1];
+    if (!story) return;
+    if (next >= 0) state.npcHeard = { ...state.npcHeard, [key]: next + 1 };
+    playDialogue(story.lines.map(line => typeof line === 'string' ? [key, line] : line));
 }
 
 function talkAboutArea(key) {
     closeNpcTalk();
     const loc = currentLocation();
     const lines = [[key, `${loc.name}? ${loc.desc}`]];
-    if ((loc.enemies || []).length) lines.push([key, `Quanh đây toàn kẻ từ ${REALMS[loc.minR]} tới ${REALMS[loc.maxR]}, liệu sức mà đi.`]);
+    if ((loc.enemies || []).length) lines.push([key, `Quanh đây toàn kẻ từ ${REALMS[enemyRealmRange(loc)[0]]} tới ${REALMS[enemyRealmRange(loc)[1]]}, liệu sức mà đi.`]);
     if (key === locationSmith(loc)) lines.push([key, `${forgeGradeOf(loc).name} này rèn được tới ${REALMS[forgeCapAt(loc)]}.`]);
     else lines.push([key, RESIDENT_AREA_LINES[loc.type] || 'Ta cũng chỉ biết có vậy.']);
     playDialogue(lines);
@@ -1783,6 +1856,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

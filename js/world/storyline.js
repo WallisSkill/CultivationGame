@@ -8,12 +8,12 @@
 =========================================================== */
 const ACTS = [
     { id: 1, name: 'Hồi I — Phàm Trần', desc: 'Một đứa trẻ mồ côi bước lên đường tu tiên.' },
-    { id: 2, name: 'Hồi II — Tiên Lộ Là Mỏ', desc: 'Phi thăng không phải giải thoát: từ tiên nô dưới mỏ tới tiên quan trên điện Lăng Tiêu.' },
-    { id: 3, name: 'Hồi III — Lục Thánh', desc: 'Va chạm với những kẻ viết ra luật trời.' },
-    { id: 4, name: 'Hồi IV — Ngoài Thiên Đạo', desc: 'Thánh Nhân chỉ là chấp sự. Ai là chủ?' },
+    { id: 2, name: 'Hồi II — Tiên Lộ Là Mỏ', desc: 'Phi thăng không phải giải thoát: từ tiên nô dưới mỏ tới Tiên Đế, Đại La Kim Tiên rồi Chuẩn Thánh.' },
+    { id: 3, name: 'Hồi III — Thất Thánh', desc: 'Thế gian chỉ có sáu vị Thánh, và ngươi là người thứ bảy. Việc nhiều ở Tiên Giới, thỉnh thoảng lên Thánh Giới nghị chính sự.' },
+    { id: 4, name: 'Hồi IV — Đại Đạo Chí Thượng', desc: 'Các cảnh giới Thiên là cực đạo cảnh. Sau lưng Lục Thánh còn rất nhiều người.' },
     { id: 5, name: 'Hồi V — Hỗn Độn Đạo Giả', desc: 'Bên ngoài vũ trụ có những kẻ xem vũ trụ như hạt bụi.' },
-    { id: 6, name: 'Hồi VI — Hồng Mông', desc: 'Nơi Đạo được sinh ra.' },
-    { id: 7, name: 'Hồi VII — Chung Nguyên', desc: 'Điểm kết. Người đang ngồi đợi ngươi.' }
+    { id: 6, name: 'Hồi VI — Hồng Mông', desc: 'Cảnh giới do chính ngươi sáng tạo. Bên trên không có ai, chỉ còn việc xuống nói chuyện với bên dưới.' },
+    { id: 7, name: 'Hồi VII — Chung Nguyên', desc: 'Điểm kết. Một chiếc ghế trống.' }
 ];
 
 const NPC_LOOK = (body, hairStyle, hair, robe, extra = {}) => ({ body, hairStyle, hair, robe, skin: '#f6d7b8', eyes: '#2b1b12', ...extra });
@@ -42,12 +42,9 @@ const NPCS = {
     tiep_dan: { name: 'Tiếp Dẫn Đạo Nhân', title: 'Thánh Nhân Tây Phương', look: NPC_LOOK('m', 5, '#1b1b22', '#d9a520', { crown: 'wheel', crownColor: '#ffd479', aura: '#ffd479', weapon: 'staff', weaponColor: '#ffd479' }) },
     dao_to: { name: 'Đạo Tổ', title: 'Người giữ Thiên Đạo', look: NPC_LOOK('m', 0, '#ffffff', '#5a3a9e', { beard: true, crown: 'wheel', crownColor: '#c58bff', aura: '#c58bff', eyes: '#8a4fc0' }) },
     ly_khach: { name: 'Lữ Khách Vô Cương', title: 'Chủ quán', look: NPC_LOOK('m', 4, '#8b5a2b', '#55524a', { weapon: 'staff', weaponColor: '#8a7a55' }) },
-    vo_danh: { name: 'Vô Danh Đạo Giả', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { aura: '#5fe6e6', crown: 'wheel', crownColor: '#5fe6e6', eyes: '#2f8f5a' }) },
-    vong_ky: { name: 'Vọng Kỷ Đạo Giả', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('f', 1, '#e9eef7', '#13525c', { aura: '#5fe6e6', eyes: '#2a5fa8', weapon: 'orb', weaponColor: '#5fe6e6' }) },
-    ma_than: { name: 'Ma Thần Thiên Ngô', kind: 'chaos', realm: 26 },
-    ban_co: { name: 'Bàn Cổ Tàn Niệm', title: 'Người khai thiên đầu tiên', look: NPC_LOOK('m', 4, '#7a1f2b', '#2b2b35', { aura: '#ff8a4c', weapon: 'spear', weaponColor: '#ff8a4c', beard: true, skin: '#d9a273' }) },
-    hong_mong: { name: 'Hồng Mông Chúa Tể', title: 'Kẻ ngồi trên Đạo', look: NPC_LOOK('f', 1, '#ff8ad8', '#7a1f6a', { aura: '#ff8ad8', crown: 'wheel', crownColor: '#ff8ad8', eyes: '#a8342a' }) },
-    chung_nguyen: { name: 'Chung Nguyên Chí Cao', title: 'Điểm kết', look: NPC_LOOK('m', 0, '#c9c9d6', '#f2f2f2', { beard: true, aura: '#ffffff', crown: 'wheel', crownColor: '#ffffff', weapon: 'staff', weaponColor: '#ffffff' }) }
+    vo_danh: { name: 'Vô Tướng Vô Hình Siêu Thoát Đại Thần Minh', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { aura: '#5fe6e6', crown: 'wheel', crownColor: '#5fe6e6', eyes: '#2f8f5a' }) },
+    vong_ky: { name: 'Cửu Duệ Thần Linh', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('f', 1, '#e9eef7', '#13525c', { aura: '#5fe6e6', eyes: '#2a5fa8', weapon: 'orb', weaponColor: '#5fe6e6' }) },
+    ma_than: { name: 'Ma Thần Thiên Ngô', kind: 'chaos', realm: 29 },
 };
 
 const SAINT_ELEMENTS = ['Kim', 'Mộc', 'Thủy', 'Hỏa', 'Thổ'];
@@ -65,32 +62,26 @@ const BOSSES = {
     doc_cong: { npc: { name: 'Đốc Công Trương Tiên', look: NPC_LOOK('m', 4, '#1b1b22', '#b5832e', { weapon: 'spear', weaponColor: '#ffc14d' }) }, realm: 9, stage: 2 },
     thien_tuong: { npc: { name: 'Phi Thăng Giám Sát Sứ', look: NPC_LOOK('m', 0, '#1b1b22', '#dbe8f7', { weapon: 'sword', weaponColor: '#9fd3ff', crown: 'guan' }) }, realm: 10, stage: 2 },
     tinh_giao: { kind: 'dragon', name: 'Thiên Hà Giao Vương', realm: 11, stage: 2 },
-    kiem_khi: { npc: 'thong_thien', realm: 18, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
+    kiem_khi: { npc: 'thong_thien', realm: 21, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
     cu_linh: { kind: 'golem', name: 'Cự Linh Thần Tướng', realm: 12, stage: 2 },
     than_ha: { npc: { name: 'Thiên Bồng Nguyên Soái', look: NPC_LOOK('m', 4, '#1b1b22', '#2f5f9e', { weapon: 'spear', weaponColor: '#9fd3ff' }) }, realm: 13, stage: 2 },
     nam_mon: { npc: { name: 'Tăng Trưởng Thiên Vương', look: NPC_LOOK('m', 0, '#1b1b22', '#8c3a3a', { weapon: 'spear', weaponColor: '#ffd479', crown: 'guan' }) }, realm: 14, stage: 2, board: 4 },
     tien_de: { npc: 'tien_de', realm: 15, stage: 2, board: 5, scale: 1.1 },
-    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 19, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
-    thai_thanh: { npc: 'thai_thanh', realm: 16, stage: 2, board: 5, elements: SAINT_ELEMENTS },
-    nguyen_thuy: { npc: 'nguyen_thuy', realm: 17, stage: 2, board: 5, elements: SAINT_ELEMENTS },
-    thong_thien: { npc: 'thong_thien', realm: 18, stage: 2, board: 5, elements: SAINT_ELEMENTS },
-    chuan_tiep: { npc: 'chuan_de', realm: 19, stage: 2, board: 6, elements: SAINT_ELEMENTS },
-    nu_oa_thu: { npc: 'nu_oa', realm: 18, stage: 2, board: 5, elements: SAINT_ELEMENTS },
-    khoi_loi: { kind: 'golem', name: 'Thiên Đạo Chấp Hành Thể', realm: 20, stage: 2, board: 4 },
-    nghiep_long: { kind: 'dragon', name: 'Vạn Kiếp Nghiệp Long', realm: 21, stage: 2, board: 4 },
-    tam_ma: { npc: { name: 'Ngươi Của Kiếp Trước', look: NPC_LOOK('m', 1, '#c9c9d6', '#2b2b35', { aura: '#c58bff' }) }, realm: 22, stage: 2, board: 5 },
-    quy_tac: { kind: 'chaos', name: 'Thiên Phạt Quy Tắc Thể', realm: 23, stage: 2, board: 5 },
-    than_dinh_ve: { kind: 'golem', name: 'Thần Đình Đại Hộ Vệ', realm: 24, stage: 2, board: 5 },
-    dao_to: { npc: 'dao_to', realm: 25, stage: 2, board: 6, scale: 1.1, elements: SAINT_ELEMENTS },
-    dao_gia_thu: { npc: 'vo_danh', realm: 26, stage: 0, scale: 3, scriptedLoss: true, board: 6 },
-    ma_than: { kind: 'chaos', name: 'Ma Thần Thiên Ngô', realm: 26, stage: 2, board: 5 },
-    vong_ky: { npc: 'vong_ky', realm: 26, stage: 2, board: 6, scale: 1.05 },
-    vo_danh: { npc: 'vo_danh', realm: 26, stage: 3, board: 6, scale: 1.1 },
-    tu_khi_linh: { kind: 'spirit', name: 'Tử Khí Bản Nguyên', realm: 27, stage: 1, board: 5 },
-    ban_co: { npc: 'ban_co', realm: 27, stage: 2, board: 6 },
-    hong_mong: { npc: 'hong_mong', realm: 27, stage: 3, board: 6, scale: 1.1 },
-    du_anh: { kind: 'spirit', name: 'Vạn Kiếp Dư Ảnh', realm: 28, stage: 1, board: 6 },
-    chung_nguyen: { npc: 'chung_nguyen', realm: 28, stage: 3, board: 6, scale: 1.15 }
+    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 22, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
+    thai_thanh: { npc: 'thai_thanh', realm: 19, stage: 2, scale: 0.7, board: 5, elements: SAINT_ELEMENTS },
+    nguyen_thuy: { npc: 'nguyen_thuy', realm: 21, stage: 2, scale: 0.6, board: 5, elements: SAINT_ELEMENTS },
+    thong_thien: { npc: 'thong_thien', realm: 21, stage: 2, scale: 0.9, board: 5, elements: SAINT_ELEMENTS },
+    chuan_tiep: { npc: 'chuan_de', realm: 22, stage: 2, board: 6, elements: SAINT_ELEMENTS },
+    khoi_loi: { kind: 'golem', name: 'Thiên Đạo Chấp Hành Thể', realm: 23, stage: 2, board: 4 },
+    nghiep_long: { kind: 'dragon', name: 'Vạn Kiếp Nghiệp Long', realm: 24, stage: 2, board: 4 },
+    tam_ma: { npc: { name: 'Ngươi Của Kiếp Trước', look: NPC_LOOK('m', 1, '#c9c9d6', '#2b2b35', { aura: '#c58bff' }) }, realm: 25, stage: 2, board: 5 },
+    quy_tac: { kind: 'chaos', name: 'Thiên Phạt Quy Tắc Thể', realm: 26, stage: 2, board: 5 },
+    than_dinh_ve: { kind: 'golem', name: 'Thần Đình Đại Hộ Vệ', realm: 27, stage: 2, board: 5 },
+    dao_to: { npc: 'dao_to', realm: 28, stage: 2, board: 6, scale: 1.1, elements: SAINT_ELEMENTS },
+    dao_gia_thu: { npc: 'vo_danh', realm: 29, stage: 0, scale: 3, scriptedLoss: true, board: 6 },
+    ma_than: { kind: 'chaos', name: 'Ma Thần Thiên Ngô', realm: 29, stage: 2, board: 5 },
+    vong_ky: { npc: 'vong_ky', realm: 29, stage: 2, board: 6, scale: 1.05 },
+    vo_danh: { npc: 'vo_danh', realm: 29, stage: 3, board: 6, scale: 1.1 },
 };
 
 const MAIN_QUESTS = [
@@ -199,7 +190,7 @@ const MAIN_QUESTS = [
         id: 'm12', act: 2, title: 'Tán Tiên Minh', unlock: 11, needs: [10, 2],
         steps: [
             { go: 'van_tien', say: [['van_nguyet', 'Tán Tiên Minh không có lý tưởng. Chúng ta chỉ không muốn bị đào đến chết. Chứng minh ngươi có ích đi.']] },
-            { boss: 'thien_tuong', say: [['van_nguyet', 'Sổ của tên giám sát này ghi rõ: linh tủy Tiên Giới không về Thiên Đình. Nó chảy lên Thánh Vực.']] }
+            { boss: 'thien_tuong', say: [['van_nguyet', 'Sổ của tên giám sát này ghi rõ: linh tủy Tiên Giới không về Thiên Đình. Nó chảy ra khỏi Tiên Giới, tới một nơi không có trên bản đồ.']] }
         ],
         reward: { hours: 24, goldRefs: 120, gear: ['boots', 3] }
     },
@@ -207,8 +198,8 @@ const MAIN_QUESTS = [
         id: 'm13', act: 2, title: 'Kiếm Khí Từ Trời', unlock: 12, needs: [11, 2],
         steps: [
             { go: 'thien_ha', say: [['van_nguyet', 'Đường ống linh tủy chạy dưới Thiên Hà. Cắt được một đoạn là Thiên Đình đau.']] },
-            { boss: 'tinh_giao', say: [['narr', 'Trời nứt một đường. Một đạo kiếm khí từ rất xa rơi xuống, không ai cầm kiếm.']] },
-            { boss: 'kiem_khi', say: [['thong_thien', 'Ồ, con kiến biết cắn. Ta chỉ tiện tay. Lớn nhanh lên, rồi đến Bích Du tìm ta.'], ['van_nguyet', 'Đó... chỉ là một sợi kiếm khí. Ngươi vừa chạm vào Thánh Nhân đấy.']] }
+            { boss: 'tinh_giao', say: [['narr', 'Trời nứt một đường. Một đạo kiếm khí lạc từ rất xa rơi xuống, không ai cầm kiếm.']] },
+            { boss: 'kiem_khi', say: [['thong_thien', 'Ồ, kiếm ta thử ở Bích Du đi lạc, trúng phải con kiến biết cắn. Lớn nhanh lên, rồi đến tìm ta.'], ['van_nguyet', 'Đó... chỉ là một sợi kiếm khí. Ngươi vừa chạm vào Thánh Nhân đấy.']] }
         ],
         reward: { hours: 36, goldRefs: 150, gear: ['amulet', 3] }
     },
@@ -217,7 +208,7 @@ const MAIN_QUESTS = [
         steps: [
             { go: 'dao_tri', say: [['dao_tri_mau', 'Kiếm khí Thông Thiên còn nằm trong kinh mạch ngươi. Ngồi xuống, ta rút cho. Rồi đi giết Cự Linh, hắn đang canh con ta.']] },
             { gather: { loc: 'dao_tri', hours: 6, label: 'Rút kiếm khí' } },
-            { boss: 'cu_linh', say: [['dao_tri_mau', 'Mọi Tiên Đế đều ký khế với Lục Thánh. Hạo Thiên cũng thế. Ta từng là vợ hắn.']] }
+            { boss: 'cu_linh', say: [['dao_tri_mau', 'Hạo Thiên đã ký một khế ước, với kẻ không ở Tiên Giới. Ta từng là vợ hắn mà chưa bao giờ thấy mặt kẻ đó.']] }
         ],
         reward: { hours: 36, goldRefs: 180, gear: ['helm', 3], lb: 1 }
     },
@@ -242,75 +233,100 @@ const MAIN_QUESTS = [
     {
         id: 'm17', act: 2, title: 'Ngai Vàng Lăng Tiêu', unlock: 16, needs: [15, 2],
         steps: [
-            { go: 'lang_tieu', say: [['tien_de', 'Ngươi tưởng ta thích ngồi đây? Bên trên có sáu người. Ta chỉ là kẻ thu thuế cho họ.']] },
-            { boss: 'tien_de', say: [['tien_de', 'Giết ta thì mỏ vẫn chạy. Muốn dừng nó... lên hỏi họ đi.'], ['narr', 'Sau ngai vàng, một phiến ngọc nứt ra. Bên kia là bóng cung điện tím.']] },
-            { boss: 'nguyen_thuy_phan', say: [['nguyen_thuy', 'Một phân thân của ta là đủ dạy bảo kẻ vô lễ. Thành Thánh rồi hãy nói chuyện.'], ['van_nguyet', 'Ngài ấy không giết ngươi. Vậy là ngươi đã bị để ý.']] }
+            { go: 'lang_tieu', say: [['tien_de', 'Ngươi tưởng ta thích ngồi đây? Trên khế ước của ta có một cái tên không ai đọc được. Ta chỉ là kẻ thu thuế cho nó.']] },
+            { boss: 'tien_de', say: [['tien_de', 'Giết ta thì chúng sẽ tìm kẻ khác. Đừng trách Lục Thánh, họ không thấy cái mỏ nào cả. Có thứ từ bên ngoài... đã che mắt họ. Muốn nói cho họ biết thì còn Lục Nguyên, Đại La, Chuẩn Thánh, ngươi còn xa lắm.'], ['narr', 'Sau ngai vàng, một phiến ngọc nứt ra. Bên kia là bóng cung điện tím.']] },
+            { boss: 'nguyen_thuy_phan', say: [['nguyen_thuy', 'Tự tay giết Tiên Đế là trái thiên mệnh ta chép. Một phân thân là đủ dạy bảo kẻ vô lễ. Lên tới Chuẩn Thánh, gom đủ Hồng Mông Tử Khí rồi hãy nói chuyện.'], ['van_nguyet', 'Ngài ấy không giết ngươi. Vậy là ngươi đã bị để ý.']] }
         ],
-        reward: { flag: 'world_thanh', hours: 48, goldRefs: 300, gear: ['armor', 4] }
+        reward: { hours: 48, goldRefs: 300, gear: ['armor', 4] }
+    },
+
+    {
+        id: 'm17a', act: 2, title: 'Lục Nguyên Quy Nhất', unlock: 17, needs: [16, 2],
+        steps: [
+            { go: 'dao_tri', say: [['dao_tri_mau', 'Thần Cảnh Lục Nguyên là sáu nguồn trong thân hợp lại. Ngồi xuống bên ao, đừng vội.']] },
+            { gather: { loc: 'dao_tri', hours: 6, label: 'Hợp nhất Lục Nguyên' }, say: [['dao_tri_mau', 'Sáu dòng đã chảy về một. Từ đây ngươi không còn là tiên thường.']] }
+        ],
+        reward: { hours: 48, goldRefs: 320, gear: ['boots', 3] }
+    },
+    {
+        id: 'm17b', act: 2, title: 'Đại La Vô Hạn', unlock: 18, needs: [17, 2],
+        steps: [
+            { go: 'nhan_giao', say: [['huyen_do', 'Đại La là lúc thời gian không còn lấy gì được của ngươi. Muốn bước qua thì nhìn thẳng vào nó.']] },
+            { gather: { loc: 'nhan_giao', hours: 8, label: 'Quan sát dòng thời gian' }, say: [['huyen_do', 'Được. Từ nay Tiên Giới không còn ai ngang hàng ngươi, trừ những người không ở Tiên Giới.']] }
+        ],
+        reward: { hours: 60, goldRefs: 350, gear: ['helm', 3] }
+    },
+    {
+        id: 'm17c', act: 2, title: 'Hồng Mông Tử Khí', unlock: 19, needs: [18, 2],
+        steps: [
+            { go: 'da_bao', say: [['da_bao', 'Đủ cả sáu phần Hồng Mông Tử Khí rồi chứ? Vậy thì đi đi. Cửa Thánh mở cho ai có tử khí, không mở cho ai có lý.']] },
+            { gather: { loc: 'lang_tieu', hours: 8, label: 'Dẫn Tử Khí vào thân' }, say: [['narr', 'Sau ngai vàng, phiến ngọc nứt ra lần nữa. Lần này cung điện tím mở cửa.']] }
+        ],
+        reward: { flag: 'world_thanh', hours: 60, goldRefs: 400, gear: ['armor', 4] }
     },
 
     /* ===== HỒI III ===== */
     {
-        id: 'm18', act: 3, title: 'Tử Tiêu Nghị Sự', needs: [16, 0],
+        id: 'm18', act: 3, title: 'Tử Tiêu Nghị Sự', needs: [19, 0],
         steps: [
-            { go: 'tu_tieu', say: [['thai_thanh', 'Một Tiên Đế chết, một vị Thánh mới sinh. Thiên Đạo vẫn cân bằng. Ngươi muốn ngồi ghế thứ bảy không?'], ['thong_thien', 'Từ chối đi nhóc, cho vui.'], ['me', 'Dừng mỏ Tiên Giới. Thả tiên nô.'], ['nguyen_thuy', 'Vậy thì đánh đi. Thánh Vực chỉ nghe một ngôn ngữ.']] },
-            { go: 'thanh_thi', say: [['narr', 'Tử Tiêu Thị bán đan dược, thư tịch, cả tin tức. Không một quầy nào bán binh giáp. Ở Thánh Vực, đồ tốt đều đã nằm trên người ai đó.']] }
+            { go: 'tu_tieu', say: [['thai_thanh', 'Cả thế gian chỉ có sáu vị Thánh. Hôm nay là bảy. Ghế thứ bảy của ngươi đó.'], ['thong_thien', 'Ngồi đi nhóc, ghế không cắn đâu.'], ['me', 'Dưới Tiên Giới có mỏ, tiên nô bị đào đến chết. Các vị có biết không?'], ['nguyen_thuy', 'Mỏ nào? Thiên mệnh ta chép không có chữ đó. Ở đây chỉ nghị chính sự.']] },
+            { go: 'van_tien', say: [['van_nguyet', 'Thánh Nhân mà vẫn về đây ăn cơm với bọn ta à?'], ['me', 'Trên đó sáu người không hề biết có mỏ. Họ không nói dối, họ thật sự không thấy.']] }
         ],
         reward: { hours: 24, goldRefs: 200, gear: ['ring', 3] }
     },
     {
-        id: 'm19', act: 3, title: 'Vô Vi', unlock: 17, needs: [16, 2],
+        id: 'm19', act: 3, title: 'Vô Vi', unlock: 20, needs: [19, 2],
         steps: [
-            { go: 'bat_canh', say: [['thai_thanh', 'Ta không ghét ngươi. Ta chỉ không làm gì cả. Chính vì thế mỏ vẫn chạy suốt vạn năm.']] },
-            { boss: 'thai_thanh', say: [['thai_thanh', 'Đẹp lắm. Thái Cực Đồ cho ngươi mượn. Bên ngoài trời có thứ ta không dám nói tên.']] }
+            { go: 'bat_canh', say: [['thai_thanh', 'Ngươi nói Tiên Giới có mỏ. Ta nhìn xuống chỉ thấy mây. Thắng được ta một ván thì ta nhìn lại lần nữa.']] },
+            { boss: 'thai_thanh', say: [['thai_thanh', 'Ngươi thắng rồi. Thái Cực Đồ cho ngươi mượn.'], ['narr', 'Ngươi bước ra khỏi Bát Cảnh Cung, thấy mình mạnh lên thật. Chỉ có đồng tử quạt lò là cười rất khẽ.']] }
         ],
         reward: { hours: 48, goldRefs: 250, gear: ['helm', 3], relic: 'Thái Cực Đồ' }
     },
     {
-        id: 'm20', act: 3, title: 'Thuận Thiên', unlock: 18, needs: [17, 2],
+        id: 'm20', act: 3, title: 'Thuận Thiên', unlock: 21, needs: [20, 2],
         steps: [
-            { go: 'ngoc_hu', say: [['nguyen_thuy', 'Trật tự là ngọn núi. Kẻ dưới chân núi không có quyền hỏi vì sao núi cao.']] },
-            { boss: 'nguyen_thuy', say: [['nguyen_thuy', 'Ngươi... không có trong thiên mệnh ta đọc. Ai đã xóa tên ngươi?']] }
+            { go: 'ngoc_hu', say: [['nguyen_thuy', 'Biết chuyện rồi thì đừng giả vờ nữa. Ta cũng không nhường hết như Thái Thanh đâu.']] },
+            { boss: 'nguyen_thuy', say: [['nguyen_thuy', 'Sáu phần sức mà ngươi còn đứng. Ngươi không có trong thiên mệnh ta chép. Ai đã xóa tên ngươi?']] }
         ],
         reward: { hours: 48, goldRefs: 300, gear: ['amulet', 3] }
     },
     {
-        id: 'm21', act: 3, title: 'Mẹ Của Muôn Loài', needs: [18, 0],
+        id: 'm21', act: 3, title: 'Mở Rộng Thánh Giới', needs: [21, 0],
         steps: [
-            { go: 'oa_hoang', say: [['nu_oa', 'Ta nặn con người từ đất, và ta không hỏi họ có muốn hay không. Con có nghĩ ta có tội?']] },
-            { boss: 'nu_oa_thu', say: [['nu_oa', 'Được rồi. Tiên nô của ta, ta tự thả. Phần còn lại con phải hỏi hai vị ở Tây Phương.']] }
+            { go: 'oa_hoang', say: [['nu_oa', 'Con đã là Đại Thánh, ngang hàng thật sự với sáu chúng ta. Thánh Giới chật rồi, tiên nhân dưới kia cũng không còn đường đi lên.'], ['me', 'Vậy thì mở rộng nó ra.'], ['nu_oa', 'Mở ra thì sẽ có thêm nhiều Thánh Nhân. Thánh không còn là thứ hiếm nữa, con chịu được không?']] },
+            { gather: { loc: 'tu_tieu', hours: 8, label: 'Đẩy bờ Thánh Giới ra xa' }, say: [['narr', 'Vách Thánh Giới lùi ra ba ngàn dặm. Dưới Tiên Giới, những người đứng ở Chuẩn Thánh cả đời ngẩng đầu lên.']] }
         ],
         reward: { hours: 36, goldRefs: 300, statBless: 0.05 }
     },
     {
-        id: 'm22', act: 3, title: 'Kiếm Hẹn', unlock: 19, needs: [18, 2],
+        id: 'm22', act: 3, title: 'Kiếm Hẹn', unlock: 22, needs: [21, 2],
         steps: [
-            { go: 'bich_du', say: [['thong_thien', 'Nhóc con lớn nhanh thật. Lần này ta dùng tay thật.']] },
-            { boss: 'thong_thien', say: [['thong_thien', 'Ha! Đã lắm! Từ thời khai thiên chưa ai làm ta chảy máu. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Nghe này: sáu chúng ta chỉ là chấp sự. Đạo Tổ cũng chỉ là người gác cổng.']] }
+            { go: 'bich_du', say: [['thong_thien', 'Lớn nhanh thật. Lần này ta dùng gần hết sức, đừng khóc.']] },
+            { boss: 'thong_thien', say: [['thong_thien', 'Đã lắm! Viên mãn Đại Thánh rồi, ta nói được cho ngươi nghe. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Bọn ta là Đại Đạo Thánh Nhân. Trên bọn ta là cảnh giới Thiên, tên thật của nó là Đại Đạo Chí Thượng. Người dưới không biết, ai nghe qua cũng tưởng Chí Thượng chỉ là Thánh mạnh hơn một chút.'], ['me', 'Thật ra thì sao?'], ['thong_thien', 'Một người trong số họ thở ra, cả sáu chúng ta phải cúi đầu. Muốn bước vào thì mua đủ đồ cấp Thiên ở Tử Tiêu Thị đi.']] }
         ],
         reward: { hours: 48, goldRefs: 350, gear: ['weapon', 4], relic: 'Tru Tiên Kiếm' }
     },
     {
-        id: 'm23', act: 3, title: 'Dưới Đài Sen', unlock: 20, needs: [19, 2],
+        id: 'm23', act: 3, title: 'Dưới Đài Sen', unlock: 23, needs: [22, 2],
         steps: [
-            { go: 'cuc_lac', say: [['chuan_de', 'Tây Phương dạy chúng sinh chịu khổ, vì khổ là nhiên liệu.'], ['tiep_dan', 'Đài sen này nằm trên một khe nứt. Muốn qua, phải bước qua chúng ta.']] },
-            { boss: 'chuan_tiep', say: [['tiep_dan', 'Mỏ Tiên Giới đã dừng. Nhưng Thiên Đạo sẽ đòi lại. Ngươi vừa khiến nó đói.'], ['narr', 'Dưới đài sen là bóng tối không có sao.']] }
+            { go: 'cuc_lac', say: [['chuan_de', 'Thiên Ma chui vào qua khe nứt dưới đài sen này. Ba ngàn năm bọn ta ngồi ngay trên nó mà không hay.'], ['tiep_dan', 'Tiếng khổ của tiên nô bị chặn lại trước tai ta. Giờ không ai được qua khe này nếu chưa đủ sức, muốn qua thì bước qua chúng ta.']] },
+            { boss: 'chuan_tiep', say: [['tiep_dan', 'Thiên Ma mất mỏ Tiên Giới, chúng sẽ đòi lại. Ngươi vừa khiến bên ngoài kia đói.'], ['narr', 'Dưới đài sen là bóng tối không có sao.']] }
         ],
         reward: { flag: 'world_thien', hours: 60, goldRefs: 400, gear: ['armor', 4], boardSlot: true }
     },
 
     /* ===== HỒI IV ===== */
     {
-        id: 'm24', act: 4, title: 'Xác Vạn Giới', unlock: 21, needs: [20, 0],
+        id: 'm24', act: 4, title: 'Xác Vạn Giới', unlock: 24, needs: [23, 0],
         steps: [
-            { go: 'van_gioi', say: [['narr', 'Những lục địa khô trôi trong hư không. Trên mỗi xác thế giới đều có một cái mỏ.'], ['ly_khach', 'Lần đầu ra ngoài à? Mọi vũ trụ đều bị trồng rồi gặt. Vũ trụ của ngươi là vụ thứ ba ngàn.']] },
+            { go: 'van_gioi', say: [['narr', 'Những lục địa khô trôi trong hư không. Trên mỗi xác thế giới đều có một cái mỏ.'], ['ly_khach', 'Mới tới Cực Đạo Vực à? Đây vẫn là Thánh Giới, chỉ là phần Lục Thánh chưa từng thấy. Mọi vũ trụ đều bị trồng rồi gặt. Ngoại Vực Thiên Ma đi trước, che mắt Thánh của vụ đó rồi đào cho cạn. Vũ trụ của ngươi là vụ thứ ba ngàn.']] },
             { hunt: { loc: 'van_gioi', name: 'Thiên Đạo Khôi Lỗi', n: 5 } },
             { boss: 'khoi_loi' }
         ],
         reward: { hours: 60, goldRefs: 400, gear: ['boots', 3] }
     },
     {
-        id: 'm25', act: 4, title: 'Biển Kiếp Trước', unlock: 22, needs: [21, 2],
+        id: 'm25', act: 4, title: 'Biển Kiếp Trước', unlock: 25, needs: [24, 2],
         steps: [
             { go: 'luan_hoi', say: [['ly_khach', 'Muốn phá Thiên Đạo thì phải biết nó đã giết ngươi bao nhiêu lần.']] },
             { boss: 'nghiep_long' },
@@ -319,7 +335,7 @@ const MAIN_QUESTS = [
         reward: { hours: 60, goldRefs: 450, gear: ['ring', 3] }
     },
     {
-        id: 'm26', act: 4, title: 'Tâm Ma Vạn Kiếp', unlock: 23, needs: [22, 2],
+        id: 'm26', act: 4, title: 'Tâm Ma Vạn Kiếp', unlock: 26, needs: [25, 2],
         steps: [
             { go: 'luan_hoi', say: [['narr', 'Từ mặt biển, một kẻ giống ngươi bước lên, trên tay còn dính máu của ngươi.']] },
             { boss: 'tam_ma', say: [['tam_ma_say', 'Lần này ngươi đi xa hơn ta. Đừng dừng lại ở ngai vàng.']] }
@@ -327,7 +343,7 @@ const MAIN_QUESTS = [
         reward: { hours: 60, goldRefs: 500, gear: ['amulet', 3] }
     },
     {
-        id: 'm27', act: 4, title: 'Khai Một Phương Trời', unlock: 24, needs: [23, 2],
+        id: 'm27', act: 4, title: 'Khai Một Phương Trời', unlock: 27, needs: [26, 2],
         steps: [
             { go: 'khai_thien', say: [['ly_khach', 'Muốn đánh thắng Thiên Đạo, ngươi phải có trời của riêng mình.']] },
             { gather: { loc: 'khai_thien', hours: 10, label: 'Khai thiên lập địa' } },
@@ -336,7 +352,7 @@ const MAIN_QUESTS = [
         reward: { hours: 72, goldRefs: 600, gear: ['helm', 4] }
     },
     {
-        id: 'm28', act: 4, title: 'Thần Đình', unlock: 25, needs: [24, 2],
+        id: 'm28', act: 4, title: 'Thần Đình', unlock: 28, needs: [27, 2],
         steps: [
             { go: 'than_dinh', say: [['narr', 'Một cỗ máy lớn hơn mọi tinh hà, quay bằng tiếng khóc đã được lọc sạch.']] },
             { hunt: { loc: 'than_dinh', name: 'Thiên Phạt Sứ', n: 6 } },
@@ -345,9 +361,9 @@ const MAIN_QUESTS = [
         reward: { hours: 72, goldRefs: 700, gear: ['weapon', 4] }
     },
     {
-        id: 'm29', act: 4, title: 'Đạo Tổ', unlock: 26, needs: [25, 2],
+        id: 'm29', act: 4, title: 'Đạo Tổ', unlock: 29, needs: [28, 2],
         steps: [
-            { go: 'than_dinh', say: [['dao_to', 'Ta không tạo ra Thiên Đạo. Ta bị đặt ở đây để giữ nó. Nếu nó dừng, thứ bên ngoài sẽ tràn vào.'], ['me', 'Thứ gì?'], ['dao_to', 'Thắng ta đi, rồi ra nhìn.']] },
+            { go: 'than_dinh', say: [['dao_to', 'Ngươi đã viên mãn Sáng Thế, giờ mới được biết. Ta không tạo ra Thiên Đạo. Ta bị đặt ở đây để giữ nó. Bên ngoài nó là Hỗn Độn.'], ['me', 'Hỗn Độn là gì?'], ['dao_to', 'Cảnh giới mà không một Chí Thượng nào được phép biết tên. Thắng ta đi, rồi ra nhìn.']] },
             { boss: 'dao_to', say: [['dao_to', 'Cuối cùng cũng được nghỉ. Thiên Đạo từ nay không còn đòi mạng ai. Nhưng biên giới đã hở rồi, con ạ.']] }
         ],
         reward: { flag: 'world_hondon', hours: 96, goldRefs: 900, gear: ['armor', 4], boardSlot: true }
@@ -355,7 +371,7 @@ const MAIN_QUESTS = [
 
     /* ===== HỒI V ===== */
     {
-        id: 'm30', act: 5, title: 'Hạt Bụi', needs: [26, 0],
+        id: 'm30', act: 5, title: 'Hạt Bụi', needs: [29, 0],
         steps: [
             { go: 'bo_hondon', say: [['narr', 'Vũ trụ của ngươi, nhìn từ đây, là một giọt nước trên phiến lá.'], ['vo_danh', 'A. Một giọt biết đi. Lâu rồi mới thấy. Để ta thử xem ngươi cứng tới đâu.']] },
             { boss: 'dao_gia_thu', say: [['vo_danh', 'Ta dùng một phần mười vạn sức, và ngươi còn đứng. Đến am của ta.']] }
@@ -363,7 +379,7 @@ const MAIN_QUESTS = [
         reward: { hours: 48, goldRefs: 500 }
     },
     {
-        id: 'm31', act: 5, title: 'Am Cỏ', needs: [26, 1],
+        id: 'm31', act: 5, title: 'Am Cỏ', needs: [29, 1],
         steps: [
             { go: 'dao_gia_am', say: [['vong_ky', 'Hỗn Độn Đạo Giả không có môn phái. Mỗi người tự thành một con đường. Đạo Giả không dùng đồ, vì chính họ là đồ. Trang bị của ngươi từ đây chỉ còn là phụ.']] },
             { gather: { loc: 'dao_gia_am', hours: 12, label: 'Nghe đạo' } },
@@ -373,7 +389,7 @@ const MAIN_QUESTS = [
         reward: { hours: 96, goldRefs: 800, gear: ['ring', 4] }
     },
     {
-        id: 'm32', act: 5, title: 'Luận Đạo', needs: [26, 2],
+        id: 'm32', act: 5, title: 'Luận Đạo', needs: [29, 2],
         steps: [
             { go: 'dao_gia_am', say: [['vong_ky', 'Muốn qua Hải Tâm, phải thắng một Đạo Giả. Ta trước.']] },
             { boss: 'vong_ky', say: [['vong_ky', 'Đạo của ngươi tên gì?'], ['me', 'Chưa có tên.'], ['vong_ky', 'Tốt. Ai có tên rồi thì đã dừng lại.']] }
@@ -381,55 +397,55 @@ const MAIN_QUESTS = [
         reward: { hours: 96, goldRefs: 800, gear: ['amulet', 4] }
     },
     {
-        id: 'm33', act: 5, title: 'Hải Tâm', unlock: 27, needs: [26, 2],
+        id: 'm33', act: 5, title: 'Hải Tâm', unlock: 30, needs: [29, 2],
         steps: [
-            { go: 'hai_tam', say: [['vo_danh', 'Ta đã ngồi ở đây lâu hơn tuổi của vạn vũ trụ. Bước qua được ta, ngươi sẽ biết Đạo từ đâu ra.']] },
-            { boss: 'vo_danh', say: [['vo_danh', 'Hay. Trước ngươi có một kẻ cũng thắng ta. Hắn cầm chổi.']] }
+            { go: 'hai_tam', say: [['vo_danh', 'Bên trên chúng ta không còn cảnh giới nào. Tám người ngồi đây, không ai đi tiếp được. Thắng ta rồi nói chuyện.']] },
+            { boss: 'vo_danh', say: [['vo_danh', 'Hay. Viên mãn Hỗn Độn rồi, không còn đường nào có sẵn nữa. Muốn đi tiếp thì tự mà làm ra đường.'], ['narr', 'Ngươi ngồi xuống giữa Hải Tâm và tự sáng tạo một cảnh giới chưa từng có. Ngươi đặt tên nó là Hồng Mông Chúa Tể.']] }
         ],
         reward: { flag: 'world_hongmong', hours: 120, goldRefs: 1000 }
     },
 
     /* ===== HỒI VI ===== */
     {
-        id: 'm34', act: 6, title: 'Tử Khí', needs: [27, 0],
+        id: 'm34', act: 6, title: 'Tử Khí', needs: [30, 0],
         steps: [
-            { go: 'tu_khi', say: [['narr', 'Không có trời, không có đất. Chỉ có một màu tím đang nghĩ.']] },
-            { hunt: { loc: 'tu_khi', name: 'Tử Khí Linh', n: 5 } },
-            { boss: 'tu_khi_linh' }
+            { go: 'tu_khi', say: [['narr', 'Cõi này do chính ngươi tạo ra. Không trời, không đất, không một ai. Chỉ có một màu tím đang chờ ngươi nghĩ.']] },
+            { go: 'dao_gia_am', say: [['vong_ky', 'Bên trên có gì?'], ['me', 'Không có ai.'], ['vong_ky', 'Vậy ngươi xuống đây làm gì?'], ['me', 'Giao việc. Giữ Ma Thần trong mộ, đừng để chúng ra Hải Tâm.']] }
         ],
         reward: { hours: 96, goldRefs: 800 }
     },
     {
-        id: 'm35', act: 6, title: 'Người Khai Thiên', needs: [27, 1],
+        id: 'm35', act: 6, title: 'Lời Dặn Xuống Dưới', needs: [30, 1],
         steps: [
-            { go: 'co_thu', say: [['ban_co', 'Ta bổ đôi hỗn độn một nhát rồi chết. Từ đó ta đứng đây chờ người đến hỏi vì sao. Rút rìu đi.']] },
-            { boss: 'ban_co', say: [['ban_co', 'Vì ta muốn có một nơi để thấy mặt trời mọc. Chỉ thế thôi. Đừng để ai biến nó thành cái mỏ nữa.']] }
+            { go: 'co_thu', say: [['narr', 'Ngươi trồng một cái cây để có chỗ ngồi. Cây lớn nhanh hơn ý nghĩ, và không có ai dưới bóng nó.']] },
+            { go: 'vo_cuong', say: [['ly_khach', 'Ngươi trên kia về à? Có gì ăn không?'], ['me', 'Không. Lão trông coi Cực Đạo Vực giúp ta, đừng để ai dựng mỏ nữa.'], ['ly_khach', 'Ghi sổ.']] },
+            { go: 'tu_tieu', say: [['thai_thanh', 'Ngươi tới, cả Thánh Giới không ai dám thở.'], ['me', 'Mỏ đóng hẳn. Lục Thánh lo việc của Thánh Giới, đừng đợi ta ra lệnh nữa.']] }
         ],
         reward: { hours: 120, goldRefs: 1000, statBless: 0.05 }
     },
     {
-        id: 'm36', act: 6, title: 'Chúa Tể', unlock: 28, needs: [27, 2],
+        id: 'm36', act: 6, title: 'Chúa Tể Tọa', unlock: 31, needs: [30, 2],
         steps: [
-            { go: 'chua_te', say: [['hong_mong', 'Ta ngồi đây để không ai phải ngồi ở nơi cao hơn. Bên trên ta chỉ còn một kẻ, và hắn đang chờ ngươi.'], ['me', 'Ngươi biết hắn?'], ['hong_mong', 'Ngươi cũng biết. Hắn dạy ngươi cầm cuốc từ năm mười tuổi.']] },
-            { boss: 'hong_mong', say: [['hong_mong', 'Thật sao... vẫn là ngươi. Đi đi. Chấm dứt nó, hoặc lặp lại nó.']] }
+            { go: 'chua_te', say: [['narr', 'Ngươi dựng một chiếc ngai, ngồi thử rồi đứng dậy. Ở đây không có ai để làm chúa tể của.']] },
+            { gather: { loc: 'chua_te', hours: 12, label: 'Sáng tạo cảnh giới cuối cùng' }, say: [['narr', 'Ngươi vẽ thêm một cảnh giới phía trên chiếc ngai trống và gọi nó là Chung Nguyên Chí Cao. Sau đó không còn gì để vẽ.']] }
         ],
         reward: { flag: 'world_chungnguyen', hours: 144, goldRefs: 1200 }
     },
 
     /* ===== HỒI VII ===== */
     {
-        id: 'm37', act: 7, title: 'Trường Hà Tận Cùng', needs: [28, 0],
+        id: 'm37', act: 7, title: 'Trường Hà Tận Cùng', needs: [31, 0],
         steps: [
-            { go: 'truong_ha', say: [['narr', 'Dòng thời gian đổ xuống hư vô như một thác nước im lặng. Trong nước là mọi kiếp của ngươi.']] },
-            { boss: 'du_anh' }
+            { go: 'truong_ha', say: [['narr', 'Dòng thời gian đổ xuống hư vô như một thác nước im lặng. Trong nước là mọi kiếp của ngươi. Trên bờ không có ai.']] },
+            { go: 'thanh_van', say: [['to_dao', 'Đệ về rồi à? Cao đến đâu rồi?'], ['me', 'Hết trời rồi, tỷ.'], ['to_dao', 'Vậy thì ăn cơm đi. Trên đó chắc không có ai nấu.']] }
         ],
         reward: { hours: 144, goldRefs: 1200 }
     },
     {
-        id: 'm38', act: 7, title: 'Người Quét Lá', needs: [28, 2],
+        id: 'm38', act: 7, title: 'Người Quét Lá', needs: [31, 2],
         steps: [
-            { go: 'chung_dai', say: [['chung_nguyen', 'Con đến rồi. Lá hôm nay nhiều quá, ta quét mãi không xong.'], ['me', 'Lão Mặc.'], ['chung_nguyen', 'Cũng là con. Kiếp trước con thắng ở đây, ngồi xuống cái ghế này, rồi thấy cô đơn quá nên quay về làm kẻ quét lá ở một ngôi làng, đợi một đứa trẻ giống mình.'], ['chung_nguyen', 'Thiên Đạo, Thánh Nhân, Đạo Tổ, tất cả chỉ để rèn con đến đây thay ta. Giờ cầm gậy lên.']] },
-            { boss: 'chung_nguyen', say: [['chung_nguyen', 'Tốt lắm. Giờ con là người chọn.']] }
+            { go: 'chung_dai', say: [['narr', 'Trên Chung Nguyên Đài có một chiếc ghế trống, cạnh ghế dựng một cây chổi cũ. Ngươi nhận ra cây chổi đó.']] },
+            { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. Lá hôm nay nhiều quá, ta quét mãi không xong.'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']] }
         ],
         reward: { ending: true, hours: 0, goldRefs: 0 }
     }
@@ -446,9 +462,9 @@ const SIDE_QUESTS = [
     { id: 's_khoi', loc: 'thanh_van', npc: 'to_dao', title: 'Luyện Kiếm Cùng Sư Tỷ', needs: [1, 0], steps: [{ hunt: { loc: 'thanh_van', name: 'Khôi Lỗi Thí Luyện', n: 5 }, say: [['to_dao', 'Khá hơn rồi. Cái này ta giữ từ hồi Trúc Cơ, cho đệ.']] }], reward: { hours: 8, goldRefs: 10, gear: ['amulet', 1] } },
     { id: 's_bang', loc: 'bang_phong', npc: 'han_bang', title: 'Băng Hồn Không Yên', needs: [5, 0], steps: [{ hunt: { loc: 'bang_phong', name: 'Băng Hồn', n: 6 }, say: [['han_bang', 'Họ từng là đệ tử của ta. Cảm ơn ngươi đã tiễn họ.']] }], reward: { hours: 12, goldRefs: 20, gear: ['boots', 2] } },
     { id: 's_thu', loc: 'van_tien', npc: 'van_nguyet', title: 'Thư Về Phàm Giới', needs: [10, 0], steps: [{ gather: { loc: 'thien_ha', hours: 4, label: 'Tìm khe truyền âm' }, say: [['to_dao', '(Giọng nói vọng từ rất xa) Đệ còn sống là được rồi. Thanh Vân vẫn còn lửa.']] }], reward: { hours: 16, goldRefs: 30, statBless: 0.02 } },
-    { id: 's_cho', loc: 'da_bao', npc: 'da_bao', title: 'Món Nợ Của Đa Bảo', needs: [15, 1], steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 6 }, say: [['da_bao', 'Làm ăn phải sòng phẳng. Đây là phần của ngươi.']] }], reward: { hours: 24, goldRefs: 80, gear: ['ring', 3] } },
-    { id: 's_quan', loc: 'vo_cuong', npc: 'ly_khach', title: 'Bữa Cơm Ở Vô Cương', needs: [22, 0], steps: [{ hunt: { loc: 'khai_thien', name: 'Hư Không Thú', n: 6 }, say: [['ly_khach', 'Thịt dai, nhưng ít ra là thật. Ngồi xuống ăn đi.']] }], reward: { hours: 36, goldRefs: 100, statBless: 0.02 } },
-    { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [26, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
+    { id: 's_cho', loc: 'da_bao', npc: 'da_bao', title: 'Món Nợ Của Đa Bảo', needs: [18, 1], steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Giới Đạo Tặc', n: 6 }, say: [['da_bao', 'Làm ăn phải sòng phẳng. Đây là phần của ngươi.']] }], reward: { hours: 24, goldRefs: 80, gear: ['ring', 3] } },
+    { id: 's_quan', loc: 'vo_cuong', npc: 'ly_khach', title: 'Bữa Cơm Ở Vô Cương', needs: [25, 0], steps: [{ hunt: { loc: 'khai_thien', name: 'Hư Không Thú', n: 6 }, say: [['ly_khach', 'Thịt dai, nhưng ít ra là thật. Ngồi xuống ăn đi.']] }], reward: { hours: 36, goldRefs: 100, statBless: 0.02 } },
+    { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [29, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
 ];
 
 /* Chủng tộc: chọn lúc tạo nhân vật cùng hệ tu đầu tiên, cố định cả đời; Yêu tộc luôn có xuất thân yeu */
@@ -536,7 +552,6 @@ Object.assign(BOSSES.kiem_khi, { path: 'kiem' });
 Object.assign(BOSSES.thai_thanh, { path: 'phap' });
 Object.assign(BOSSES.nguyen_thuy, { path: 'phap' });
 Object.assign(BOSSES.nguyen_thuy_phan, { path: 'phap' });
-Object.assign(BOSSES.nu_oa_thu, { path: 'yeu' });
 Object.assign(BOSSES.chuan_tiep, { path: 'the' });
 Object.assign(BOSSES.ma_quan, { path: 'ma', adds: { name: 'Vực Ma', kind: 'demon', n: 2 } });
 Object.assign(BOSSES.lang_phong_2, { path: 'ma' });

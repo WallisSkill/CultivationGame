@@ -2456,7 +2456,7 @@ function getOriginAndFate(elements, rank) {
 
 function getBreakthroughStory(prevRealm, newRealm, stats) {
     const stories = {
-        // 🔥 TIÊN GIỚI (9-15)
+        // 🔥 TIÊN GIỚI (9-18)
         9: {
             title: "✨ ĐẮC ĐẠO TIÊN GIỚI ✨",
             story: [
@@ -2474,8 +2474,8 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
             ]
         },
 
-        // 🌟 THÁNH CẢNH (16-19)
-        16: {
+        // 🌟 THÁNH CẢNH (19-22)
+        19: {
             title: "⭐ THÀNH THÁNH - VẠN LINH QUỲ BÁI ⭐",
             story: [
                 "🌌🌌🌌 VŨ TRỤ RUNG CHUYỂN 🌌🌌🌌",
@@ -2497,8 +2497,8 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
             ]
         },
 
-        // ⚡ THIÊN CẢNH (20-25)
-        20: {
+        // ⚡ THIÊN CẢNH (23-28)
+        23: {
             title: "⚡ THIÊN ĐỈNH - NGHỊCH THIÊN THÀNH ĐẠO ⚡",
             story: [
                 "🌌🌌🌌🌌🌌 ĐA VŨ TRỤ CHẤN ĐỘNG 🌌🌌🌌🌌🌌",
@@ -2530,8 +2530,8 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
             ]
         },
 
-        // 🌌 HỖN ĐỘN CẢNH (26+)
-        26: {
+        // 🌌 HỖN ĐỘN CẢNH (29+)
+        29: {
             title: "🌌 HỖN ĐỘN ĐẠO GIẢ - SÁNG TẠO VẠN VẬT 🌌",
             story: [
                 "🌌🌌🌌🌌🌌🌌🌌 HỖN ĐỘN KHAI TÍCH 🌌🌌🌌🌌🌌🌌🌌",
@@ -2563,7 +2563,7 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
                 "⭐ Ngươi chính là... TẤT CẢ!",
             ]
         },
-        27: {
+        30: {
             title: "🌠 HỒNG MÔNG CHÚA TỂ - THỐNG TRỊ VẠN ĐẠO 🌠",
             story: [
                 "🌠🌠🌠🌠🌠🌠🌠 HỒNG MÔNG KHAI MÔNG 🌠🌠🌠🌠🌠🌠🌠",
@@ -2599,8 +2599,8 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
             ]
         },
 
-        // 🏆 CHUNG NGUYÊN CẢNH (28)
-        28: {
+        // 🏆 CHUNG NGUYÊN CẢNH (31)
+        31: {
             title: "🏆 CHUNG NGUYÊN CHÍ CAO - THỐNG NHẤT VẠN HỮU 🏆",
             story: [
                 "🏆🏆🏆🏆🏆🏆🏆🏆🏆 CHUNG NGUYÊN GIÁNG LÂM 🏆🏆🏆🏆🏆🏆🏆🏆🏆",
@@ -2653,16 +2653,16 @@ function getBreakthroughStory(prevRealm, newRealm, stats) {
     // Xác định story phù hợp
     let selectedStory = null;
 
-    if (newRealm === 28) {
-        selectedStory = stories[28];
-    } else if (newRealm === 27) {
-        selectedStory = stories[27];
-    } else if (newRealm === 26) {
-        selectedStory = stories[26];
-    } else if (newRealm >= 20) {
-        selectedStory = stories[20];
-    } else if (newRealm >= 16) {
-        selectedStory = stories[16];
+    if (newRealm === 31) {
+        selectedStory = stories[31];
+    } else if (newRealm === 30) {
+        selectedStory = stories[30];
+    } else if (newRealm === 29) {
+        selectedStory = stories[29];
+    } else if (newRealm >= 23) {
+        selectedStory = stories[23];
+    } else if (newRealm >= 19) {
+        selectedStory = stories[19];
     } else if (newRealm >= 9) {
         selectedStory = stories[9];
     }

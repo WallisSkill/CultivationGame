@@ -12,6 +12,10 @@ function buildShopStock() {
         SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
             stock.push({ ...makeSaintGear(slot, quality), id: `saint_${slot}_${quality}`, price: gearPrice(SAINT_REALM, quality) });
         }));
+    } else if (loc.id === THIEN_GEAR_SHOP) {
+        if (state.realmIndex >= THIEN_REALM - 1) SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
+            stock.push({ ...makeThienGear(slot, quality), id: `thien_${slot}_${quality}`, price: gearPrice(THIEN_REALM, quality) });
+        }));
     } else if (loc.world !== 'thanh') {
         [1, 0].forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
             stock.push({ ...makeGearItem(realm, slot, quality), id: `gear_${slot}_${quality}`, price: gearPrice(realm, quality) });
@@ -32,7 +36,8 @@ function buildShopStock() {
 
 function addItemToInventory(it) {
     state.inventory.push(it);
-    renderAll();
+    renderTopStats();
+    renderInventory();
     log(`Nhận vật Phẩm: ${it.name}`);
 }
 
@@ -46,7 +51,7 @@ function useItem(index) {
         if (window._battleActive) { showToast('Đang chiến đấu, chưa thể bế quan.', 'warn'); return; }
         const gained = gainCultivationSeconds((it.minutes || XP_ITEM_MINUTES) * 60);
         log(`📘 Dùng ${it.name}, tu vi +${formatNumber(gained)}.`);
-        needsFullRender = true;
+        renderTopStats();
     }
 
     else if (it.type === 'power') {
@@ -95,7 +100,7 @@ function useItem(index) {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
         needsFullRender = true;
-        if (it.saintGear && saintGearWorn() === GEAR_SLOT_IDS.length) {
+        if ((it.saintGear || it.thienGear) && gateGearWorn(it.saintGear ? 'saintGear' : 'thienGear') === GEAR_SLOT_IDS.length) {
             delete state.bottleneckNotice;
             checkRealmProgress();
         }
@@ -276,6 +281,7 @@ function buyItem(id) {
     const { id: _id, price: _price, ...item } = si;
     addItemToInventory({ desc: 'Mua tại cửa hàng', ...item });
     log(`🛒 Mua thành công: ${si.name} — Giá ${formatNumber(si.price)} linh thạch.`);
+    renderShop();
 }
 
 function shopItemDesc(si) {

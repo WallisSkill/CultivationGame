@@ -22,13 +22,8 @@ const MAIN_SCENES = {
     m15: { intro: [['narr', 'Khắp Vạn Tiên Thành, những tiên nô phá xiềng đổ về quảng trường. Không ai hô khẩu hiệu. Họ chỉ cầm cuốc.'], ['tien_lai', 'Lão già này đào đất ba ngàn năm. Hôm nay muốn đào thứ khác.']], outro: [['narr', 'Đường ống linh tủy gãy làm đôi. Lần đầu sau vạn năm, đèn của Lăng Tiêu Bảo Điện chập chờn.'], ['van_nguyet', 'Chuyện mỏ xong rồi. Giờ tới thứ khó hơn: những kẻ đã hưởng từ nó.']] },
     m16: { intro: [['tien_lai', 'Nếu lão ngã, đừng quay lại. Cuốc này là của ngươi.'], ['me', 'Lão sẽ không ngã.'], ['tien_lai', 'Tiên nô nào cũng ngã, con ạ. Chỉ là được chọn ngã ở đâu.']], outro: [['narr', 'Nam Thiên Môn đổ xuống. Trong đống đá, ngươi nhặt lại một chiếc cuốc cũ, cán đã ướt.']] },
     m17: { intro: [['narr', 'Lăng Tiêu Bảo Điện vắng tanh. Chín ngàn bậc thềm ngọc, giống hệt bậc đá Thanh Vân năm nào.'], ['me', 'Ta đã leo bậc này một lần rồi.']], outro: [['narr', 'Tiên nô quỳ xuống hát một bài ca cũ. Ngươi không ngồi lên ngai vàng. Ngươi đi về phía vết nứt.']] },
-    m18: { intro: [['narr', 'Tử Tiêu Cung nằm trên một khoảng trời không có gió. Sáu chiếc ghế đá, sáu hơi thở nặng như sáu thế giới.']], outro: [['narr', 'Bộ đồ của Đa Bảo trên người ngươi vẫn còn mới. Trên cổ áo có dòng chữ nhỏ: "Hàng đã bán không đổi trả."']] },
-    m19: { intro: [['narr', 'Bát Cảnh Cung có một lò đan chưa bao giờ tắt. Một đồng tử quạt lửa, không ngẩng đầu.'], ['me', 'Thái Thanh ở đâu?'], ['narr', 'Đồng tử chỉ tay vào ngọn lửa, rồi lại quạt tiếp.']], outro: [['thai_thanh', 'Hàng ức năm ta không làm gì. Hôm nay ta cho ngươi mượn đồ. Coi như đã làm một việc.']] },
-    m20: { intro: [['narr', 'Trên đường tới Ngọc Hư, mỗi bước chân ngươi đều nghe tiếng sổ sách lật. Có ai đó đang đọc số mệnh của ngươi, và đang nhíu mày.']], outro: [['narr', 'Trong thiên thư của Ngọc Hư Cung, trang ghi tên ngươi là một trang trắng, mép giấy bị rọc rất ngay ngắn.']] },
-    m21: { intro: [['narr', 'Oa Hoàng Cung không có vách, chỉ có đất ẩm và những tượng người chưa khô.'], ['me', 'Những tượng này là gì?'], ['nu_oa', 'Là những đứa trẻ chưa ra đời. Con cũng từng ở đây.']], outro: [['narr', 'Từ Tiên Giới vọng lên tin: xiềng của tiên nô tự rơi. Bạch Lão Đầu không kịp nghe tin ấy.']] },
-    m22: { intro: [['narr', 'Vạn kiếm ở Bích Du đồng loạt chúc xuống khi ngươi đặt chân lên đảo. Vết sẹo trên ngực bỗng nóng lên.'], ['thong_thien', 'Vẫn giữ vết sẹo ta cho à? Tốt. Có người biết giữ đồ.']], outro: [['narr', 'Hắn cười rất to. Sau tiếng cười, ngươi thấy lần đầu tiên một Thánh Nhân nhìn lên trời mà sợ.']] },
     m23: { intro: [['narr', 'Cực Lạc thơm mùi sen. Những người tụng kinh ở đây đều mỉm cười giống nhau, và không ai chớp mắt.']], outro: [['narr', 'Khe nứt mở ra phía dưới đài sen. Không có gió, không có sao, chỉ có tiếng trái tim ngươi đang đập.']] },
-    m24: { intro: [['narr', 'Ra khỏi vũ trụ, ngươi mới biết bầu trời cũng có mép. Bên ngoài trôi lững lờ xác của những thế giới khác.'], ['ly_khach', 'Đứng đó mãi cũng không sống lại được đâu. Ta có quán, ăn gì không?']], outro: [['ly_khach', 'Con khôi lỗi này thu hoạch thay Thiên Đạo. Nó còn nhớ tên người cuối cùng nó gặt, nhưng ngươi đừng hỏi.']] },
+    m24: { intro: [['narr', 'Ra khỏi vũ trụ, ngươi mới biết bầu trời cũng có mép. Bên ngoài trôi lững lờ xác của những thế giới khác.'], ['ly_khach', 'Đứng đó mãi cũng không sống lại được đâu. Ta có quán, ăn gì không?']], outro: [['ly_khach', 'Con khôi lỗi này thu hoạch thay Thiên Đạo, sau khi Thiên Ma đào xong. Nó còn nhớ tên người cuối cùng nó gặt, nhưng ngươi đừng hỏi.']] },
     m25: { intro: [['narr', 'Luân Hồi Hải không có sóng. Mỗi giọt nước là một đời người đã sống xong.'], ['me', 'Bao nhiêu trong đó là ta?'], ['ly_khach', 'Đừng đếm. Có người đếm rồi không về nữa.']], outro: [['narr', 'Ngươi nhớ lại mùi lá khô. Nhớ cả cảm giác cán chổi trong lòng bàn tay, dù đời này ngươi chưa từng quét.']] },
     m26: { intro: [['narr', 'Đêm ở Luân Hồi Hải, có tiếng ai đó gọi đúng cái tên ngươi chưa bao giờ nói với ai.']], outro: [['narr', 'Ngươi đặt tay lên ngực. Ở đó vừa có một thứ rời đi, nhẹ như khi buông một món nợ.']] },
     m27: { intro: [['narr', 'Hoang Nguyên là nơi chưa có luật. Lửa ở đây có thể lạnh, đá có thể khóc.'], ['ly_khach', 'Đừng hỏi cách khai thiên. Bàn Cổ cũng không ai dạy.']], outro: [['narr', 'Ngươi đặt tên cho ngọn gió đầu tiên của thế giới mình là "Thanh Thủy".']] },
@@ -38,11 +33,6 @@ const MAIN_SCENES = {
     m31: { intro: [['narr', 'Am cỏ chỉ có một phiến đá, một bình trà nguội và hai người không hề quan tâm vũ trụ ngươi vừa cứu.']], outro: [['vong_ky', 'Ma Thần chết rồi vẫn còn mơ. Nghe tiếng mơ đó, ngươi sẽ hiểu vì sao Đạo Giả không ngủ.']] },
     m32: { intro: [['vo_danh', 'Thua cũng được. Chỉ là thua thì ngươi quét sân.'], ['me', 'Sao ai cũng bắt ta quét?']], outro: [['narr', 'Vọng Kỷ nhấp ngụm trà nguội, lần đầu tiên sau vạn kỷ nguyên mỉm cười.']] },
     m33: { intro: [['narr', 'Hải Tâm là con mắt của cơn bão. Ở giữa có một người ngồi, trước mặt là bàn cờ chưa ai đi nước nào.']], outro: [['narr', 'Ngươi nhìn xuống tay mình. Những vết chai ngươi không nhớ đã có từ bao giờ, nằm đúng chỗ người ta cầm chổi.']] },
-    m34: { intro: [['narr', 'Ngươi không còn biết mình đứng hay nổi. Ý nghĩ vừa sinh đã bị màu tím đọc mất.']], outro: [['narr', 'Linh tử khí tan ra, thì thầm một câu bằng giọng của chính ngươi: "Về nhà đi."']] },
-    m35: { intro: [['narr', 'Cổ thụ rộng hơn trí tưởng tượng. Dưới gốc có một người khổng lồ không có nửa thân, vẫn đang cầm rìu.']], outro: [['narr', 'Mặt trời đầu tiên ngươi nhìn thấy trong đời, ở suối Thanh Thủy, hóa ra là món quà có người đã chết vì nó.']] },
-    m36: { intro: [['narr', 'Chúa Tể Tọa không có đường lên. Muốn tới, ngươi phải quên mất mình đang đi.']], outro: [['narr', 'Trên ghế để lại một chiếc lá khô. Ngươi không cần đoán ai đã đặt nó ở đó.']] },
-    m37: { intro: [['narr', 'Trong dòng nước, ngươi thấy mình ở tuổi lên mười đang đuổi sói, thấy Thanh Dao đốt đèn đợi thư, thấy những kẻ đã ngã cầm cuốc.'], ['me', 'Tất cả vẫn ở đây.']], outro: [['narr', 'Dư ảnh tan đi, để lại tiếng chổi quét đều đều từ cuối dòng sông.']] },
-    m38: { intro: [['narr', 'Chung Nguyên Đài là một khoảnh sân nhỏ. Có một gốc cây, nhiều lá và mùi khói bếp của Thanh Thủy Thôn.']] }
 };
 
 Object.entries(MAIN_SCENES).forEach(([id, scene]) => Object.assign(QUEST_INDEX[id], scene));
@@ -61,8 +51,6 @@ Object.assign(NPCS, {
     dong_tu: { name: 'Kim Giác Đồng Tử', title: 'Giữ lò Bát Quái', look: NPC_LOOK('m', 3, '#1b1b22', '#e8cf8f', { weapon: 'fan', weaponColor: '#ffc14d' }) },
     hoang_cong: { name: 'Khai Sơn Tượng', title: 'Thợ Hoang Nguyên', look: NPC_LOOK('m', 4, '#8b5a2b', '#5a3a9e', { beard: true, weapon: 'staff', weaponColor: '#c58bff' }) },
     mo_nhan: { name: 'Người Giữ Mộ', title: 'Thợ Ma Thần Mộ', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { weapon: 'staff', weaponColor: '#5fe6e6' }) },
-    thu_linh: { name: 'Mộc Linh', title: 'Hồn của Cổ Thụ', look: NPC_LOOK('f', 1, '#ff8ad8', '#7a1f6a', { aura: '#ff8ad8' }) },
-    do_nhan: { name: 'Lão Lái Đò', title: 'Người chèo Trường Hà', look: NPC_LOOK('m', 5, '#f0e6c8', '#f2f2f2', { beard: true, weapon: 'staff', weaponColor: '#f5f5f5' }) }
 });
 
 const REGION_QUESTS = [
@@ -122,56 +110,46 @@ const REGION_QUESTS = [
         steps: [{ hunt: { loc: 'dao_tri', name: 'Dao Trì Hộ Vệ', n: 5 }, say: [['dao_tri_mau', 'Ao đã nhận ngươi. Thần lò từ nay mở cửa.']] }]
     },
     {
-        loc: 'thanh_thi', npc: 'narr', title: 'Lệnh Bài Tử Tiêu Thị', needs: [16, 0],
-        intro: [['narr', 'Người giữ chợ không ngẩng đầu: "Thánh Vực không có khách vãng lai. Tán Đồ đang phá quầy, dẹp đi rồi hãy hỏi mua."']],
-        steps: [{ hunt: { loc: 'thanh_thi', name: 'Thánh Vực Tán Đồ', n: 5 }, say: [['narr', 'Chợ yên trở lại. Lệnh bài bằng ngọc tím rơi vào tay ngươi.']] }]
+        loc: 'thanh_thi', npc: 'narr', title: 'Lệnh Bài Tử Tiêu Thị', needs: [19, 0],
+        intro: [['narr', 'Người giữ chợ không ngẩng đầu: "Thánh Giới không có khách vãng lai. Tán Đồ đang phá quầy, dẹp đi rồi hãy hỏi mua."']],
+        steps: [{ hunt: { loc: 'thanh_thi', name: 'Thánh Giới Tán Đồ', n: 5 }, say: [['narr', 'Chợ yên trở lại. Lệnh bài bằng ngọc tím rơi vào tay ngươi.']] }]
     },
     {
-        loc: 'da_bao', npc: 'da_bao', title: 'Tiền Đặt Cọc', needs: [15, 0],
-        intro: [['da_bao', 'Đồ cấp Thánh ta chỉ bán cho kẻ đã tới Tiên Đế. Đặt cọc bằng đầu bọn đạo tặc Thánh Vực xuống đây trộm hàng, ta cấp lệnh bài.']],
-        steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Vực Đạo Tặc', n: 5 }, say: [['da_bao', 'Lệnh bài của ngươi đây. Nhớ kỹ: thiếu một món đồ Thánh trên người, Thiên Đạo sẽ không cho ngươi thành Thánh. Mua đủ sáu món, mua nhiều, chết ít.']] }]
+        loc: 'da_bao', npc: 'da_bao', title: 'Tiền Đặt Cọc', needs: [18, 0],
+        intro: [['da_bao', 'Đồ cấp Thánh ta chỉ bán cho Chuẩn Thánh. Đặt cọc bằng đầu bọn đạo tặc Thánh Giới xuống đây trộm hàng, ta cấp lệnh bài.']],
+        steps: [{ hunt: { loc: 'da_bao', name: 'Thánh Giới Đạo Tặc', n: 5 }, say: [['da_bao', 'Lệnh bài của ngươi đây. Nhớ kỹ: thiếu một món đồ Thánh trên người, Thiên Đạo sẽ không cho ngươi thành Thánh. Mua đủ sáu món, mua nhiều, chết ít.']] }]
     },
     {
-        loc: 'bat_canh', npc: 'dong_tu', title: 'Quạt Lò Bát Quái', needs: [16, 0],
+        loc: 'bat_canh', npc: 'dong_tu', title: 'Quạt Lò Bát Quái', needs: [19, 0],
         intro: [['dong_tu', 'Lò Bát Quái chưa tắt lần nào. Đánh thắng Lực Sĩ thì ta cho ngươi ghé lửa nhờ một lúc. Sư phụ ta sẽ không làm gì đâu, người chưa bao giờ làm gì.']],
         steps: [{ hunt: { loc: 'bat_canh', name: 'Hoàng Cân Lực Sĩ', n: 5 }, say: [['dong_tu', 'Vào đi. Đừng nói ta cho phép, cũng đừng nói ta không cho.']] }]
     },
     {
-        loc: 'vo_cuong', npc: 'ly_khach', title: 'Tiền Cơm Trả Trước', needs: [20, 0],
+        loc: 'vo_cuong', npc: 'ly_khach', title: 'Tiền Cơm Trả Trước', needs: [23, 0],
         intro: [['ly_khach', 'Quán ta ghi sổ chứ không cho nợ. Dẹp bọn đạo tặc trước cửa là trừ được bữa đầu.']],
-        steps: [{ hunt: { loc: 'vo_cuong', name: 'Thiên Ngoại Đạo Tặc', n: 5 }, say: [['ly_khach', 'Sạch sẽ. Bếp, lò và tấm bảng trong quán, ngươi dùng thoải mái.']] }]
+        steps: [{ hunt: { loc: 'vo_cuong', name: 'Cực Đạo Tán Tu', n: 5 }, say: [['ly_khach', 'Sạch sẽ. Bếp, lò và tấm bảng trong quán, ngươi dùng thoải mái.']] }]
     },
     {
-        loc: 'khai_thien', npc: 'hoang_cong', title: 'Quặng Quy Tắc', needs: [22, 0],
+        loc: 'khai_thien', npc: 'hoang_cong', title: 'Quặng Quy Tắc', needs: [25, 0],
         intro: [['hoang_cong', 'Nơi này chưa có luật nên lửa muốn cháy kiểu gì thì cháy. Mang Quy Tắc Thể về, ta rèn cho lửa một cái luật.']],
         steps: [{ hunt: { loc: 'khai_thien', name: 'Quy Tắc Thể', n: 6 }, say: [['hoang_cong', 'Lửa đã biết nghe lời. Thần lò Hoang Nguyên mở cho ngươi.']] }]
     },
     {
-        loc: 'dao_gia_am', npc: 'vong_ky', title: 'Khôi Lỗi Trước Am', needs: [26, 0],
+        loc: 'dao_gia_am', npc: 'vong_ky', title: 'Khôi Lỗi Trước Am', needs: [29, 0],
         intro: [['vong_ky', 'Am không có gì để bán, chỉ có đồ người ta bỏ quên. Muốn lấy thì đánh thắng khôi lỗi ngoài sân.']],
         steps: [{ hunt: { loc: 'dao_gia_am', name: 'Đạo Giả Thí Luyện Khôi', n: 6 }, say: [['vong_ky', 'Cứ lấy. Đừng hỏi của ai.']] }]
     },
     {
-        loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Đốt Hài Ma Thần', needs: [26, 0],
+        loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Đốt Hài Ma Thần', needs: [29, 0],
         intro: [['mo_nhan', 'Thần lò ở đây đốt bằng hài cốt Ma Thần. Mang về đủ, ta nhóm cho một mẻ.']],
         steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 6 }, say: [['mo_nhan', 'Đủ cháy một kỷ nguyên. Lò này từ nay có tên ngươi.']] }]
-    },
-    {
-        loc: 'co_thu', npc: 'thu_linh', title: 'Lắng Nghe Cổ Thụ', needs: [27, 0],
-        intro: [['thu_linh', 'Cây không bán cũng không cho. Cây chỉ rụng lá xuống người nó tin. Hộ Linh nổi giận rồi, làm chúng ngủ đi.']],
-        steps: [{ hunt: { loc: 'co_thu', name: 'Cổ Thụ Hộ Linh', n: 6 }, say: [['thu_linh', 'Cây đã nghe ngươi. Mọi thứ dưới tán này mở cho ngươi.']] }]
-    },
-    {
-        loc: 'truong_ha', npc: 'do_nhan', title: 'Tiền Đò', needs: [28, 0],
-        intro: [['do_nhan', 'Qua sông phải trả tiền đò, mà ở đây chỉ nhận dư ảnh của chính khách. Trả đi, rồi ta bán cho thứ cần bán.']],
-        steps: [{ hunt: { loc: 'truong_ha', name: 'Dư Ảnh Của Ngươi', n: 6 }, say: [['do_nhan', 'Đủ tiền đò. Quầy và lò bên bến mở cho ngươi.']] }]
     }
 ].map(q => ({ ...q, id: `open_${q.loc}`, reward: { hours: 1, goldRefs: 5, opens: q.loc } }));
 
 SIDE_QUESTS.push(...REGION_QUESTS);
 REGION_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 
-const FREE_SERVICE_LOCATIONS = ['thanh_thuy'];
+const FREE_SERVICE_LOCATIONS = ['thanh_thuy', 'co_thu', 'truong_ha'];
 
 const ROAD_TALES = {
     pham: [
@@ -247,9 +225,9 @@ function stageQuest(realm, stage, slot) {
 }
 
 const STAGE_QUESTS = [];
-for (let realm = 0; realm <= 28; realm++) {
+for (let realm = 0; realm < REALM_COUNT; realm++) {
     for (let stage = 0; stage < 4; stage++) {
-        for (let slot = 0; slot < STAGE_QUEST_COUNT; slot++) STAGE_QUESTS.push(stageQuest(realm, stage, slot));
+        if (realm < OVERSEER_REALM) for (let slot = 0; slot < STAGE_QUEST_COUNT; slot++) STAGE_QUESTS.push(stageQuest(realm, stage, slot));
     }
 }
 SIDE_QUESTS.push(...STAGE_QUESTS);
@@ -353,8 +331,15 @@ Object.values(LOCATIONS).forEach(loc => {
         NPCS[key] = { name: SMITH_NAMES[seed % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
         named.push(key);
     }
-    LOCATION_NPCS[loc.id] = [...named, residentKey(loc.id)];
+    LOCATION_NPCS[loc.id] = EMPTY_WORLDS.includes(loc.world) ? [] : [...named, residentKey(loc.id)];
 });
+
+/* Người đã chết trong cốt truyện không còn đứng ở địa điểm */
+const NPC_DIES_IN = { tien_de: 'm17' };
+
+function npcGone(key) {
+    return state.questDone.includes(NPC_DIES_IN[key]);
+}
 
 function locationSmith(loc) {
     return LOCATION_NPCS[loc.id].find(key => /thợ/i.test(NPCS[key].title || ''));
