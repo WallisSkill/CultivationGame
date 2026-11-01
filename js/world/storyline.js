@@ -67,11 +67,12 @@ const BOSSES = {
     than_ha: { npc: { name: 'Thiên Bồng Nguyên Soái', look: NPC_LOOK('m', 4, '#1b1b22', '#2f5f9e', { weapon: 'spear', weaponColor: '#9fd3ff' }) }, realm: 13, stage: 2 },
     nam_mon: { npc: { name: 'Tăng Trưởng Thiên Vương', look: NPC_LOOK('m', 0, '#1b1b22', '#8c3a3a', { weapon: 'spear', weaponColor: '#ffd479', crown: 'guan' }) }, realm: 14, stage: 2, board: 4 },
     tien_de: { npc: 'tien_de', realm: 15, stage: 2, board: 5, scale: 1.1 },
-    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 22, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
+    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 21, stage: 2, scale: 4, scriptedLoss: true, board: 5 },
     thai_thanh: { npc: 'thai_thanh', realm: 19, stage: 2, scale: 0.7, board: 5, elements: SAINT_ELEMENTS },
     nguyen_thuy: { npc: 'nguyen_thuy', realm: 21, stage: 2, scale: 0.6, board: 5, elements: SAINT_ELEMENTS },
     thong_thien: { npc: 'thong_thien', realm: 21, stage: 2, scale: 0.9, board: 5, elements: SAINT_ELEMENTS },
-    chuan_tiep: { npc: 'chuan_de', realm: 22, stage: 2, board: 6, elements: SAINT_ELEMENTS },
+    chuan_tiep: { npc: 'chuan_de', realm: 21, stage: 1, scale: 0.85, board: 5, elements: SAINT_ELEMENTS },
+    thien_ma_chu: { kind: 'chaos', name: 'Ngoại Vực Thiên Ma Chủ', realm: 23, stage: 2, board: 5 },
     khoi_loi: { kind: 'golem', name: 'Thiên Đạo Chấp Hành Thể', realm: 23, stage: 2, board: 4 },
     nghiep_long: { kind: 'dragon', name: 'Vạn Kiếp Nghiệp Long', realm: 24, stage: 2, board: 4 },
     tam_ma: { npc: { name: 'Ngươi Của Kiếp Trước', look: NPC_LOOK('m', 1, '#c9c9d6', '#2b2b35', { aura: '#c58bff' }) }, realm: 25, stage: 2, board: 5 },
@@ -309,7 +310,9 @@ const MAIN_QUESTS = [
     {
         id: 'm23', act: 3, title: 'Dưới Đài Sen', unlock: 23, needs: [22, 2],
         steps: [
-            { go: 'cuc_lac', say: [['chuan_de', 'Thiên Ma chui vào qua khe nứt dưới đài sen này. Ba ngàn năm bọn ta ngồi ngay trên nó mà không hay.'], ['tiep_dan', 'Tiếng khổ của tiên nô bị chặn lại trước tai ta. Giờ không ai được qua khe này nếu chưa đủ sức, muốn qua thì bước qua chúng ta.']] },
+            { go: 'tu_tieu', say: [['nguyen_thuy', 'Ta đã chép lại thiên mệnh từ đầu. Từ nay trong sổ có chữ mỏ, chữ tiên nô, và chữ Thiên Ma.'], ['thai_thanh', 'Ta không thích làm việc. Lần này ta làm.'], ['chuan_de', 'Tây Phương xin thôi đòi đất. Đất còn thì mới có người.'], ['nu_oa', 'Các con ăn gì chưa? Ăn rồi cùng ra trận.'], ['thong_thien', 'Lần đầu sáu kẻ này ngồi một bàn mà không cãi nhau. Nhóc, ngươi sắp Diệt Thiên, cầm đầu đi.'], ['me', 'Các vị giữ Thánh Giới. Xé xong tấm màn, ta ra ngoài thế giới tìm chúng.']] },
+            { gather: { loc: 'tu_tieu', hours: 6, label: 'Chư Thánh hợp lực xé màn Thiên Ma' }, say: [['narr', 'Sáu đạo Thánh quang cùng rơi xuống Tiên Giới. Lần đầu sau ba ngàn năm, các Thánh thấy mỏ Vô Quang đúng như nó vốn có.'], ['tiep_dan', 'Giờ ta nghe thấy rồi. Tất cả.']] },
+            { go: 'cuc_lac', say: [['chuan_de', 'Thiên Ma chui vào qua khe nứt dưới đài sen này. Ba ngàn năm bọn ta ngồi ngay trên nó mà không hay.'], ['tiep_dan', 'Lên Diệt Thiên mới bước được ra ngoài thế giới, ngoài đó là Thiên Ma Ngoại Vực. Chưa đủ sức thì ra là chết, muốn qua thì bước qua chúng ta.']] },
             { boss: 'chuan_tiep', say: [['tiep_dan', 'Thiên Ma mất mỏ Tiên Giới, chúng sẽ đòi lại. Ngươi vừa khiến bên ngoài kia đói.'], ['narr', 'Dưới đài sen là bóng tối không có sao.']] }
         ],
         reward: { flag: 'world_thien', hours: 60, goldRefs: 400, gear: ['armor', 4], boardSlot: true }
@@ -319,7 +322,7 @@ const MAIN_QUESTS = [
     {
         id: 'm24', act: 4, title: 'Xác Vạn Giới', unlock: 24, needs: [23, 0],
         steps: [
-            { go: 'van_gioi', say: [['narr', 'Những lục địa khô trôi trong hư không. Trên mỗi xác thế giới đều có một cái mỏ.'], ['ly_khach', 'Mới tới Cực Đạo Vực à? Đây vẫn là Thánh Giới, chỉ là phần Lục Thánh chưa từng thấy. Mọi vũ trụ đều bị trồng rồi gặt. Ngoại Vực Thiên Ma đi trước, che mắt Thánh của vụ đó rồi đào cho cạn. Vũ trụ của ngươi là vụ thứ ba ngàn.']] },
+            { go: 'van_gioi', say: [['narr', 'Những lục địa khô trôi trong hư không. Trên mỗi xác thế giới đều có một cái mỏ.'], ['ly_khach', 'Mới tới Thiên Ma Ngoại Vực à? Đây là ngoài mép thế giới, nơi Lục Thánh chưa từng nhìn thấy. Mọi vũ trụ đều bị trồng rồi gặt. Ngoại Vực Thiên Ma đi trước, che mắt Thánh của vụ đó rồi đào cho cạn. Vũ trụ của ngươi là vụ thứ ba ngàn.']] },
             { hunt: { loc: 'van_gioi', name: 'Thiên Đạo Khôi Lỗi', n: 5 } },
             { boss: 'khoi_loi' }
         ],
@@ -418,7 +421,7 @@ const MAIN_QUESTS = [
         id: 'm35', act: 6, title: 'Lời Dặn Xuống Dưới', needs: [30, 1],
         steps: [
             { go: 'co_thu', say: [['narr', 'Ngươi trồng một cái cây để có chỗ ngồi. Cây lớn nhanh hơn ý nghĩ, và không có ai dưới bóng nó.']] },
-            { go: 'vo_cuong', say: [['ly_khach', 'Ngươi trên kia về à? Có gì ăn không?'], ['me', 'Không. Lão trông coi Cực Đạo Vực giúp ta, đừng để ai dựng mỏ nữa.'], ['ly_khach', 'Ghi sổ.']] },
+            { go: 'vo_cuong', say: [['ly_khach', 'Ngươi trên kia về à? Có gì ăn không?'], ['me', 'Không. Lão trông coi Thiên Ma Ngoại Vực giúp ta, đừng để ai dựng mỏ nữa.'], ['ly_khach', 'Ghi sổ.']] },
             { go: 'tu_tieu', say: [['thai_thanh', 'Ngươi tới, cả Thánh Giới không ai dám thở.'], ['me', 'Mỏ đóng hẳn. Lục Thánh lo việc của Thánh Giới, đừng đợi ta ra lệnh nữa.']] }
         ],
         reward: { hours: 120, goldRefs: 1000, statBless: 0.05 }

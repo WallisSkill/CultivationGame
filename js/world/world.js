@@ -369,7 +369,7 @@ function realmWorld() {
     return worldTierOfRealm(state.realmIndex || 0).id;
 }
 
-/* Cực Đạo Vực và Thánh Giới là một Giới */
+/* Thiên Ma Ngoại Vực và Thánh Giới cùng tính là một Giới */
 function gioiIndex(worldId) {
     return worldIndex(worldId === 'thien' ? 'thanh' : worldId);
 }
@@ -1369,6 +1369,7 @@ function enemyRenownPoints(enemy) {
 
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
+    onSaintDuelWon(enemy);
     const killed = [enemy, ...(enemy.escorts || [])];
     if (enemy.hunted) {
         const earned = enemyRenownPoints(enemy);
@@ -1619,7 +1620,35 @@ function openNpcTalk(key) {
     const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}${questRewardHTML(q)}</button>`).join('');
     const reports = npcReports(key).map(rt => `<button class="mini-btn" onclick="reportToNpc('${rt.id}')">📜 Báo lại: ${QUEST_INDEX[rt.id].title}</button>`).join('');
     openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>
-        <div class="npc-options">${reports}${offers}${npcStoryButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
+        <div class="npc-options">${reports}${offers}${npcStoryButton(key)}${saintDuelButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
+}
+
+/* Lục Thánh ở sức thật, viên mãn Đại Thánh; thua không chết, thắng lần đầu mới có thưởng */
+const SAINT_DUEL_REALM = 20;
+const SAINT_DUEL_GOLD_REFS = 300;
+const SAINT_DUELS = { thai_thanh: 1.3, thong_thien: 1.25, nguyen_thuy: 1.2, nu_oa: 1.15, tiep_dan: 1, chuan_de: 0.95 };
+Object.entries(SAINT_DUELS).forEach(([key, scale]) => {
+    BOSSES[`duel_${key}`] = { npc: key, realm: 21, stage: 3, scale, board: 6, elements: SAINT_ELEMENTS, scriptedLoss: true };
+});
+
+function saintDuelButton(key) {
+    if (!SAINT_DUELS[key] || (state.realmIndex || 0) < SAINT_DUEL_REALM) return '';
+    return `<button class="mini-btn" onclick="challengeSaint('${key}')">⚔️ Thách đấu${state.saintDuels?.[key] ? ' (đã thắng)' : ''}</button>`;
+}
+
+function challengeSaint(key) {
+    if (!requireFree()) return;
+    closeNpcTalk();
+    spawnBoss(`duel_${key}`);
+}
+
+function onSaintDuelWon(enemy) {
+    const key = enemy.bossId?.replace('duel_', '');
+    if (!SAINT_DUELS[key] || state.saintDuels?.[key]) return;
+    state.saintDuels = { ...state.saintDuels, [key]: true };
+    const gold = goldRef(state.realmIndex) * SAINT_DUEL_GOLD_REFS;
+    state.gold += gold;
+    log(`🏆 Lần đầu thắng ${enemy.name} ở sức thật: +${formatNumber(gold)} linh thạch.`);
 }
 
 function npcStoryList(key) {
@@ -1860,6 +1889,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, challengeSaint, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });
