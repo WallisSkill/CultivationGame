@@ -187,7 +187,7 @@ const MAIN_QUESTS = [
 
     /* ===== HỒI II ===== */
     {
-        id: 'm11', act: 2, title: 'Tiên Nô', unlock: 10, needs: [9, 1],
+        id: 'm11', act: 2, title: 'Tiên Nô', unlock: 10, needs: [9, 0],
         steps: [
             { go: 'phi_thang_tri', say: [['narr', 'Không có tiên nhạc. Chỉ có xiềng xích và một chiếc bàn kiểm kê.'], ['tien_lai', 'Lại một đứa nữa. Đừng chống cự, chúng sẽ chuyển ngươi xuống mỏ thôi.']] },
             { go: 'tien_khoang', say: [['tien_lai', 'Ba ngàn năm rồi, ta đào linh tủy cho Thiên Đình. Kẻ phi thăng là đồng tiền của họ đó con.']] },
@@ -302,7 +302,7 @@ const MAIN_QUESTS = [
 
     /* ===== HỒI IV ===== */
     {
-        id: 'm24', act: 4, title: 'Xác Vạn Giới', unlock: 21, needs: [20, 2],
+        id: 'm24', act: 4, title: 'Xác Vạn Giới', unlock: 21, needs: [20, 0],
         steps: [
             { go: 'van_gioi', say: [['narr', 'Những lục địa khô trôi trong hư không. Trên mỗi xác thế giới đều có một cái mỏ.'], ['ly_khach', 'Lần đầu ra ngoài à? Mọi vũ trụ đều bị trồng rồi gặt. Vũ trụ của ngươi là vụ thứ ba ngàn.']] },
             { hunt: { loc: 'van_gioi', name: 'Thiên Đạo Khôi Lỗi', n: 5 } },

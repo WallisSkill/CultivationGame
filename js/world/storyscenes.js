@@ -202,3 +202,49 @@ const ROAD_TALES = {
         [['narr', 'Dòng thời gian khẽ rẽ, để lại bên bờ một vật ướt nước.']]
     ]
 };
+
+/* Mỗi tiểu cảnh giới có vài việc riêng, sinh theo nơi cùng tầm cảnh giới. Không chặn đột phá, qua tiểu cảnh là hết hạn */
+const STAGE_QUEST_COUNT = 3;
+const STAGE_HUNT_TITLES = ['Trừ Hại {enemy}', 'Lệnh Truy Sát {enemy}', 'Dấu Vết {enemy}', 'Thử Tay Với {enemy}', 'Vây Quét {enemy}', 'Món Nợ Của {enemy}', 'Tin Đồn Về {enemy}', 'Đêm Săn {enemy}'];
+const STAGE_HUNT_INTROS = ['Dân quanh {loc} đồn rằng {enemy} lại xuất hiện. Không ai dám ra khỏi cửa sau khi tắt nắng.', 'Một tờ cáo thị rách treo trước {loc}: ai diệt được {enemy} thì có thưởng.', 'Trong lúc tĩnh tọa, ngươi ngửi thấy tử khí từ {loc}. Tu vi vừa tăng cũng cần một chỗ để thử.', 'Một tu sĩ bị thương lết tới trước mặt ngươi, chỉ kịp nói ba chữ: "{enemy}... {loc}..."'];
+const STAGE_HUNT_DONES = ['Chiến trường yên lại. Tay ngươi vững hơn lúc đến.', 'Người quanh đây bắt đầu nhớ tên ngươi.', 'Thu dọn xong, ngươi nhận ra đường tu trước mặt rõ hơn một chút.'];
+const STAGE_GATHER_TITLES = ['Ngộ Đạo Tại {loc}', 'Thu Thập Linh Vật {loc}', 'Khảo Sát {loc}', 'Lắng Nghe {loc}', 'Vẽ Bản Đồ {loc}', 'Tìm Di Tích {loc}'];
+const STAGE_GATHER_LABELS = ['Tĩnh tọa ngộ đạo', 'Thu thập linh vật', 'Khảo sát địa mạch', 'Lắng nghe linh khí', 'Ghi chép địa hình', 'Tìm dấu di tích'];
+const STAGE_GATHER_INTROS = ['Linh khí ở {loc} chuyển động theo nhịp lạ. Ở tiểu cảnh này ngươi đã nghe được nó.', 'Một cuốn sổ cũ nhắc tới {loc}, trang cuối bị xé mất.', 'Ngươi muốn hiểu vùng đất này trước khi đi xa hơn. {loc} là nơi nên bắt đầu.'];
+const STAGE_GATHER_DONES = ['Một chút tâm đắc lắng xuống đan điền.', 'Thứ tìm được không lớn, nhưng là của riêng ngươi.', 'Ngươi ghi lại mọi thứ, biết đâu về sau cần tới.'];
+
+function stageFill(text, loc, enemy) {
+    return text.replace(/\{loc\}/g, loc.name).replace(/\{enemy\}/g, enemy || '');
+}
+
+function stageQuest(realm, stage, slot) {
+    const sites = Object.values(LOCATIONS).filter(l => l.minR <= realm && l.maxR >= realm && (l.enemies || []).length);
+    const seed = realm * 31 + stage * 7 + slot * 3;
+    const loc = sites[(seed + slot * Math.ceil(sites.length / STAGE_QUEST_COUNT)) % sites.length];
+    const id = `st_${realm}_${stage}_${slot}`;
+    const base = { id, loc: loc.id, npc: 'narr', needs: [realm, stage], until: [realm, stage], stageQuest: true, reward: { hours: 0.5 + stage * 0.25, goldRefs: 3 + stage } };
+    if (slot === 2) {
+        return {
+            ...base,
+            title: stageFill(STAGE_GATHER_TITLES[seed % STAGE_GATHER_TITLES.length], loc),
+            intro: [['narr', stageFill(STAGE_GATHER_INTROS[seed % STAGE_GATHER_INTROS.length], loc)]],
+            steps: [{ gather: { loc: loc.id, hours: 1, label: STAGE_GATHER_LABELS[seed % STAGE_GATHER_LABELS.length] }, say: [['narr', STAGE_GATHER_DONES[seed % STAGE_GATHER_DONES.length]]] }]
+        };
+    }
+    const enemy = loc.enemies[seed % loc.enemies.length].name;
+    return {
+        ...base,
+        title: stageFill(STAGE_HUNT_TITLES[seed % STAGE_HUNT_TITLES.length], loc, enemy),
+        intro: [['narr', stageFill(STAGE_HUNT_INTROS[seed % STAGE_HUNT_INTROS.length], loc, enemy)]],
+        steps: [{ hunt: { loc: loc.id, name: enemy, n: 3 + stage }, say: [['narr', STAGE_HUNT_DONES[seed % STAGE_HUNT_DONES.length]]] }]
+    };
+}
+
+const STAGE_QUESTS = [];
+for (let realm = 0; realm <= 28; realm++) {
+    for (let stage = 0; stage < 4; stage++) {
+        for (let slot = 0; slot < STAGE_QUEST_COUNT; slot++) STAGE_QUESTS.push(stageQuest(realm, stage, slot));
+    }
+}
+SIDE_QUESTS.push(...STAGE_QUESTS);
+STAGE_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });

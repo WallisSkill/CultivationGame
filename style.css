@@ -1616,8 +1616,9 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 .side-pane { display: block; }
 .side-pane > .panel { margin-bottom: 6px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .side-pane > .panel:last-child { margin-bottom: 0; }
-.panel-log-small .log, #log { overflow: hidden; }
-.chat-messages { overflow: hidden; justify-content: flex-end; }
+.panel-log-small .log, #log { overflow-x: hidden; overflow-y: auto; }
+.chat-messages { overflow-x: hidden; overflow-y: auto; }
+.chat-messages > :first-child { margin-top: auto; }
 #worldMap { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
 #worldMap > .filter-chips, #worldMap > .map-dest { flex: none; margin: 0; }
 #worldMap .map-svg { flex: 1 1 0; min-height: 0; width: 100%; height: auto; }

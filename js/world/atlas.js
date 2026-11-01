@@ -97,7 +97,34 @@ const DAO_SITES = {
     quy_khu: { world: 'chungnguyen', name: 'Quy Khư', icon: '🕳️', x: 500, y: 480, type: 'wild', qi: 1.9, minR: 28, maxR: 28, links: ['truong_ha', 'chung_dai'], desc: 'Nơi mọi thứ bị lãng quên trôi về.', enemies: [E('Quy Khư Ảnh', 'chaos')] }
 };
 
-Object.entries(DAO_SITES).forEach(([id, site]) => {
+/* ---- Vùng đất thêm của từng Giới, nối vào đồ thị như đạo tràng ---- */
+const REGION_SITES = {
+    co_lac: { world: 'pham', name: 'Cổ Lạc Trấn', icon: '🏮', x: 430, y: 450, type: 'wild', qi: 1.0, minR: 1, maxR: 4, links: ['thanh_van', 'van_long'], desc: 'Trấn cổ bỏ hoang, ban đêm vẫn có đèn.', enemies: [E('Âm Hồn Trấn Cổ', 'spirit'), E('Đạo Phỉ Cổ Lạc', 'human')] },
+    tu_vong_coc: { world: 'pham', name: 'Tử Vong Cốc', icon: '💀', x: 450, y: 90, type: 'wild', qi: 1.1, minR: 2, maxR: 5, links: ['vu_moc_lam', 'xich_diem'], desc: 'Khe núi không chim nào bay qua.', enemies: [E('Độc Hạt Vương', 'beast'), E('Thi Khôi', 'golem')] },
+    long_cung: { world: 'pham', name: 'Đông Hải Long Cung', icon: '🐉', x: 925, y: 470, type: 'dungeon', qi: 1.25, minR: 5, maxR: 8, links: ['bang_phong', 'phi_thang'], desc: 'Cung điện chìm dưới biển đông.', enemies: [E('Dạ Xoa Tuần Hải', 'human'), E('Giao Long', 'dragon')] },
+
+    dong_thien_mon: { world: 'tien', name: 'Đông Thiên Môn', icon: '🌅', x: 925, y: 380, type: 'dungeon', qi: 1.2, minR: 13, maxR: 15, links: ['nam_thien_mon', 'lang_tieu'], desc: 'Cổng trời phía đông, nơi mặt trời tiên giới mọc lên.', enemies: [E('Kim Ô Vệ', 'beast'), E('Thiên Binh Đông Môn', 'human')] },
+    tay_thien_mon: { world: 'tien', name: 'Tây Thiên Môn', icon: '🌇', x: 240, y: 240, type: 'dungeon', qi: 1.15, minR: 10, maxR: 13, links: ['tien_khoang', 'tru_tien'], desc: 'Cổng trời phía tây, canh đường áp giải tiên nô.', enemies: [E('Bạch Hổ Vệ', 'beast'), E('Thiên Binh Tây Môn', 'human')] },
+    bac_thien_mon: { world: 'tien', name: 'Bắc Thiên Môn', icon: '❄️', x: 610, y: 60, type: 'dungeon', qi: 1.25, minR: 12, maxR: 15, links: ['thien_ha', 'thai_ho'], desc: 'Cổng trời phía bắc, gió lạnh thổi từ ngoài vũ trụ.', enemies: [E('Huyền Vũ Vệ', 'golem'), E('Thiên Binh Bắc Môn', 'human')] },
+    quang_han: { world: 'tien', name: 'Quảng Hàn Cung', icon: '🌙', x: 460, y: 490, type: 'wild', qi: 1.3, minR: 11, maxR: 14, links: ['van_tien', 'dao_tri'], desc: 'Cung trăng lạnh, một cây quế chặt mãi không đổ.', enemies: [E('Ngọc Thố Tinh', 'beast'), E('Nguyệt Hồn', 'spirit')] },
+
+    linh_son: { world: 'thanh', name: 'Linh Sơn', icon: '🗻', x: 880, y: 470, type: 'wild', qi: 1.4, minR: 18, maxR: 19, links: ['bich_du'], desc: 'Núi thiêng tiếng chuông không dứt.', enemies: [E('Hộ Pháp Kim Cương', 'golem'), E('La Hán Sa Đọa', 'human')] },
+    loi_trach: { world: 'thanh', name: 'Lôi Trạch', icon: '⚡', x: 640, y: 110, type: 'wild', qi: 1.3, minR: 16, maxR: 18, links: ['tu_tieu', 'ngoc_hu'], desc: 'Đầm lầy nơi sấm sét đẻ trứng.', enemies: [E('Lôi Bằng', 'beast'), E('Lôi Trạch Linh', 'spirit')] },
+
+    tinh_mo: { world: 'thien', name: 'Tinh Thần Mộ', icon: '🌠', x: 500, y: 300, type: 'wild', qi: 1.3, minR: 21, maxR: 24, links: ['vo_cuong', 'luan_hoi'], desc: 'Nghĩa địa của những ngôi sao đã tắt.', enemies: [E('Tinh Hài', 'golem'), E('Tử Tinh Linh', 'spirit')] },
+    hu_nhan: { world: 'thien', name: 'Hư Không Chi Nhãn', icon: '👁️', x: 800, y: 440, type: 'dungeon', qi: 1.45, minR: 23, maxR: 25, links: ['bat_diet', 'than_dinh'], desc: 'Một con mắt mở ra giữa hư không.', enemies: [E('Hư Không Ma Đồng', 'chaos'), E('Thiên Đạo Thám Tử', 'human')] },
+
+    thai_so_thuy: { world: 'hondon', name: 'Thái Sơ Thủy', icon: '💧', x: 280, y: 270, type: 'wild', qi: 1.45, minR: 26, maxR: 26, links: ['bo_hondon', 'dao_gia_am'], desc: 'Giọt nước có trước mọi đại dương.', enemies: [E('Thái Sơ Thủy Linh', 'spirit')] },
+    vo_chung_lau: { world: 'hondon', name: 'Vô Chung Lâu', icon: '🗼', x: 640, y: 290, type: 'dungeon', qi: 1.5, minR: 26, maxR: 26, links: ['ma_than_mo', 'hai_tam'], desc: 'Tòa tháp không có tầng cuối.', enemies: [E('Lâu Chủ Tàn Ảnh', 'human'), E('Hỗn Độn Khôi', 'golem')] },
+
+    so_hoa: { world: 'hongmong', name: 'Sơ Hỏa Đài', icon: '🔥', x: 510, y: 400, type: 'wild', qi: 1.7, minR: 27, maxR: 27, links: ['co_thu', 'hm_ma'], desc: 'Ngọn lửa đầu tiên chưa từng tắt.', enemies: [E('Sơ Hỏa Linh', 'spirit')] },
+    dao_thai: { world: 'hongmong', name: 'Đạo Thai', icon: '🥚', x: 870, y: 130, type: 'dungeon', qi: 1.8, minR: 27, maxR: 27, links: ['chua_te', 'hm_the'], desc: 'Bào thai của một Đại Đạo chưa ra đời.', enemies: [E('Đạo Thai Hộ Vệ', 'chaos')] },
+
+    ky_uc_ho: { world: 'chungnguyen', name: 'Ký Ức Hồ', icon: '🪞', x: 360, y: 170, type: 'wild', qi: 1.9, minR: 28, maxR: 28, links: ['truong_ha', 'van_dao_bi'], desc: 'Mặt hồ chỉ soi những gì đã mất.', enemies: [E('Ký Ức Chi Ảnh', 'spirit')] },
+    tan_lo: { world: 'chungnguyen', name: 'Tận Lộ', icon: '🛤️', x: 650, y: 420, type: 'wild', qi: 1.95, minR: 28, maxR: 28, links: ['chung_dai', 'quy_khu'], desc: 'Con đường hết chỗ để đi tiếp.', enemies: [E('Tận Lộ Hành Giả', 'human')] }
+};
+
+Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
     LOCATIONS[id] = { type: 'sect', ...site };
     site.links.forEach(other => LOCATIONS[other].links.push(id));
 });

@@ -34,6 +34,7 @@ function sceneSpots(loc) {
     add('🏪', 'Cửa hàng', () => openServiceShop(), hasService('shop'));
     add('🔨', forgeGradeOf(loc).name, () => openForge(), hasService('forge'));
     add('📜', 'Bảng treo thưởng', () => acceptBounty(), hasService('board') && !state.bounty);
+    add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
     add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop'));
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), !!loc.path);
@@ -41,7 +42,7 @@ function sceneSpots(loc) {
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), loc.type === 'town' || loc.type === 'sect');
-    SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
+    SIDE_QUESTS.filter(q => q.loc === loc.id && !questExpired(q) && !state.questDone.includes(q.id)
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
         .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());

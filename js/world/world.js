@@ -255,8 +255,22 @@ function canEnterLocation(id) {
     return ABSOLUTE_WORLDS.includes(loc.world) || (state.realmIndex || 0) >= loc.minR;
 }
 
+/* Lên Giới cao rồi không được xuống lại, trừ người đứng đầu Thiên Hạ Bảng của Giới đang ở */
+function worldIndex(worldId) {
+    return WORLD_TIERS.findIndex(w => w.id === worldId);
+}
+
+function holdsWorldTop(worldId) {
+    return thienHaRank(worldId) === 1;
+}
+
+function descentBlocked(fromWorld, toWorld) {
+    return worldIndex(toWorld) < worldIndex(fromWorld) && !holdsWorldTop(fromWorld);
+}
+
 function teleportBlockReason(id) {
     const tier = worldOf(id);
+    if (descentBlocked(currentLocation().world, tier.id)) return `Không được xuống ${tier.name}: cần đứng đầu Thiên Hạ Bảng ${worldOf(state.location).name}.`;
     const minRealm = TELEPORT_MIN_REALM[tier.id];
     if (minRealm == null) return '';
     const missing = [];
@@ -310,7 +324,8 @@ function edgeSeconds(from, to) {
 function neighbors(id, carried = false) {
     const loc = LOCATIONS[id];
     const out = [...loc.links];
-    if (loc.gate && (!loc.gate.flag || state.flags[loc.gate.flag]) && worldUnlocked(LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
+    if (loc.gate && (!loc.gate.flag || state.flags[loc.gate.flag]) && worldUnlocked(LOCATIONS[loc.gate.to].world)
+        && !descentBlocked(loc.world, LOCATIONS[loc.gate.to].world)) out.push(loc.gate.to);
     return carried ? out : out.filter(canEnterLocation);
 }
 
@@ -780,13 +795,27 @@ function needsMet(q) {
     return state.realmIndex > r || (state.realmIndex === r && state.realmStage >= s);
 }
 
+function questExpired(q) {
+    return !!q.until && (state.realmIndex !== q.until[0] || state.realmStage !== q.until[1]);
+}
+
+function stageQuestsOpen() {
+    return STAGE_QUESTS.filter(q => !questExpired(q) && !state.questDone.includes(q.id) && !state.questActive.some(rt => rt.id === q.id));
+}
+
+function goToStageQuest(id) {
+    const q = QUEST_INDEX[id];
+    if (state.location === q.loc) return acceptSideQuest(id);
+    travelTo(q.loc);
+}
+
 function nextMainQuest() {
     return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
 }
 
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : null;
+    return q && !state.questDone.includes(q.id) ? q : tienViGate(realm);
 }
 
 function pickOrigin() {
@@ -863,7 +892,21 @@ function advanceMainQuest() {
     questsOnLocation();
 }
 
+/* Phi thăng: đột phá sang cảnh giới đầu của Giới mới là đứng ngay ở cửa vào Giới đó */
+function ascendToWorld() {
+    const realm = state.realmIndex || 0;
+    const tier = worldTierOfRealm(realm);
+    if (realm !== tier.from || currentLocation().world === tier.id) return;
+    const entry = Object.values(LOCATIONS).find(l => l.world === tier.id && l.gate && worldIndex(LOCATIONS[l.gate.to].world) < worldIndex(tier.id));
+    if (!entry) return;
+    state.activity = null;
+    state.location = entry.id;
+    log(`🌠 Phi thăng tới ${tier.name}: ${entry.name}.`);
+    checkArrival();
+}
+
 function onRealmChanged() {
+    ascendToWorld();
     advanceMainQuest();
 }
 
@@ -1031,6 +1074,7 @@ function onEnemyDefeated(enemy) {
                 if (rt.n >= hunt.n) completeStep(rt);
             }
         });
+        noteCourtKill(unit);
         if (state.bounty && state.bounty.name === unit.name && state.bounty.loc === state.location) {
             state.bounty.done++;
             if (state.bounty.done >= state.bounty.need) finishBounty();
@@ -1096,6 +1140,15 @@ function renderQuestPanel() {
         if (q) cards.unshift(`<div class="quest-card"><div class="small">${ACTS[q.act - 1].name}</div><b>${q.title}</b>
             <div class="small">Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.</div></div>`);
         else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}</b></div>`);
+    }
+    stageQuestsOpen().forEach(q => {
+        const here = state.location === q.loc;
+        cards.push(`<div class="quest-card"><div class="small">Tiểu cảnh giới · ${LOCATIONS[q.loc].name}</div><b>${q.title}</b>
+            <button class="mini-btn" onclick="goToStageQuest('${q.id}')">${here ? 'Nhận' : 'Đi tới'}</button></div>`);
+    });
+    if (state.court) {
+        const c = state.court;
+        cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình</div><b>${c.name}</b><div class="small">${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div></div>`);
     }
     if (state.bounty) {
         const b = state.bounty;
@@ -1345,7 +1398,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    goToStageQuest, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

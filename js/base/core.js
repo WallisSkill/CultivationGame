@@ -627,15 +627,18 @@ function countInitLogs() {
 }
 
 const LOG_LIMIT = 200;
+const LOG_STICK_PX = 40;
+
 function log(msg) {
     const el = $('log');
     const time = new Date().toLocaleTimeString();
     const coloredMsg = colorizeWithMap(msg);
 
     // 🌟 Thêm giờ và render vào nhật ký
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < LOG_STICK_PX;
     el.insertAdjacentHTML('beforeend', `<div>★ ${time} — ${coloredMsg}</div>`);
     while (el.childElementCount > LOG_LIMIT) el.firstElementChild.remove();
-    el.scrollTop = el.scrollHeight;
+    if (atBottom) el.scrollTop = el.scrollHeight;
 
     // 🌟 Lưu vào lịch sử để hiển thị khi chết
     if (typeof window !== 'undefined') {

@@ -12,6 +12,7 @@ const TIANJIAO_NAMES = [
 ];
 const TIANJIAO_BASE_SCORE = 20;
 const TIANJIAO_BOARD_SIZE = 10;
+const THIEN_HA_SHOWN = 5;
 
 /* Chỉ số theo hạng 1, 2, 3 */
 const RANK_FREE_GUARDS = [2, 1, 1];
@@ -47,6 +48,27 @@ function tianjiaoBoard(locId) {
 function tianjiaoRank(locId) {
     if (!(state.renown?.[locId] > 0)) return 0;
     return tianjiaoBoard(locId).findIndex(entry => entry.isMe) + 1;
+}
+
+/* Thiên Hạ Bảng: tổng điểm của từng người trên mọi nơi trong một Giới */
+function thienHaBoard(worldId) {
+    const totals = new Map();
+    const add = (key, entry) => {
+        const row = totals.get(key) || { name: entry.name, score: 0, isMe: !!entry.isMe };
+        row.score += entry.score;
+        totals.set(key, row);
+    };
+    Object.keys(LOCATIONS).filter(id => LOCATIONS[id].world === worldId).forEach(id => {
+        [...npcTianjiao(id), ...knownPlayerScores(id)].forEach(entry => add(entry.name, entry));
+        add('me', { name: state.name, score: state.renown?.[id] || 0, isMe: true });
+    });
+    return [...totals.values()].sort((a, b) => b.score - a.score || (b.isMe ? 1 : 0) - (a.isMe ? 1 : 0));
+}
+
+function thienHaRank(worldId) {
+    const board = thienHaBoard(worldId);
+    const rank = board.findIndex(entry => entry.isMe);
+    return board[rank].score > 0 ? rank + 1 : 0;
 }
 
 function rankValue(table, locId = state.location) {
@@ -109,7 +131,13 @@ function openTianjiaoBoard() {
     const hint = rank >= 1 && rank <= 3
         ? `<div class="small"><b>Ưu đãi hạng ${rank} tại đây:</b></div>${perks}`
         : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
-    openWorldModal('tianjiaoModal', `🏆 Thiên Kiêu Bảng — ${LOCATIONS[locId].name}`, `${hint}${rows}`);
+    const world = worldOf(locId);
+    const board = thienHaBoard(world.id);
+    const worldRows = board.slice(0, THIEN_HA_SHOWN).map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
+        <span>${i + 1}. ${sectEscape(entry.name)}</span><b>${formatNumber(entry.score)}</b></div>`).join('');
+    const worldRank = thienHaRank(world.id);
+    const worldNote = `<div class="small" style="margin-top:10px"><b>Thiên Hạ Bảng — ${world.name}</b> (tổng điểm mọi nơi trong Giới${worldRank ? `, ngươi hạng ${worldRank}` : ''}). Hạng 1 mới được xuống Giới thấp hơn.</div>`;
+    openWorldModal('tianjiaoModal', `🏆 Thiên Kiêu Bảng — ${LOCATIONS[locId].name}`, `${hint}${rows}${worldNote}${worldRows}`);
 }
 
 function sectHomeLocation() {
