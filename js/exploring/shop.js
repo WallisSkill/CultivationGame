@@ -119,12 +119,11 @@ function useItem(index) {
         
         // 🆕 Chỉ cập nhật age display
         const ageEl = document.getElementById('ageTxt');
-        if (ageEl) ageEl.textContent = `${state.age} / ${state.maxAge}`;
+        if (ageEl) ageEl.textContent = `${state.age} / ${maxAgeText()}`;
         
         const ageBarEl = document.getElementById('ageBar');
         if (ageBarEl) {
-            const percent = Math.min(100, Math.round(state.age / state.maxAge * 100));
-            ageBarEl.style.width = `${percent}%`;
+            ageBarEl.style.width = `${agePercent()}%`;
         }
     }
     else if (it.type === 'luck') {
@@ -398,7 +397,7 @@ function renderShop() {
 
 /* Hỗn Độn Đạo Giả không dùng linh thạch: đan dược đổi bằng elo thắng luận đạo */
 function eloPillStock() {
-    return buildShopStock(SELF_FORGE_SITE).filter(si => !si.slot).map(si => ({ ...si, elo: state.realmIndex >= FREE_GOODS_REALM ? 0 : Math.max(1, Math.round(si.price / (goldRef(state.realmIndex) * ELO_PILL_GOLD_REFS))) }));
+    return buildShopStock(SELF_FORGE_SITE).filter(si => !si.slot && !(si.type === 'life' && ageless())).map(si => ({ ...si, elo: state.realmIndex >= FREE_GOODS_REALM ? 0 : Math.max(1, Math.round(si.price / (goldRef(state.realmIndex) * ELO_PILL_GOLD_REFS))) }));
 }
 
 function openPillExchange() {

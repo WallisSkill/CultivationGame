@@ -276,8 +276,20 @@ window.addEventListener("load", () => {
 /* ===========================
     KIỂM TRA THỌ NGUYÊN — TU SĨ HẾT THỌ TẮC TỬ
    =========================== */
+function ageless() {
+    return (state.realmIndex || 0) >= AGELESS_REALM;
+}
+
+function maxAgeText() {
+    return ageless() ? '∞' : formatNumber(state.maxAge);
+}
+
+function agePercent() {
+    return ageless() ? 0 : Math.min(100, Math.round(state.age / state.maxAge * 100));
+}
+
 function checkLongevity() {
-    if (state.age >= state.maxAge) {
+    if (!ageless() && state.age >= state.maxAge) {
         log('⚰️ Tuổi thọ đã vượt quá cực hạn! Nguyên thần tán, thân thể hóa tro bụi...');
         loseByLongevity();
     }
@@ -308,12 +320,11 @@ function updateAgeDisplay() {
     const ageBar = $('ageBar');
 
     if (ageTxt) {
-        writeText(ageTxt, `${Math.floor(state.age)} / ${formatNumber(state.maxAge)}`);
+        writeText(ageTxt, `${Math.floor(state.age)} / ${maxAgeText()}`);
     }
 
     if (ageBar) {
-        const agePercent = Math.min(100, Math.round(state.age / state.maxAge * 100));
-        ageBar.style.width = `${agePercent}%`;
+        ageBar.style.width = `${agePercent()}%`;
     }
 }
 
@@ -388,7 +399,7 @@ function showRebirthButton(deathReason = 'không rõ nguyên nhân', killInfo = 
                 <div><b style="color: #e6c97a;">Đạo danh:</b> ${state.name || 'Vô Danh Tu Sĩ'}</div>
                 <div><b style="color: #e6c97a;">Cảnh giới đạt được:</b> ${colorizeWithMap(realmName)} ${colorizeWithMap(stageName)}</div>
                 <div><b style="color: #e6c97a;">Linh căn:</b> ${elements} (${colorizeWithMap(rootRankName)})</div>
-                <div><b style="color: #e6c97a;">Tuổi thọ:</b> ${Math.floor(state.age)} / ${state.maxAge}</div>
+                <div><b style="color: #e6c97a;">Tuổi thọ:</b> ${Math.floor(state.age)} / ${maxAgeText()}</div>
                 <div><b style="color: #e6c97a;">Linh thạch tích lũy:</b> ${state.gold}</div>
                 <div><b style="color: #e6c97a;">Sức mạnh tối đa:</b> ${state.totalPower || state.power}</div>
                 <div><b style="color: #e6c97a;">Kho đồ:</b> ${state.inventory.length} vật phẩm</div>
@@ -953,8 +964,8 @@ function renderTopStats() {
         </div>
 
         <div class="stat"><b>Tuổi thọ</b>
-            <div id="ageTxt">${Math.floor(state.age)} / ${formatNumber(state.maxAge)}</div>
-            <div class="bar"><i id="ageBar" style="width:${Math.min(100, Math.round(state.age / state.maxAge * 100))}%"></i></div>
+            <div id="ageTxt">${Math.floor(state.age)} / ${maxAgeText()}</div>
+            <div class="bar"><i id="ageBar" style="width:${agePercent()}%"></i></div>
         </div>
 
         <div class="stat"><b>Linh thạch</b>
@@ -1155,8 +1166,8 @@ function showStatDetails() {
             <div style="background:rgba(248,131,172,0.1);border:1px solid rgba(248,131,172,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
                 <div style="color:#f783ac;font-weight:600;margin-bottom:10px;font-size:1.1em;">🩸 Tuổi Thọ</div>
                 <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
-                    <div>⏳ Hiện tại: <span style="color:#fff">${Math.floor(state.age)}</span> / <span style="color:#fff">${formatNumber(state.maxAge)}</span> tuổi</div>
-                    <div>📊 Đã sử dụng: <span style="color:#ff6b6b">${((state.age / state.maxAge) * 100).toFixed(1)}%</span></div>
+                    <div>⏳ Hiện tại: <span style="color:#fff">${Math.floor(state.age)}</span> / <span style="color:#fff">${maxAgeText()}</span> tuổi</div>
+                    <div>📊 Đã sử dụng: <span style="color:#ff6b6b">${ageless() ? '0.0' : ((state.age / state.maxAge) * 100).toFixed(1)}%</span></div>
                 </div>
             </div>
         </div>

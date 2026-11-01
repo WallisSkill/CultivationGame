@@ -939,7 +939,7 @@ function openForge() {
     }).join('');
     const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[forgeCapAt(loc)]}.` : '';
     const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
-    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${freeGoods() ? 'không tốn gì, xong ngay' : `${matCost} ${MATERIAL_NAMES[worldId]} (có ${have})${price ? ` + ${formatNumber(price)} linh thạch` : ''}, ${formatRealDuration(forgeSeconds())}, ${selfForging() ? 'tự rèn' : 'thợ rèn'} làm nền, rèn được nhiều món cùng lúc`}. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${freeGoods() ? 'không tốn gì, xong ngay' : `${matCost} ${MATERIAL_NAMES[worldId]} (có ${have})${price ? ` + ${formatNumber(price)} linh thạch` : ''}, ${formatRealDuration(forgeSeconds())}, ${selfForging() ? 'tự rèn' : 'thợ rèn'} làm nền, rèn được nhiều món cùng lúc`}. ${Math.round(grade.topChance * (grade.godWorld === worldId ? 1 - grade.godChance : 1) * 100)}% ra phẩm Tiên.${grade.godWorld === worldId ? ` ${Math.round(grade.godChance * 100)}% ra phẩm Thần.` : ''}${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
 }
 
 let forgeChosenSubs = [];
