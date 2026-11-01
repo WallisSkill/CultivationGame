@@ -134,7 +134,7 @@ function openTianjiaoBoard() {
     const hint = rank >= 1 && rank <= 3
         ? `<div class="small"><b>Ưu đãi hạng ${rank} tại đây:</b></div>${perks}`
         : worldOf(locId).id === 'hondon'
-            ? '<div class="small">Hỗn Độn Hải không có quái để săn, bảng này chỉ có tám Đạo Giả.</div>'
+            ? '<div class="small">Hỗn Độn Hải không có quái để săn, bảng này chỉ có sáu Đạo Giả. Gặp họ để luận đạo: thắng được cộng điểm, thua bị trừ, đối thủ càng cao càng đáng.</div>'
             : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
     const world = worldOf(locId);
     const board = thienHaBoard(world.id);

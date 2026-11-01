@@ -44,7 +44,7 @@ function sceneSpots(loc) {
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), DAO_PATHS[loc.path]?.race === state.race && state.daoPath !== loc.path);
     add('📜', 'Truyền thừa các hệ', () => openAllHall(), !!loc.hallAll);
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
-    add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
+    add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect' || (loc.type === 'town' && loc.world === 'hondon'));
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), (loc.type === 'town' || loc.type === 'sect') && !NO_MONSTER_WORLDS.includes(loc.world));
     LOCATION_NPCS[loc.id].filter(key => !npcGone(key)).forEach(key => add(npcOffers(key).length || npcReports(key).length ? '❗' : '💬', NPCS[key].name, () => openNpcTalk(key)));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
@@ -380,7 +380,7 @@ function renderWorldViewTabs() {
     const huntable = (currentLocation().enemies || []).length > 0;
     const autoHunt = huntable ? `<button class="filter-chip ${state.autoHunt ? 'active' : ''}" onclick="toggleAutoHunt()">🔁 Săn liên tục: ${state.autoHunt ? 'ON' : 'OFF'}</button>` : '';
     tabs.innerHTML = `<button class="filter-chip ${sceneState.view === 'scene' ? 'active' : ''}" onclick="setWorldView('scene')">🚶 Bên trong</button>
-        <button class="filter-chip ${sceneState.view === 'map' ? 'active' : ''}" onclick="setWorldView('map')">🗺️ Thiên Hạ Đồ</button>
+        <button class="filter-chip ${sceneState.view === 'map' ? 'active' : ''}" onclick="setWorldView('map')">🗺️ Thiên Hạ Đồ</button>${selfForging() ? '<button class="filter-chip" onclick="openForge()">🔨 Rèn đồ</button><button class="filter-chip" onclick="openPillExchange()">⚗️ Đổi đan</button>' : ''}
         ${autoHunt}
         <span class="small">👥 ${here + 1} người tại đây · ${Math.max(worldServer.online, onlinePlayers.size + 1)} online</span>`;
     $('sceneHost').style.display = sceneState.view === 'scene' ? 'flex' : 'none';

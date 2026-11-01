@@ -330,8 +330,16 @@ function gearPrice(realm, quality) {
 const FORGE_GRADES = [
     { name: 'Lò rèn', topChance: 0.15, overChance: 0, overRealms: 0 },
     { name: 'Danh lò', topChance: 0.30, overChance: 0.10, overRealms: 1 },
-    { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2, wholeWorld: true }
+    { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2, wholeWorld: true },
+    { name: 'Tự rèn', topChance: 0.50, overChance: 0, overRealms: 0, wholeWorld: true }
 ];
+
+/* Đồ của Hỗn Độn Đạo Giả là chính bản thân Hỗn Độn: ở đâu cũng tự rèn được, chỉ tốn Hỗn Độn Thạch */
+const SELF_FORGE_SITE = { id: 'self_forge', world: 'hondon', name: 'từ bản thân Hỗn Độn', forgeGrade: FORGE_GRADES.length - 1, maxR: 29 };
+const CHAOS_STONE_SECONDS = 360;
+const CHAOS_STONE_QUEST = 10;
+const LUAN_DAO_ELO = 5;
+const ELO_PILL_GOLD_REFS = 30;
 
 /* Thần lò cho chọn loại chỉ số phụ, mỗi loại cộng thêm phí; giá trị vẫn ngẫu nhiên */
 const FORGE_SUB_MAX = 3;
@@ -389,7 +397,7 @@ const GATE_TIERS = [
     { realm: SAINT_REALM, motif: 'thanh', icon: '🪷', color: '#ff9d4d', flag: 'saintGear', label: 'Thánh', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh', shop: 'da_bao', exclusive: true },
     { realm: THIEN_REALM, motif: 'thien', icon: '✴️', color: '#d9b8ff', flag: 'thienGear', label: 'Thiên', title: 'Mặc đủ đồ cấp Thiên', shop: 'thanh_thi', exclusive: true },
     { realm: 29, motif: 'hondon', icon: '🌀', color: '#5fe6e6', flag: 'hondonGear', label: 'Hỗn Độn', title: 'Mặc đủ đồ cấp Hỗn Độn', shop: 'vo_cuong' },
-    { realm: 30, motif: 'hongmong', icon: '🌸', color: '#ffb3e6', flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' },
+    { realm: 30, motif: 'hongmong', icon: '🌸', color: '#ffb3e6', flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông' },
     { realm: 31, motif: 'chungnguyen', icon: '⚪', color: '#f5f5f5', flag: 'chungnguyenGear', label: 'Chung Nguyên', title: 'Mặc đủ đồ cấp Chung Nguyên', shop: 'co_thu' }
 ];
 

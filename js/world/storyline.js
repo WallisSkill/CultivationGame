@@ -402,7 +402,7 @@ const MAIN_QUESTS = [
     {
         id: 'm33', act: 5, title: 'Hải Tâm', unlock: 30, needs: [29, 2],
         steps: [
-            { go: 'hai_tam', say: [['vo_danh', 'Bên trên chúng ta không còn cảnh giới nào. Tám người ngồi đây, không ai đi tiếp được. Thắng ta rồi nói chuyện.']] },
+            { go: 'hai_tam', say: [['vo_danh', 'Bên trên chúng ta không còn cảnh giới nào. Sáu người ngồi đây, không ai đi tiếp được. Thắng ta rồi nói chuyện.']] },
             { boss: 'vo_danh', say: [['vo_danh', 'Hay. Viên mãn Hỗn Độn rồi, không còn đường nào có sẵn nữa. Muốn đi tiếp thì tự mà làm ra đường.'], ['narr', 'Ngươi ngồi xuống giữa Hải Tâm và tự sáng tạo một cảnh giới chưa từng có. Ngươi đặt tên nó là Hồng Mông Chúa Tể.']] }
         ],
         reward: { flag: 'world_hongmong', hours: 120, goldRefs: 1000 }

@@ -50,7 +50,6 @@ Object.assign(NPCS, {
     tien_thuong: { name: 'Lý Chưởng Quỹ', title: 'Chưởng quỹ Vạn Tiên', look: NPC_LOOK('m', 0, '#1b1b22', '#dbe8f7', { weapon: 'orb', weaponColor: '#7fd4ff' }) },
     dong_tu: { name: 'Kim Giác Đồng Tử', title: 'Giữ lò Bát Quái', look: NPC_LOOK('m', 3, '#1b1b22', '#e8cf8f', { weapon: 'fan', weaponColor: '#ffc14d' }) },
     hoang_cong: { name: 'Khai Sơn Tượng', title: 'Thợ Hoang Nguyên', look: NPC_LOOK('m', 4, '#8b5a2b', '#5a3a9e', { beard: true, weapon: 'staff', weaponColor: '#c58bff' }) },
-    mo_nhan: { name: 'Người Giữ Mộ', title: 'Thợ Ma Thần Mộ', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { weapon: 'staff', weaponColor: '#5fe6e6' }) },
 });
 
 const REGION_QUESTS = [
@@ -133,16 +132,6 @@ const REGION_QUESTS = [
         loc: 'khai_thien', npc: 'hoang_cong', title: 'Quặng Quy Tắc', needs: [25, 0],
         intro: [['hoang_cong', 'Nơi này chưa có luật nên lửa muốn cháy kiểu gì thì cháy. Mang Quy Tắc Thể về, ta rèn cho lửa một cái luật.']],
         steps: [{ hunt: { loc: 'khai_thien', name: 'Quy Tắc Thể', n: 6 }, say: [['hoang_cong', 'Lửa đã biết nghe lời. Thần lò Hoang Nguyên mở cho ngươi.']] }]
-    },
-    {
-        loc: 'dao_gia_am', npc: 'vong_ky', title: 'Khôi Lỗi Trước Am', needs: [29, 0],
-        intro: [['vong_ky', 'Am không có gì để bán, chỉ có đồ người ta bỏ quên. Muốn lấy thì tự lục, tìm được gì là của ngươi.']],
-        steps: [{ gather: { loc: 'dao_gia_am', hours: 2, label: 'Lục đồ bỏ quên' }, say: [['vong_ky', 'Cứ lấy. Đừng hỏi của ai.']] }]
-    },
-    {
-        loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Đốt Hài Ma Thần', needs: [29, 0],
-        intro: [['mo_nhan', 'Thần lò ở đây đốt bằng hài cốt Ma Thần. Nhặt về đủ, ta nhóm cho một mẻ.']],
-        steps: [{ gather: { loc: 'ma_than_mo', hours: 2, label: 'Nhặt hài cốt Ma Thần' }, say: [['mo_nhan', 'Đủ cháy một kỷ nguyên. Lò này từ nay có tên ngươi.']] }]
     }
 ].map(q => ({ ...q, id: `open_${q.loc}`, reward: { hours: 1, goldRefs: 5, opens: q.loc } }));
 
@@ -321,14 +310,14 @@ const GATE_QUEST_SETS = {
         { loc: 'than_dinh', npc: 'narr', title: 'Dấu Ấn Đạo Vệ', hunt: 'Đạo Vệ', slots: ['boots', 'amulet'], intro: 'Đạo Vệ đeo dấu ấn đi lại qua bờ Hỗn Độn. Lấy đủ thì ngươi cũng đi được.', done: 'Đủ sáu món cấp Hỗn Độn. Bờ bên kia không còn là chỗ chết nữa.' }
     ],
     30: [
-        { loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Long Cốt Hỗn Độn', gather: { loc: 'ma_than_mo', hours: GATE_QUEST_GATHER_HOURS, label: 'Nhặt long cốt' }, slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
-        { loc: 'vo_chung_lau', npc: 'narr', title: 'Tầng Không Có Số', gather: { loc: 'vo_chung_lau', hours: GATE_QUEST_GATHER_HOURS, label: 'Leo tầng không có số' }, slots: ['weapon', 'ring'], intro: 'Tháp này cất thứ binh khí chưa từng được rèn. Leo đủ lâu, nó sẽ tự rơi vào tay ngươi.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
-        { loc: 'hai_tam', npc: 'narr', title: 'Hơi Thở Hải Tâm', gather: { loc: 'hai_tam', hours: GATE_QUEST_GATHER_HOURS, label: 'Ngồi giữa mắt bão' }, slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ngồi giữa bão đủ lâu mà không tan thì hơi ấy đọng lại thành đồ.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
+        { loc: 'ma_than_mo', npc: 'hd_thu_cuu', title: 'Long Cốt Hỗn Độn', gather: { loc: 'ma_than_mo', hours: GATE_QUEST_GATHER_HOURS, label: 'Nhặt long cốt' }, slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
+        { loc: 'vo_chung_lau', npc: 'am_duong', title: 'Tầng Không Có Số', gather: { loc: 'vo_chung_lau', hours: GATE_QUEST_GATHER_HOURS, label: 'Leo tầng không có số' }, slots: ['weapon', 'ring'], intro: 'Tháp này cất thứ binh khí chưa từng được rèn. Leo đủ lâu, nó sẽ tự rơi vào tay ngươi.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
+        { loc: 'hai_tam', npc: 'vo_danh', title: 'Hơi Thở Hải Tâm', gather: { loc: 'hai_tam', hours: GATE_QUEST_GATHER_HOURS, label: 'Ngồi giữa mắt bão' }, slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ngồi giữa bão đủ lâu mà không tan thì hơi ấy đọng lại thành đồ.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
     ],
     31: [
         { loc: 'dao_gia_am', npc: 'vong_ky', title: 'Dệt Áo Bằng Tử Khí', gather: { loc: 'tu_khi', hours: GATE_QUEST_GATHER_HOURS, label: 'Thu Hồng Mông Tử Khí' }, slots: ['armor', 'helm'], intro: 'Cõi của ngươi không có ai để chém, nên phải tự làm lấy. Về Thiên Nguyên thu Tử Khí mà dệt áo, bước tới Trường Hà không có áo là tan.', done: 'Ngươi vừa mặc vào thứ đã tạo ra Đạo. Đừng giặt.' },
         { loc: 'vo_cuong', npc: 'ly_khach', title: 'Lửa Đầu Tiên', gather: { loc: 'so_hoa', hours: GATE_QUEST_GATHER_HOURS, label: 'Lấy lửa Sơ Hỏa Đài' }, slots: ['weapon', 'ring'], intro: 'Bếp ta tắt lửa rồi. Ngươi có ngọn lửa chưa từng tắt trên đó, xin một mồi. Tiện tay tôi luôn binh khí của ngươi.', done: 'Lửa tốt. Bữa này ta trả công bằng hai món, khỏi ghi sổ.' },
-        { loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Bào Thai Của Đạo', gather: { loc: 'dao_thai', hours: GATE_QUEST_GATHER_HOURS, label: 'Canh Đạo Thai' }, slots: ['boots', 'amulet'], intro: 'Người chết ở đây đều không thấy được đoạn cuối. Ngồi canh Đạo Thai đi, thứ chưa ra đời mới dẫn được ngươi tới chỗ mọi thứ đã kết thúc.', done: 'Đủ sáu món cấp Chung Nguyên. Từ đây không còn ai đào mộ giúp ngươi nữa.' }
+        { loc: 'ma_than_mo', npc: 'hd_thu_cuu', title: 'Bào Thai Của Đạo', gather: { loc: 'dao_thai', hours: GATE_QUEST_GATHER_HOURS, label: 'Canh Đạo Thai' }, slots: ['boots', 'amulet'], intro: 'Người chết ở đây đều không thấy được đoạn cuối. Ngồi canh Đạo Thai đi, thứ chưa ra đời mới dẫn được ngươi tới chỗ mọi thứ đã kết thúc.', done: 'Đủ sáu món cấp Chung Nguyên. Từ đây không còn ai đào mộ giúp ngươi nữa.' }
     ]
 };
 
@@ -369,8 +358,8 @@ function npcLookFromSeed(seed) {
     return NPC_LOOK(seed % 2 ? 'm' : 'f', seed % 6, RESIDENT_COLORS[seed % 3], RESIDENT_COLORS[seed % RESIDENT_COLORS.length]);
 }
 
-/* Hỗn Độn Hải chỉ có tám Đạo Giả nên người ở mỗi nơi đều là một trong tám vị đó */
-const HONDON_DAO_GIA = ['hd_vo_thuc', 'hd_thu_cuu', 'am_duong', 'tich_diet', 'thich_thien', 'vo_luong', 'vo_danh', 'vong_ky'];
+/* Hỗn Độn Hải chỉ có sáu Đạo Giả nên người ở mỗi nơi đều là một trong sáu vị đó */
+const HONDON_DAO_GIA = ['hd_thu_cuu', 'hd_vo_thuc', 'am_duong', 'thich_thien', 'vo_danh', 'vong_ky'];
 
 const LOCATION_NPCS = {};
 Object.values(LOCATIONS).forEach(loc => {

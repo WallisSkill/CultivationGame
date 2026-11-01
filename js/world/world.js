@@ -23,7 +23,7 @@ const TRAVEL_GATE_PIXELS = 500;
 /* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
 const TRAVEL_DISTANCE_EXPONENT = 1.5;
 /* Dịch chuyển: cần tông môn + cảnh giới tối thiểu của cõi đích */
-const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 30 };
+const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 29, hongmong: 30, chungnguyen: 31 };
 /* Cõi cuối: cảnh giới cao hơn cõi thì tới tức thì, thấp hơn thì mất ngàn giờ cho mỗi bậc thiếu */
 const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
@@ -45,7 +45,6 @@ const BOUNTY_KILLS = 5;
 const BOUNTY_GOLD_REFS = 15;
 const BOUNTY_HOURS = 1;
 const BOUNTY_MATERIAL = 6;
-const EXPLORE_MATERIAL = 2;
 
 let worldLastTick = Date.now();
 let worldUiAccum = 0;
@@ -176,6 +175,7 @@ function travelSecondsLeft() {
 function advanceWorld(sec) {
     if (state.dead || !state.root?.elements) return;
     advanceForgeQueue(sec);
+    accrueChaosStone(sec);
     const moving = window._battleActive ? 0 : Math.min(sec, travelSecondsLeft());
     state.age += (sec - moving) * ageYearsPerSecond(state.realmIndex) + moving * travelAgeYearsPerSecond(state.realmIndex);
     if (window._battleActive) return;
@@ -294,7 +294,6 @@ function finishActivity() {
             break;
         case 'explore':
             window.exploreOriginalImpl();
-            if (NO_MONSTER_WORLDS.includes(currentLocation().world)) grantMaterial(currentLocation().world, materialYield(state.realmIndex, EXPLORE_MATERIAL));
             break;
         case 'gather':
             completeGather(a.questId);
@@ -396,7 +395,7 @@ function teleportLockReason(id) {
     const tier = worldOf(id);
     const minRealm = TELEPORT_MIN_REALM[tier.id];
     if (minRealm == null) return '';
-    if ((state.realmIndex || 0) >= OVERSEER_REALM) return '';
+    if ((state.realmIndex || 0) >= Math.max(minRealm, OVERSEER_REALM)) return '';
     const missing = [];
     if (!state.sect) missing.push('nhập tông môn');
     if ((state.realmIndex || 0) < minRealm) missing.push(`đạt ${REALMS[minRealm]}`);
@@ -861,9 +860,25 @@ function openWorldModal(id, title, body) {
     modal.style.display = 'flex';
 }
 
+function selfForging() {
+    return realmWorld() === SELF_FORGE_SITE.world;
+}
+
+function forgeSite() {
+    return selfForging() ? SELF_FORGE_SITE : currentLocation();
+}
+
+function accrueChaosStone(sec) {
+    if (!selfForging()) return;
+    const clock = (state.chaosStoneClock || 0) + sec;
+    const stones = Math.floor(clock / CHAOS_STONE_SECONDS);
+    state.chaosStoneClock = clock - stones * CHAOS_STONE_SECONDS;
+    if (stones) state.mats.hondon = (state.mats.hondon || 0) + stones;
+}
+
 function openForge() {
-    if (!hasService('forge')) { showToast(`${currentLocation().name} không có lò rèn.`, 'warn'); return; }
-    const loc = currentLocation();
+    if (!selfForging() && !hasService('forge')) { showToast(`${currentLocation().name} không có lò rèn.`, 'warn'); return; }
+    const loc = forgeSite();
     const grade = forgeGradeOf(loc);
     const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
@@ -880,7 +895,7 @@ function openForge() {
     }).join('');
     const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[forgeCapAt(loc)]}.` : '';
     const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
-    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have})${price ? ` + ${formatNumber(price)} linh thạch` : ''}, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, ${selfForging() ? 'tự rèn' : 'thợ rèn'} làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
 }
 
 let forgeChosenSubs = [];
@@ -890,7 +905,7 @@ function forgeCanChooseSubs(loc, realm) {
 }
 
 function forgePriceWith(realm, subCount) {
-    return Math.floor(gearPrice(realm, 2) * (1 + FORGE_SUB_FEE * subCount));
+    return selfForging() ? 0 : Math.floor(gearPrice(realm, 2) * (1 + FORGE_SUB_FEE * subCount));
 }
 
 function forgeSubPicker(loc, realm) {
@@ -909,7 +924,7 @@ function toggleForgeSub(kind) {
 
 function gearUpgradeCost(item) {
     const next = (item.plus || 0) + 1;
-    return { gold: goldRef(item.reqRealm || 0) * 2 * next, mats: next };
+    return { gold: selfForging() ? 0 : goldRef(item.reqRealm || 0) * 2 * next, mats: next };
 }
 
 function upgradeGear(uidIndex) {
@@ -917,7 +932,7 @@ function upgradeGear(uidIndex) {
     if (!item?.slot) return;
     const plus = item.plus || 0;
     if (plus >= gearUpgradeCap(item.reqRealm || 0)) { showToast('Đã đạt giới hạn nâng cấp.', 'warn'); return; }
-    if ((item.reqRealm || 0) > forgeCapAt(currentLocation())) { showToast('Lò này không đủ sức nâng món đồ đó.', 'warn'); return; }
+    if ((item.reqRealm || 0) > forgeCapAt(forgeSite())) { showToast('Lò này không đủ sức nâng món đồ đó.', 'warn'); return; }
     const worldId = worldTierOfRealm(item.reqRealm || 0).id;
     const cost = gearUpgradeCost(item);
     if ((state.mats[worldId] || 0) < cost.mats || state.gold < cost.gold) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
@@ -935,18 +950,18 @@ function gearUpgradeRows() {
         const cap = gearUpgradeCap(item.reqRealm || 0);
         const step = Math.round(gearUpgradeStep(item.reqRealm || 0) * 1000) / 10;
         if (plus >= cap) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">${gearStatText(item)} · tối đa +${cap}</div></div></div>`;
-        if ((item.reqRealm || 0) > forgeCapAt(currentLocation())) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">Lò này không đủ sức nâng món đồ này.</div></div></div>`;
+        if ((item.reqRealm || 0) > forgeCapAt(forgeSite())) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">Lò này không đủ sức nâng món đồ này.</div></div></div>`;
         const cost = gearUpgradeCost(item);
         const worldId = worldTierOfRealm(item.reqRealm || 0).id;
         return `<div class="shop-item forge-row">
             <div><b>${item.name}</b><div class="small">${gearStatText(item)} · +${plus}/${cap} · mỗi cấp +${step}%</div>
-            <div class="small">${formatNumber(cost.gold)} linh thạch, ${cost.mats} ${MATERIAL_NAMES[worldId]}</div></div>
+            <div class="small">${cost.gold ? `${formatNumber(cost.gold)} linh thạch, ` : ''}${cost.mats} ${MATERIAL_NAMES[worldId]}</div></div>
             <button onclick="upgradeGear(${index})">Nâng cấp</button></div>`;
     }).join('');
 }
 
 function startForge(slot) {
-    const loc = currentLocation();
+    const loc = forgeSite();
     const realm = forgeRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const subs = forgeCanChooseSubs(loc, realm) && forgeChosenSubs.length ? forgeChosenSubs : null;
@@ -957,7 +972,7 @@ function startForge(slot) {
     state.gold -= price;
     const seconds = hastedSeconds(FORGE_HOURS * 3600);
     state.forgeQueue.push({ slot, realm, grade: loc.forgeGrade || 0, subs, total: seconds, remaining: seconds });
-    log(`🔨 Giao thợ rèn ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
+    log(`🔨 ${selfForging() ? 'Tự rèn' : 'Giao thợ rèn'} ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
     openForge();
     renderAll();
 }
@@ -975,7 +990,7 @@ function advanceForgeQueue(sec) {
 function finishForge(job) {
     const gear = makeForgedGear(job.realm, job.slot, job.grade, job.subs);
     addItemToInventory(gear);
-    log(`🔨 Thợ rèn giao ${gear.name}!`);
+    log(`🔨 Rèn xong ${gear.name}!`);
     showToast(`Rèn xong ${gear.name}`, 'info');
 }
 
@@ -1060,7 +1075,7 @@ function gearGate(realm) {
     if (!tier) return null;
     const worn = gateGearWorn(tier);
     if (worn >= GEAR_SLOT_IDS.length) return null;
-    return { id: `gate_gear_${realm}`, title: `${tier.title}, nhận từ nhiệm vụ phụ hoặc mua ở ${LOCATIONS[tier.shop].name} (${worn}/${GEAR_SLOT_IDS.length})` };
+    return { id: `gate_gear_${realm}`, title: `${tier.title}, nhận từ nhiệm vụ phụ${tier.shop ? ` hoặc mua ở ${LOCATIONS[tier.shop].name}` : ''} (${worn}/${GEAR_SLOT_IDS.length})` };
 }
 
 function getBreakthroughGate(realm) {
@@ -1249,6 +1264,7 @@ function grantQuestReward(q) {
         state.gold += gold;
         log(`💰 +${formatNumber(gold)} linh thạch`);
     }
+    if (selfForging()) grantMaterial(SELF_FORGE_SITE.world, CHAOS_STONE_QUEST);
     if (r.gear) addItemToInventory(makeGearItem(state.realmIndex, r.gear[0], r.gear[1]));
     if (r.gateGear) r.gateGear.slots.forEach(slot => addItemToInventory(makeGateGear(gateTierOf(r.gateGear.realm), slot, GATE_QUEST_QUALITY)));
     if (r.treasure) addItemToInventory(makeTreasureGear(state.realmIndex, randomGearSlot(), TREASURE_REWARD.quality, TREASURE_REWARD.bonus));
@@ -1372,6 +1388,7 @@ function enemyRenownPoints(enemy) {
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
     onSaintDuelWon(enemy);
+    onLuanDaoWon(enemy);
     const killed = [enemy, ...(enemy.escorts || [])];
     if (enemy.hunted) {
         const earned = enemyRenownPoints(enemy);
@@ -1398,6 +1415,7 @@ function onEnemyDefeated(enemy) {
 function onScriptedLoss(enemy) {
     state.hp = state.totalMaxHp;
     log(`💫 ${enemy.name} không hạ sát thủ. Ngươi sống sót.`);
+    onLuanDaoLost(enemy);
     clearBossStep(enemy.bossId);
 }
 
@@ -1623,7 +1641,7 @@ function openNpcTalk(key) {
     const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}${questRewardHTML(q)}</button>`).join('');
     const reports = npcReports(key).map(rt => `<button class="mini-btn" onclick="reportToNpc('${rt.id}')">📜 Báo lại: ${QUEST_INDEX[rt.id].title}</button>`).join('');
     openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>
-        <div class="npc-options">${reports}${offers}${npcStoryButton(key)}${saintDuelButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
+        <div class="npc-options">${reports}${offers}${npcStoryButton(key)}${saintDuelButton(key)}${luanDaoButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
 }
 
 /* Lục Thánh ở sức thật, viên mãn Đại Thánh; thua không chết, thắng lần đầu mới có thưởng */
@@ -1633,6 +1651,54 @@ const SAINT_DUELS = { thai_thanh: 1.3, thong_thien: 1.25, nguyen_thuy: 1.2, nu_o
 Object.entries(SAINT_DUELS).forEach(([key, scale]) => {
     BOSSES[`duel_${key}`] = { npc: key, realm: 21, stage: 3, scale, board: 6, elements: SAINT_ELEMENTS, scriptedLoss: true };
 });
+
+/* Hỗn Độn Hải không có quái: Đạo Giả luận đạo với nhau để lên bảng, tính kiểu elo nên càng vượt đối thủ thắng càng ít, thua càng đau */
+const LUAN_DAO_SCALES = [1.3, 1.25, 1.2, 1.15, 1.1, 1.05];
+HONDON_DAO_GIA.forEach((key, i) => {
+    BOSSES[`luan_${key}`] = { npc: key, realm: OVERSEER_REALM, stage: 3, scale: LUAN_DAO_SCALES[i], board: 6, scriptedLoss: true };
+});
+
+function luanDaoKey(npcKey) {
+    if (currentLocation().world !== 'hondon' || (state.realmIndex || 0) < OVERSEER_REALM) return null;
+    return HONDON_DAO_GIA.find(key => NPCS[key].name === NPCS[npcKey].name) || null;
+}
+
+function luanDaoStake(enemy) {
+    const key = enemy.bossId?.startsWith('luan_') ? enemy.bossId.slice(5) : null;
+    if (!key) return null;
+    const locId = state.location;
+    const mine = state.renown[locId] || 0;
+    const rival = npcTianjiao(locId).find(entry => entry.id === `npc_${key}`).score;
+    const unit = TIANJIAO_BASE_SCORE * renownPoints(LOCATIONS[locId].maxR);
+    return { locId, mine, gain: Math.round(unit * rival / (mine + rival)), loss: Math.round(unit * mine / (mine + rival)) };
+}
+
+function onLuanDaoWon(enemy) {
+    const stake = luanDaoStake(enemy);
+    if (!stake) return;
+    grantRenown(stake.locId, stake.gain);
+    state.luanElo = (state.luanElo || 0) + LUAN_DAO_ELO;
+    log(`📊 Elo +${LUAN_DAO_ELO}, dùng để đổi đan dược.`);
+}
+
+function onLuanDaoLost(enemy) {
+    const stake = luanDaoStake(enemy);
+    if (!stake) return;
+    state.renown[stake.locId] = stake.mine - stake.loss;
+    log(`🏆 Thiên kiêu -${formatNumber(stake.loss)} điểm tại ${LOCATIONS[stake.locId].name}.`);
+    reportRenown(stake.locId);
+}
+
+function luanDaoButton(key) {
+    const rival = luanDaoKey(key);
+    return rival ? `<button class="mini-btn" onclick="challengeLuanDao('${rival}')">⚔️ Luận đạo</button>` : '';
+}
+
+function challengeLuanDao(key) {
+    if (!requireFree()) return;
+    closeNpcTalk();
+    spawnBoss(`luan_${key}`);
+}
 
 function saintDuelButton(key) {
     if (!SAINT_DUELS[key] || (state.realmIndex || 0) < SAINT_DUEL_REALM) return '';
@@ -1893,6 +1959,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, challengeSaint, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, challengeSaint, challengeLuanDao, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

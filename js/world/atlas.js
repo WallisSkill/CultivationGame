@@ -163,4 +163,10 @@ const OPENED_REALM = 21;
 Object.values(LOCATIONS).forEach(loc => {
     if (loc.world === 'thanh') loc.enemyMax = loc.minR >= OPENED_REALM ? OPENED_ENEMY_MAX : SAINT_ENEMY_MAX;
     if (NO_MONSTER_WORLDS.includes(loc.world)) loc.enemies = [];
+    if (loc.world === 'hondon') {
+        loc.services = [];
+        delete loc.forgeGrade;
+        delete loc.blackMarket;
+        if (loc.type === 'sect') loc.type = 'wild';
+    }
 });

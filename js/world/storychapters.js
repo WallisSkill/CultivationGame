@@ -14,11 +14,9 @@ Object.assign(NPCS, {
     kiem_to: { name: 'Bất Hủ Kiếm Tổ', title: 'Đại Đạo Chí Thượng', look: NPC_LOOK('m', 1, '#c9c9d6', '#2b2b35', { aura: '#c58bff', weapon: 'sword', weaponColor: '#c58bff' }) },
     van_kiep: { name: 'Vạn Kiếp Thiên Quân', title: 'Đại Đạo Chí Thượng', look: NPC_LOOK('m', 4, '#8b5a2b', '#3a2a6e', { aura: '#c58bff', weapon: 'spear', weaponColor: '#c58bff' }) },
     hd_vo_thuc: { name: 'Hỗn Độn Vô Thức', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { aura: '#5fe6e6' }) },
-    hd_thu_cuu: { name: 'Hỗn Độn Thứ Chín', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('f', 1, '#5fe6e6', '#13525c', { aura: '#5fe6e6', eyes: '#2a5fa8' }) },
-    am_duong: { name: 'Âm Dương Vô Cấu', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('f', 2, '#e9eef7', '#13525c', { aura: '#5fe6e6', weapon: 'orb', weaponColor: '#5fe6e6' }) },
-    tich_diet: { name: 'Tịch Diệt Thần', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 4, '#1b1b22', '#13525c', { aura: '#5fe6e6', weapon: 'spear', weaponColor: '#5fe6e6' }) },
-    thich_thien: { name: 'Thích Thiên', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 5, '#1b1b22', '#13525c', { aura: '#5fe6e6', crown: 'wheel', crownColor: '#5fe6e6' }) },
-    vo_luong: { name: 'Vô Lượng Đại Diệt Tôn', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 0, '#ffffff', '#13525c', { beard: true, aura: '#5fe6e6', crown: 'wheel', crownColor: '#5fe6e6' }) },
+    hd_thu_cuu: { name: 'Hỗn Độn Thứ Chín', title: 'Hỗn Độn Đạo Giả Viên Mãn', look: NPC_LOOK('m', 1, '#5fe6e6', '#13525c', { aura: '#5fe6e6', eyes: '#2a5fa8' }) },
+    am_duong: { name: 'Âm Dương Vô Cấu Tịch Diệt Thần', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('f', 2, '#e9eef7', '#13525c', { aura: '#5fe6e6', weapon: 'orb', weaponColor: '#5fe6e6' }) },
+    thich_thien: { name: 'Thích Thiên Vô Lượng Đại Diệt Tôn', title: 'Hỗn Độn Đạo Giả', look: NPC_LOOK('m', 5, '#1b1b22', '#13525c', { aura: '#5fe6e6', crown: 'wheel', crownColor: '#5fe6e6' }) },
     thai_bach: { name: 'Thái Bạch Tinh Quân', title: 'Sứ giả Lăng Tiêu', look: NPC_LOOK('m', 0, '#f0e6c8', '#dbe8f7', { beard: true, crown: 'guan', weapon: 'fan', weaponColor: '#f5f5f5' }) }
 });
 
@@ -144,10 +142,10 @@ const SECT_ERRANDS = [
 MAIN_CHAPTERS['14-1'].steps.push(...SECT_ERRANDS.slice(0, 2));
 MAIN_CHAPTERS['14-2'].steps.unshift(...SECT_ERRANDS.slice(2));
 
-/* Hồi V: gặp đủ tám Đạo Giả trước các trận luận đạo */
+/* Hồi V: gặp đủ sáu Đạo Giả trước các trận luận đạo */
 const DAO_GIA_MEETINGS = {
-    m31: [{ go: 'thai_so_thuy', say: [['hd_vo_thuc', '...'], ['me', 'Lão có nghe ta nói không?'], ['hd_vo_thuc', 'Nghe. Chưa quyết định có tồn tại hay không.']] }, { go: 'ma_than_mo', say: [['hd_thu_cuu', 'Ta là Hỗn Độn thứ chín. Tám cái trước ta đều đã chết, kể cả cái đang đứng nói chuyện với ngươi.']] }],
-    m32: [{ go: 'hon_kiem', say: [['am_duong', 'Âm dương của ta không vướng một hạt bụi. Vũ trụ của ngươi thì toàn bụi.']] }, { go: 'vo_chung_lau', say: [['tich_diet', 'Mọi thứ đều diệt. Ta chỉ đến sớm một chút.']] }, { go: 'hon_the', say: [['thich_thien', 'Trời của ngươi ta đã thích, đã hết. Ngươi còn định bước tiếp?']] }, { go: 'hai_tam', say: [['vo_luong', 'Vô lượng vũ trụ, vô lượng lần diệt. Ngươi là lần thứ mấy, tự ngươi đếm đi.']] }]
+    m31: [{ go: 'thai_so_thuy', say: [['hd_vo_thuc', '...'], ['me', 'Lão có nghe ta nói không?'], ['hd_vo_thuc', 'Nghe. Chưa quyết định có tồn tại hay không.']] }, { go: 'ma_than_mo', say: [['hd_thu_cuu', 'Ta là Hỗn Độn thứ chín. Tám cái trước ta đều đã chết, kể cả cái đang đứng nói chuyện với ngươi.'], ['hd_thu_cuu', 'Đứa ngươi gặp ở Thái Sơ Thủy là con ta. Nó chưa quyết định có tồn tại hay không, ta là cha nên chờ được.']] }],
+    m32: [{ go: 'hon_kiem', say: [['am_duong', 'Âm dương của ta không vướng một hạt bụi. Vũ trụ của ngươi thì toàn bụi.']] }, { go: 'vo_chung_lau', say: [['am_duong', 'Mọi thứ đều diệt. Ta chỉ đến sớm một chút.']] }, { go: 'hon_the', say: [['thich_thien', 'Trời của ngươi ta đã thích, đã hết. Ngươi còn định bước tiếp?']] }, { go: 'hai_tam', say: [['thich_thien', 'Vô lượng vũ trụ, vô lượng lần diệt. Ngươi là lần thứ mấy, tự ngươi đếm đi.']] }]
 };
 Object.entries(DAO_GIA_MEETINGS).forEach(([id, steps]) => QUEST_INDEX[id].steps.unshift(...steps));
 
@@ -250,10 +248,8 @@ const NPC_STORIES = {
     vong_ky: [{ from: 29, lines: ['Chín hậu duệ của ta đều mang tên ta. Lần nào gọi một đứa, tám đứa kia cũng quay lại.', ['me', 'Bọn họ đâu?'], 'Trong tay áo ta. Chúng đang ngủ.'] }],
     hd_vo_thuc: [{ from: 29, lines: ['...', ['me', 'Chỉ có thế thôi sao?'], '...'] }],
     hd_thu_cuu: [{ from: 29, lines: ['Lần sau gặp nhau, người đứng đây sẽ là Hỗn Độn thứ mười.', ['me', 'Ngươi sợ à?'], 'Ta đã là người thứ chín được nghe câu đó.'] }],
-    am_duong: [{ from: 29, lines: ['Đừng chạm vào áo ta.', ['me', 'Bẩn à?'], 'Không. Ngươi sẽ thấy mình bẩn.'] }],
-    tich_diet: [{ from: 29, lines: ['Ta ngồi với mọi thứ trong phút cuối của chúng.', ['me', 'Có đáng sợ không?'], 'Không. Chỉ yên tĩnh thôi.'] }],
-    thich_thien: [{ from: 29, lines: ['Ta từng thích một vũ trụ, rồi ta thích hết nó.', ['me', 'Nghĩa là sao?'], 'Là ăn. Đừng hỏi thêm.'] }],
-    vo_luong: [{ from: 29, lines: ['Vô lượng diệt nghĩa là không đếm được ta đã diệt bao nhiêu thứ.', ['me', 'Còn sinh ra thì sao?'], 'Câu đó chưa từng có ai hỏi. Ngồi xuống đây.'] }]
+    am_duong: [{ from: 29, lines: ['Đừng chạm vào áo ta.', ['me', 'Bẩn à?'], 'Không. Ngươi sẽ thấy mình bẩn.'] }, { from: 29, lines: ['Ta ngồi với mọi thứ trong phút cuối của chúng.', ['me', 'Có đáng sợ không?'], 'Không. Chỉ yên tĩnh thôi.'] }],
+    thich_thien: [{ from: 29, lines: ['Ta từng thích một vũ trụ, rồi ta thích hết nó.', ['me', 'Nghĩa là sao?'], 'Là ăn. Đừng hỏi thêm.'] }, { from: 29, lines: ['Vô lượng diệt nghĩa là không đếm được ta đã diệt bao nhiêu thứ.', ['me', 'Còn sinh ra thì sao?'], 'Câu đó chưa từng có ai hỏi. Ngồi xuống đây.'] }],
 };
 
 /* Cư dân: mỗi người một chuyện theo Giới, chọn cố định theo người */

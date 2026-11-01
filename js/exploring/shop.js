@@ -2,12 +2,11 @@
     INVENTORY / ITEMS / EQUIP
 =========================== */
 /* Hàng bán theo cảnh giới, không vượt cảnh giới cao nhất của nơi đó — trang bị Phàm/Linh, đan dược, ngọc giản bế quan */
-function buildShopStock() {
-    const realm = serviceRealmAt(currentLocation(), state.realmIndex || 0);
+function buildShopStock(loc = currentLocation()) {
+    const realm = serviceRealmAt(loc, state.realmIndex || 0);
     const g = goldRef(realm);
     const base = baseStatsFor(realm, state.realmStage || 0, state.root?.rank || 0);
     const stock = [];
-    const loc = currentLocation();
     const gateTier = GATE_TIERS.find(t => t.shop === loc.id && (state.realmIndex || 0) >= t.realm - 1);
     if (gateTier) SAINT_SHOP_QUALITIES.forEach(quality => GEAR_SLOT_IDS.forEach(slot => {
         stock.push({ ...makeGateGear(gateTier, slot, quality), id: `gate_${gateTier.realm}_${slot}_${quality}`, price: gearPrice(gateTier.realm, quality) });
@@ -396,6 +395,32 @@ function renderShop() {
 
     renderLinhBaoShop(listEl);
 }
+
+/* Hỗn Độn Đạo Giả không dùng linh thạch: đan dược đổi bằng elo thắng luận đạo */
+function eloPillStock() {
+    return buildShopStock(SELF_FORGE_SITE).filter(si => !si.slot).map(si => ({ ...si, elo: Math.max(1, Math.round(si.price / (goldRef(state.realmIndex) * ELO_PILL_GOLD_REFS))) }));
+}
+
+function openPillExchange() {
+    const rows = eloPillStock().map(si => `<div class="shop-item forge-row">
+        <div><b>${si.name}</b><div class="small">${shopItemDesc(si)}</div></div>
+        <button onclick="buyPillWithElo('${si.id}')" ${(state.luanElo || 0) < si.elo ? 'disabled' : ''}>${si.elo} elo</button>
+    </div>`).join('');
+    openWorldModal('pillModal', '⚗️ Đổi đan dược', `<div class="small">Elo hiện có: ${state.luanElo || 0}. Mỗi trận thắng luận đạo được ${LUAN_DAO_ELO} elo.</div>${rows}`);
+}
+
+function buyPillWithElo(id) {
+    const si = eloPillStock().find(x => x.id === id);
+    if (!si || (state.luanElo || 0) < si.elo) return;
+    state.luanElo -= si.elo;
+    const { id: _id, price: _price, elo: _elo, ...item } = si;
+    addItemToInventory({ ...item, count: 1 });
+    log(`⚗️ Đổi ${si.name} bằng ${si.elo} elo.`);
+    openPillExchange();
+    renderAll();
+}
+
+if (typeof window !== 'undefined') Object.assign(window, { openPillExchange, buyPillWithElo });
 
 /* ===========================
    CHỢ LINH BẢO (Bazaar-style artifacts)
