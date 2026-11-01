@@ -439,6 +439,7 @@ function setupFriendsEventListeners() {
 
         if (msg.type === 'info' && msg.message === 'Đã đăng ký hồ sơ.') return;
         if (msg.type === 'friend_online') noteProfile(msg.profile);
+        if (msg.type === 'friend_offline') onlinePlayers.delete(msg.profileId);
         if (msg.type === 'ranked_board' || msg.type === 'ranked_rewards') {
             handleRankedMessage(msg);
             return;

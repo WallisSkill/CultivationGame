@@ -7,8 +7,8 @@
     - PvP: trận theo lượt giữa hai máy, người hỗ trợ đánh thêm một đòn trợ chiến mỗi lượt của chủ phòng.
     - Phòng tổ đội: chủ phòng mời người vào; thành viên sẵn sàng tự vào mọi trận của chủ phòng,
       kể cả săn quái. Thành viên gửi chỉ số định kỳ, chủ phòng phát danh sách định kỳ.
-    - Đưa đi: người cùng phòng cảnh giới bằng hoặc cao hơn nhận lời thì ta đi với thời gian của họ, được qua cả vùng chưa đủ cảnh giới,
-      họ dịch chuyển được tới đó thì ta tới ngay. Chỗ ta chưa đủ cảnh giới vẫn không vào được.
+    - Đưa đi: người cùng phòng cảnh giới bằng hoặc cao hơn nhận lời thì ta đi với thời gian của họ, được qua cả vùng chưa đủ cảnh giới.
+      Ai đã mở khóa dịch chuyển tới đó thì đưa ta tới ngay, bất kể cảnh giới và họ đang ở đâu. Chỗ ta chưa đủ cảnh giới vẫn không vào được.
     - Tin nhắn đi qua pvp_relay (sessionId 'coop').
 =========================== */
 const COOP_SESSION = 'coop';
@@ -354,16 +354,16 @@ function roomMates() {
 }
 
 function roomCarriers() {
-    return roomMates().filter(m => m.realmIndex >= (state.realmIndex || 0));
+    return roomMates();
 }
 
 function rideAsk(dest) {
     if (!requireFree()) return;
     const carriers = roomCarriers();
-    if (!carriers.length || !findPath(state.location, dest, true)) return;
+    if (!carriers.length) return;
     const id = `${state.profileId}_${Date.now().toString(36)}`;
     coop.ride = { id, dest, carriers: carriers.map(m => m.id), at: Date.now() };
-    carriers.forEach(m => coopRelay(m.id, 'ride_ask', { id, from: state.location, dest }));
+    carriers.forEach(m => coopRelay(m.id, 'ride_ask', { id, from: state.location, dest, realm: state.realmIndex || 0 }));
     openWorldModal('coopModal', `🤝 Nhờ đưa tới ${LOCATIONS[dest].name}`, `<div class="small">Đang đợi ${carriers.map(m => m.name).join(', ')} nhận lời...</div>
         <div class="loc-actions"><button onclick="rideCancel()">Thôi không đợi</button></div>`);
 }
@@ -373,13 +373,15 @@ function rideCancel() {
     coopClosePrompt();
 }
 
-/* Người đưa tính thời gian bằng tốc độ của chính họ */
-function rideSeconds(from, dest) {
-    return canTeleport(dest) ? 0 : findPath(from, dest)?.seconds ?? null;
+/* Người đưa tính thời gian bằng tốc độ của chính họ; cảnh giới thấp hơn thì chỉ đưa bằng dịch chuyển */
+function rideSeconds(from, dest, askerRealm) {
+    if (teleportUnlocked(dest)) return 0;
+    if ((state.realmIndex || 0) < askerRealm) return null;
+    return findPath(from, dest)?.seconds ?? null;
 }
 
 function rideOnAsk(msg, name) {
-    const { id, from, dest } = msg.data || {};
+    const { id, from, dest, realm } = msg.data || {};
     const refuse = () => coopRelay(msg.from, 'ride_no', { id });
     if (typeof id !== 'string' || !Object.hasOwn(LOCATIONS, from ?? '') || !Object.hasOwn(LOCATIONS, dest ?? '')) return;
     if (!roomMates().some(m => m.id === msg.from) || coop.rideAsked[msg.from]) return;
@@ -390,7 +392,7 @@ function rideOnAsk(msg, name) {
         buttons: [{ text: 'Từ chối', value: false }, { text: 'Đưa đi', value: true, variant: 'primary' }]
     }).then(ok => {
         delete coop.rideAsked[msg.from];
-        const seconds = ok ? rideSeconds(from, dest) : null;
+        const seconds = ok ? rideSeconds(from, dest, Number(realm) || 0) : null;
         if (seconds == null) return refuse();
         coopRelay(msg.from, 'ride_ok', { id, seconds });
         log(`🤝 Đưa ${sectEscape(name)} tới ${LOCATIONS[dest].name}.`);

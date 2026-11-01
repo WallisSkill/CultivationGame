@@ -322,7 +322,8 @@ function canEnterLocation(id) {
     return ABSOLUTE_WORLDS.includes(loc.world) || (state.realmIndex || 0) >= loc.minR;
 }
 
-/* Lên Giới cao rồi không được xuống lại, trừ người đứng đầu Thiên Hạ Bảng của Giới đang ở */
+/* Lên Giới cao rồi không được xuống thêm, trừ người đứng đầu Thiên Hạ Bảng của Giới đang ở.
+   Đã đứng ở Giới thấp thì vẫn đi lại trong Giới đó và về lại được */
 function worldIndex(worldId) {
     return WORLD_TIERS.findIndex(w => w.id === worldId);
 }
@@ -341,12 +342,18 @@ function descentActive() {
 
 function descentBlocked(toWorld) {
     const home = realmWorld();
-    return worldIndex(toWorld) < worldIndex(home) && !holdsWorldTop(home) && !descentActive();
+    const floor = Math.min(worldIndex(home), worldIndex(currentLocation().world));
+    return worldIndex(toWorld) < floor && !holdsWorldTop(home) && !descentActive();
 }
 
 function teleportBlockReason(id) {
     const tier = worldOf(id);
     if (descentBlocked(tier.id)) return `Không được xuống ${tier.name}: cần đứng đầu Thiên Hạ Bảng ${worldTierOfRealm(state.realmIndex || 0).name} hoặc dùng Tinh Không Thạch.`;
+    return teleportLockReason(id);
+}
+
+function teleportLockReason(id) {
+    const tier = worldOf(id);
     const minRealm = TELEPORT_MIN_REALM[tier.id];
     if (minRealm == null) return '';
     const missing = [];
@@ -355,9 +362,14 @@ function teleportBlockReason(id) {
     return missing.length ? `Dịch chuyển trong ${tier.name}: cần ${missing.join(' và ')}.` : '';
 }
 
-function canTeleport(id) {
+/* Đã mở khóa dịch chuyển tới đó, kể cả khi bản thân đang bị cấm xuống Giới thấp */
+function teleportUnlocked(id) {
     return id in LOCATIONS && canEnterLocation(id) && TELEPORT_MIN_REALM[LOCATIONS[id].world] != null
-        && worldUnlocked(LOCATIONS[id].world) && !teleportBlockReason(id);
+        && worldUnlocked(LOCATIONS[id].world) && !teleportLockReason(id);
+}
+
+function canTeleport(id) {
+    return teleportUnlocked(id) && !descentBlocked(worldOf(id).id);
 }
 
 function teleportTo(id) {
@@ -435,19 +447,23 @@ function beginRoute(id, route) {
     startActivity({ type: 'travel', label: `🛤️ Đi tới ${LOCATIONS[id].name}`, seconds: route.seconds, legs: route.legs, leg: 0, dest: id });
 }
 
-/* Đồng đội đưa đi: được đi qua vùng chưa đủ cảnh giới, không bao giờ chậm hơn tự đi */
+/* Đồng đội đưa đi: được đi qua vùng chưa đủ cảnh giới, không bao giờ chậm hơn tự đi.
+   Người đưa đã mở khóa dịch chuyển tới đó thì tới ngay, không cần có đường đi */
 function carriedTravel(id, seconds, carrier) {
     if (!requireFree()) return;
-    const route = findPath(state.location, id, true);
-    if (!route) return;
-    if (seconds >= route.seconds && findPath(state.location, id)) {
-        showToast(`${carrier} không đi nhanh hơn ngươi. Người đưa phải cao cảnh giới hơn hoặc có thể dịch chuyển tới đó.`, 'warn');
-        return;
-    }
     if (seconds <= 0) {
         state.location = id;
         log(`⚡ ${carrier} đưa ngươi tới ngay ${LOCATIONS[id].name}.`);
         checkArrival();
+        return;
+    }
+    const route = findPath(state.location, id, true);
+    if (!route) {
+        showToast(`${carrier} chưa mở khóa dịch chuyển tới đó, mà đường đi thì chưa có.`, 'warn');
+        return;
+    }
+    if (seconds >= route.seconds && findPath(state.location, id)) {
+        showToast(`${carrier} không đi nhanh hơn ngươi. Người đưa phải cao cảnh giới hơn hoặc có thể dịch chuyển tới đó.`, 'warn');
         return;
     }
     const scale = Math.min(1, seconds / route.seconds);
@@ -701,8 +717,8 @@ function renderMapDestination() {
         : '';
     const blocked = teleportBlockReason(mapSelected);
     const carryRoute = findPath(state.location, mapSelected, true);
-    const carry = carryRoute && roomCarriers().length ? `<button onclick="rideAsk('${loc.id}')">🤝 Nhờ đồng đội đưa đi</button>` : '';
-    const carryHint = carryRoute && !carry ? '<div class="small">Muốn được đưa đi: vào chung phòng với người cảnh giới bằng hoặc cao hơn.</div>' : '';
+    const carry = roomCarriers().length ? `<button onclick="rideAsk('${loc.id}')">🤝 Nhờ đồng đội đưa đi</button>` : '';
+    const carryHint = carryRoute && !carry ? '<div class="small">Muốn được đưa đi: vào chung phòng với người cảnh giới bằng hoặc cao hơn, hoặc người đã mở khóa dịch chuyển tới đó.</div>' : '';
     return `<div class="map-dest">
         <div><b>${loc.icon} ${loc.name}</b> <span class="small">linh khí x${loc.qi.toFixed(2)} · ${REALMS[loc.minR]} trở lên</span>
         <div class="small">${loc.desc}</div>${intelLine(loc)}${blocked ? `<div class="small">🔒 ${blocked}</div>` : ''}${carryHint}</div>

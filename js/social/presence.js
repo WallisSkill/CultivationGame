@@ -11,7 +11,8 @@
 const WORLD_SESSION = 'world';
 const PRESENCE_INTERVAL_MS = 15000;
 const PRESENCE_EXPIRE_MS = 40000;
-const POSITION_SEND_MS = 200;
+const PRESENCE_FULL_MS = 60000;
+const POSITION_SEND_MS = 250;
 const POSITION_PEER_LIMIT = 20;
 const SAY_MAX_LENGTH = 120;
 const SAY_SHOW_MS = 6000;
@@ -26,6 +27,9 @@ const serverBoards = {};
 const worldServer = { active: false, online: 0 };
 let renownCache = {};
 let positionSentAt = 0;
+let positionSent = null;
+let presenceFullAt = 0;
+let renownSaveTimer = null;
 
 function initPresence() {
     try {
@@ -40,11 +44,15 @@ function initPresence() {
 }
 
 function saveRenownCache() {
-    try {
-        localStorage.setItem(RENOWN_CACHE_KEY, JSON.stringify(renownCache));
-    } catch (e) {
-        console.error('Failed to save renown cache:', e);
-    }
+    if (renownSaveTimer) return;
+    renownSaveTimer = setTimeout(() => {
+        renownSaveTimer = null;
+        try {
+            localStorage.setItem(RENOWN_CACHE_KEY, JSON.stringify(renownCache));
+        } catch (e) {
+            console.error('Failed to save renown cache:', e);
+        }
+    }, PRESENCE_INTERVAL_MS);
 }
 
 function sharedRenown() {
@@ -54,11 +62,18 @@ function sharedRenown() {
 
 function sendPresence() {
     if (!window.matchConnected || !state.root?.elements) return;
-    registerProfile();
+    const now = Date.now();
+    const full = !worldServer.active || now - presenceFullAt >= PRESENCE_FULL_MS;
+    if (full) {
+        presenceFullAt = now;
+        registerProfile();
+    }
     wsSend({ type: 'world_enter', loc: state.location });
     reportRenown();
-    wsSend({ type: 'ranked_claim', token: profileToken() });
-    wsSend({ type: 'boss_get' });
+    if (full) {
+        wsSend({ type: 'ranked_claim', token: profileToken() });
+        wsSend({ type: 'boss_get' });
+    }
 }
 
 function profileToken() {
@@ -159,6 +174,11 @@ function handleWorldMessage(msg) {
         case 'world_pos':
             roomPlayer({ id: msg.id, x: msg.x, y: msg.y });
             break;
+        case 'world_moves':
+            if (msg.loc === state.location && Array.isArray(msg.moves)) {
+                msg.moves.forEach(([id, x, y]) => roomPlayer({ id, x, y }));
+            }
+            break;
         case 'world_say': {
             const player = onlinePlayers.get(msg.id);
             if (player && typeof msg.text === 'string') {
@@ -185,6 +205,9 @@ function sendPosition(x, y) {
     const now = Date.now();
     if (now - positionSentAt < POSITION_SEND_MS) return;
     positionSentAt = now;
+    const spot = `${Math.round(x)},${Math.round(y)}`;
+    if (spot === positionSent) return;
+    positionSent = spot;
     if (worldServer.active) {
         wsSend({ type: 'world_pos', x: Math.round(x), y: Math.round(y) });
         return;
