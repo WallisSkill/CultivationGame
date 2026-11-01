@@ -1097,7 +1097,7 @@ function questExpired(q) {
 
 function questOpen(q) {
     if (state.questDone.includes(q.id) || state.questActive.some(rt => rt.id === q.id)) return false;
-    if (!needsMet(q) || questExpired(q)) return false;
+    if (!needsMet(q) || questExpired(q) || !endingAllows(q)) return false;
     if (q.realmOnly != null && state.realmIndex !== q.realmOnly) return false;
     return [q.after, q.afterMain].every(id => !id || state.questDone.includes(id));
 }
@@ -1106,8 +1106,12 @@ function mainQuestBlocker(q) {
     return (q.needsSide || []).find(id => !state.questDone.includes(id));
 }
 
+function endingAllows(q) {
+    return !q.needsEnding || state.endingId === q.needsEnding;
+}
+
 function nextMainQuest() {
-    return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
+    return MAIN_QUESTS.find(q => !state.questDone.includes(q.id) && endingAllows(q)) || null;
 }
 
 function gateGearWorn(tier) {

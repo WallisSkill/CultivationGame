@@ -84,7 +84,7 @@ for (let r = 1; r < 29; r++) if (!G.MAIN_QUESTS.some(q => q.unlock === r)) fail.
 for (let r = 0; r < 29; r++) for (let st = 0; st < 4; st++) if (!G.MAIN_QUESTS.some(q => q.needs[0] === r && q.needs[1] === st)) fail.push(`thiếu hồi truyện ${r}-${st}`);
 G.MAIN_QUESTS.forEach((q, i) => {
     const prev = G.MAIN_QUESTS[i - 1];
-    if (prev && (q.needs[0] < prev.needs[0] || (q.needs[0] === prev.needs[0] && q.needs[1] <= prev.needs[1]))) fail.push(`${q.id}: needs lùi hoặc trùng ${prev.id}`);
+    if (prev && !q.needsEnding && (q.needs[0] < prev.needs[0] || (q.needs[0] === prev.needs[0] && q.needs[1] <= prev.needs[1]))) fail.push(`${q.id}: needs lùi hoặc trùng ${prev.id}`);
     (q.needsSide || []).forEach(id => {
         const side = G.QUEST_INDEX[id];
         if (side.afterMain && G.MAIN_QUESTS.findIndex(m => m.id === side.afterMain) >= i) fail.push(`${q.id}: kẹt vòng với ${id}`);

@@ -83,6 +83,16 @@ const BOSSES = {
     ma_than: { kind: 'chaos', name: 'Ma Thần Thiên Ngô', realm: 29, stage: 2, board: 5 },
     vong_ky: { npc: 'vong_ky', realm: 29, stage: 2, board: 6, scale: 1.05 },
     vo_danh: { npc: 'vo_danh', realm: 29, stage: 3, board: 6, scale: 1.1 },
+    cs_1: { npc: 'vong_ky', realm: 31, stage: 3, board: 6, scale: 1 },
+    cs_2: { npc: 'vo_danh', realm: 31, stage: 3, board: 6, scale: 1.05 },
+    cs_3: { npc: 'thich_thien', realm: 31, stage: 3, board: 6, scale: 1.1 },
+    cs_4: { npc: 'am_duong', realm: 31, stage: 3, board: 6, scale: 1.15 },
+    cs_5: { npc: 'hd_vo_thuc', realm: 31, stage: 3, board: 6, scale: 1.2 },
+    cs_6: { npc: 'hd_thu_cuu', realm: 31, stage: 3, board: 6, scale: 1.3 },
+    cs_7: { npc: 'hd_thu_cuu', realm: 31, stage: 3, board: 6, scale: 1.3, adds: { n: 1, name: 'Hỗn Độn Vô Thức' } },
+    cs_8: { npc: 'am_duong', realm: 31, stage: 3, board: 6, scale: 1.3, adds: { n: 1, name: 'Thích Thiên Vô Lượng Đại Diệt Tôn' } },
+    cs_9: { npc: 'hd_thu_cuu', realm: 31, stage: 3, board: 6, scale: 1.4, adds: { n: 5, name: 'Đạo Giả Liên Thủ' } },
+    cs_10: { kind: 'chaos', name: 'Tất Cả Chúng Sinh', realm: 31, stage: 3, board: 6, scale: 1.6, adds: { n: 5, name: 'Chúng Sinh' } },
 };
 
 const MAIN_QUESTS = [
@@ -451,6 +461,23 @@ const MAIN_QUESTS = [
             { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. Lá hôm nay nhiều quá, ta quét mãi không xong.'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']] }
         ],
         reward: { ending: true, hours: 0, goldRefs: 0 }
+    },
+    {
+        id: 'm39', act: 7, title: 'Chúng Sinh Khiêu Chiến', needs: [31, 3], needsEnding: 'ngoi',
+        steps: [
+            { go: 'chung_dai', say: [['narr', 'Ngươi vừa ngồi xuống, Chung Nguyên Giới bắt đầu nuốt các Giới bên dưới. Hồng Mông, Hỗn Độn, Thiên Ma Ngoại Vực lần lượt mờ đi.'], ['narr', 'Những kẻ đã sáng tạo ra các Giới ấy không chịu ngồi yên. Sáu Đạo Giả bước lên Đài, phía sau họ là tất cả chúng sinh.']] },
+            { boss: 'cs_1', say: [['vong_ky', 'Am của ta không còn gì để ai bỏ quên nữa. Ta thua, người sau đến.']] },
+            { boss: 'cs_2', say: [['vo_danh', 'Ta từng nói bên trên không còn cảnh giới nào. Ngươi vẽ thêm một cái, rồi nuốt hết cả phần dưới.']] },
+            { boss: 'cs_3', say: [['thich_thien', 'Ta thích hết bao nhiêu vũ trụ, chưa từng bị thứ gì thích lại. Hóa ra là cảm giác này.']] },
+            { boss: 'cs_4', say: [['am_duong', 'Áo ta dính bụi rồi. Mọi thứ đều diệt, kể cả ta.']] },
+            { boss: 'cs_5', say: [['hd_vo_thuc', 'Ta quyết định rồi. Ta tồn tại, để đứng đây thua ngươi.']] },
+            { boss: 'cs_6', say: [['hd_thu_cuu', 'Con ta vừa chọn tồn tại, không ai được nuốt nó. Đứng lên đi, chưa xong đâu.']] },
+            { boss: 'cs_7', say: [['hd_thu_cuu', 'Hai cha con cũng không cản được. Hỗn Độn thứ mười sẽ không có nữa.']] },
+            { boss: 'cs_8', say: [['am_duong', 'Diệt cộng với diệt vẫn chưa đủ diệt ngươi.'], ['thich_thien', 'Vậy thì gọi tất cả.']] },
+            { boss: 'cs_9', say: [['narr', 'Sáu Đạo Giả ngã xuống quanh Đài. Từ bên dưới vang lên một âm thanh ngươi đã nghe từ thuở mười tuổi: tiếng của tất cả mọi người.']] },
+            { boss: 'cs_10', say: [['narr', 'Tất cả chúng sinh dừng lại. Không ai thắng, chỉ còn ngươi ngồi đó.'], ['narr', 'Ngươi nhả các Giới ra, trả lại từng ngọn núi, từng chiếc lá. Ở Thanh Thủy Thôn, lá lại rụng đầy sân.']] }
+        ],
+        reward: { hours: 0, goldRefs: 0 }
     }
 ];
 
