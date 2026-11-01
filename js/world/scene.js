@@ -5,8 +5,10 @@
 =========================================================== */
 const SCENE_W = 1400;
 const SCENE_H = 900;
-const SCENE_VIEW_W = 960;
-const SCENE_VIEW_H = 540;
+const SCENE_VIEW_MIN_W = 960;
+let sceneViewW = SCENE_VIEW_MIN_W;
+const SCENE_VIEW_BASE_H = 540;
+let sceneViewH = SCENE_VIEW_BASE_H;
 const SCENE_SPEED = 240;
 const SCENE_PLAYER_R = 16;
 const SCENE_INTERACT_R = 80;
@@ -211,12 +213,24 @@ function drawBubble(ctx, x, y, text) {
     ctx.fillText(text, x, y - SCENE_AVATAR_H - 27, w - 10);
 }
 
+/* Màn rộng nhìn được nhiều cảnh hơn thay vì chừa dải đen */
+function fitSceneView() {
+    const canvas = sceneState.canvas;
+    if (!canvas.clientWidth || !canvas.clientHeight) return;
+    const aspect = canvas.clientWidth / canvas.clientHeight;
+    sceneViewW = Math.round(Math.max(SCENE_VIEW_MIN_W, Math.min(SCENE_W, SCENE_VIEW_BASE_H * aspect)));
+    sceneViewH = Math.round(Math.min(SCENE_H, sceneViewW / aspect));
+    if (canvas.width !== sceneViewW) canvas.width = sceneViewW;
+    if (canvas.height !== sceneViewH) canvas.height = sceneViewH;
+}
+
 function drawScene() {
+    fitSceneView();
     const s = sceneState;
     const ctx = s.ctx;
     const pal = worldTierOfRealm(currentLocation().minR).palette;
-    const camX = Math.max(0, Math.min(SCENE_W - SCENE_VIEW_W, s.x - SCENE_VIEW_W / 2));
-    const camY = Math.max(0, Math.min(SCENE_H - SCENE_VIEW_H, s.y - SCENE_VIEW_H / 2));
+    const camX = Math.max(0, Math.min(SCENE_W - sceneViewW, s.x - sceneViewW / 2));
+    const camY = Math.max(0, Math.min(SCENE_H - sceneViewH, s.y - sceneViewH / 2));
     ctx.save();
     ctx.translate(-camX, -camY);
 
@@ -285,17 +299,17 @@ function drawScene() {
         const text = `[E] ${s.nearest.label}`;
         const w = ctx.measureText(text).width + 30;
         ctx.fillStyle = 'rgba(0,0,0,.75)';
-        ctx.fillRect(SCENE_VIEW_W / 2 - w / 2, SCENE_VIEW_H - 46, w, 32);
+        ctx.fillRect(sceneViewW / 2 - w / 2, sceneViewH - 46, w, 32);
         ctx.fillStyle = '#ffe9a0';
-        ctx.fillText(text, SCENE_VIEW_W / 2, SCENE_VIEW_H - 24);
+        ctx.fillText(text, sceneViewW / 2, sceneViewH - 24);
     }
     if (state.activity?.type === 'travel') {
         ctx.fillStyle = 'rgba(0,0,0,.6)';
-        ctx.fillRect(0, 0, SCENE_VIEW_W, SCENE_VIEW_H);
+        ctx.fillRect(0, 0, sceneViewW, sceneViewH);
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 22px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(state.activity.label, SCENE_VIEW_W / 2, SCENE_VIEW_H / 2);
+        ctx.fillText(state.activity.label, sceneViewW / 2, sceneViewH / 2);
     }
 }
 
@@ -371,11 +385,11 @@ function isTypingTarget(target) {
 
 function scenePointer(event) {
     const rect = sceneState.canvas.getBoundingClientRect();
-    const scale = Math.max(SCENE_VIEW_W / rect.width, SCENE_VIEW_H / rect.height);
-    const padX = (rect.width - SCENE_VIEW_W / scale) / 2;
-    const padY = (rect.height - SCENE_VIEW_H / scale) / 2;
-    const camX = Math.max(0, Math.min(SCENE_W - SCENE_VIEW_W, sceneState.x - SCENE_VIEW_W / 2));
-    const camY = Math.max(0, Math.min(SCENE_H - SCENE_VIEW_H, sceneState.y - SCENE_VIEW_H / 2));
+    const scale = Math.max(sceneViewW / rect.width, sceneViewH / rect.height);
+    const padX = (rect.width - sceneViewW / scale) / 2;
+    const padY = (rect.height - sceneViewH / scale) / 2;
+    const camX = Math.max(0, Math.min(SCENE_W - sceneViewW, sceneState.x - sceneViewW / 2));
+    const camY = Math.max(0, Math.min(SCENE_H - sceneViewH, sceneState.y - sceneViewH / 2));
     sceneState.tx = (event.clientX - rect.left - padX) * scale + camX;
     sceneState.ty = (event.clientY - rect.top - padY) * scale + camY;
 }
@@ -383,7 +397,7 @@ function scenePointer(event) {
 function initScene() {
     const host = $('sceneHost');
     if (!host) return;
-    host.innerHTML = `<canvas id="sceneCanvas" width="${SCENE_VIEW_W}" height="${SCENE_VIEW_H}" tabindex="0" aria-label="Bên trong khu vực, đi bằng WASD, tương tác bằng E"></canvas>
+    host.innerHTML = `<canvas id="sceneCanvas" width="${sceneViewW}" height="${sceneViewH}" tabindex="0" aria-label="Bên trong khu vực, đi bằng WASD, tương tác bằng E"></canvas>
         <div class="chat-input-row">
             <button onclick="sceneInteract()">Tương tác (E)</button>
             <input id="sceneSay" type="text" maxlength="${SAY_MAX_LENGTH}" placeholder="Nói với mọi người tại đây" aria-label="Nói với mọi người tại đây"
