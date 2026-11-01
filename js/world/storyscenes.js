@@ -295,8 +295,9 @@ SIDE_QUESTS.push(...INTEL_QUESTS);
 INTEL_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => (names[LOCATIONS[q.loc].world] = LOCATIONS[q.loc].name, names), {});
 
-/* Mỗi cảnh giới mốc có ba nhiệm vụ phụ nối nhau ở Giới trước đó, cộng lại đủ sáu món đồ của mốc */
+/* Mỗi cảnh giới mốc có ba nhiệm vụ phụ nối nhau ở cảnh giới cuối trước mốc, mở dần từ Sơ Kỳ tới Đại Viên Mãn, cộng lại đủ sáu món */
 const GATE_QUEST_HUNT = 6;
+const GATE_QUEST_STAGES = [0, 2, 3];
 const GATE_QUEST_SETS = {
     9: [
         { loc: 'long_cung', npc: 'narr', title: 'Giáp Vảy Đông Hải', hunt: 'Giao Long', slots: ['armor', 'helm'], intro: 'Phàm cốt không chịu nổi tiên khí đâu. Vảy Giao Long dưới Long Cung may được giáp, ngươi dám xuống lấy không?', done: 'Giáp này tiên khí xuyên không thủng. Mặc vào rồi hẵng nghĩ tới chuyện phi thăng.' },
@@ -329,7 +330,7 @@ const GATE_QUESTS = Object.entries(GATE_QUEST_SETS).flatMap(([gate, set]) => set
     const realm = Number(gate) - 1;
     const speaker = entry.npc === 'narr' ? `dan_${entry.loc}` : entry.npc;
     return {
-        id: `gate_${gate}_${stage}`, loc: entry.loc, npc: entry.npc, title: entry.title, realmOnly: realm, needs: [realm, stage],
+        id: `gate_${gate}_${stage}`, loc: entry.loc, npc: entry.npc, title: entry.title, realmOnly: realm, needs: [realm, GATE_QUEST_STAGES[stage]],
         after: stage ? `gate_${gate}_${stage - 1}` : null,
         intro: [[speaker, entry.intro]],
         steps: [{ hunt: { loc: entry.loc, name: entry.hunt, n: GATE_QUEST_HUNT }, say: [[speaker, entry.done]] }],

@@ -351,18 +351,37 @@ function buildPublicProfile() {
     };
 }
 
+const WS_RETRY_MIN_MS = 1000;
+const WS_RETRY_MAX_MS = 15000;
+const WS_CLOSE_REPLACED = 1000;
+const PVP_HB_TIMEOUT_MS = 15000;
+let wsRetryMs = WS_RETRY_MIN_MS;
+let wsRetryTimer = null;
+
+/* Mất mạng thì tự nối lại, giãn dần; bị tab khác thế chỗ thì thôi */
+function scheduleWsRetry(code) {
+    if (code === WS_CLOSE_REPLACED || wsRetryTimer) return;
+    wsRetryTimer = setTimeout(() => {
+        wsRetryTimer = null;
+        connectMatchWS(true);
+    }, wsRetryMs);
+    wsRetryMs = Math.min(WS_RETRY_MAX_MS, wsRetryMs * 2);
+}
+
 function wsSend(obj) {
     if (!window.matchWS || !window.matchConnected) return false;
     try { window.matchWS.send(JSON.stringify(obj)); return true; } catch { return false; }
 }
 
-function connectMatchWS() {
+function connectMatchWS(quiet = false) {
     return new Promise((resolve) => {
         if (window.matchWS && window.matchConnected) return resolve(true);
-        log('🔌 Đang kết nối PvP...');
+        if (!quiet) log('🔌 Đang kết nối PvP...');
         try { window.matchWS = new WebSocket(matchURL); } catch { log('❌ Không thể khởi tạo kết nối PvP.'); return resolve(false); }
         window.matchWS.onopen = () => {
             window.matchConnected = true;
+            wsRetryMs = WS_RETRY_MIN_MS;
+            pvpSession.oppLastHbTs = Date.now();
             log('✅ Kết nối PvP đã mở.');
             registerProfile();
             
@@ -376,9 +395,11 @@ function connectMatchWS() {
             }
             resolve(true);
         };
-        window.matchWS.onclose = () => {
+        window.matchWS.onclose = (ev) => {
+            if (window.matchConnected) log('🔌 Kết nối PvP đã đóng.');
             window.matchConnected = false;
-            log('🔌 Kết nối PvP đã đóng.');
+            resolve(false);
+            scheduleWsRetry(ev.code);
             // nếu đang tìm thì trả nút về trạng thái mặc định
             if (window._findingMatch) {
                 window._findingMatch = false;
@@ -387,37 +408,10 @@ function connectMatchWS() {
             if (state.currentEnemy?.isPvP) window._battleActive = false;
             if (typeof renderFriendsUI === 'function') renderFriendsUI();
         };
-        window.matchWS.onerror = () => { window.matchConnected = false; log('❌ Lỗi kết nối PvP.'); };
+        window.matchWS.onerror = () => { if (!quiet) log('❌ Lỗi kết nối PvP.'); };
         window.matchWS.onmessage = onMatchMessage;
     });
 }
-
-// send forfeit on page closing to notify opponent
-window.addEventListener('beforeunload', () => {
-    try {
-        if (pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
-            wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'forfeit' } });
-        }
-    } catch { }
-});
-
-// Heartbeat to detect opponent disconnect
-function startPvPHeartbeat() {
-    stopPvPHeartbeat();
-    window._battleActive = true;
-    pvpSession.oppLastHbTs = Date.now();
-    window._pvpHbTimer = setInterval(() => {
-        if (pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
-            wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'hb', data: { t: Date.now() } });
-            const gap = Date.now() - (pvpSession.oppLastHbTs || 0);
-            if (gap > 4500) {
-                log('🏳️ Đối thủ đã rời trận. Ngươi chiến thắng!');
-                endPvPSession();
-            }
-        }
-    }, 1500);
-}
-function stopPvPHeartbeat() { if (window._pvpHbTimer) { clearInterval(window._pvpHbTimer); window._pvpHbTimer = null; } }
 
 function registerProfile() {
     const profile = buildPublicProfile();
@@ -507,7 +501,7 @@ function startPvPHeartbeat() {
         if (pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
             wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'hb', data: { t: Date.now() } });
             const gap = Date.now() - (pvpSession.oppLastHbTs || 0);
-            if (gap > 4500) {
+            if (gap > PVP_HB_TIMEOUT_MS) {
                 log('🏳️ Đối thủ đã rời trận. Ngươi chiến thắng!');
                 endPvPSession();
             }
@@ -520,6 +514,7 @@ function stopPvPHeartbeat() { if (window._pvpHbTimer) { clearInterval(window._pv
 window.addEventListener('beforeunload', () => {
     try {
         if (pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
+            reportRankedLoss();
             wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'forfeit' } });
         }
     } catch { }
@@ -540,12 +535,11 @@ function onMatchMessage(ev) {
 
     if (msg.type === 'pvp_relay' && msg.from && msg.sessionId && msg.kind) {
         if (!pvpSession.sessionId || msg.sessionId !== pvpSession.sessionId) return;
+        pvpSession.oppLastHbTs = Date.now();
 
         switch (msg.kind) {
-            case 'hb': {
-                pvpSession.oppLastHbTs = Date.now();
+            case 'hb':
                 break;
-            }
             case 'attack': {
                 const dmg = Math.max(0, Math.floor(msg.data?.damage || 0));
                 const burn = Math.max(0, Math.floor(msg.data?.burn || 0));

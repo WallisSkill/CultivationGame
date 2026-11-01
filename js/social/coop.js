@@ -20,6 +20,8 @@ const COOP_PVP_ASSIST_MULT = 0.6;
 const COOP_MAX_SLOTS = 6;
 const COOP_MAX_PACK = 3;
 const COOP_PEER_LIMIT = 20;
+const COOP_SEND_BUFFER_LIMIT = 16 * 1024;
+const COOP_MIRROR_MAX_STEP_MS = 250;
 
 const ROOM_MAX_MEMBERS = 3;
 const ROOM_SYNC_MS = 3000;
@@ -148,6 +150,7 @@ function coopHelperCombatants() {
 function coopTick(units, kind = 'tick') {
     const now = Date.now();
     if (!coop.helpers.length || now - coop.tickAt < COOP_TICK_MS) return;
+    if (window.matchWS?.bufferedAmount > COOP_SEND_BUFFER_LIMIT) return;
     coop.tickAt = now;
     coop.helpers.forEach(h => coopRelay(h.id, kind, { id: h.sid, units }));
 }
@@ -167,13 +170,15 @@ function coopBroadcastArena(battle) {
     coop.helpers.forEach(h => coopRelay(h.id, 'arena', { id: h.sid, units }));
 }
 
+/* Mỗi đơn vị một mảng gọn: máu, khiên, cờ choáng/băng, rồi tiến độ từng ô */
 function coopBattleTick(battle) {
+    if (!coop.helpers.length || Date.now() - coop.tickAt < COOP_TICK_MS) return;
     const now = performance.now();
-    coopTick([...battle.allies, ...battle.foes].map(c => ({
-        hp: Math.max(0, Math.round(c.hp)), shield: Math.round(c.shield),
-        stun: now < c.stunUntil ? 1 : 0, freeze: now < c.freezeUntil ? 1 : 0,
-        elapsed: c.slots.map(slot => Math.round(slot.elapsed))
-    })), 'arena_tick');
+    coopTick([...battle.allies, ...battle.foes].map(c => [
+        Math.max(0, Math.round(c.hp)), Math.round(c.shield),
+        (now < c.stunUntil ? 1 : 0) + (now < c.freezeUntil ? 2 : 0),
+        ...c.slots.map(slot => Math.round(slot.elapsed))
+    ]), 'arena_tick');
 }
 
 function coopFinish(win, reward = null) {
@@ -280,13 +285,18 @@ function roomOnAlly(msg, name) {
     if (!room) return;
     const carriers = roomCarriers().length;
     let member = room.members.find(m => m.id === msg.from);
+    const allyText = JSON.stringify(msg.data?.ally ?? null);
+    if (member?.allyText === allyText) {
+        member.seen = Date.now();
+        return;
+    }
     if (!member) {
         if (msg.kind !== 'room_join' || room.members.length >= ROOM_MAX_MEMBERS) return;
         member = { id: msg.from };
         room.members.push(member);
         log(`🏠 ${sectEscape(name)} vào phòng.`);
     }
-    Object.assign(member, { ally: coopCleanAlly(msg.data?.ally), ready: !!msg.data?.ally?.ready, seen: Date.now() });
+    Object.assign(member, { ally: coopCleanAlly(msg.data?.ally), ready: !!msg.data?.ally?.ready, seen: Date.now(), allyText });
     renderRoomPanel();
     rideRefresh(carriers);
 }
@@ -482,6 +492,30 @@ function coopOnArena(data) {
     syncBattleOverlay();
     lbBuildArenaDOM(coop.helping.arena);
     lbUpdateArena(coop.helping.arena);
+    if (!coop.mirrorAt) {
+        coop.mirrorAt = performance.now();
+        requestAnimationFrame(coopMirrorFrame);
+    }
+}
+
+/* Giữa hai gói tin thanh hồi chiêu tự chạy tiếp, tới gói sau thì chỉnh lại theo chủ phòng */
+function coopMirrorFrame(time) {
+    const mirror = coop.helping?.arena;
+    if (!mirror) {
+        coop.mirrorAt = 0;
+        return;
+    }
+    const step = Math.min(COOP_MIRROR_MAX_STEP_MS, Math.max(0, time - coop.mirrorAt));
+    coop.mirrorAt = time;
+    mirror.units.forEach(unit => {
+        if (unit.hp <= 0 || time < unit.stunUntil || time < unit.freezeUntil) return;
+        unit.slots.forEach(slot => {
+            const full = slot.cooldown * 1000;
+            slot.elapsed = Math.min(full, slot.elapsed + step);
+            if (slot.fillNode) slot.fillNode.style.transform = `scaleX(${slot.elapsed / full})`;
+        });
+    });
+    requestAnimationFrame(coopMirrorFrame);
 }
 
 function coopOnArenaTick(data) {
@@ -491,18 +525,20 @@ function coopOnArenaTick(data) {
     const now = performance.now();
     mirror.units.forEach((unit, i) => {
         const next = data.units[i];
-        if (!next) return;
-        const hp = Math.max(0, Number(next.hp) || 0);
+        if (!Array.isArray(next)) return;
+        const [nextHp, nextShield, flags, ...elapsedList] = next;
+        const hp = Math.max(0, Number(nextHp) || 0);
         const delta = Math.round(hp - unit.hp);
         if (delta < 0) lbFloat(unit, `${fmtVal(delta)}`, 'dmg');
         else if (delta > 0) lbFloat(unit, `+${fmtVal(delta)}`, 'heal');
         unit.hp = hp;
-        unit.shield = Math.max(0, Number(next.shield) || 0);
-        unit.stunUntil = next.stun ? now + COOP_TICK_MS * 2 : 0;
-        unit.freezeUntil = next.freeze ? now + COOP_TICK_MS * 2 : 0;
+        unit.shield = Math.max(0, Number(nextShield) || 0);
+        unit.stunUntil = flags & 1 ? now + COOP_TICK_MS * 2 : 0;
+        unit.freezeUntil = flags & 2 ? now + COOP_TICK_MS * 2 : 0;
         unit.slots.forEach((slot, s) => {
-            const elapsed = Number(next.elapsed?.[s]) || 0;
-            if (elapsed < slot.elapsed) lbLunge(unit);
+            const elapsed = Number(elapsedList[s]) || 0;
+            if (elapsed < slot.hostElapsed) lbLunge(unit);
+            slot.hostElapsed = elapsed;
             slot.elapsed = elapsed;
         });
     });
@@ -560,7 +596,10 @@ function handleCoopRelay(msg) {
         case 'room_roster':
             if (coop.joined?.host === msg.from && Array.isArray(msg.data?.members)) {
                 const carriers = roomCarriers().length;
+                const rosterText = JSON.stringify(msg.data);
                 coop.joined.seen = Date.now();
+                if (coop.joined.rosterText === rosterText) break;
+                coop.joined.rosterText = rosterText;
                 coop.joined.hostRealm = lbClamp(Number(msg.data.hostRealm) || 0, 0, REALMS.length - 1);
                 coop.joined.members = msg.data.members.slice(0, ROOM_MAX_MEMBERS).map(m => ({
                     id: String(m?.id), name: sectEscape(String(m?.name).slice(0, 60)), ready: !!m?.ready,
