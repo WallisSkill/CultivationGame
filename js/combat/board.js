@@ -1068,7 +1068,7 @@ if (typeof window !== 'undefined') window.showBoardRewardChoice = showBoardRewar
 /* ---------- enemy board generator ---------- */
 function buildEnemyBoard(enemy) {
     const realm = enemy.realmIndex || 0;
-    const grade = maxLinhBaoGradeForRealm(realm);
+    const grade = maxLinhBaoGradeForRealm(enemy.shownRealm ?? realm);
     const count = enemy.boardSize || 3;
     const enemyEls = enemy.elements || [];
 
@@ -1235,7 +1235,7 @@ function lbBuildEnemyCombatant(enemy) {
         maxHp: Math.max(1, enemy.maxHp || enemy.hp || 100),
         baseAtk: enemy.str || 10, atk: enemy.str || 10, def: enemy.def || 0,
         elements: enemy.elements || [], rootRank: enemy.rootRank || 0,
-        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0, tier: enemy.tier || null,
+        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0, tier: enemy.tier || null, shownRealm: enemy.shownRealm,
         slots: defs.map(lbMakeSlot), ref: enemy, avatar: enemyAvatarSvg(enemy)
     });
 }

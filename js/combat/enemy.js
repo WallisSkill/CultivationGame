@@ -117,7 +117,7 @@ function enemyPackMembers(enemy) {
 }
 
 function unitRankText(e) {
-    return `${REALMS[e.realmIndex || 0]} ${STAGES[e.realmStage || 0]}${e.tier ? ` · ${e.tier}` : ''}`;
+    return `${REALMS[e.shownRealm ?? e.realmIndex ?? 0]} ${STAGES[e.realmStage || 0]}${e.tier ? ` · ${e.tier}` : ''}`;
 }
 
 function startEncounter(enemy) {

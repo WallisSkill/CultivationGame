@@ -1552,6 +1552,7 @@ function spawnBoss(id, quest) {
         rootRank: rollEnemyRootRank(realm, 1)
     });
     enemy.bossId = id;
+    enemy.shownRealm = b.shownRealm;
     if (b.hpMult) enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * b.hpMult);
     if (huVoBoard(piece)) enemy.boardDefs = huVoBoard(piece);
     if (b.huVoFinal) enemy.escorts = huVoFinalEscorts(realm, stage);
@@ -1559,6 +1560,7 @@ function spawnBoss(id, quest) {
     if (b.adds) {
         enemy.escorts = Array.from({ length: b.adds.n }, () => {
             const add = buildEnemy({ name: b.adds.name, kind: b.adds.kind, realmIndex: realm, realmStage: stage, boardSize: 1 });
+            add.shownRealm = b.shownRealm;
             add.str = Math.floor(add.str * 0.5);
             add.hp = add.maxHp = Math.floor(add.maxHp * 0.3);
             return add;
