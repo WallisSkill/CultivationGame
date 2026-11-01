@@ -387,11 +387,18 @@ const GATE_TIERS = [
     { realm: SAINT_REALM, flag: 'saintGear', label: 'Thánh', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh', shop: 'da_bao', exclusive: true },
     { realm: THIEN_REALM, flag: 'thienGear', label: 'Thiên', title: 'Mặc đủ đồ cấp Thiên', shop: 'thanh_thi', exclusive: true },
     { realm: 29, flag: 'hondonGear', label: 'Hỗn Độn', title: 'Mặc đủ đồ cấp Hỗn Độn', shop: 'vo_cuong' },
-    { realm: 30, flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' }
+    { realm: 30, flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' },
+    { realm: 31, flag: 'chungnguyenGear', label: 'Chung Nguyên', title: 'Mặc đủ đồ cấp Chung Nguyên', shop: 'co_thu' }
 ];
 
 function gateTierOf(realm) {
     return GATE_TIERS.find(t => t.realm === realm) || null;
+}
+
+/* Cấp thật của một món đọc từ tên: đồ vượt cấp và đồ thất truyền vẫn mang tên cấp của chúng; đồ không theo bộ trả về -1 */
+function gearSeriesRealm(item) {
+    const name = String(item.name || '').replace(/^[⚡✨]\s*/u, '');
+    return GEAR_SERIES.findIndex(series => name.startsWith(`${series} `));
 }
 
 function makeGateGear(tier, slot, quality) {
@@ -420,7 +427,7 @@ const STACK_TYPES = ['xp', 'consumable', 'power', 'defense', 'life', 'luck'];
 
 /* --------- pháp bảo --------- */
 const LB_GRADE_POWER = [1, 1.4, 1.9, 2.6, 3.5, 4.6, 6, 7.5, 9, 10, 10.8, 11.4, 12];
-const LB_GRADE_UNLOCK_REALM = [0, 3, 5, 8, 12, 16, 20, 23, 25, 26, 27, 28, 28];
+const LB_GRADE_UNLOCK_REALM = [0, 3, 5, 8, 12, 16, 20, 23, 25, 26, 29, 30, 31];
 
 function maxLinhBaoGradeForRealm(realm) {
     let grade = 0;
@@ -483,6 +490,6 @@ if (typeof module !== 'undefined') {
     module.exports = {
         realmRealSeconds, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
         LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, pathTeamBond, pathsOfRace, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
-        makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, goldRef, gearPrice, realmProgress
+        makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, LB_GRADE_UNLOCK_REALM, goldRef, gearPrice, realmProgress
     };
 }

@@ -14,7 +14,7 @@ vm.createContext(ctx);
 vm.runInContext(`
 var INFO = {
   ORIGINS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
-  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS
+  refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS, LB_GRADE_UNLOCK_REALM
 };`, ctx);
 const G = ctx.INFO;
 
@@ -112,6 +112,10 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     const names = (G.LOCATIONS[step.hunt?.loc]?.enemies || []).map(e => e.name);
     if (step.hunt && !names.includes(step.hunt.name)) fail.push(`${q.id}: ${step.hunt.name} không có ở ${step.hunt.loc}`);
 }));
+
+[[10, 29], [11, 30], [12, 31]].forEach(([grade, realm]) => {
+    if (G.LB_GRADE_UNLOCK_REALM[grade] !== realm) fail.push(`pháp giai ${grade} phải mở ở cảnh giới ${realm}`);
+});
 
 G.GATE_TIERS.forEach(tier => {
     const shop = G.LOCATIONS[tier.shop];

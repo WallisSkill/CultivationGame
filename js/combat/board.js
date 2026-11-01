@@ -62,15 +62,7 @@ function canUseLinhBaoGrade(grade) {
 
 // Get realm name for a given grade
 function getRealmNameForGrade(grade) {
-    const realmRequired = LB_GRADE_UNLOCK_REALM[grade] || 0;
-    if (realmRequired === 0) return 'Phàm giới';
-    if (realmRequired <= 4) return `Trúc Cơ (Cảnh ${realmRequired})`;
-    if (realmRequired <= 8) return `Tiên Giới (Cảnh ${realmRequired})`;
-    if (realmRequired <= 12) return `Thánh Cảnh (Cảnh ${realmRequired})`;
-    if (realmRequired <= 16) return `Thiên Cảnh (Cảnh ${realmRequired})`;
-    if (realmRequired <= 20) return `Hỗn Độn (Cảnh ${realmRequired})`;
-    if (realmRequired <= 25) return `Hồng Mông (Cảnh ${realmRequired})`;
-    return `Chung Nguyên (Cảnh ${realmRequired})`;
+    return REALMS[LB_GRADE_UNLOCK_REALM[grade] || 0];
 }
 
 // 🆕 When player breakthroughs to a new realm, upgrade all Linh Bảo to the max grade for that realm

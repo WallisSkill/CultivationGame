@@ -154,8 +154,8 @@ function useItem(index) {
         it.equipped = !it.equipped;
         log(`${it.name} ${it.equipped ? 'đã trang bị' : 'đã tháo'}`);
         needsFullRender = true;
-        const gateTier = GATE_TIERS.find(t => it[t.flag]);
-        if (gateTier && gateGearWorn(gateTier.flag) === GEAR_SLOT_IDS.length) {
+        const gateTier = gateTierOf((state.realmIndex || 0) + 1);
+        if (gateTier && gateGearWorn(gateTier) === GEAR_SLOT_IDS.length) {
             delete state.bottleneckNotice;
             checkRealmProgress();
         }

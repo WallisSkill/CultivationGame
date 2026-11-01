@@ -1050,14 +1050,14 @@ function nextMainQuest() {
     return MAIN_QUESTS.find(q => !state.questDone.includes(q.id)) || null;
 }
 
-function gateGearWorn(flag) {
-    return state.inventory.filter(it => it.equipped && it[flag]).length;
+function gateGearWorn(tier) {
+    return state.inventory.filter(it => it.equipped && it.slot && (it[tier.flag] || gearSeriesRealm(it) >= tier.realm)).length;
 }
 
 function gearGate(realm) {
     const tier = gateTierOf(realm);
     if (!tier) return null;
-    const worn = gateGearWorn(tier.flag);
+    const worn = gateGearWorn(tier);
     if (worn >= GEAR_SLOT_IDS.length) return null;
     return { id: `gate_gear_${realm}`, title: `${tier.title}, nhận từ nhiệm vụ phụ hoặc mua ở ${LOCATIONS[tier.shop].name} (${worn}/${GEAR_SLOT_IDS.length})` };
 }
