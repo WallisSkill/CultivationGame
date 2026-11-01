@@ -1597,7 +1597,7 @@ function renderInventory() {
         }
         else {
             d.innerHTML = `
-                        <div style="cursor:pointer" onclick="showItemDetailModal(${realIndex})"><b style="color:#e6c97a">${item.name}</b> ${desc}</div>
+                        <div style="cursor:pointer" onclick="showItemDetailModal(${realIndex})"><b style="color:#e6c97a">${item.name}${item.count > 1 ? ` ×${item.count}` : ''}</b> ${desc}</div>
                         <div class="inv-buttons">
                             ${item.type === 'weapon' || item.type === 'armor'
                     ? `<button class="equip-btn" onclick="useItem(${realIndex})">
@@ -1607,6 +1607,7 @@ function renderInventory() {
                         ? `<button class="use-btn" onclick="useRelic('${item.name}')">✨ Kích hoạt</button>`
                         : `<button class="use-btn" onclick="useItem(${realIndex})">Dùng</button>`
                 }
+                            ${item.type === 'xp' && item.count > 1 ? `<button class="use-btn" onclick="useAllXp(${realIndex})">Dùng hết</button>` : ''}
                             <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>
                         </div>
                     `;

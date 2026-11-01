@@ -23,22 +23,57 @@ function buildShopStock() {
     }
     stock.push(
         { id: 'pill_heal', name: 'Hồi Thiên Đan', type: 'consumable', healPct: 0.5, price: g * 3 },
-        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', minutes: XP_ITEM_MINUTES, price: g * 60 },
+        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', minutes: XP_ITEM_MINUTES, price: goldRef(state.realmIndex || 0) * XP_ITEM_MINUTES * XP_PILL_PRICE_PER_MINUTE },
         { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: Math.ceil(base.power * 0.02), price: g * 150 },
         { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: Math.ceil(base.defense * 0.02), price: g * 150 },
         { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 30 + realm * 20, price: g * 20 },
         { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.01, price: g * 200 }
     );
+    if (state.realmIndex >= SAINT_REALM) SAINT_XP_PILLS.forEach(pill => {
+        stock.push({ ...pill, type: 'xp', price: goldRef(state.realmIndex) * pill.minutes * XP_PILL_PRICE_PER_MINUTE });
+    });
     const discount = renownShopMult();
     stock.forEach(item => { item.price = Math.floor(item.price * discount); });
     return stock;
 }
 
+function stackKey(it) {
+    return STACK_TYPES.includes(it?.type) ? [it.type, it.name, it.minutes, it.value, it.healPct].join('|') : null;
+}
+
 function addItemToInventory(it) {
-    state.inventory.push(it);
+    const key = stackKey(it);
+    const same = key && state.inventory.find(other => stackKey(other) === key);
+    if (same) same.count = (same.count || 1) + (it.count || 1);
+    else state.inventory.push(it);
     renderTopStats();
     renderInventory();
     log(`Nhận vật Phẩm: ${it.name}`);
+}
+
+/* Save cũ: gộp các viên giống nhau thành một dòng */
+function mergeStacks() {
+    const seen = new Map();
+    state.inventory = state.inventory.filter(it => {
+        const key = stackKey(it);
+        if (!key) return true;
+        const same = seen.get(key);
+        if (!same) { seen.set(key, it); return true; }
+        same.count = (same.count || 1) + (it.count || 1);
+        return false;
+    });
+}
+
+function useAllXp(index) {
+    const it = state.inventory[index];
+    if (!it || it.type !== 'xp') return;
+    if (window._battleActive) { showToast('Đang chiến đấu, chưa thể bế quan.', 'warn'); return; }
+    const count = it.count || 1;
+    const gained = gainCultivationSeconds((it.minutes || XP_ITEM_MINUTES) * 60 * count);
+    state.inventory.splice(index, 1);
+    log(`📘 Dùng ${count} ${it.name}, tu vi +${formatNumber(gained)}.`);
+    renderTopStats();
+    renderInventory();
 }
 
 function useItem(index) {
@@ -154,7 +189,8 @@ function useItem(index) {
     }
 
     // consume non-equipment items
-    if (it.type !== 'weapon' && it.type !== 'armor' && it.type !== 'root_frag' && it.type !== 'root') {
+    if ((it.count || 1) > 1) it.count--;
+    else if (it.type !== 'weapon' && it.type !== 'armor' && it.type !== 'root_frag' && it.type !== 'root') {
         state.inventory.splice(index, 1);
     }
     
@@ -220,7 +256,7 @@ function confirmRootCombination() {
 function discardItem(index) {
     const it = state.inventory[index];
     if (!it) return;
-    if (confirm(`Ngài có chắc muốn vứt bỏ vật Phẩm "${it.name}" không?`)) {
+    if (confirm(`Ngài có chắc muốn vứt bỏ vật Phẩm "${it.name}"${it.count > 1 ? ` (cả ${it.count} viên)` : ''} không?`)) {
         state.inventory.splice(index, 1);
         log(`🗑️ Vứt bỏ ${it.name}.`);
         renderAll();
@@ -267,20 +303,32 @@ function openShopModal() {
 
 if (typeof window !== 'undefined') window.openShopModal = openShopModal;
 
+function shopQty(id) {
+    return Math.max(1, Math.floor(Number(document.getElementById(`shopQty_${id}`)?.value) || 1));
+}
+
+function setShopQtyMax(id) {
+    const si = (window.RENDERED_SHOP_LIST || []).find(x => x.id === id);
+    const input = document.getElementById(`shopQty_${id}`);
+    if (si && input) input.value = Math.max(1, Math.floor(state.gold / si.price));
+}
+
 function buyItem(id) {
     const si = (window.RENDERED_SHOP_LIST || []).find(x => x.id === id);
     if (!si) {
         log('Không tìm thấy vật phẩm trong shop hiện tại.');
         return;
     }
-    if (state.gold < si.price) {
-        log(`Không đủ linh thạch (${formatNumber(si.price)}).`);
+    const qty = STACK_TYPES.includes(si.type) ? shopQty(id) : 1;
+    const cost = si.price * qty;
+    if (state.gold < cost) {
+        log(`Không đủ linh thạch (${formatNumber(cost)}).`);
         return;
     }
-    state.gold -= si.price;
+    state.gold -= cost;
     const { id: _id, price: _price, ...item } = si;
-    addItemToInventory({ desc: 'Mua tại cửa hàng', ...item });
-    log(`🛒 Mua thành công: ${si.name} — Giá ${formatNumber(si.price)} linh thạch.`);
+    addItemToInventory({ desc: 'Mua tại cửa hàng', ...item, count: qty });
+    log(`🛒 Mua thành công: ${qty} ${si.name} — Giá ${formatNumber(cost)} linh thạch.`);
     renderShop();
 }
 
@@ -318,6 +366,8 @@ function renderShop() {
             </div>
             <div style="text-align:right;margin-left:12px;">
                 <div class="small" style="color:#ffd166;">${formatNumber(si.price)} linh thạch</div>
+                ${STACK_TYPES.includes(si.type) ? `<input id="shopQty_${si.id}" type="number" min="1" value="1" aria-label="Số lượng" style="width:72px;margin-top:6px;">
+                <button onclick="setShopQtyMax('${si.id}')" style="margin-top:6px;white-space:nowrap;">Tối đa</button>` : ''}
                 <button onclick="buyItem('${si.id}')" style="margin-top:6px;white-space:nowrap;">Mua</button>
             </div>
         `;

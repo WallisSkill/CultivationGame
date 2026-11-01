@@ -404,6 +404,12 @@ function materialYield(realm, n) {
 }
 const FORGE_HOURS = 0.05;
 const XP_ITEM_MINUTES = 5;
+const SAINT_XP_PILLS = [
+    { id: 'pill_thanh_1h', name: 'Thánh Nguyên Đan', minutes: 60 },
+    { id: 'pill_thanh_2h', name: 'Đại Thánh Nguyên Đan', minutes: 120 }
+];
+const XP_PILL_PRICE_PER_MINUTE = 12;
+const STACK_TYPES = ['xp', 'consumable', 'power', 'defense', 'life', 'luck'];
 
 /* --------- pháp bảo --------- */
 const LB_GRADE_POWER = [1, 1.4, 1.9, 2.6, 3.5, 4.6, 6, 7.5, 9, 10, 10.8, 11.4, 12];

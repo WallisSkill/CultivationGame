@@ -96,6 +96,7 @@ function initWorldState() {
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
     migrateRealmShift();
+    mergeStacks();
     migrateMainChapters();
     if (state.flags.open_da_bao && state.realmIndex >= SAINT_REALM) state.flags.open_thanh_thi = true;
     if (state.ageCurveFixed) {
