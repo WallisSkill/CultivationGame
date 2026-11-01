@@ -23,17 +23,20 @@ function buildShopStock() {
     }
     stock.push(
         { id: 'pill_heal', name: 'Hồi Thiên Đan', type: 'consumable', healPct: 0.5, price: g * 3 },
-        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', minutes: XP_ITEM_MINUTES, price: goldRef(state.realmIndex || 0) * XP_ITEM_MINUTES * XP_PILL_PRICE_PER_MINUTE },
+        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', realm: state.realmIndex || 0, minutes: XP_ITEM_MINUTES, price: goldRef(state.realmIndex || 0) * XP_ITEM_MINUTES * XP_PILL_PRICE_PER_MINUTE },
         { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: Math.ceil(base.power * 0.02), price: g * 150 },
         { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: Math.ceil(base.defense * 0.02), price: g * 150 },
         { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 30 + realm * 20, price: g * 20 },
         { id: 'scroll_fortune', name: 'Trục Thư Tăng Vận', type: 'luck', value: 0.01, price: g * 200 }
     );
     if (state.realmIndex >= SAINT_REALM) SAINT_XP_PILLS.forEach(pill => {
-        stock.push({ ...pill, type: 'xp', price: goldRef(state.realmIndex) * pill.minutes * XP_PILL_PRICE_PER_MINUTE });
+        stock.push({ ...pill, type: 'xp', realm: state.realmIndex, price: goldRef(state.realmIndex) * pill.minutes * XP_PILL_PRICE_PER_MINUTE });
     });
     const discount = renownShopMult();
-    stock.forEach(item => { item.price = Math.floor(item.price * discount); });
+    stock.forEach(item => {
+        item.price = Math.floor(item.price * discount);
+        tagXpItem(item);
+    });
     return stock;
 }
 
@@ -41,7 +44,26 @@ function stackKey(it) {
     return STACK_TYPES.includes(it?.type) ? [it.type, it.name, it.minutes, it.value, it.healPct].join('|') : null;
 }
 
+/* Vật phẩm tu vi mang cảnh giới lúc có được: tên ghi rõ, và cho đúng tu vi của cảnh giới đó */
+function tagXpItem(it) {
+    if (it?.type !== 'xp' || it.tagged) return it;
+    it.realm = it.realm ?? (state.realmIndex || 0);
+    it.tagged = true;
+    it.name = `${it.name} [${REALMS[it.realm]}]`;
+    return it;
+}
+
+function xpItemGain(it, count = 1) {
+    return gainXpAmount(cultivationSecondsXp((it.minutes || XP_ITEM_MINUTES) * 60 * count, it.realm));
+}
+
+function gainXpAmount(amount) {
+    gainXP(amount);
+    return amount;
+}
+
 function addItemToInventory(it) {
+    tagXpItem(it);
     const key = stackKey(it);
     const same = key && state.inventory.find(other => stackKey(other) === key);
     if (same) same.count = (same.count || 1) + (it.count || 1);
@@ -54,6 +76,7 @@ function addItemToInventory(it) {
 /* Save cũ: gộp các viên giống nhau thành một dòng */
 function mergeStacks() {
     const seen = new Map();
+    state.inventory.forEach(tagXpItem);
     state.inventory = state.inventory.filter(it => {
         const key = stackKey(it);
         if (!key) return true;
@@ -69,7 +92,7 @@ function useAllXp(index) {
     if (!it || it.type !== 'xp') return;
     if (window._battleActive) { showToast('Đang chiến đấu, chưa thể bế quan.', 'warn'); return; }
     const count = it.count || 1;
-    const gained = gainCultivationSeconds((it.minutes || XP_ITEM_MINUTES) * 60 * count);
+    const gained = xpItemGain(it, count);
     state.inventory.splice(index, 1);
     log(`📘 Dùng ${count} ${it.name}, tu vi +${formatNumber(gained)}.`);
     renderTopStats();
@@ -84,7 +107,7 @@ function useItem(index) {
     
     if (it.type === 'xp') {
         if (window._battleActive) { showToast('Đang chiến đấu, chưa thể bế quan.', 'warn'); return; }
-        const gained = gainCultivationSeconds((it.minutes || XP_ITEM_MINUTES) * 60);
+        const gained = xpItemGain(it);
         log(`📘 Dùng ${it.name}, tu vi +${formatNumber(gained)}.`);
         renderTopStats();
     }
@@ -337,7 +360,7 @@ function shopItemDesc(si) {
         case 'weapon':
         case 'armor': return gearStatText(si);
         case 'consumable': return `Hồi ${Math.round(si.healPct * 100)}% HP`;
-        case 'xp': return `Bằng ${si.minutes} phút bế quan`;
+        case 'xp': return `Bằng ${si.minutes} phút bế quan của ${REALMS[si.realm]}`;
         case 'power': return `Sức mạnh vĩnh viễn +${formatNumber(si.value)}`;
         case 'defense': return `Phòng thủ vĩnh viễn +${formatNumber(si.value)}`;
         case 'life': return `Tuổi thọ +${si.value}`;

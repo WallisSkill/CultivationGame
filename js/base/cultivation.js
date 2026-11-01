@@ -50,8 +50,8 @@ function battleXpSeconds(minutes) {
     return Math.min(minutes * 60, realmRealSeconds(state.realmIndex || 0) * BATTLE_XP_MAX_REALM_SHARE);
 }
 
-function cultivationSecondsXp(seconds) {
-    return Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * raceOf().xp * seconds);
+function cultivationSecondsXp(seconds, realm = state.realmIndex || 0) {
+    return Math.floor(cultivationRate(realm, state.root, 1) * raceOf().xp * seconds);
 }
 
 function gainCultivationSeconds(seconds) {
