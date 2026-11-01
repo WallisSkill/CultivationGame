@@ -95,6 +95,7 @@ function initWorldState() {
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
     migrateRealmShift();
+    migrateHuVoUnearned();
     mergeStacks();
     migrateMainChapters();
     if (state.flags.open_da_bao && state.realmIndex >= SAINT_REALM) state.flags.open_thanh_thi = true;
@@ -129,6 +130,24 @@ function migrateStatCurve() {
 /* Save cũ: chèn ba cảnh giới sau Tiên Đế, ai từ Thánh Nhân trở lên dời lên ba bậc */
 const REALM_SHIFT_FROM = 16;
 const REALM_SHIFT = 3;
+
+/* Bản đầu của Đại Kết Cục cho lên Hư Vô Chí Đạo mà không qua trận nào: save cũ quay về Chung Nguyên viên mãn và đánh lại từ đầu */
+function migrateHuVoUnearned() {
+    if (state.huVoEarned) return;
+    state.huVoEarned = true;
+    if (!state.questDone?.includes('m40') && state.realmIndex < REALM_COUNT - 1 && !state.huVoName) return;
+    state.questDone = state.questDone.filter(id => id !== 'm40');
+    state.questActive = state.questActive.filter(rt => rt.id !== 'm40');
+    if (state.realmIndex >= REALM_COUNT - 1) {
+        state.realmIndex = REALM_COUNT - 2;
+        state.realmStage = STAGES.length - 1;
+    }
+    if (LOCATIONS[state.location]?.world === HU_VO_WORLD) state.location = 'chung_dai';
+    if (state.huVoName) {
+        state.name = state.huVoName;
+        delete state.huVoName;
+    }
+}
 
 function migrateRealmShift() {
     if (state.realmShift) return;
@@ -1322,6 +1341,8 @@ function enterFinalRealm() {
     state.realmIndex = REALM_COUNT - 1;
     state.realmStage = STAGES.length - 1;
     state.xp = 0;
+    state.huVoEarned = true;
+    takeHuVoName();
     moveToHuVoWorld();
     log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Endgame.`);
     reportHuVoWin();
@@ -1522,7 +1543,7 @@ function applyHuVoHolder(enemy, holder) {
     log(`🌌 ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, đang đợi ngươi.`);
 }
 
-/* Trận cuối đánh với chính cái tên của người chơi, còn người chơi thành Hư Vô Chi Chủ */
+/* Trận cuối đánh với chính cái tên của người chơi, thắng mới thành Hư Vô Chi Chủ */
 function takeHuVoName() {
     if (state.huVoName) return;
     state.huVoName = state.name;
@@ -1540,7 +1561,6 @@ function spawnBoss(id, quest) {
     const b = BOSSES[id];
     const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
     const piece = huVoPiece(id);
-    if (b.huVoFinal) takeHuVoName();
     let realm = b.realm, stage = b.stage || 0;
     if (!b.scriptedLoss && quest && realm >= quest.needs[0]) {
         realm = quest.needs[0];

@@ -92,7 +92,7 @@ const BOSSES = {
     cs_7: { npc: 'hd_thu_cuu', realm: 31, stage: 3, shownRealm: 29, board: 6, scale: 1.3, adds: { n: 1, name: 'Hỗn Độn Vô Thức' } },
     cs_8: { npc: 'am_duong', realm: 31, stage: 3, shownRealm: 29, board: 6, scale: 1.3, adds: { n: 1, name: 'Thích Thiên Vô Lượng Đại Diệt Tôn' } },
     cs_9: { npc: 'hd_thu_cuu', realm: 31, stage: 3, shownRealm: 29, board: 6, scale: 1.4, adds: { n: 5, name: 'Đạo Giả Liên Thủ' } },
-    cs_10: { kind: 'chaos', name: 'Tất Cả Chúng Sinh', realm: 31, stage: 3, board: 6, scale: 1.6, adds: { n: 5, name: 'Chúng Sinh' } },
+    cs_10: { kind: 'chaos', name: 'Tất Cả Chúng Sinh', realm: 31, stage: 3, shownRealm: 29, board: 6, scale: 1.6, adds: { n: 5, name: 'Chúng Sinh' } },
     hv_gear: { kind: 'chaos', name: 'Trang Bị Tách Ra', realm: 31, stage: 3, board: 4, scale: 0.8, huVoPiece: 'gear' },
     hv_lb: { kind: 'chaos', name: 'Pháp Bảo Tách Ra', realm: 31, stage: 3, scale: 1, huVoPiece: 'lb' },
     hu_vo: { kind: 'chaos', name: 'Hư Vô Chí Đạo', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoFinal: true },
@@ -483,7 +483,7 @@ const MAIN_QUESTS = [
         reward: { hours: 0, goldRefs: 0 }
     },
     {
-        id: 'm40', act: 7, title: 'Đại Kết Cục', needs: [31, 3], needsEnding: 'ngoi',
+        id: 'm40', act: 7, title: 'Đại Kết Cục', needs: [31, 3], needsEnding: 'ngoi', unlock: 32,
         steps: [
             { go: 'chung_dai', say: [['narr', 'Các Giới đã trở về chỗ cũ, nhưng ngươi vẫn chưa xong. Còn một thứ chưa từng thua ngươi, vì nó chưa từng rời khỏi ngươi.']] },
             { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] },
