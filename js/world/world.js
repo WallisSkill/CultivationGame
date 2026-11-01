@@ -43,6 +43,9 @@ const ROAD_BANDITS = {
     hondon: 'Hỗn Độn Đạo Tặc', hongmong: 'Hồng Mông Đạo Tặc', chungnguyen: 'Chung Yên Đạo Tặc'
 };
 const BOUNTY_KILLS = 5;
+const BOUNTY_GOLD_REFS = 15;
+const BOUNTY_HOURS = 1;
+const BOUNTY_MATERIAL = 6;
 
 let worldLastTick = Date.now();
 let worldUiAccum = 0;
@@ -922,7 +925,20 @@ function forgeQueueHTML() {
         `${GEAR_SLOTS[job.slot].label} (${formatRealDuration(job.remaining / (state.testSpeed || 1))})`).join(', ')}</div>`;
 }
 
+function bountyRewardText() {
+    const worldId = worldTierOfRealm(state.realmIndex).id;
+    return [`+${formatNumber(cultivationSecondsXp(cultivationHoursToSeconds(BOUNTY_HOURS)))} tu vi`, `+${formatNumber(goldRef(state.realmIndex) * BOUNTY_GOLD_REFS)} linh thạch`, `+${materialYield(state.realmIndex, BOUNTY_MATERIAL)} ${MATERIAL_NAMES[worldId]}`].join(' · ');
+}
+
+function openBountyBoard() {
+    openWorldModal('bountyModal', '📜 Bảng treo thưởng', `<div class="small">Diệt ${BOUNTY_KILLS} con mồi được chỉ định trong Giới này.</div>
+        <div class="small">🎁 ${bountyRewardText()}</div>
+        <button class="mini-btn" onclick="acceptBounty()">Nhận lệnh</button>`);
+}
+
 function acceptBounty() {
+    const board = document.getElementById('bountyModal');
+    if (board) board.style.display = 'none';
     const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && l.minR <= state.realmIndex && l.maxR >= state.realmIndex - 1);
     const loc = pool[Math.floor(Math.random() * pool.length)];
     const pick = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
@@ -933,11 +949,11 @@ function acceptBounty() {
 
 function finishBounty() {
     const worldId = worldTierOfRealm(state.realmIndex).id;
-    const gold = goldRef(state.realmIndex) * 15;
+    const gold = goldRef(state.realmIndex) * BOUNTY_GOLD_REFS;
     state.gold += gold;
-    const xp = gainCultivationHours(1);
+    const xp = gainCultivationHours(BOUNTY_HOURS);
     log(`📜 Hoàn thành treo thưởng! +${formatNumber(gold)} linh thạch, +${formatNumber(xp)} tu vi.`);
-    grantMaterial(worldId, materialYield(state.realmIndex, 6));
+    grantMaterial(worldId, materialYield(state.realmIndex, BOUNTY_MATERIAL));
     state.bounty = null;
 }
 
@@ -1335,6 +1351,31 @@ function questStepText(rt) {
     return '';
 }
 
+/* Phần thưởng tính theo cảnh giới hiện tại; nhiệm vụ ẩn giữ bí mật */
+function questRewardText(q) {
+    if (q.hidden) return '';
+    const r = q.reward || {};
+    const parts = [];
+    if (r.hours) parts.push(`+${formatNumber(cultivationSecondsXp(cultivationHoursToSeconds(r.hours)))} tu vi`);
+    if (r.goldRefs) parts.push(`+${formatNumber(goldRef(state.realmIndex) * r.goldRefs)} linh thạch`);
+    if (r.gear) parts.push(`${GEAR_SLOTS[r.gear[0]].label} phẩm ${GEAR_QUALITIES[r.gear[1]].name}`);
+    if (r.treasure) parts.push(`1 món ngẫu nhiên phẩm ${GEAR_QUALITIES[TREASURE_REWARD.quality].name}, vượt ${TREASURE_REWARD.bonus} cảnh giới`);
+    if (r.lb) parts.push('1 linh bảo ngẫu nhiên');
+    if (r.relic) parts.push(r.relic);
+    if (r.boardSlot) parts.push('+1 ô trận pháp');
+    if (r.statBless) parts.push(`chỉ số bản thể +${Math.round(r.statBless * 100)}%`);
+    if (r.intel) parts.push('thêm tin vào Địa Chí');
+    if (r.opens) parts.push(`mở dịch vụ ${LOCATIONS[r.opens].name}`);
+    if (r.flag) parts.push(`mở đường tới ${WORLD_TIERS.find(x => 'world_' + x.id === r.flag).name}`);
+    if (r.ending) parts.push('kết thúc cốt truyện');
+    return parts.join(' · ');
+}
+
+function questRewardHTML(q) {
+    const text = questRewardText(q);
+    return text ? `<div class="small">🎁 ${text}</div>` : '';
+}
+
 function questActionLabel(rt) {
     const step = questStep(rt);
     if (step.boss) return 'Khiêu chiến';
@@ -1354,6 +1395,7 @@ function renderQuestPanel() {
             <div class="small">${main ? ACTS[q.act - 1].name : 'Nhiệm vụ phụ'}${q.unlock != null ? ` · mở khóa ${REALMS[q.unlock]}` : ''}</div>
             <b>${q.title}</b>
             <div class="small">${questStepText(rt)}</div>
+            ${questRewardHTML(q)}
             <button class="mini-btn" onclick="questAction('${rt.id}')">${questActionLabel(rt)}</button>
         </div>`;
     });
@@ -1361,18 +1403,18 @@ function renderQuestPanel() {
         const q = nextMainQuest();
         const blocker = q && QUEST_INDEX[mainQuestBlocker(q)];
         if (q) cards.unshift(`<div class="quest-card" data-quest="${q.id}"><div class="small">${ACTS[q.act - 1].name}</div><b>${q.title}</b>
-            <div class="small">${blocker && needsMet(q) ? `Trước hết hãy xong "${blocker.title}": gặp ${NPCS[questGiver(blocker)].name} tại ${LOCATIONS[blocker.loc].name}.` : `Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.`}</div></div>`);
+            <div class="small">${blocker && needsMet(q) ? `Trước hết hãy xong "${blocker.title}": gặp ${NPCS[questGiver(blocker)].name} tại ${LOCATIONS[blocker.loc].name}.` : `Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.`}</div>${questRewardHTML(q)}</div>`);
         else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}</b></div>`);
     }
     if (descentActive()) {
         cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);
     }
     (state.courtOrders || []).forEach(c => {
-        cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div></div>`);
+        cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div><div class="small">🎁 ${courtRewardText(LOCATIONS[c.loc], c.realm)}</div></div>`);
     });
     if (state.bounty) {
         const b = state.bounty;
-        cards.push(`<div class="quest-card"><div class="small">Treo thưởng</div><b>${b.name}</b><div class="small">${LOCATIONS[b.loc].name} (${b.done}/${b.need})</div></div>`);
+        cards.push(`<div class="quest-card"><div class="small">Treo thưởng</div><b>${b.name}</b><div class="small">${LOCATIONS[b.loc].name} (${b.done}/${b.need})</div><div class="small">🎁 ${bountyRewardText()}</div></div>`);
     }
     el.innerHTML = cards.join('') || '<div class="small">Chưa có nhiệm vụ.</div>';
 }
@@ -1465,7 +1507,8 @@ function questTipHTML(id) {
     }).join('');
     return `<b>${q.title}</b><div class="small">${giver}</div>
         <div class="tip-head">Vì sao có nhiệm vụ này</div><div class="small">${why}</div>
-        <div class="tip-head">Diễn biến</div><div class="small">${steps}</div>`;
+        <div class="tip-head">Diễn biến</div><div class="small">${steps}</div>
+        ${q.hidden ? '' : `<div class="tip-head">Phần thưởng</div><div class="small">${questRewardText(q) || 'Không có'}</div>`}`;
 }
 
 function trackGearTip(e) {
@@ -1499,7 +1542,7 @@ function npcReports(key) {
 }
 
 function openNpcTalk(key) {
-    const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}</button>`).join('');
+    const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}${questRewardHTML(q)}</button>`).join('');
     const reports = npcReports(key).map(rt => `<button class="mini-btn" onclick="reportToNpc('${rt.id}')">📜 Báo lại: ${QUEST_INDEX[rt.id].title}</button>`).join('');
     openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>
         <div class="npc-options">${reports}${offers}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
@@ -1709,6 +1752,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, toggleForgeSub, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

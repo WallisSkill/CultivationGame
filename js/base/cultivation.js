@@ -50,16 +50,23 @@ function battleXpSeconds(minutes) {
     return Math.min(minutes * 60, realmRealSeconds(state.realmIndex || 0) * BATTLE_XP_MAX_REALM_SHARE);
 }
 
+function cultivationSecondsXp(seconds) {
+    return Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * raceOf().xp * seconds);
+}
+
 function gainCultivationSeconds(seconds) {
-    const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * raceOf().xp * seconds);
+    const amount = cultivationSecondsXp(seconds);
     gainXP(amount);
     return amount;
 }
 
 /* Đan dược, nhiệm vụ, kỳ ngộ: "giờ" tính theo nhịp của cảnh giới cuối, nên giữ nguyên tỷ lệ ở mọi cảnh giới */
+function cultivationHoursToSeconds(hours) {
+    return hours * 3600 * realmRealSeconds(state.realmIndex || 0) / (REALM_LAST_DAYS * SECONDS_PER_DAY);
+}
+
 function gainCultivationHours(hours) {
-    const ratio = realmRealSeconds(state.realmIndex || 0) / (REALM_LAST_DAYS * SECONDS_PER_DAY);
-    return gainCultivationSeconds(hours * 3600 * ratio);
+    return gainCultivationSeconds(cultivationHoursToSeconds(hours));
 }
 
 function checkRealmProgress() {

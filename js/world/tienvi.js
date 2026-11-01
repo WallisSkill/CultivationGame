@@ -88,6 +88,18 @@ function courtMeritReward(loc, realm) {
     return Math.floor(base * (courtBoard()[0].isMe ? COURT_TOP_MULT : 1));
 }
 
+function courtGoldReward(loc, realm) {
+    return goldRef(state.realmIndex) * COURT_GOLD_REFS * courtGrade(loc, realm).mult;
+}
+
+function courtRenownReward() {
+    return renownPoints(state.realmIndex) * COURT_RENOWN_KILLS;
+}
+
+function courtRewardText(loc, realm) {
+    return `+${formatNumber(courtMeritReward(loc, realm))} công lao · +${formatNumber(courtGoldReward(loc, realm))} linh thạch · +${formatNumber(courtRenownReward())} điểm thiên kiêu`;
+}
+
 function courtRollRank(loc) {
     const realm = loc.minR + Math.floor(Math.random() * (loc.maxR - loc.minR + 1));
     const stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : 3;
@@ -146,11 +158,11 @@ function noteCourtKill(unit) {
     const before = tienViIndex();
     const loc = LOCATIONS[order.loc];
     const merit = courtMeritReward(loc, order.realm);
-    const gold = goldRef(state.realmIndex) * COURT_GOLD_REFS * courtGrade(loc, order.realm).mult;
+    const gold = courtGoldReward(loc, order.realm);
     state.merit += merit;
     state.gold += gold;
     state.courtOrders = state.courtOrders.filter(o => o !== order);
-    grantRenown(state.location, renownPoints(state.realmIndex) * COURT_RENOWN_KILLS);
+    grantRenown(state.location, courtRenownReward());
     log(`🏛️ Hoàn thành lệnh Thiên Đình: +${merit} công lao, +${formatNumber(gold)} linh thạch.`);
     if (tienViIndex() > before) {
         log(`🏛️ Thăng tiên vị: ${tienViName()}!`);
@@ -171,13 +183,13 @@ function openCourt() {
     const rows = courtBoard().map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
         <span>${i < 3 ? ['🥇', '🥈', '🥉'][i] : `${i + 1}.`} ${sectEscape(entry.name)}</span><b>${formatNumber(entry.merit)}</b></div>`).join('');
     const ranks = TIEN_VI.map((rank, i) => `<div class="small">${i === index ? '▶ ' : ''}${rank.name}: ${formatNumber(rank.merit)} công lao, cần để lên ${REALMS[rank.realm]}</div>`).join('');
-    const orders = state.courtOrders.map(order => `<div class="small">• ${order.name} ${courtRankText(order)} tại ${LOCATIONS[order.loc].name} (${order.done}/${order.need}) · ${courtGrade(LOCATIONS[order.loc], order.realm).name}</div>`).join('');
+    const orders = state.courtOrders.map(order => `<div class="small">• ${order.name} ${courtRankText(order)} tại ${LOCATIONS[order.loc].name} (${order.done}/${order.need}) · ${courtGrade(LOCATIONS[order.loc], order.realm).name}<br>🎁 ${courtRewardText(LOCATIONS[order.loc], order.realm)}</div>`).join('');
     const full = state.courtOrders.length >= COURT_MAX_ORDERS;
     const offers = courtOffers().map((offer, i) => {
         const loc = LOCATIONS[offer.loc];
         const grade = courtGrade(loc, offer.realm);
-        return `<div class="market-row"><span class="small"><b>${grade.name}</b> · diệt ${grade.kills} ${offer.name} <b>${courtRankText(offer)}</b> tại ${loc.name}</span>
-            <button class="mini-btn" ${full ? 'disabled' : ''} onclick="acceptCourtOrder(${i})">+${courtMeritReward(loc, offer.realm)} công lao</button></div>`;
+        return `<div class="market-row"><span class="small"><b>${grade.name}</b> · diệt ${grade.kills} ${offer.name} <b>${courtRankText(offer)}</b> tại ${loc.name}<br>🎁 ${courtRewardText(loc, offer.realm)}</span>
+            <button class="mini-btn" ${full ? 'disabled' : ''} onclick="acceptCourtOrder(${i})">Nhận</button></div>`;
     }).join('');
     const order = `<div class="small" style="margin-top:8px"><b>Lệnh đang làm ${state.courtOrders.length}/${COURT_MAX_ORDERS}</b></div>${orders}
         <div class="small" style="margin-top:8px"><b>Lệnh có thể nhận</b></div>${offers}`;
