@@ -8,7 +8,11 @@
 const LOOK_OPTIONS = {
     body: [{ id: 'm', label: 'Nam' }, { id: 'f', label: 'Nữ' }],
     skin: ['#f6d7b8', '#eec39a', '#d9a273', '#a9734a', '#e9e2f0'],
-    hairStyle: ['Búi đạo', 'Xõa dài', 'Đuôi ngựa', 'Song kế', 'Tóc ngắn', 'Đầu trọc'],
+    hairStyle: ['Búi đạo', 'Xõa dài', 'Đuôi ngựa', 'Song kế', 'Tóc ngắn', 'Đầu trọc', 'Bán kế'],
+    face: ['Trái xoan', 'Vuông', 'Thanh tú'],
+    eyeShape: ['Phượng nhãn', 'Hiền hòa', 'Đuôi xếch'],
+    brow: ['Kiếm mi', 'Liễu mi', 'Rậm'],
+    beard: ['Không', 'Ria', 'Râu dài'],
     hair: ['#1b1b22', '#4a2f1d', '#8b5a2b', '#c9c9d6', '#f0e6c8', '#7a1f2b', '#2a4f8f', '#5b2a86'],
     robe: ['#3f6f9e', '#3e7d5a', '#8c3a3a', '#6b4a8f', '#d9d4c5', '#2b2b35', '#b5832e', '#c26a9a'],
     eyes: ['#2b1b12', '#2a5fa8', '#2f8f5a', '#a8342a', '#8a4fc0', '#d9a520']
@@ -27,7 +31,7 @@ const REALM_AURA = [
 ];
 
 function defaultLook() {
-    return { body: 'm', skin: LOOK_OPTIONS.skin[0], hairStyle: 0, hair: LOOK_OPTIONS.hair[0], robe: LOOK_OPTIONS.robe[0], eyes: LOOK_OPTIONS.eyes[0] };
+    return { body: 'm', skin: LOOK_OPTIONS.skin[0], hairStyle: 0, hair: LOOK_OPTIONS.hair[0], robe: LOOK_OPTIONS.robe[0], eyes: LOOK_OPTIONS.eyes[0], face: 0, eyeShape: 0, beard: 0 };
 }
 
 function shadeColor(hex, amount) {
@@ -39,160 +43,192 @@ function shadeColor(hex, amount) {
 
 let _svgUid = 0;
 
+const INK = '#1d1a20';
+
 function auraLayer(color, id) {
     if (!color) return '';
-    return `<defs><radialGradient id="${id}"><stop offset="35%" stop-color="${color}" stop-opacity=".5"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></radialGradient></defs>
-        <ellipse class="av-aura" cx="60" cy="88" rx="58" ry="72" fill="url(#${id})"/>`;
+    return `<defs><radialGradient id="${id}"><stop offset="20%" stop-color="${color}" stop-opacity=".42"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></radialGradient></defs>
+        <ellipse class="av-aura" cx="60" cy="70" rx="56" ry="68" fill="url(#${id})"/>
+        <g fill="none" stroke="${color}" stroke-linecap="round" opacity=".55">
+            <path d="M22 118 Q6 96 20 74 Q30 60 22 44 Q40 62 30 80 Q22 98 34 112" stroke-width="2.4"/>
+            <path d="M98 112 Q116 92 102 68 Q94 52 104 34 Q86 54 94 74 Q102 94 88 110" stroke-width="2"/>
+        </g>`;
 }
 
-const HAIR_PARTED = 'M35 46 Q31 12 60 11 Q89 12 85 46 Q83 34 74 30 Q67 33 60 25 Q53 33 46 30 Q37 34 35 46 Z';
-const HAIR_SWEPT = 'M35 47 Q31 12 60 11 Q89 12 85 47 Q83 35 73 28 Q60 39 44 33 Q37 38 35 47 Z';
+const HAIR_CAP = 'M49.4 28 Q46.6 9.6 60 9 Q73.4 9.6 70.6 28 Q69.6 20.6 65 16.6 Q60.4 20.6 54.6 18 Q50.6 21 49.4 28 Z';
+const HAIR_SWEEP = 'M49.4 28 Q46.6 9.6 60 9 Q73.4 9.6 70.6 28 Q70 20 64 15.4 Q58 22 51.6 20.6 Q50 23.6 49.4 28 Z';
+
+function hairStrands(c) {
+    return `<path d="M51 17 Q46 30 48.4 46 Q49.6 36 51.4 27 Q52 21 54 17 Z" fill="${c}"/><path d="M69 17 Q74 30 71.6 46 Q70.4 36 68.6 27 Q68 21 66 17 Z" fill="${c}"/>`;
+}
+
+function hairLines(look) {
+    const hi = shadeColor(look.hair, 0.4);
+    return `<path d="M51.6 22 Q53 13 60 10.6 M54 17.6 Q57 12 63 11 M66 15.6 Q65 12.6 61.6 10.4 M68.6 22 Q68 16 64.6 12.4" stroke="${hi}" stroke-width=".4" fill="none" stroke-linecap="round" opacity=".5"/>`;
+}
 
 function hairBack(look) {
     const c = look.hair;
-    const dark = shadeColor(c, -0.25);
+    const dark = shadeColor(c, -0.3);
     switch (look.hairStyle) {
-        case 1: return `<path d="M34 34 Q24 76 30 116 Q44 126 60 122 Q76 126 90 116 Q96 76 86 34 Z" fill="${dark}"/>`;
-        case 2: return `<path d="M64 12 Q98 4 106 40 Q110 66 96 92 Q96 66 86 48 Q78 32 64 22 Z" fill="${dark}"/>`;
-        case 3: return `<circle cx="35" cy="19" r="10" fill="${c}"/><circle cx="85" cy="19" r="10" fill="${c}"/>`;
-        case 5: return '';
-        default: return `<path d="M35 36 Q34 52 42 58 Q60 64 78 58 Q86 52 85 36 Z" fill="${dark}"/>`;
+        case 1: return `<path d="M50 18 Q40 56 43 112 Q52 122 60 116 Q68 122 77 112 Q80 56 70 18 Z" fill="${dark}"/>`;
+        case 2: return `<path d="M63 9 Q84 6 88 30 Q92 56 84 84 Q81 60 76 42 Q72 24 62 16 Z" fill="${dark}"/>`;
+        case 3: return `<path d="M50 22 Q45 40 47 60 Q60 66 73 60 Q75 40 70 22 Z" fill="${dark}"/>`;
+        case 6: return `<path d="M50 18 Q42 52 45 92 Q52 100 60 96 Q68 100 75 92 Q78 52 70 18 Z" fill="${dark}"/>`;
+        default: return '';
     }
-}
-
-function hairSheen(look) {
-    return `<path d="M43 23 Q60 15 77 23" stroke="${shadeColor(look.hair, 0.45)}" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".4"/>`;
-}
-
-function hairLocks(c) {
-    return `<path d="M36 42 Q31 54 36 66 Q37 56 40 46 Z" fill="${c}"/><path d="M84 42 Q89 54 84 66 Q83 56 80 46 Z" fill="${c}"/>`;
 }
 
 function hairFront(look) {
     const c = look.hair;
+    const pin = '#d9b45a';
     switch (look.hairStyle) {
-        case 0: return `<ellipse cx="60" cy="10" rx="8" ry="7" fill="${c}"/><rect x="49" y="9" width="22" height="2.4" rx="1.2" fill="#d9b45a"/>
-            <path d="${HAIR_PARTED}" fill="${c}"/>${hairLocks(c)}${hairSheen(look)}`;
-        case 1: return `<path d="${HAIR_SWEPT}" fill="${c}"/>${hairLocks(c)}${hairSheen(look)}`;
-        case 2: return `<path d="${HAIR_SWEPT}" fill="${c}"/><rect x="62" y="10" width="9" height="5" rx="2" fill="#c0392b"/>${hairLocks(c)}${hairSheen(look)}`;
-        case 3: return `<path d="${HAIR_PARTED}" fill="${c}"/><rect x="29" y="27" width="11" height="3" rx="1.5" fill="#d9b45a"/><rect x="80" y="27" width="11" height="3" rx="1.5" fill="#d9b45a"/>${hairSheen(look)}`;
-        case 4: return `<path d="M35 44 Q31 13 60 12 Q89 13 85 44 L80 32 L74 37 L68 27 L60 34 L52 27 L46 37 L40 32 Z" fill="${c}"/>${hairSheen(look)}`;
-        default: return `<path d="M44 22 Q54 17 64 19" stroke="#ffffff" stroke-opacity=".3" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+        case 0: return `<ellipse cx="60" cy="6.4" rx="5.4" ry="4.6" fill="${c}"/><path d="M50 8 L71 5" stroke="${pin}" stroke-width="1" stroke-linecap="round"/><path d="${HAIR_CAP}" fill="${c}"/>${hairLines(look)}`;
+        case 1: return `<path d="${HAIR_SWEEP}" fill="${c}"/>${hairStrands(c)}<path d="M48.6 40 Q45 62 49 84 Q50 62 51.6 44 Z" fill="${c}"/><path d="M71.4 40 Q75 62 71 84 Q70 62 68.4 44 Z" fill="${c}"/>${hairLines(look)}`;
+        case 2: return `<path d="${HAIR_SWEEP}" fill="${c}"/><path d="M60 8 L68 7" stroke="#b5332b" stroke-width="2.2" stroke-linecap="round"/>${hairStrands(c)}${hairLines(look)}`;
+        case 3: return `<circle cx="48.4" cy="10.6" r="5.4" fill="${c}"/><circle cx="71.6" cy="10.6" r="5.4" fill="${c}"/><path d="${HAIR_CAP}" fill="${c}"/><path d="M45 14 L52 14M68 14 L75 14" stroke="${pin}" stroke-width="1.2" stroke-linecap="round"/>${hairStrands(c)}${hairLines(look)}`;
+        case 4: return `<path d="M49.4 27 Q46.6 9.6 60 9 Q73.4 9.6 70.6 27 L68 20 L65 23 L62 16.6 L58 22 L55 17 L52.6 23 Z" fill="${c}"/>${hairLines(look)}`;
+        case 5: return '<path d="M53 15.4 Q58 13 63 13.6" stroke="#fff" stroke-opacity=".3" stroke-width="1.1" fill="none" stroke-linecap="round"/>';
+        default: return `<ellipse cx="60" cy="6.6" rx="4.6" ry="3.8" fill="${c}"/><path d="M57 4 L64 9" stroke="${pin}" stroke-width=".9" stroke-linecap="round"/><path d="${HAIR_SWEEP}" fill="${c}"/>${hairStrands(c)}${hairLines(look)}`;
     }
 }
 
+const FACE_SHAPES = [
+    'M50.6 24 Q50.6 13 60 13 Q69.4 13 69.4 24 Q69.4 31 66 35.6 Q62.4 39.8 60 40 Q57.6 39.8 54 35.6 Q50.6 31 50.6 24 Z',
+    'M50.4 24 Q50.4 13 60 13 Q69.6 13 69.6 24 Q69.8 32 67.4 36 Q63.4 40.4 60 40.4 Q56.6 40.4 52.6 36 Q50.2 32 50.4 24 Z',
+    'M51 24 Q51 13 60 13 Q69 13 69 24 Q68.8 30 65 35.4 Q62 40 60 40.6 Q58 40 55 35.4 Q51.2 30 51 24 Z'
+];
+
 function eyeLayer(cx, side, look, id, fem) {
-    const y = 45;
-    const outer = cx + side * 6, inner = cx - side * 5;
-    const lid = `M${inner} ${y + 1} Q${cx} ${y - 5.5} ${outer} ${y - 1.4}`;
-    const irisX = fem ? 3.3 : 2.9, irisY = fem ? 4.2 : 3.7;
-    const lash = shadeColor(look.hair, -0.35);
-    const flick = fem ? `<path d="M${outer} ${y - 1.4} L${outer + side * 2} ${y - 3}" stroke="${lash}" stroke-width="1.1" stroke-linecap="round"/>` : '';
-    return `<path d="${lid} Q${cx} ${y + 4.6} ${inner} ${y + 1} Z" fill="#fffaf2"/>
-        <ellipse cx="${cx}" cy="${y - 0.2}" rx="${irisX}" ry="${irisY}" fill="url(#${id}-iris)"/>
-        <circle cx="${cx}" cy="${y - 0.2}" r="1.5" fill="#120e0d"/><circle cx="${cx + 1}" cy="${y - 1.7}" r="1" fill="#fff"/>
-        <path d="${lid}" stroke="${lash}" stroke-width="1.6" fill="none" stroke-linecap="round"/>${flick}`;
+    const y = 27;
+    const outer = cx + side * 3.5, inner = cx - side * 3;
+    const lift = [1.1, 0.4, 1.8][look.eyeShape || 0];
+    const open = fem ? 2.5 : 2;
+    const lid = `M${inner} ${y + 0.5} Q${cx} ${y - open} ${outer} ${y - lift}`;
+    const lash = shadeColor(look.hair, -0.45);
+    return `<path d="${lid} Q${cx} ${y + 1.5} ${inner} ${y + 0.5} Z" fill="#fbf7ee"/>
+        <circle cx="${cx}" cy="${y - 0.3}" r="1.45" fill="url(#${id}-iris)"/><circle cx="${cx}" cy="${y - 0.3}" r=".62" fill="#0d0b0b"/><circle cx="${cx + 0.4}" cy="${y - 0.8}" r=".3" fill="#fff"/>
+        <path d="${lid}" stroke="${lash}" stroke-width="${fem ? 0.85 : 0.75}" fill="none" stroke-linecap="round"/>`;
+}
+
+function browLayer(look, fem) {
+    const style = look.brow ?? (fem ? 1 : 0);
+    const c = shadeColor(look.hair, -0.25);
+    const y = 22;
+    const rise = [1.5, 0.5, 1][style];
+    const width = [0.95, 0.55, 1.35][style];
+    const brow = side => `M${60 + side * 1.9} ${y + 0.8} Q${60 + side * 5.4} ${y - rise} ${60 + side * 8.2} ${y - rise + 0.9}`;
+    return `<path d="${brow(-1)} ${brow(1)}" stroke="${c}" stroke-width="${width}" fill="none" stroke-linecap="round"/>`;
+}
+
+function beardLayer(look) {
+    const c = look.hair;
+    const kind = look.beard === true ? 2 : (look.beard || 0);
+    if (kind === 1) return `<path d="M55.4 33.4 Q58 32.6 60 33.4 Q62 32.6 64.6 33.4 Q62 34.6 60 34 Q58 34.6 55.4 33.4 Z" fill="${c}"/>`;
+    if (kind === 2) return `<path d="M55 33.2 Q60 32.2 65 33.2 Q64.6 37 62.6 42 Q61 56 60 64 Q59 56 57.4 42 Q55.4 37 55 33.2 Z" fill="${c}"/>`;
+    return '';
 }
 
 function faceLayer(look, id) {
     const fem = look.body === 'f';
-    const brow = shadeColor(look.hair, -0.1);
-    const browLine = (inner, peak, outer, y) => `M${inner} ${y + 1} Q${peak} ${y - 1.4} ${outer} ${y - 0.4}`;
-    const brows = `<path d="${browLine(54, 49, 43, 38)} ${browLine(66, 71, 77, 38)}" stroke="${brow}" stroke-width="${fem ? 1.1 : 1.8}" fill="none" stroke-linecap="round"/>`;
-    const nose = `<path d="M60.4 52 Q61.2 53.6 60 54" stroke="${shadeColor(look.skin, -0.3)}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
-    const mouth = fem
-        ? `<path d="M57 59 Q60 60.8 63 59" stroke="#c9544f" stroke-width="1.5" fill="none" stroke-linecap="round"/>`
-        : `<path d="M57 59.4 Q60 60.4 63 59.2" stroke="#a0654f" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
-    const blush = fem ? '<ellipse cx="45" cy="52.5" rx="3.6" ry="1.8" fill="#ff8f8f" opacity=".32"/><ellipse cx="75" cy="52.5" rx="3.6" ry="1.8" fill="#ff8f8f" opacity=".32"/>' : '';
-    const beard = look.beard
-        ? `<path d="M47 57 Q60 92 73 57 Q60 65 47 57 Z" fill="${look.hair}"/>`
-        : '';
-    return blush + eyeLayer(49.5, -1, look, id, fem) + eyeLayer(70.5, 1, look, id, fem) + brows + nose + mouth + beard;
+    const line = shadeColor(look.skin, -0.42);
+    const nose = `<path d="M60.8 30 Q61.4 31.3 60.8 31.7 Q60.2 32 59.4 31.7" stroke="${line}" stroke-width=".45" fill="none" stroke-linecap="round" opacity=".75"/>`;
+    const lip = fem ? '#b8423f' : '#9a5a4c';
+    const mouth = `<path d="M57.4 ${35} Q59 34.5 60 34.9 Q61 34.5 62.6 ${35} Q60 36.4 57.4 ${35} Z" fill="${lip}" opacity="${fem ? 0.9 : 0.6}"/>`;
+    const cheek = fem ? '<ellipse cx="54" cy="31" rx="2.4" ry="1.3" fill="#e88" opacity=".22"/><ellipse cx="66" cy="31" rx="2.4" ry="1.3" fill="#e88" opacity=".22"/>' : '';
+    const shade = `<path d="M50.8 25 Q51 31 54 35.6 Q56 38 58 39.2 Q53.4 33 52.6 24 Q51.6 23 50.8 25 Z M69.2 25 Q69 31 66 35.6 Q64 38 62 39.2 Q66.6 33 67.4 24 Q68.4 23 69.2 25 Z" fill="${line}" opacity=".16"/>`;
+    return shade + cheek + eyeLayer(55.5, -1, look, id, fem) + eyeLayer(64.5, 1, look, id, fem) + browLayer(look, fem) + nose + mouth + beardLayer(look);
 }
 
 function weaponLayer(kind, color) {
     if (!kind) return '';
-    const glow = shadeColor(color, 0.4);
+    const glow = shadeColor(color, 0.45);
     switch (kind) {
-        case 'spear': return `<g transform="rotate(10 100 90)"><rect x="98" y="30" width="4" height="118" fill="#6b4a2b"/><path d="M100 10 L107 34 L93 34 Z" fill="${color}" stroke="${glow}"/></g>`;
-        case 'fan': return `<g transform="translate(90 84)"><path d="M0 0 L-16 -30 Q10 -44 30 -24 Z" fill="${color}" stroke="${glow}"/><path d="M0 0 L-5 -36M0 0 L9 -36M0 0 L22 -30" stroke="${glow}" stroke-width="1"/></g>`;
-        case 'orb': return `<circle cx="102" cy="82" r="11" fill="${color}" stroke="${glow}" stroke-width="2"/><circle cx="98" cy="78" r="3" fill="#fff" opacity=".7"/>`;
-        case 'staff': return `<rect x="98" y="24" width="4" height="124" fill="#6b4a2b"/><circle cx="100" cy="22" r="8" fill="${color}" stroke="${glow}"/>`;
-        default: return `<g transform="rotate(14 100 96)"><rect x="97" y="26" width="6" height="74" rx="1" fill="${color}" stroke="${glow}" stroke-width="1"/><path d="M97 26 L100 16 L103 26 Z" fill="${glow}"/><rect x="90" y="98" width="20" height="4" fill="#caa24a"/><rect x="98" y="102" width="4" height="14" fill="#5c3b1e"/></g>`;
+        case 'spear': return `<g transform="rotate(5 98 90)"><rect x="97.2" y="26" width="1.8" height="124" fill="#4b3320"/><path d="M98 6 L102 28 L98 31 L94 28 Z" fill="${color}" stroke="${INK}" stroke-width=".5"/><path d="M95 32 Q98 40 101 32" stroke="#a33" stroke-width="1.6" fill="none"/></g>`;
+        case 'fan': return `<g transform="translate(97 92)"><path d="M0 0 L-17 -22 Q0 -36 17 -22 Z" fill="#efe8da" stroke="${INK}" stroke-width=".6"/><path d="M0 0 L-9 -29M0 0 L0 -32M0 0 L9 -29" stroke="${INK}" stroke-width=".4" opacity=".6"/><path d="M-14 -24 Q0 -34 14 -24" stroke="${color}" stroke-width="2" fill="none" opacity=".7"/></g>`;
+        case 'orb': return `<circle cx="99" cy="76" r="8" fill="${color}" stroke="${glow}" stroke-width="1"/><circle cx="96.6" cy="73.6" r="2.2" fill="#fff" opacity=".75"/>`;
+        case 'staff': return `<rect x="97.4" y="20" width="1.8" height="130" fill="#4b3320"/><path d="M98.2 8 Q106 14 98.2 22 Q90.6 14 98.2 8 Z" fill="${color}" stroke="${INK}" stroke-width=".5"/>`;
+        default: return `<g transform="rotate(9 98 92)"><path d="M96.7 22 L98 12 L99.3 22 L99.3 84 L96.7 84 Z" fill="${shadeColor(color, 0.35)}" stroke="${INK}" stroke-width=".5"/><path d="M98 14 L98 84" stroke="${color}" stroke-width=".7"/><path d="M92.6 84 Q98 86.6 103.4 84" stroke="#caa24a" stroke-width="1.8" fill="none" stroke-linecap="round"/><rect x="97.1" y="85" width="1.8" height="11" fill="#2f2118"/><path d="M98 96 Q95 104 98 110" stroke="#a33" stroke-width="1" fill="none"/></g>`;
     }
 }
 
 function crownLayer(crown, color) {
     switch (crown) {
-        case 'guan': return `<path d="M49 18 L52 6 Q60 3 68 6 L71 18 Q60 21 49 18 Z" fill="${color}" stroke="${shadeColor(color, -0.35)}" stroke-width="1"/><rect x="44" y="12" width="32" height="2.2" rx="1.1" fill="#e6c97a"/>`;
-        case 'halo': return `<ellipse cx="60" cy="10" rx="22" ry="5" fill="none" stroke="${color}" stroke-width="3"/>`;
-        case 'wheel': return `<circle cx="60" cy="42" r="42" fill="none" stroke="${color}" stroke-width="2.5" stroke-dasharray="6 6" opacity=".8"/>`;
+        case 'guan': return `<path d="M54 10 L55.6 2 Q60 .4 64.4 2 L66 10 Q60 12 54 10 Z" fill="${color}" stroke="${INK}" stroke-width=".5"/><path d="M49 7.6 L71 5.4" stroke="#e6c97a" stroke-width="1" stroke-linecap="round"/>`;
+        case 'halo': return `<ellipse cx="60" cy="5" rx="13" ry="3" fill="none" stroke="${color}" stroke-width="1.6"/>`;
+        case 'wheel': return `<circle cx="60" cy="27" r="25" fill="none" stroke="${color}" stroke-width="1.2" stroke-dasharray="3 3" opacity=".8"/>`;
         default: return '';
     }
 }
 
 function wingLayer(color) {
     if (!color) return '';
-    return `<path d="M36 82 Q2 62 4 106 Q18 96 36 100 Z" fill="${color}" opacity=".7"/><path d="M84 82 Q118 62 116 106 Q102 96 84 100 Z" fill="${color}" opacity=".7"/>`;
+    return `<g fill="${color}" opacity=".32"><path d="M44 54 Q14 44 4 66 Q2 86 14 100 Q14 78 26 68 Q36 62 46 62 Z"/><path d="M76 54 Q106 44 116 66 Q118 86 106 100 Q106 78 94 68 Q84 62 74 62 Z"/></g>`;
+}
+
+function ribbonLayer(color) {
+    if (!color) return '';
+    return `<path d="M46 62 Q14 72 16 104 Q17 126 4 146" stroke="${color}" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/>
+        <path d="M74 62 Q106 72 104 104 Q103 126 116 146" stroke="${color}" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/>`;
 }
 
 function robeDefs(l, id) {
     const robe = l.robe;
     return `<defs>
-        <linearGradient id="${id}-robe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.3)}"/><stop offset=".45" stop-color="${robe}"/><stop offset="1" stop-color="${shadeColor(robe, -0.38)}"/></linearGradient>
-        <linearGradient id="${id}-sleeve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.08)}"/><stop offset="1" stop-color="${shadeColor(robe, -0.45)}"/></linearGradient>
-        <linearGradient id="${id}-inner" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.62)}"/><stop offset="1" stop-color="${shadeColor(robe, 0.2)}"/></linearGradient>
-        <linearGradient id="${id}-skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(l.skin, 0.12)}"/><stop offset="1" stop-color="${shadeColor(l.skin, -0.06)}"/></linearGradient>
-        <radialGradient id="${id}-iris" cy=".75" r=".8"><stop offset="0" stop-color="${shadeColor(l.eyes, 0.22)}"/><stop offset="1" stop-color="${shadeColor(l.eyes, -0.15)}"/></radialGradient>
+        <linearGradient id="${id}-robe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.34)}"/><stop offset=".5" stop-color="${robe}"/><stop offset="1" stop-color="${shadeColor(robe, -0.34)}"/></linearGradient>
+        <linearGradient id="${id}-sleeve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.22)}"/><stop offset=".6" stop-color="${shadeColor(robe, -0.08)}"/><stop offset="1" stop-color="${shadeColor(robe, 0.5)}"/></linearGradient>
+        <linearGradient id="${id}-inner" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f1e6"/><stop offset="1" stop-color="${shadeColor(robe, 0.66)}"/></linearGradient>
+        <linearGradient id="${id}-skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(l.skin, 0.2)}"/><stop offset="1" stop-color="${shadeColor(l.skin, -0.05)}"/></linearGradient>
+        <radialGradient id="${id}-iris"><stop offset="0" stop-color="${shadeColor(l.eyes, 0.2)}"/><stop offset="1" stop-color="${shadeColor(l.eyes, -0.3)}"/></radialGradient>
+        <filter id="${id}-ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".12" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="1.1"/></filter>
     </defs>`;
-}
-
-function ribbonLayer(color) {
-    if (!color) return '';
-    return `<path d="M42 78 Q10 84 14 116 Q16 134 4 144" stroke="${color}" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>
-        <path d="M78 78 Q110 84 106 116 Q104 134 116 144" stroke="${color}" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>`;
 }
 
 function humanoidSvg(look, opts = {}) {
     const l = { ...defaultLook(), ...look };
     const id = `av${++_svgUid}`;
-    const dark = shadeColor(l.robe, -0.5);
     const trim = l.trim || '#e6c97a';
-    const sash = l.sash || trim;
-    const boots = l.boots || shadeColor(l.robe, -0.55);
+    const sash = l.sash || shadeColor(l.robe, -0.4);
+    const boots = l.boots || INK;
     const fem = l.body === 'f';
-    const shoulder = fem ? 18 : 23, waist = fem ? 12 : 16, hem = fem ? 33 : 35;
-    const left = 60 - shoulder, right = 60 + shoulder;
-    return `<svg class="avatar ${opts.cls || ''}" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.title || 'nhân vật'}">
+    const sh = fem ? 13.5 : 17, waist = fem ? 7.6 : 10.4, hem = fem ? 27 : 30;
+    const L = 60 - sh, R = 60 + sh;
+    const inkLine = `stroke="${INK}" stroke-width=".55" stroke-linejoin="round"`;
+    const view = opts.bust ? '22 0 76 101' : '0 0 120 160';
+    return `<svg class="avatar ${opts.cls || ''}" viewBox="${view}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.title || 'nhân vật'}">
         ${robeDefs(l, id)}
         ${auraLayer(l.aura, id)}
         ${wingLayer(l.wing)}
-        <ellipse cx="60" cy="153" rx="36" ry="5.5" fill="#000" opacity=".32"/>
+        <ellipse cx="60" cy="153" rx="34" ry="4" fill="#000" opacity=".28"/>
         ${ribbonLayer(l.aura)}
         ${hairBack(l)}
-        <ellipse cx="49" cy="151" rx="9" ry="4.4" fill="${boots}"/><ellipse cx="71" cy="151" rx="9" ry="4.4" fill="${boots}"/>
-        <path d="M43 149 Q49 146 55 149M65 149 Q71 146 77 149" stroke="${shadeColor(boots, 0.35)}" stroke-width="1.2" fill="none"/>
-        <path d="M${left} 75 Q60 64 ${right} 75 L${60 + waist} 97 Q${60 + hem - 8} 122 ${60 + hem} 146 Q60 154 ${60 - hem} 146 Q${60 - hem + 8} 122 ${60 - waist} 97 Z" fill="url(#${id}-robe)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
-        <path d="M52 100 Q49 126 45 149 Q60 153 75 149 Q71 126 68 100 Z" fill="url(#${id}-inner)"/>
-        <path d="M${60 - hem} 146 Q60 154 ${60 + hem} 146" stroke="${trim}" stroke-width="2.4" fill="none"/>
-        <path d="M45 104 Q40 126 34 142M75 104 Q80 126 86 142M52 100 L45 149M68 100 L75 149" stroke="${dark}" stroke-width="1" fill="none" opacity=".45"/>
-        <path d="M50 67 L60 86 L70 67 Z" fill="#f4efe2"/>
-        <path d="M46 69 L52 66.6 L71 95 L63 98 Z" fill="${trim}"/>
-        <path d="M74 69 L68 66.6 L56 87 L60 91 Z" fill="${shadeColor(trim, -0.2)}"/>
-        <rect x="${60 - waist - 1}" y="92" width="${waist * 2 + 2}" height="9" rx="2.5" fill="${sash}" stroke="${shadeColor(sash, -0.35)}" stroke-width=".8"/>
-        <path d="M60 101 L60 113" stroke="${sash}" stroke-width="1.4"/>
-        <circle cx="60" cy="116" r="3.8" fill="#bff2d2" stroke="${shadeColor(sash, -0.2)}" stroke-width="1"/>
-        <path d="M58 119 L57 131M60 119.6 L60 132M62 119 L63 131" stroke="${sash}" stroke-width="1.2" stroke-linecap="round"/>
-        <path d="M${left + 1} 75 Q${left - 14} 92 ${left - 15} 118 Q${left - 15} 128 ${left - 4} 126 Q${left + 6} 124 ${left + 7} 114 L${60 - waist + 1} 90 Z" fill="url(#${id}-sleeve)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
-        <path d="M${left - 15} 118 Q${left - 15} 128 ${left - 4} 126 Q${left + 6} 124 ${left + 7} 114" stroke="${trim}" stroke-width="2.4" fill="none"/>
-        <circle cx="${left - 4}" cy="124" r="4.6" fill="${l.skin}"/>
+        <g filter="url(#${id}-ink)">
+            <path d="M46 151 q-6 3 -9 1 q2 -4 9 -5 Z M74 151 q6 3 9 1 q-2 -4 -9 -5 Z" fill="${boots}" ${inkLine}/>
+            <path d="M${L} 47 Q${L - 1} 62 ${60 - waist} 79 Q${60 - hem + 9} 114 ${60 - hem} 147 Q${60 - hem / 2} 154 60 151 Q${60 + hem / 2} 154 ${60 + hem} 147 Q${60 + hem - 9} 114 ${60 + waist} 79 Q${R + 1} 62 ${R} 47 Q60 41 ${L} 47 Z" fill="url(#${id}-robe)" ${inkLine}/>
+            <path d="M54 80 Q52 118 47 151 Q60 154.5 73 151 Q68 118 66 80 Z" fill="url(#${id}-inner)" stroke="${INK}" stroke-width=".5"/>
+            <path d="M${60 - hem} 147 Q${60 - hem / 2} 154 47 151 M73 151 Q${60 + hem / 2} 154 ${60 + hem} 147" stroke="${trim}" stroke-width="1.8" fill="none"/>
+            <path d="M51 84 Q47 116 41 146 Q48 118 53 86Z M69 84 Q73 116 79 146 Q72 118 67 86Z M57 92 Q56 122 55 148 Q58 122 59 94Z M63 92 Q64 122 65 148 Q62 122 61 94Z" fill="${INK}" opacity=".3"/>
+            <path d="M54 44 L60 60 L66 44 Q60 42 54 44 Z" fill="#f6f1e6" stroke="${INK}" stroke-width=".4"/>
+            <path d="M52.4 44.6 L55.4 43.6 L69.4 76.6 L65.6 78.4 Z" fill="${trim}" stroke="${INK}" stroke-width=".4"/>
+            <path d="M67.6 44.6 L64.6 43.6 L56 62 L58.4 64.4 Z" fill="${shadeColor(trim, -0.18)}" stroke="${INK}" stroke-width=".4"/>
+            <path d="M${60 - waist - 1} 75.4 Q60 79 ${60 + waist + 1} 75.4 L${60 + waist + 1.4} 81.6 Q60 85 ${60 - waist - 1.4} 81.6 Z" fill="${sash}" ${inkLine}/>
+            <path d="M57 83 Q55 96 56.4 108 M59.4 83.4 Q60 98 58.8 112" stroke="${sash}" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            <circle cx="63.6" cy="92" r="2.1" fill="#bff2d2" stroke="${INK}" stroke-width=".4"/><path d="M63.6 84 L63.6 90 M63.6 94 L63.6 101" stroke="#a33" stroke-width=".7"/>
+            <path d="M${L + 1} 47 Q${L - 9} 62 ${L - 12} 96 Q${L - 17} 120 ${L - 11} 131 Q${L - 2} 137 ${L + 7} 121 Q${L + 8} 100 ${L + 7} 68 Z" fill="url(#${id}-sleeve)" ${inkLine}/>
+            <path d="M${L - 11} 131 Q${L - 2} 137 ${L + 7} 121" stroke="${trim}" stroke-width="1.9" fill="none"/>
+            <path d="M${L - 3} 66 Q${L - 7} 96 ${L - 7} 124 M${L + 2} 72 Q${L + 1} 100 ${L + 1} 124" stroke="${INK}" stroke-width=".6" fill="none" opacity=".35"/>
+            <path d="M${L - 4} 131.6 q2 4 4.6 3 q2 -1 1.4 -4.6 Z" fill="${l.skin}" stroke="${INK}" stroke-width=".4"/>
+        </g>
         ${weaponLayer(l.weapon, l.weaponColor || '#c8d4e0')}
-        <path d="M${right - 1} 75 Q${right + 13} 86 96 106 Q95 115 86 116 Q78 116 ${right - 6} 110 L${60 + waist - 1} 90 Z" fill="url(#${id}-sleeve)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
-        <path d="M96 106 Q95 115 86 116 Q79 116 ${right - 6} 110" stroke="${trim}" stroke-width="2.4" fill="none"/>
-        <circle cx="96" cy="108" r="4.6" fill="${l.skin}"/>
-        <rect x="53" y="58" width="14" height="13" rx="3" fill="${shadeColor(l.skin, -0.14)}"/>
-        <ellipse cx="36" cy="46" rx="2.4" ry="4.4" fill="${shadeColor(l.skin, -0.08)}"/><ellipse cx="84" cy="46" rx="2.4" ry="4.4" fill="${shadeColor(l.skin, -0.08)}"/>
-        <path d="M36 40 Q36 17 60 17 Q84 17 84 40 Q84 52 76 59 Q68 67 60 68 Q52 67 44 59 Q36 52 36 40 Z" fill="url(#${id}-skin)"/>
+        <g filter="url(#${id}-ink)">
+            <path d="M${R - 1} 47 Q${R + 8} 56 ${R + 11} 72 L97 78 Q102 84 99 92 Q99 118 86 128 Q76 124 ${R - 3} 96 Q${R - 6} 80 ${R - 7} 64 Z" fill="url(#${id}-sleeve)" ${inkLine}/>
+            <path d="M97 78 Q102 84 99 92" stroke="${trim}" stroke-width="1.9" fill="none"/>
+            <path d="M${R + 3} 62 Q${R + 3} 88 86 118 M${R - 2} 72 Q${R - 2} 92 80 112" stroke="${INK}" stroke-width=".6" fill="none" opacity=".35"/>
+            <path d="M96.4 80 q3.4 -2.4 5.4 0 q1.4 3 -1.4 5.4 q-3.4 .6 -4.6 -1.6 Z" fill="${l.skin}" stroke="${INK}" stroke-width=".4"/>
+        </g>
+        <path d="M56 36 L56 44 Q60 47 64 44 L64 36 Z" fill="${shadeColor(l.skin, -0.14)}"/><path d="M56 38 Q60 43 64 38 L64 41 Q60 44.4 56 41 Z" fill="${shadeColor(l.skin, -0.34)}" opacity=".5"/>
+        <ellipse cx="50.2" cy="27" rx="1.1" ry="2.5" fill="${shadeColor(l.skin, -0.12)}"/><ellipse cx="69.8" cy="27" rx="1.1" ry="2.5" fill="${shadeColor(l.skin, -0.12)}"/>
+        <path d="${FACE_SHAPES[l.face || 0]}" fill="url(#${id}-skin)" stroke="${shadeColor(l.skin, -0.4)}" stroke-width=".35"/>
         ${faceLayer(l, id)}
         ${hairFront(l)}
         ${crownLayer(l.crown, l.crownColor || trim)}
@@ -280,8 +316,8 @@ function playerLook() {
     return look;
 }
 
-function playerAvatarSvg() {
-    return humanoidSvg(playerLook(), { title: state.name || 'Tu sĩ' });
+function playerAvatarSvg(bust = false) {
+    return humanoidSvg(playerLook(), { title: state.name || 'Tu sĩ', bust });
 }
 
 function enemyAvatarSvg(enemy) {
@@ -294,13 +330,15 @@ function enemyAvatarSvg(enemy) {
 
 function npcAvatarSvg(npc) {
     if (npc.kind && MONSTER_DRAW[npc.kind]) return monsterSvg(npc.kind, npc.realm || 0, npc.name);
-    return humanoidSvg(npc.look || defaultLook(), { title: npc.name });
+    return humanoidSvg(npc.look || defaultLook(), { title: npc.name, bust: true });
 }
 
 /* --------- tạo nhân vật --------- */
+const LOOK_INDEXED = ['hairStyle', 'face', 'eyeShape', 'brow', 'beard'];
+
 function lookChips(key, values, current, labelOf) {
     return values.map((v, i) => {
-        const value = typeof v === 'object' ? v.id : (key === 'hairStyle' ? i : v);
+        const value = typeof v === 'object' ? v.id : (LOOK_INDEXED.includes(key) ? i : v);
         const active = value === current ? 'active' : '';
         const isColor = typeof v === 'string' && v[0] === '#';
         return isColor
@@ -312,10 +350,14 @@ function lookChips(key, values, current, labelOf) {
 function characterCreatorHTML() {
     const l = { ...defaultLook(), ...(state.look || {}) };
     return `<div class="creator">
-        <div class="creator-preview">${humanoidSvg({ ...l, weapon: 'sword' }, { title: 'Xem trước' })}</div>
+        <div class="creator-preview">${humanoidSvg({ ...l, weapon: 'sword' }, { title: 'Xem trước', bust: true })}</div>
         <div class="creator-options">
             <div class="look-row"><span>Thân hình</span><div>${lookChips('body', LOOK_OPTIONS.body, l.body, 'Thân hình')}</div></div>
             <div class="look-row"><span>Kiểu tóc</span><div>${lookChips('hairStyle', LOOK_OPTIONS.hairStyle, l.hairStyle, 'Kiểu tóc')}</div></div>
+            <div class="look-row"><span>Khuôn mặt</span><div>${lookChips('face', LOOK_OPTIONS.face, l.face, 'Khuôn mặt')}</div></div>
+            <div class="look-row"><span>Mắt</span><div>${lookChips('eyeShape', LOOK_OPTIONS.eyeShape, l.eyeShape, 'Mắt')}</div></div>
+            <div class="look-row"><span>Lông mày</span><div>${lookChips('brow', LOOK_OPTIONS.brow, l.brow ?? (l.body === 'f' ? 1 : 0), 'Lông mày')}</div></div>
+            <div class="look-row"><span>Râu</span><div>${lookChips('beard', LOOK_OPTIONS.beard, l.beard || 0, 'Râu')}</div></div>
             <div class="look-row"><span>Màu tóc</span><div>${lookChips('hair', LOOK_OPTIONS.hair, l.hair, 'Màu tóc')}</div></div>
             <div class="look-row"><span>Màu da</span><div>${lookChips('skin', LOOK_OPTIONS.skin, l.skin, 'Màu da')}</div></div>
             <div class="look-row"><span>Màu mắt</span><div>${lookChips('eyes', LOOK_OPTIONS.eyes, l.eyes, 'Màu mắt')}</div></div>

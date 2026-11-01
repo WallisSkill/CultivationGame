@@ -1243,7 +1243,7 @@ function playDialogue(lines) {
 }
 
 function speakerOf(who) {
-    if (who === 'me') return { name: state.name, svg: playerAvatarSvg() };
+    if (who === 'me') return { name: state.name, svg: playerAvatarSvg(true) };
     const npc = NPCS[who] || { name: who };
     if (who === 'narr') return { name: '', svg: '' };
     return { name: npc.name, title: npc.title, svg: npcAvatarSvg(npc) };
@@ -1309,7 +1309,7 @@ function renderAppearancePanel() {
     }).join('');
     const path = DAO_PATHS[state.daoPath];
     const beatenBy = Object.values(DAO_PATHS).find(p => p.beats === state.daoPath);
-    el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg()}</div><div class="gear-slots">${slots}</div></div>
+    el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg(true)}</div><div class="gear-slots">${slots}</div></div>
         <div class="loc-actions">
             <button class="mini-btn" onclick="equipForRealm()">Đúng cảnh giới</button>
             <button class="mini-btn" onclick="equipAll()">Mạnh nhất</button>
