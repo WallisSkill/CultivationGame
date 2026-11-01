@@ -172,6 +172,9 @@ const ROAD_TALES = {
     chungnguyen: [
         [['narr', 'Một đoạn ký ức của ngươi trôi ngang, trong đó có món đồ ngươi đã làm rơi từ kiếp trước.']],
         [['narr', 'Dòng thời gian khẽ rẽ, để lại bên bờ một vật ướt nước.']]
+    ],
+    huvo: [
+        [['narr', 'Trong Hư Vô Cung không có gì rơi xuống, vì không có gì ngoài ngươi. Ngươi nghĩ tới một món đồ, và nó ở đó.']]
     ]
 };
 

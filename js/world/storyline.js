@@ -489,7 +489,7 @@ const MAIN_QUESTS = [
             { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] },
             { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ thuở mười tuổi lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
             { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']] },
-            { boss: 'hu_vo', say: [['narr', 'Không có ai ngã xuống. Người đó chỉ mỉm cười rồi tan đi, và Hư Vô mở ra.'], ['narr', 'Từ đây không còn cảnh giới nào phía trên, không còn con đường nào phía trước. Chỉ còn ngươi, và tất cả những gì ngươi muốn làm.']] }
+            { boss: 'hu_vo', say: [['narr', 'Không có ai ngã xuống. Người đó chỉ mỉm cười rồi tan đi, và Hư Vô mở ra.'], ['narr', 'Từ đây không còn cảnh giới nào phía trên, không còn con đường nào phía trước. Chỉ còn ngươi, và tất cả những gì ngươi muốn làm.'], ['narr', 'Hư Vô Giới chỉ có một người. Con đường xuống đã biến mất, và ngươi không cần nó nữa.']] }
         ],
         reward: { finalRealm: true, hours: 0, goldRefs: 0 }
     }

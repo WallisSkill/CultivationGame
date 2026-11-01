@@ -60,6 +60,11 @@ function sharedRenown() {
     return Object.fromEntries(entries);
 }
 
+/* Ở Hư Vô Giới mỗi người một phòng riêng để không gặp ai */
+function presenceRoom() {
+    return currentLocation().world === HU_VO_WORLD ? `hv_${state.profileId}` : state.location;
+}
+
 function sendPresence() {
     if (!window.matchConnected || !state.root?.elements) return;
     const now = Date.now();
@@ -68,7 +73,7 @@ function sendPresence() {
         presenceFullAt = now;
         registerProfile();
     }
-    wsSend({ type: 'world_enter', loc: state.location });
+    wsSend({ type: 'world_enter', loc: presenceRoom() });
     reportRenown();
     if (full) {
         wsSend({ type: 'ranked_claim', token: profileToken() });
@@ -122,7 +127,7 @@ function expirePlayers() {
 }
 
 function playersHere() {
-    return [...onlinePlayers.values()].filter(p => p.loc === state.location
+    return [...onlinePlayers.values()].filter(p => presenceRoom() === state.location && p.loc === state.location
         && (worldServer.active || Date.now() - p.lastSeen < PRESENCE_EXPIRE_MS));
 }
 

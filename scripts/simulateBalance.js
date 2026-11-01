@@ -50,6 +50,7 @@ for (const [id, o] of Object.entries(G.ORIGINS)) {
     });
 }
 const ABSOLUTE = ['hondon', 'hongmong', 'chungnguyen'];
+const WORLDS_WITHOUT_LIFE = [...ABSOLUTE, 'huvo'];
 function reachable(start, realm) {
     const seen = new Set([start]);
     const queue = [start];
@@ -101,7 +102,7 @@ G.MAIN_QUESTS.forEach((q, i) => {
 for (let r = 0; r < 29; r++) {
     if (!Object.values(G.LOCATIONS).some(l => (l.services || []).includes('forge') && l.minR <= r && l.maxR >= r)) fail.push(`cảnh giới ${r}: không có lò rèn`);
 }
-G.WORLD_TIERS.filter(w => !['hondon', 'hongmong', 'chungnguyen'].includes(w.id)).forEach(w => {
+G.WORLD_TIERS.filter(w => !WORLDS_WITHOUT_LIFE.includes(w.id)).forEach(w => {
     if (!Object.values(G.LOCATIONS).some(l => l.world === w.id && l.forgeGrade === 2)) fail.push(`${w.id}: không có Thần lò`);
 });
 
@@ -117,7 +118,7 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     if (G.LB_GRADE_UNLOCK_REALM[grade] !== realm) fail.push(`pháp giai ${grade} phải mở ở cảnh giới ${realm}`);
 });
 
-Object.values(G.LOCATIONS).filter(l => ['hondon', 'hongmong', 'chungnguyen'].includes(l.world)).forEach(l => {
+Object.values(G.LOCATIONS).filter(l => WORLDS_WITHOUT_LIFE.includes(l.world)).forEach(l => {
     if (l.enemies.length) fail.push(`${l.name}: không được có quái`);
     if (l.services.length || l.blackMarket) fail.push(`${l.name}: không được có dịch vụ`);
 });

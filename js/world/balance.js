@@ -35,12 +35,15 @@ const WORLD_TIERS = [
     { id: 'thien', name: 'Thiên Ma Ngoại Vực', from: 23, to: 28, palette: ['#22123f', '#46238a', '#c7a1ff'] },
     { id: 'hondon', name: 'Hỗn Độn Hải', from: 29, to: 29, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
     { id: 'hongmong', name: 'Hồng Mông', from: 30, to: 30, palette: ['#2a0b26', '#6d1a5e', '#ff8ad8'] },
-    { id: 'chungnguyen', name: 'Chung Nguyên', from: 31, to: 32, palette: ['#17171c', '#3c3c46', '#f5f5f5'] }
+    { id: 'chungnguyen', name: 'Chung Nguyên', from: 31, to: 31, palette: ['#17171c', '#3c3c46', '#f5f5f5'] },
+    { id: 'huvo', name: 'Hư Vô Giới', from: 32, to: 32, palette: ['#0d0618', '#2a1450', '#b388ff'] }
 ];
 
 /* Cõi do người chơi tự sáng tạo sau viên mãn Hỗn Độn: không người, không quái, chỉ đi nói chuyện với bên dưới */
-const EMPTY_WORLDS = ['hongmong', 'chungnguyen'];
+const EMPTY_WORLDS = ['hongmong', 'chungnguyen', 'huvo'];
 const OVERSEER_REALM = 29;
+const HU_VO_WORLD = 'huvo';
+const HU_VO_HOME = 'hu_vo_cung';
 /* Hỗn Độn Hải chỉ có Đạo Giả, không có quái để săn */
 const NO_MONSTER_WORLDS = ['hondon', ...EMPTY_WORLDS];
 
@@ -434,7 +437,7 @@ function makeGateGear(tier, slot, quality) {
 
 const MATERIAL_NAMES = {
     pham: 'Huyền Thiết Tinh', tien: 'Tiên Kim Sa', thanh: 'Thánh Ngân', thien: 'Cực Đạo Vẫn Thiết',
-    hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
+    hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang', huvo: 'Hư Vô Tinh'
 };
 const FORGE_MATERIAL_COST = 20;
 

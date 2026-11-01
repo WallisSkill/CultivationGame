@@ -180,7 +180,8 @@ const ROBE_MOTIFS = {
     thien: 'M0 -6 L1.6 -1.6 L6 0 L1.6 1.6 L0 6 L-1.6 1.6 L-6 0 L-1.6 -1.6 Z',
     hondon: 'M0 0 q2 -2 3 1 q-1 4 -5 2 q-4 -3 -1 -7 q5 -3 8 2',
     hongmong: 'M0 0 Q-3 -6 0 -6 Q3 -6 0 0 M0 0 Q6 -3 6 0 Q6 3 0 0 M0 0 Q3 6 0 6 Q-3 6 0 0 M0 0 Q-6 3 -6 0 Q-6 -3 0 0',
-    chungnguyen: 'M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0'
+    chungnguyen: 'M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0',
+    huvo: 'M-6 0 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0'
 };
 const ROBE_MOTIF_SPOTS = [[46, 64, 0.8], [74, 64, 0.8], [43, 116, 1.3], [77, 116, 1.3], [38, 136, 1], [82, 136, 1]];
 
@@ -305,7 +306,7 @@ function realmAuraColor(realm) {
 
 /* Áo quần mang màu phẩm chất của món đang mặc, viền theo thế giới của món đó */
 const GEAR_FABRIC_SHADE = -0.12;
-const WORLD_TRIMS = { pham: '#e6c97a', tien: '#7fd4ff', thanh: '#ff9d4d', thien: '#d9b8ff', hondon: '#5fe6e6', hongmong: '#ffb3e6', chungnguyen: '#111111' };
+const WORLD_TRIMS = { pham: '#e6c97a', tien: '#7fd4ff', thanh: '#ff9d4d', thien: '#d9b8ff', hondon: '#5fe6e6', hongmong: '#ffb3e6', chungnguyen: '#111111', huvo: '#b388ff' };
 
 function playerLook() {
     const look = { ...defaultLook(), ...(state.look || {}) };

@@ -23,7 +23,7 @@ const TRAVEL_GATE_PIXELS = 500;
 /* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
 const TRAVEL_DISTANCE_EXPONENT = 1.5;
 /* Dịch chuyển: cần tông môn + cảnh giới tối thiểu của cõi đích */
-const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 29, hongmong: 30, chungnguyen: 31 };
+const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 29, hongmong: 30, chungnguyen: 31, huvo: 32 };
 /* Cõi cuối: cảnh giới cao hơn cõi thì tới tức thì, thấp hơn thì mất ngàn giờ cho mỗi bậc thiếu */
 const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
@@ -331,6 +331,11 @@ function worldOf(locId) {
     return WORLD_TIERS.find(w => w.id === LOCATIONS[locId].world);
 }
 
+/* Hư Vô Chi Chủ ở một mình một Giới, không xuống được nữa */
+function hasLeftWorlds() {
+    return (state.realmIndex || 0) >= REALM_COUNT - 1;
+}
+
 function worldUnlocked(worldId) {
     return worldId === 'pham' || !!state.flags['world_' + worldId];
 }
@@ -352,6 +357,7 @@ function absoluteLegSeconds(to) {
    Các cõi cuối đi theo luật riêng trong absoluteLegSeconds. */
 function canEnterLocation(id) {
     const loc = LOCATIONS[id];
+    if (hasLeftWorlds()) return loc.world === HU_VO_WORLD;
     return ABSOLUTE_WORLDS.includes(loc.world) || (state.realmIndex || 0) >= loc.minR;
 }
 
@@ -693,7 +699,7 @@ function terrainDecor(worldId, pal, locs, width, height) {
         if (worldId === 'tien' || worldId === 'thanh') {
             return `<g opacity=".3" fill="#fff"><ellipse cx="${p.x}" cy="${p.y}" rx="${34 * s}" ry="${9 * s}"/><ellipse cx="${p.x + 18 * s}" cy="${p.y - 7 * s}" rx="${22 * s}" ry="${8 * s}"/></g>`;
         }
-        if (worldId === 'thien' || worldId === 'chungnguyen') {
+        if (worldId === 'thien' || worldId === 'chungnguyen' || worldId === HU_VO_WORLD) {
             return `<circle cx="${p.x}" cy="${p.y}" r="${1.6 * s}" fill="#fff" opacity="${0.3 + p.k * 0.6}"/>`;
         }
         return `<path d="M${p.x} ${p.y} q${20 * s} ${-16 * s} ${40 * s} 0 t${40 * s} 0" stroke="${pal[2]}" stroke-opacity=".28" fill="none" stroke-width="2"/>`;
@@ -733,7 +739,7 @@ function renderMap() {
     const token = showToken
         ? `<g id="mapToken" transform="translate(${p.x - 26} ${p.y - 74})" pointer-events="none">${playerAvatarSvg().replace('<svg class', '<svg width="52" height="70" class')}</g>`
         : '';
-    const tabs = WORLD_TIERS.filter(w => worldUnlocked(w.id)).map(w =>
+    const tabs = WORLD_TIERS.filter(w => worldUnlocked(w.id) && (!hasLeftWorlds() || w.id === HU_VO_WORLD)).map(w =>
         `<button class="filter-chip ${w.id === viewId ? 'active' : ''}" onclick="setMapWorld('${w.id}')">${w.name}</button>`
     ).join('');
     host.innerHTML = `<div class="filter-chips">${tabs}<button class="filter-chip" onclick="openAtlasBook()">📖 Địa Chí</button></div>
@@ -1304,11 +1310,19 @@ function completeStep(rt) {
     renderAll();
 }
 
+function moveToHuVoWorld() {
+    state.flags['world_' + HU_VO_WORLD] = true;
+    state.location = HU_VO_HOME;
+    mapViewWorld = null;
+    log(`🏯 Ngươi dọn về ${LOCATIONS[HU_VO_HOME].name}. Từ đây không xuống Giới dưới được nữa.`);
+}
+
 /* Cảnh giới cuối không đi bằng tu vi: thắng Hư Vô Chí Đạo là bước vào, trò chơi sang endgame */
 function enterFinalRealm() {
     state.realmIndex = REALM_COUNT - 1;
     state.realmStage = STAGES.length - 1;
     state.xp = 0;
+    moveToHuVoWorld();
     log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Endgame.`);
     reportHuVoWin();
 }
