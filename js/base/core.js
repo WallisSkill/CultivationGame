@@ -1323,6 +1323,9 @@ function inventoryFilterHTML() {
 }
 
 /* Số món mỗi trang lấy theo chỗ trống thật để cả trang hiện đủ, không phải cuộn */
+/* Đổi số món đổi luôn chiều cao dòng: chỉ tăng ở lượt ngoài, lượt lồng chỉ được giảm nên luôn dừng */
+let inventoryFitting = false;
+
 function fitInventoryPage(listEl) {
     const pane = listEl.closest('.side-pane');
     if (!pane?.offsetHeight || !listEl.offsetHeight) return;
@@ -1331,8 +1334,15 @@ function fitInventoryPage(listEl) {
     const columns = getComputedStyle(listEl).gridTemplateColumns.split(' ').length;
     const fit = Math.max(1, Math.floor(free / (tallest + 8))) * columns;
     if (fit === inventoryPerPage || inventoryPage > 0) return;
+    if (inventoryFitting && fit > inventoryPerPage) return;
+    const outermost = !inventoryFitting;
+    inventoryFitting = true;
     inventoryPerPage = fit;
-    renderInventory();
+    try {
+        renderInventory();
+    } finally {
+        if (outermost) inventoryFitting = false;
+    }
 }
 
 // 🆕 Item Detail Modal
