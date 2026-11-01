@@ -38,7 +38,7 @@ function sceneSpots(loc) {
     add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
     add('🕯️', 'Chợ Đen', () => openBlackMarket(), !!loc.blackMarket);
     add('🌌', 'Dùng Tinh Không Thạch', () => useStarStone(), canUseStarStone());
-    add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop'));
+    add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop') && guardsAllowed());
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), DAO_PATHS[loc.path]?.race === state.race);
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), DAO_PATHS[loc.path]?.race === state.race && state.daoPath !== loc.path);

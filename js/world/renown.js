@@ -101,18 +101,22 @@ function renownWalkMult() {
     return 1 / renownTravelMult(state.location);
 }
 
+function guardsAllowed() {
+    return (state.realmIndex || 0) < OVERSEER_REALM;
+}
+
 function renownFreeGuards() {
-    return rankValue(RANK_FREE_GUARDS);
+    return guardsAllowed() ? rankValue(RANK_FREE_GUARDS) : 0;
 }
 
 function renownPerkLines(rank) {
     if (rank < 1 || rank > 3) return [];
     const i = rank - 1;
     const type = currentLocation().type;
-    const lines = [`🤝 ${RANK_FREE_GUARDS[i]} hộ pháp khu vực miễn phí mỗi trận`, `🐎 Rời khu vực nhanh hơn: thời gian đi x${RANK_TRAVEL_MULT[i]}`, `🏃 Đi trong khu vực nhanh x${(1 / RANK_TRAVEL_MULT[i]).toFixed(2)}`];
+    const lines = [guardsAllowed() && `🤝 ${RANK_FREE_GUARDS[i]} hộ pháp khu vực miễn phí mỗi trận`, `🐎 Rời khu vực nhanh hơn: thời gian đi x${RANK_TRAVEL_MULT[i]}`, `🏃 Đi trong khu vực nhanh x${(1 / RANK_TRAVEL_MULT[i]).toFixed(2)}`].filter(Boolean);
     if (type === 'sect') lines.push(`💠 Linh khí +${Math.round(RANK_QI_BONUS[i] * 100)}%`);
     if (type === 'town' || type === 'sect') lines.push(`🏪 Giá cửa hàng -${Math.round(RANK_SHOP_DISCOUNT[i] * 100)}%`);
-    if (type === 'wild' || type === 'dungeon') lines.push(`💰 Linh thạch từ săn +${Math.round(RANK_HUNT_GOLD_BONUS[i] * 100)}%`);
+    if ((type === 'wild' || type === 'dungeon') && !NO_MONSTER_WORLDS.includes(currentLocation().world)) lines.push(`💰 Linh thạch từ săn +${Math.round(RANK_HUNT_GOLD_BONUS[i] * 100)}%`);
     return lines;
 }
 
@@ -141,7 +145,7 @@ function openTianjiaoBoard() {
     const worldRows = board.slice(0, THIEN_HA_SHOWN).map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
         <span>${i + 1}. ${sectEscape(entry.name)}</span><b>${formatNumber(entry.score)}</b></div>`).join('');
     const worldRank = thienHaRank(world.id);
-    const worldNote = `<div class="small" style="margin-top:10px"><b>Thiên Hạ Bảng — ${world.name}</b> (tổng điểm mọi nơi trong Giới${worldRank ? `, ngươi hạng ${worldRank}` : ''}). Hạng 1 mới được xuống Giới thấp hơn.</div>`;
+    const worldNote = `<div class="small" style="margin-top:10px"><b>Thiên Hạ Bảng — ${world.name}</b> (tổng điểm mọi nơi trong Giới${worldRank ? `, ngươi hạng ${worldRank}` : ''}).${(state.realmIndex || 0) < OVERSEER_REALM ? ' Hạng 1 mới được xuống Giới thấp hơn.' : ''}</div>`;
     openWorldModal('tianjiaoModal', `🏆 Thiên Kiêu Bảng — ${LOCATIONS[locId].name}`, `${hint}${rows}${worldNote}${worldRows}`);
 }
 
