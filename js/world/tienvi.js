@@ -6,11 +6,11 @@
 =========================================================== */
 const TIEN_VI = [
     { name: 'Tiên Đinh', merit: 0, realm: 10 },
-    { name: 'Thiên Binh', merit: 30, realm: 12 },
-    { name: 'Thiên Tướng', merit: 120, realm: 14 },
-    { name: 'Tinh Quân', merit: 400, realm: 16 },
-    { name: 'Tiên Quan', merit: 1000, realm: 20 },
-    { name: 'Đế Quân', merit: 2500, realm: 26 }
+    { name: 'Thiên Binh', merit: 30, realm: 11 },
+    { name: 'Thiên Tướng', merit: 90, realm: 12 },
+    { name: 'Tinh Quân', merit: 200, realm: 13 },
+    { name: 'Tiên Quan', merit: 400, realm: 14 },
+    { name: 'Đế Quân', merit: 700, realm: 15 }
 ];
 const COURT_MERIT_BASE = 10;
 const COURT_KILLS = 6;
