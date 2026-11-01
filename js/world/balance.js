@@ -340,6 +340,7 @@ const CHAOS_STONE_SECONDS = 360;
 const CHAOS_STONE_QUEST = 10;
 const LUAN_DAO_ELO = 5;
 const ELO_PILL_GOLD_REFS = 30;
+const ELO_FREE_REALM = 30;
 
 /* Thần lò cho chọn loại chỉ số phụ, mỗi loại cộng thêm phí; giá trị vẫn ngẫu nhiên */
 const FORGE_SUB_MAX = 3;
