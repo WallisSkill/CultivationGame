@@ -1,7 +1,7 @@
 /* ===========================================================
    NGOẠI HÌNH — vẽ nhân vật bằng SVG ghép lớp
-   - look: { body, skin, hairStyle, hair, robe, trim, eyes, beard, aura, crown, weapon, wing }
-   - Người chơi: look gốc + trang bị đang mặc đổi đạo bào/vũ khí/đạo quan,
+   - look: { body, skin, hairStyle, hair, robe, trim, sash, boots, eyes, beard, aura, crown, weapon, wing }
+   - Người chơi: look gốc + phẩm chất đồ đang mặc đổi màu đạo bào/vân hài/đai/vũ khí/đạo quan,
      cảnh giới quyết định hào quang.
    - Quái & thực thể: kind quyết định hình khối, palette theo thế giới.
 =========================================================== */
@@ -72,25 +72,32 @@ function hairFront(look) {
     }
 }
 
-function faceLayer(look) {
-    const eye = look.eyes || '#2b1b12';
+function eyeLayer(cx, look, id, fem) {
+    const y = 46;
+    const rx = fem ? 5.4 : 4.6, ry = fem ? 6.2 : 5;
+    const lash = shadeColor(look.hair, -0.3);
+    return `<ellipse cx="${cx}" cy="${y}" rx="${rx + 1}" ry="${ry}" fill="#fffdf8"/>
+        <ellipse cx="${cx}" cy="${y + 0.4}" rx="${rx - 0.8}" ry="${ry - 0.3}" fill="url(#${id}-iris)"/>
+        <ellipse cx="${cx}" cy="${y + 0.8}" rx="${rx - 2.8}" ry="${ry - 2.2}" fill="#14100f"/>
+        <circle cx="${cx + 1.6}" cy="${y - 2}" r="1.6" fill="#fff"/><circle cx="${cx - 1.4}" cy="${y + 2.4}" r=".8" fill="#fff" opacity=".8"/>
+        <path d="M${cx - rx - 1.6} ${y - 1} Q${cx} ${y - ry - 2.6} ${cx + rx + 1.6} ${y - 1}" stroke="${lash}" stroke-width="${fem ? 2 : 1.7}" fill="none" stroke-linecap="round"/>`;
+}
+
+function faceLayer(look, id) {
     const fem = look.body === 'f';
-    const ey = 46;
-    const eyes = fem
-        ? `<ellipse cx="50" cy="${ey}" rx="4" ry="5" fill="${eye}"/><ellipse cx="70" cy="${ey}" rx="4" ry="5" fill="${eye}"/>
-           <circle cx="51.5" cy="${ey - 2}" r="1.4" fill="#fff"/><circle cx="71.5" cy="${ey - 2}" r="1.4" fill="#fff"/>
-           <path d="M44 ${ey - 4} Q50 ${ey - 9} 55 ${ey - 5}M65 ${ey - 5} Q70 ${ey - 9} 76 ${ey - 4}" stroke="#2b1b12" stroke-width="1.6" fill="none"/>`
-        : `<ellipse cx="50" cy="${ey}" rx="3.2" ry="4" fill="${eye}"/><ellipse cx="70" cy="${ey}" rx="3.2" ry="4" fill="${eye}"/>
-           <circle cx="51" cy="${ey - 1.6}" r="1.1" fill="#fff"/><circle cx="71" cy="${ey - 1.6}" r="1.1" fill="#fff"/>
-           <path d="M44 ${ey - 8} L55 ${ey - 6}M65 ${ey - 6} L76 ${ey - 8}" stroke="${shadeColor(look.hair, -0.1)}" stroke-width="2.4" stroke-linecap="round"/>`;
+    const brow = shadeColor(look.hair, -0.1);
+    const brows = fem
+        ? `<path d="M42 37 Q49 33 55 36M65 36 Q71 33 78 37" stroke="${brow}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`
+        : `<path d="M41 38 L55 35.5M65 35.5 L79 38" stroke="${brow}" stroke-width="2.6" stroke-linecap="round"/>`;
+    const nose = `<path d="M60 51 Q61.6 53.4 59.6 54" stroke="${shadeColor(look.skin, -0.28)}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
     const mouth = fem
-        ? `<path d="M56 56 Q60 59 64 56" stroke="#c0564f" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-           <ellipse cx="44" cy="53" rx="3.5" ry="2" fill="#ff9d9d" opacity=".5"/><ellipse cx="76" cy="53" rx="3.5" ry="2" fill="#ff9d9d" opacity=".5"/>`
-        : `<path d="M56 57 L64 57" stroke="#8a5a44" stroke-width="1.6" stroke-linecap="round"/>`;
+        ? `<path d="M56 58.4 Q60 61.4 64 58.4 Q60 59.6 56 58.4 Z" fill="#d0605c" stroke="#d0605c" stroke-width=".8" stroke-linejoin="round"/>`
+        : `<path d="M55.5 58.6 Q60 60.6 64.5 58.6" stroke="#9a5f4a" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
+    const blush = `<ellipse cx="44" cy="54" rx="4.4" ry="2.4" fill="#ff8f8f" opacity="${fem ? 0.4 : 0.18}"/><ellipse cx="76" cy="54" rx="4.4" ry="2.4" fill="#ff8f8f" opacity="${fem ? 0.4 : 0.18}"/>`;
     const beard = look.beard
-        ? `<path d="M46 56 Q60 92 74 56 Q60 64 46 56 Z" fill="${look.hair}"/>`
+        ? `<path d="M46 57 Q60 94 74 57 Q60 66 46 57 Z" fill="${look.hair}"/>`
         : '';
-    return eyes + mouth + beard;
+    return blush + eyeLayer(49, look, id, fem) + eyeLayer(71, look, id, fem) + brows + nose + mouth + beard;
 }
 
 function weaponLayer(kind, color) {
@@ -119,31 +126,72 @@ function wingLayer(color) {
     return `<path d="M36 82 Q2 62 4 106 Q18 96 36 100 Z" fill="${color}" opacity=".7"/><path d="M84 82 Q118 62 116 106 Q102 96 84 100 Z" fill="${color}" opacity=".7"/>`;
 }
 
+function robeDefs(l, id) {
+    const robe = l.robe;
+    return `<defs>
+        <linearGradient id="${id}-robe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.3)}"/><stop offset=".45" stop-color="${robe}"/><stop offset="1" stop-color="${shadeColor(robe, -0.38)}"/></linearGradient>
+        <linearGradient id="${id}-sleeve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.08)}"/><stop offset="1" stop-color="${shadeColor(robe, -0.45)}"/></linearGradient>
+        <linearGradient id="${id}-inner" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(robe, 0.62)}"/><stop offset="1" stop-color="${shadeColor(robe, 0.2)}"/></linearGradient>
+        <linearGradient id="${id}-skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shadeColor(l.skin, 0.12)}"/><stop offset="1" stop-color="${shadeColor(l.skin, -0.06)}"/></linearGradient>
+        <radialGradient id="${id}-iris" cy=".75" r=".8"><stop offset="0" stop-color="${shadeColor(l.eyes, 0.55)}"/><stop offset="1" stop-color="${shadeColor(l.eyes, -0.15)}"/></radialGradient>
+    </defs>`;
+}
+
+function ribbonLayer(color) {
+    if (!color) return '';
+    return `<path d="M42 78 Q10 84 14 116 Q16 134 4 144" stroke="${color}" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>
+        <path d="M78 78 Q110 84 106 116 Q104 134 116 144" stroke="${color}" stroke-width="3" fill="none" opacity=".75" stroke-linecap="round"/>`;
+}
+
+function hairTemples(look) {
+    if (look.hairStyle === 5) return '';
+    const c = look.hair;
+    return `<path d="M34 42 Q31 58 36 69 Q40 58 40 44 Z" fill="${c}"/><path d="M86 42 Q89 58 84 69 Q80 58 80 44 Z" fill="${c}"/>
+        <path d="M43 24 Q53 18 66 21" stroke="${shadeColor(c, 0.32)}" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>`;
+}
+
 function humanoidSvg(look, opts = {}) {
     const l = { ...defaultLook(), ...look };
     const id = `av${++_svgUid}`;
-    const robe = l.robe, dark = shadeColor(robe, -0.28), lite = shadeColor(robe, 0.22);
+    const dark = shadeColor(l.robe, -0.5);
     const trim = l.trim || '#e6c97a';
-    const shoulders = l.body === 'f' ? 'M42 72 Q60 64 78 72' : 'M38 73 Q60 63 82 73';
+    const sash = l.sash || trim;
+    const boots = l.boots || shadeColor(l.robe, -0.55);
+    const fem = l.body === 'f';
+    const shoulder = fem ? 18 : 23, waist = fem ? 12 : 16, hem = fem ? 33 : 35;
+    const left = 60 - shoulder, right = 60 + shoulder;
     return `<svg class="avatar ${opts.cls || ''}" viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.title || 'nhân vật'}">
+        ${robeDefs(l, id)}
         ${auraLayer(l.aura, id)}
         ${wingLayer(l.wing)}
-        <ellipse cx="60" cy="152" rx="32" ry="6" fill="#000" opacity=".3"/>
+        <ellipse cx="60" cy="153" rx="36" ry="5.5" fill="#000" opacity=".32"/>
+        ${ribbonLayer(l.aura)}
         ${hairBack(l)}
-        <path d="${shoulders} L${l.body === 'f' ? '84 146 L36 146' : '88 146 L32 146'} Z" fill="${robe}"/>
-        <path d="M32 146 Q60 138 88 146 L90 150 L30 150 Z" fill="${dark}"/>
-        <path d="M60 68 L60 146" stroke="${dark}" stroke-width="2"/>
-        <path d="M50 67 L60 88 L70 67" fill="${lite}" stroke="${trim}" stroke-width="1.6"/>
-        <rect x="${l.body === 'f' ? 42 : 38}" y="92" width="${l.body === 'f' ? 36 : 44}" height="8" rx="2" fill="${trim}"/>
-        <path d="M58 100 L54 124 L60 120 L66 124 L62 100 Z" fill="${trim}" opacity=".9"/>
-        <path d="M38 74 Q26 90 26 110 Q33 116 39 110 L44 84 Z" fill="${dark}"/>
-        <path d="M82 74 Q94 90 94 108 Q87 114 81 108 L76 84 Z" fill="${dark}"/>
-        <circle cx="31" cy="112" r="5" fill="${l.skin}"/>
-        <circle cx="90" cy="108" r="5" fill="${l.skin}"/>
+        <ellipse cx="49" cy="151" rx="9" ry="4.4" fill="${boots}"/><ellipse cx="71" cy="151" rx="9" ry="4.4" fill="${boots}"/>
+        <path d="M43 149 Q49 146 55 149M65 149 Q71 146 77 149" stroke="${shadeColor(boots, 0.35)}" stroke-width="1.2" fill="none"/>
+        <path d="M${left} 75 Q60 64 ${right} 75 L${60 + waist} 97 Q${60 + hem - 8} 122 ${60 + hem} 146 Q60 154 ${60 - hem} 146 Q${60 - hem + 8} 122 ${60 - waist} 97 Z" fill="url(#${id}-robe)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M52 100 Q49 126 45 149 Q60 153 75 149 Q71 126 68 100 Z" fill="url(#${id}-inner)"/>
+        <path d="M${60 - hem} 146 Q60 154 ${60 + hem} 146" stroke="${trim}" stroke-width="2.4" fill="none"/>
+        <path d="M45 104 Q40 126 34 142M75 104 Q80 126 86 142M52 100 L45 149M68 100 L75 149" stroke="${dark}" stroke-width="1" fill="none" opacity=".45"/>
+        <path d="M50 67 L60 86 L70 67 Z" fill="#f4efe2"/>
+        <path d="M46 69 L52 66.6 L71 95 L63 98 Z" fill="${trim}"/>
+        <path d="M74 69 L68 66.6 L56 87 L60 91 Z" fill="${shadeColor(trim, -0.2)}"/>
+        <rect x="${60 - waist - 1}" y="92" width="${waist * 2 + 2}" height="9" rx="2.5" fill="${sash}" stroke="${shadeColor(sash, -0.35)}" stroke-width=".8"/>
+        <path d="M60 101 L60 113" stroke="${sash}" stroke-width="1.4"/>
+        <circle cx="60" cy="116" r="3.8" fill="#bff2d2" stroke="${shadeColor(sash, -0.2)}" stroke-width="1"/>
+        <path d="M58 119 L57 131M60 119.6 L60 132M62 119 L63 131" stroke="${sash}" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M${left + 1} 75 Q${left - 14} 92 ${left - 15} 118 Q${left - 15} 128 ${left - 4} 126 Q${left + 6} 124 ${left + 7} 114 L${60 - waist + 1} 90 Z" fill="url(#${id}-sleeve)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M${left - 15} 118 Q${left - 15} 128 ${left - 4} 126 Q${left + 6} 124 ${left + 7} 114" stroke="${trim}" stroke-width="2.4" fill="none"/>
+        <circle cx="${left - 4}" cy="124" r="4.6" fill="${l.skin}"/>
         ${weaponLayer(l.weapon, l.weaponColor || '#c8d4e0')}
-        <rect x="53" y="58" width="14" height="12" fill="${shadeColor(l.skin, -0.12)}"/>
-        <path d="M34 44 Q34 18 60 18 Q86 18 86 44 Q86 66 60 66 Q34 66 34 44 Z" fill="${l.skin}"/>
-        ${faceLayer(l)}
+        <path d="M${right - 1} 75 Q${right + 13} 86 96 106 Q95 115 86 116 Q78 116 ${right - 6} 110 L${60 + waist - 1} 90 Z" fill="url(#${id}-sleeve)" stroke="${dark}" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M96 106 Q95 115 86 116 Q79 116 ${right - 6} 110" stroke="${trim}" stroke-width="2.4" fill="none"/>
+        <circle cx="96" cy="108" r="4.6" fill="${l.skin}"/>
+        <rect x="53" y="58" width="14" height="13" rx="3" fill="${shadeColor(l.skin, -0.14)}"/>
+        <ellipse cx="34.5" cy="47" rx="3" ry="5" fill="${shadeColor(l.skin, -0.08)}"/><ellipse cx="85.5" cy="47" rx="3" ry="5" fill="${shadeColor(l.skin, -0.08)}"/>
+        <path d="M35 42 Q35 18 60 18 Q85 18 85 42 Q85 56 73 63 Q60 70 47 63 Q35 56 35 42 Z" fill="url(#${id}-skin)"/>
+        ${faceLayer(l, id)}
+        ${hairTemples(l)}
         ${hairFront(l)}
         ${crownLayer(l.crown, l.crownColor || trim)}
     </svg>`;
@@ -198,8 +246,8 @@ function realmAuraColor(realm) {
     return color;
 }
 
-/* Trang bị đổi hình: đạo bào theo chuỗi trang bị, vũ khí theo phẩm chất, đạo quan theo thế giới */
-const WORLD_ROBES = { pham: null, tien: '#dbe8f7', thanh: '#e8cf8f', thien: '#5a3a9e', hondon: '#13525c', hongmong: '#7a1f6a', chungnguyen: '#f2f2f2' };
+/* Áo quần mang màu phẩm chất của món đang mặc, viền theo thế giới của món đó */
+const GEAR_FABRIC_SHADE = -0.12;
 const WORLD_TRIMS = { pham: '#e6c97a', tien: '#7fd4ff', thanh: '#ff9d4d', thien: '#d9b8ff', hondon: '#5fe6e6', hongmong: '#ffb3e6', chungnguyen: '#111111' };
 
 function playerLook() {
@@ -208,11 +256,15 @@ function playerLook() {
     const armor = (typeof equippedInSlot === 'function') ? equippedInSlot('armor') : null;
     const weapon = (typeof equippedInSlot === 'function') ? equippedInSlot('weapon') : null;
     const helm = (typeof equippedInSlot === 'function') ? equippedInSlot('helm') : null;
+    const boots = (typeof equippedInSlot === 'function') ? equippedInSlot('boots') : null;
+    const amulet = (typeof equippedInSlot === 'function') ? equippedInSlot('amulet') : null;
+    const fabric = item => shadeColor(GEAR_QUALITIES[item.quality || 0].color, GEAR_FABRIC_SHADE);
     if (armor) {
-        const w = worldTierOfRealm(armor.reqRealm || 0).id;
-        if (WORLD_ROBES[w]) look.robe = WORLD_ROBES[w];
-        look.trim = armor.quality >= 3 ? GEAR_QUALITIES[armor.quality].color : WORLD_TRIMS[w];
+        look.robe = fabric(armor);
+        look.trim = WORLD_TRIMS[worldTierOfRealm(armor.reqRealm || 0).id];
     }
+    if (boots) look.boots = fabric(boots);
+    if (amulet) look.sash = fabric(amulet);
     if (weapon) {
         look.weapon = 'sword';
         look.weaponColor = GEAR_QUALITIES[weapon.quality || 0].color;

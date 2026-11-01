@@ -32,7 +32,7 @@ function sceneSpots(loc) {
     add('🗡️', 'Săn quái', () => startHunt(), huntable);
     add('🧭', 'Thám hiểm', () => startExplore());
     add('🏪', 'Cửa hàng', () => openServiceShop(), hasService('shop'));
-    add('🔨', 'Lò rèn', () => openForge(), hasService('forge'));
+    add('🔨', forgeGradeOf(loc).name, () => openForge(), hasService('forge'));
     add('📜', 'Bảng treo thưởng', () => acceptBounty(), hasService('board') && !state.bounty);
     add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop'));
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);

@@ -29,9 +29,9 @@ const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
 const LOW_REALM_HOURS_PER_STEP = 1000;
 const ROAD_EVENT_INTERVAL = 5;
-const ROAD_EVENT_BASE_CHANCE = 0.005;
+const ROAD_EVENT_BASE_CHANCE = 0.03;
 const ROAD_EVENT_LUCK_FACTOR = 0.1;
-const ROAD_EVENT_MAX_CHANCE = 0.08;
+const ROAD_EVENT_MAX_CHANCE = 0.15;
 const ROAD_BANDIT_XP_MINUTES = 0.5;
 const ROAD_BANDITS = {
     pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Vực Đạo Tặc', thien: 'Thiên Ngoại Đạo Tặc',
@@ -396,7 +396,12 @@ function triggerRoadEvent(kind = null) {
     const roll = Math.random();
     const type = kind || (roll < 0.10 + luck ? 'master' : (roll < 0.55 ? 'item' : 'bandit'));
     if (type === 'master') roadMaster();
-    else if (type === 'item') roadItem();
+    else if (type === 'item') {
+        const tales = ROAD_TALES[currentLocation().world];
+        playDialogue(tales[Math.floor(Math.random() * tales.length)]);
+        log('✨ Kỳ ngộ trên đường!');
+        roadItem();
+    }
     else roadBandit();
 }
 
@@ -610,8 +615,13 @@ function toggleAutoHunt() {
     renderAll();
 }
 
+function serviceOpen(locId) {
+    return FREE_SERVICE_LOCATIONS.includes(locId) || !!state.flags[`open_${locId}`];
+}
+
 function hasService(name) {
-    return (currentLocation().services || []).includes(name);
+    const loc = currentLocation();
+    return (loc.services || []).includes(name) && serviceOpen(loc.id);
 }
 
 function openServiceShop() {
@@ -641,7 +651,9 @@ function openWorldModal(id, title, body) {
 
 function openForge() {
     if (!hasService('forge')) { showToast(`${currentLocation().name} không có lò rèn.`, 'warn'); return; }
-    const realm = state.realmIndex;
+    const loc = currentLocation();
+    const grade = forgeGradeOf(loc);
+    const realm = serviceRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const have = state.mats[worldId] || 0;
     const price = gearPrice(realm, 2);
@@ -653,7 +665,9 @@ function openForge() {
             <button onclick="startForge('${slot}')" ${have < matCost || state.gold < price ? 'disabled' : ''}>Rèn</button>
         </div>`;
     }).join('');
-    openWorldModal('forgeModal', '🔨 Lò rèn', `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. 15% ra phẩm Tiên.</div>${forgeQueueHTML()}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+    const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[loc.maxR]}.` : '';
+    const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
+    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have}) + ${formatNumber(price)} linh thạch, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, thợ rèn làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
 }
 
 function gearUpgradeCost(item) {
@@ -666,6 +680,7 @@ function upgradeGear(uidIndex) {
     if (!item?.slot) return;
     const plus = item.plus || 0;
     if (plus >= gearUpgradeCap(item.reqRealm || 0)) { showToast('Đã đạt giới hạn nâng cấp.', 'warn'); return; }
+    if ((item.reqRealm || 0) > currentLocation().maxR) { showToast('Lò này không đủ sức nâng món đồ đó.', 'warn'); return; }
     const worldId = worldTierOfRealm(item.reqRealm || 0).id;
     const cost = gearUpgradeCost(item);
     if ((state.mats[worldId] || 0) < cost.mats || state.gold < cost.gold) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
@@ -683,6 +698,7 @@ function gearUpgradeRows() {
         const cap = gearUpgradeCap(item.reqRealm || 0);
         const step = Math.round(gearUpgradeStep(item.reqRealm || 0) * 1000) / 10;
         if (plus >= cap) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">${gearStatText(item)} · tối đa +${cap}</div></div></div>`;
+        if ((item.reqRealm || 0) > currentLocation().maxR) return `<div class="shop-item forge-row"><div><b>${item.name}</b><div class="small">Lò này không đủ sức nâng món đồ này.</div></div></div>`;
         const cost = gearUpgradeCost(item);
         const worldId = worldTierOfRealm(item.reqRealm || 0).id;
         return `<div class="shop-item forge-row">
@@ -693,7 +709,8 @@ function gearUpgradeRows() {
 }
 
 function startForge(slot) {
-    const realm = state.realmIndex;
+    const loc = currentLocation();
+    const realm = serviceRealmAt(loc, state.realmIndex);
     const worldId = worldTierOfRealm(realm).id;
     const price = gearPrice(realm, 2);
     const matCost = forgeMaterialCost();
@@ -701,7 +718,7 @@ function startForge(slot) {
     state.mats[worldId] -= matCost;
     state.gold -= price;
     const seconds = hastedSeconds(FORGE_HOURS * 3600);
-    state.forgeQueue.push({ slot, realm, total: seconds, remaining: seconds });
+    state.forgeQueue.push({ slot, realm, grade: loc.forgeGrade || 0, total: seconds, remaining: seconds });
     log(`🔨 Giao thợ rèn ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
     openForge();
     renderAll();
@@ -718,7 +735,7 @@ function advanceForgeQueue(sec) {
 }
 
 function finishForge(job) {
-    const gear = makeGearItem(job.realm, job.slot, Math.random() < 0.15 ? 3 : 2);
+    const gear = makeForgedGear(job.realm, job.slot, job.grade);
     addItemToInventory(gear);
     log(`🔨 Thợ rèn giao ${gear.name}!`);
     showToast(`Rèn xong ${gear.name}`, 'info');
@@ -842,6 +859,7 @@ function advanceMainQuest() {
     if (!q || !needsMet(q)) return;
     state.questActive.push({ id: q.id, step: 0, n: 0 });
     log(`📖 ${ACTS[q.act - 1].name} — Nhiệm vụ mới: ${q.title}`);
+    if (q.intro) playDialogue(q.intro);
     questsOnLocation();
 }
 
@@ -865,6 +883,7 @@ function completeStep(rt) {
     if (rt.step >= q.steps.length) {
         state.questActive = state.questActive.filter(x => x !== rt);
         state.questDone.push(q.id);
+        if (q.outro) playDialogue(q.outro);
         grantQuestReward(q);
         advanceMainQuest();
     } else {
@@ -900,6 +919,10 @@ function grantQuestReward(q) {
         log(`🌟 Đạo cơ thăng hoa: chỉ số bản thể +${Math.round(r.statBless * 100)}%.`);
     }
     syncStorySect();
+    if (r.opens) {
+        state.flags[`open_${r.opens}`] = true;
+        log(`🔓 ${LOCATIONS[r.opens].name} đã mở dịch vụ cho ngươi.`);
+    }
     if (r.flag) {
         state.flags[r.flag] = true;
         const w = WORLD_TIERS.find(x => 'world_' + x.id === r.flag);
@@ -1025,6 +1048,7 @@ function onScriptedLoss(enemy) {
 function acceptSideQuest(id) {
     state.questActive.push({ id, step: 0, n: 0 });
     log(`📜 Nhận nhiệm vụ phụ: ${QUEST_INDEX[id].title}`);
+    if (QUEST_INDEX[id].intro) playDialogue(QUEST_INDEX[id].intro);
     questsOnLocation();
     renderAll();
 }

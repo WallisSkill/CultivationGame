@@ -8,12 +8,12 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storyscenes.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`
 var INFO = {
-  ORIGINS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  ORIGINS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage
 };`, ctx);
 const G = ctx.INFO;
@@ -90,6 +90,21 @@ G.MAIN_QUESTS.forEach((q, i) => {
     if (!list.some(l => (l.services || []).includes('shop'))) fail.push(`${w}: không có shop`);
     if (!list.some(l => (l.services || []).includes('forge'))) fail.push(`${w}: không có forge`);
 });
+
+for (let r = 0; r < 29; r++) {
+    if (!Object.values(G.LOCATIONS).some(l => (l.services || []).includes('forge') && l.minR <= r && l.maxR >= r)) fail.push(`cảnh giới ${r}: không có lò rèn`);
+}
+G.WORLD_TIERS.forEach(w => {
+    if (!Object.values(G.LOCATIONS).some(l => l.world === w.id && l.forgeGrade === 2)) fail.push(`${w.id}: không có Thần lò`);
+});
+
+Object.values(G.LOCATIONS).filter(l => (l.services || []).length).forEach(l => {
+    if (!G.FREE_SERVICE_LOCATIONS.includes(l.id) && !G.SIDE_QUESTS.some(q => q.reward?.opens === l.id)) fail.push(`${l.name}: không có nhiệm vụ mở dịch vụ`);
+});
+G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => {
+    const names = (G.LOCATIONS[step.hunt?.loc]?.enemies || []).map(e => e.name);
+    if (step.hunt && !names.includes(step.hunt.name)) fail.push(`${q.id}: ${step.hunt.name} không có ở ${step.hunt.loc}`);
+}));
 
 /* ---- đường cong sức mạnh ---- */
 function playerAt(r, s, gearRealm, quality, lbSlots, rootRank = 3, lbRealm = r) {

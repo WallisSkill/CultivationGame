@@ -210,6 +210,36 @@ function gearPrice(realm, quality) {
     return goldRef(realm) * GEAR_QUALITIES[quality].price;
 }
 
+/* --------- lò rèn theo nơi: lò và quầy hàng chỉ phục vụ tới cảnh giới cao nhất của nơi đó, lò càng lớn càng dễ ra đồ tốt.
+   Đồ vượt cấp mang chỉ số cảnh giới cao hơn nhưng dùng được ngay ở cảnh giới lúc rèn --------- */
+const FORGE_GRADES = [
+    { name: 'Lò rèn', topChance: 0.15, overChance: 0, overRealms: 0 },
+    { name: 'Danh lò', topChance: 0.30, overChance: 0.10, overRealms: 1 },
+    { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2 }
+];
+
+function forgeGradeOf(loc) {
+    return FORGE_GRADES[loc.forgeGrade || 0];
+}
+
+function serviceRealmAt(loc, realm) {
+    return Math.min(realm, loc.maxR);
+}
+
+function makeForgedGear(realm, slot, gradeIndex = 0) {
+    const grade = FORGE_GRADES[gradeIndex];
+    const quality = Math.random() < grade.topChance ? 3 : 2;
+    const over = Math.random() < grade.overChance ? 1 + Math.floor(Math.random() * grade.overRealms) : 0;
+    const gearRealm = Math.min(REALM_COUNT - 1, realm + over);
+    if (gearRealm === realm) return makeGearItem(realm, slot, quality);
+    return {
+        ...makeGearItem(gearRealm, slot, quality),
+        name: `⚡ ${GEAR_SERIES[gearRealm]} ${GEAR_SLOTS[slot].label} [${GEAR_QUALITIES[quality].name}] vượt cấp`,
+        reqRealm: realm,
+        desc: `Rèn vượt ${gearRealm - realm} cảnh giới, yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
+    };
+}
+
 const MATERIAL_NAMES = {
     pham: 'Huyền Thiết Tinh', tien: 'Tiên Kim Sa', thanh: 'Thánh Ngân', thien: 'Thiên Ngoại Vẫn Thiết',
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'

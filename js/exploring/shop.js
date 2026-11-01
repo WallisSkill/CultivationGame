@@ -1,9 +1,9 @@
 /* ===========================
     INVENTORY / ITEMS / EQUIP
 =========================== */
-/* Hàng bán theo cảnh giới hiện tại — trang bị Phàm/Linh, đan dược, ngọc giản bế quan */
+/* Hàng bán theo cảnh giới, không vượt cảnh giới cao nhất của nơi đó — trang bị Phàm/Linh, đan dược, ngọc giản bế quan */
 function buildShopStock() {
-    const realm = state.realmIndex || 0;
+    const realm = serviceRealmAt(currentLocation(), state.realmIndex || 0);
     const g = goldRef(realm);
     const base = baseStatsFor(realm, state.realmStage || 0, state.root?.rank || 0);
     const stock = [];
