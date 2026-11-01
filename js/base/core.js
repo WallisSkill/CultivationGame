@@ -1114,12 +1114,83 @@ if (typeof window !== 'undefined') {
     window.closeStatDetailModal = closeStatDetailModal;
 }
 let inventoryFilter = 'all';
+let inventoryFacets = {};
+let inventorySort = 'new';
 let inventoryPage = 0;
-const ITEMS_PER_PAGE = 4;
+let inventoryPerPage = 4;
+
+const INV_USE_TYPES = {
+    consumable: '🧪 Hồi phục', xp: '📘 Tu vi', power: '💪 Sức mạnh', defense: '🛡️ Phòng thủ',
+    life: '🩸 Thọ nguyên', luck: '🍀 Vận may', relic: '💠 Linh bảo'
+};
+const INV_CATEGORIES = [
+    { id: 'all', label: '📦 Tất cả', test: () => true },
+    { id: 'worn', label: '🧤 Đang mặc', test: item => item.equipped === true },
+    { id: 'gear', label: '⚔️ Trang bị', test: item => ['weapon', 'armor'].includes(item.type) },
+    { id: 'linhbao', label: '📜 Công pháp', test: item => item.type === 'linhbao' },
+    { id: 'gem', label: '💎 Ngọc', test: item => item.type === 'gem' },
+    { id: 'use', label: '💊 Đan dược', test: item => !!INV_USE_TYPES[item.type] },
+    { id: 'root', label: '💠 Linh căn', test: item => ['root', 'root_frag'].includes(item.type) }
+];
+const INV_SORTS = [
+    { id: 'new', label: 'Mới nhất' },
+    { id: 'grade', label: 'Phẩm cao' },
+    { id: 'realm', label: 'Cảnh giới cao' }
+];
+const INV_LB_EFFECTS = [
+    ['damage', '⚔️ Sát thương', ['damage']], ['heal', '🌿 Hồi phục', ['heal']], ['shield', '🛡️ Hộ thuẫn', ['shield']],
+    ['buff', '⬆️ Tăng lực', ['buffAtk', 'lifesteal']], ['control', '❄️ Khống chế', ['freeze', 'stun', 'parry']]
+];
+
+function inventoryFacetGroups() {
+    if (inventoryFilter === 'gear' || inventoryFilter === 'worn') return [
+        { key: 'slot', label: 'Ô', options: GEAR_SLOT_IDS.map(id => ({ id, label: `${GEAR_SLOTS[id].icon} ${GEAR_SLOTS[id].label}`, test: item => item.slot === id })) },
+        { key: 'quality', label: 'Phẩm', options: GEAR_QUALITIES.map((q, i) => ({ id: String(i), label: q.name, test: item => (item.quality || 0) === i })) },
+        { key: 'fit', label: 'Yêu cầu', options: [
+            { id: 'ok', label: 'Đủ cảnh giới', test: item => (item.reqRealm || 0) <= state.realmIndex },
+            { id: 'high', label: 'Chưa đủ', test: item => (item.reqRealm || 0) > state.realmIndex }
+        ] }
+    ];
+    if (inventoryFilter === 'linhbao') return [
+        { key: 'effect', label: 'Hiệu ứng', options: INV_LB_EFFECTS.map(([id, label, actions]) => ({ id, label, test: item => lbEffectList(item).some(e => actions.includes(e.action)) })) },
+        { key: 'grade', label: 'Giai', options: LB_GRADE_NAMES.map((name, i) => ({ id: String(i), label: name, test: item => lbGradeOf(item) === i })) },
+        { key: 'board', label: 'Vị trí', options: [
+            { id: 'on', label: 'Trên trận', test: item => state.board.includes(item.uid) },
+            { id: 'off', label: 'Trong kho', test: item => !state.board.includes(item.uid) }
+        ] }
+    ];
+    if (inventoryFilter === 'gem') return [
+        { key: 'kind', label: 'Loại', options: Object.entries(LB_GEM_KINDS).map(([id, g]) => ({ id, label: `${g.icon} ${g.label}`, test: item => item.gemKind === id })) },
+        { key: 'tier', label: 'Bậc', options: [0, 1, 2, 3].map(t => ({ id: String(t), label: `Bậc ${t + 1}`, test: item => (item.tier || 0) === t })) }
+    ];
+    if (inventoryFilter === 'use') return [
+        { key: 'kind', label: 'Công dụng', options: Object.entries(INV_USE_TYPES).map(([id, label]) => ({ id, label, test: item => item.type === id })) }
+    ];
+    if (inventoryFilter === 'root') return [
+        { key: 'kind', label: 'Dạng', options: [
+            { id: 'root', label: 'Linh căn', test: item => item.type === 'root' },
+            { id: 'frag', label: 'Mảnh', test: item => item.type === 'root_frag' }
+        ] }
+    ];
+    return [];
+}
 
 // 🔍 Đặt bộ lọc
 function setInventoryFilter(type) {
     inventoryFilter = type;
+    inventoryFacets = {};
+    inventoryPage = 0;
+    renderInventory();
+}
+
+function toggleInventoryFacet(key, id) {
+    inventoryFacets[key] = inventoryFacets[key] === id ? null : id;
+    inventoryPage = 0;
+    renderInventory();
+}
+
+function setInventorySort(id) {
+    inventorySort = id;
     inventoryPage = 0;
     renderInventory();
 }
@@ -1127,41 +1198,76 @@ function setInventoryFilter(type) {
 // 📄 Chuyển trang
 function changeInventoryPage(offset) {
     const filtered = getFilteredInventory();
-    const maxPage = Math.floor((filtered.length - 1) / ITEMS_PER_PAGE);
+    const maxPage = Math.floor((filtered.length - 1) / inventoryPerPage);
     inventoryPage = Math.max(0, Math.min(maxPage, inventoryPage + offset));
     renderInventory();
 }
 
-// 📦 Lọc vật phẩm theo loại
-function getFilteredInventory() {
-    return state.inventory.filter(item => {
-        // 🆕 Công pháp (manual) removed - never show in inventory
-        if (item.type === 'manual') return false;
+function inventoryCategoryItems(categoryId = inventoryFilter) {
+    const category = INV_CATEGORIES.find(c => c.id === categoryId) || INV_CATEGORIES[0];
+    return state.inventory.filter(item => item.type !== 'manual' && category.test(item));
+}
 
-        if (inventoryFilter === 'equipped') return item.equipped === true;
-        if (inventoryFilter === 'usable')
-            return ['consumable', 'xp', 'life', 'power', 'defense', 'luck'].includes(item.type);
-        if (inventoryFilter === 'relic') return item.type === 'relic';
-        if (inventoryFilter === 'linhbao') return item.type === 'linhbao';
-        if (inventoryFilter === 'gem') return item.type === 'gem';
-        if (inventoryFilter === 'root') return item.type === 'root';
-        if (inventoryFilter === 'root_frag') return item.type === 'root_frag';
-        if (inventoryFilter === 'manual') return item.type === 'manual';
-        // Filter by Linh Bảo effect type
-        if (inventoryFilter === 'lb_damage') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'damage');
-        if (inventoryFilter === 'lb_heal') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'heal');
-        if (inventoryFilter === 'lb_shield') return item.type === 'linhbao' && lbEffectList(item).some(e => e.action === 'shield');
-        if (inventoryFilter === 'lb_buff') return item.type === 'linhbao' && lbEffectList(item).some(e => ['buffAtk', 'lifesteal'].includes(e.action));
-        if (inventoryFilter === 'lb_control') return item.type === 'linhbao' && lbEffectList(item).some(e => ['freeze', 'stun', 'parry'].includes(e.action));
-        // Filter by Linh Bảo grade
-        if (inventoryFilter === 'lb_grade_0') return item.type === 'linhbao' && (item.grade || 0) <= 0;
-        if (inventoryFilter === 'lb_grade_1') return item.type === 'linhbao' && (item.grade || 0) === 1;
-        if (inventoryFilter === 'lb_grade_2') return item.type === 'linhbao' && (item.grade || 0) === 2;
-        if (inventoryFilter === 'lb_grade_3') return item.type === 'linhbao' && (item.grade || 0) === 3;
-        if (inventoryFilter === 'lb_grade_4') return item.type === 'linhbao' && (item.grade || 0) === 4;
-        if (inventoryFilter === 'lb_grade_5') return item.type === 'linhbao' && (item.grade || 0) >= 5;
-        return true;
+function inventoryFacetMatch(item, groups, skipKey = null) {
+    return groups.every(group => {
+        if (group.key === skipKey || !inventoryFacets[group.key]) return true;
+        return group.options.find(o => o.id === inventoryFacets[group.key])?.test(item) ?? true;
     });
+}
+
+function inventoryRank(item) {
+    if (inventorySort === 'realm') return item.reqRealm || 0;
+    return item.type === 'linhbao' ? lbGradeOf(item) : (item.quality ?? item.tier ?? item.rank ?? 0);
+}
+
+// 📦 Lọc và sắp xếp vật phẩm
+function getFilteredInventory() {
+    const groups = inventoryFacetGroups();
+    const items = inventoryCategoryItems().filter(item => inventoryFacetMatch(item, groups));
+    if (inventorySort === 'new') return items.reverse();
+    return items.sort((a, b) => inventoryRank(b) - inventoryRank(a));
+}
+
+function inventoryFilterHTML() {
+    const chip = (active, onclick, text) => `<button class="filter-chip ${active ? 'active' : ''}" onclick="${onclick}">${text}</button>`;
+    const categories = INV_CATEGORIES.map(c => chip(inventoryFilter === c.id, `setInventoryFilter('${c.id}')`, `${c.label} ${inventoryCategoryItems(c.id).length}`)).join('');
+    const groups = inventoryFacetGroups();
+    const base = inventoryCategoryItems();
+    const facets = groups.map(group => {
+        const pool = base.filter(item => inventoryFacetMatch(item, groups, group.key));
+        const chips = group.options.map(option => {
+            const count = pool.filter(option.test).length;
+            const active = inventoryFacets[group.key] === option.id;
+            if (!count && !active) return '';
+            return chip(active, `toggleInventoryFacet('${group.key}','${option.id}')`, `${option.label} ${count}`);
+        }).join('');
+        return chips ? `<div class="filter-chips"><span class="filter-label">${group.label}:</span>${chips}</div>` : '';
+    }).join('');
+    const sorts = INV_SORTS.map(o => chip(inventorySort === o.id, `setInventorySort('${o.id}')`, o.label)).join('');
+    return `<div class="inventory-filter-row">
+            <div class="filter-chips">${categories}</div>
+            ${facets}
+            <div class="filter-chips"><span class="filter-label">Xếp:</span>${sorts}</div>
+        </div>
+        <div class="inv-actions">
+            <button class="equip-all-btn" onclick="equipForRealm()">🧤 Đúng cảnh giới</button>
+            <button class="equip-all-btn" onclick="equipAll()">⚔️ Mạnh nhất</button>
+            <button class="equip-all-btn" onclick="sellOutdatedGear()">💰 Bán đồ cũ</button>
+            <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()">🌟 Nâng Linh Bảo</button>
+        </div>`;
+}
+
+/* Số món mỗi trang lấy theo chỗ trống thật để cả trang hiện đủ, không phải cuộn */
+function fitInventoryPage(listEl) {
+    const pane = listEl.closest('.side-pane');
+    if (!pane?.offsetHeight || !listEl.offsetHeight) return;
+    const tallest = Math.max(...[...listEl.children].map(child => child.offsetHeight));
+    const free = pane.getBoundingClientRect().bottom - listEl.firstElementChild.getBoundingClientRect().top - 44;
+    const columns = getComputedStyle(listEl).gridTemplateColumns.split(' ').length;
+    const fit = Math.max(1, Math.floor(free / (tallest + 8))) * columns;
+    if (fit === inventoryPerPage) return;
+    inventoryPerPage = fit;
+    renderInventory();
 }
 
 // 🆕 Item Detail Modal
@@ -1270,40 +1376,7 @@ function renderInventory() {
     const listEl = $('inventoryItems');
     const pageEl = $('inventoryPagination');
 
-    filterEl.innerHTML = `
-                <div class="inventory-filter-row">
-                    <div class="filter-chips">
-                        <button class="filter-chip ${inventoryFilter === 'all' ? 'active' : ''}" onclick="setInventoryFilter('all')">📦 Tất cả</button>
-                        <button class="filter-chip ${inventoryFilter === 'equipped' ? 'active' : ''}" onclick="setInventoryFilter('equipped')">🧤 Mặc</button>
-                        <button class="filter-chip ${inventoryFilter === 'equipment' ? 'active' : ''}" onclick="setInventoryFilter('equipment')">⚔️ Trang bị</button>
-                        <button class="filter-chip ${inventoryFilter === 'linhbao' ? 'active' : ''}" onclick="setInventoryFilter('linhbao')">📜 Công pháp</button>
-                        <button class="filter-chip ${inventoryFilter === 'gem' ? 'active' : ''}" onclick="setInventoryFilter('gem')">💎 Ngọc</button>
-                        <button class="filter-chip ${inventoryFilter === 'usable' ? 'active' : ''}" onclick="setInventoryFilter('usable')">💊 Dùng được</button>
-                        <button class="filter-chip ${inventoryFilter === 'root' ? 'active' : ''}" onclick="setInventoryFilter('root')">💠 Linh căn</button>
-                    </div>
-                    <div class="filter-chips" style="margin-top:4px">
-                        <span class="filter-label">📜 Công pháp:</span>
-                        <button class="filter-chip ${inventoryFilter === 'lb_damage' ? 'active' : ''}" onclick="setInventoryFilter('lb_damage')">⚔️ Sát thương</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_heal' ? 'active' : ''}" onclick="setInventoryFilter('lb_heal')">🌿 Hồi phục</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_shield' ? 'active' : ''}" onclick="setInventoryFilter('lb_shield')">🛡️ Hộ thuẫn</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_buff' ? 'active' : ''}" onclick="setInventoryFilter('lb_buff')">⬆️ BUFF</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_control' ? 'active' : ''}" onclick="setInventoryFilter('lb_control')">❄️ Khống chế</button>
-                    </div>
-                    <div class="filter-chips" style="margin-top:4px">
-                        <span class="filter-label">Cấp:</span>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_0' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_0')">Phàm</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_1' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_1')">Hoàng</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_2' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_2')">Huyền</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_3' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_3')">Địa</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_4' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_4')">Thiên</button>
-                        <button class="filter-chip ${inventoryFilter === 'lb_grade_5' ? 'active' : ''}" onclick="setInventoryFilter('lb_grade_5')">🔮 Tiên+</button>
-                    </div>
-                </div>
-                <button class="equip-all-btn" onclick="equipForRealm()">🧤 Mặc đồ đúng cảnh giới</button>
-                <button class="equip-all-btn" onclick="equipAll()">⚔️ Mặc đồ mạnh nhất</button>
-                <button class="equip-all-btn" onclick="sellOutdatedGear()">💰 Bán đồ lỗi thời</button>
-                <button class="equip-all-btn" onclick="doUpgradeLinhBaoByRealm()" style="background:#5c3d11;color:#ffd700;margin-left:8px">🌟 Nâng Cấp Linh Bảo Theo Tu Vi</button>
-            `;
+    filterEl.innerHTML = inventoryFilterHTML();
 
     const filtered = getFilteredInventory();
     if (!filtered.length) {
@@ -1311,8 +1384,9 @@ function renderInventory() {
         return;
     }
 
-    const start = inventoryPage * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
+    inventoryPage = Math.min(inventoryPage, Math.floor((filtered.length - 1) / inventoryPerPage));
+    const start = inventoryPage * inventoryPerPage;
+    const end = start + inventoryPerPage;
     const pageItems = filtered.slice(start, end);
 
     pageItems.forEach((item, idx) => {
@@ -1433,7 +1507,7 @@ function renderInventory() {
     });
 
     const total = filtered.length;
-    const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil(total / inventoryPerPage);
     if (totalPages > 1) {
         pageEl.innerHTML = `
             <button onclick="changeInventoryPage(-1)">⬅</button>
@@ -1448,6 +1522,7 @@ function renderInventory() {
         btn.innerHTML = `<button class="primary" onclick="confirmRootCombination()">✅ Xác nhận hợp thành (${rootCombineSelection.length})</button>`;
         el.appendChild(btn);
     }
+    fitInventoryPage(listEl);
 }
 
 

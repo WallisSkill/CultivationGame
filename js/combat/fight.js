@@ -172,6 +172,7 @@ const LOSE_REST_SECONDS = 180;
 
 function runFromBattle() {
     if (!state.currentEnemy) { log('Không có kẻ thù để chạy.'); return; }
+    if (state.currentEnemy.worldBoss && window.__boardBattle?.running) { lbEndBattle(window.__boardBattle, 'lose'); return; }
     if (state.currentEnemy.isPvP && pvpSession.active && pvpSession.opponentId && pvpSession.sessionId) {
         reportRankedLoss();
         wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind: 'end', data: { result: 'forfeit' } });

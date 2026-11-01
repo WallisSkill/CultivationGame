@@ -443,6 +443,10 @@ function setupFriendsEventListeners() {
             handleRankedMessage(msg);
             return;
         }
+        if (msg.type?.startsWith('boss_')) {
+            handleWorldBossMessage(msg);
+            return;
+        }
         if (msg.type?.startsWith('world_') || msg.type === 'tianjiao_board') {
             handleWorldMessage(msg);
             return;

@@ -58,6 +58,7 @@ function sendPresence() {
     wsSend({ type: 'world_enter', loc: state.location });
     reportRenown();
     wsSend({ type: 'ranked_claim', token: profileToken() });
+    wsSend({ type: 'boss_get' });
 }
 
 function profileToken() {

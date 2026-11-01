@@ -38,6 +38,7 @@ function sceneSpots(loc) {
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), !!loc.path && state.daoPath !== loc.path);
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
+    add('🐉', 'Boss Thế Giới', () => openWorldBoss(), loc.type === 'town' || loc.type === 'sect');
     SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
         .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
@@ -340,8 +341,8 @@ function renderWorldViewTabs() {
         <button class="filter-chip ${sceneState.view === 'map' ? 'active' : ''}" onclick="setWorldView('map')">🗺️ Thiên Hạ Đồ</button>
         ${autoHunt}
         <span class="small">👥 ${here + 1} người tại đây · ${Math.max(worldServer.online, onlinePlayers.size + 1)} online</span>`;
-    $('sceneHost').style.display = sceneState.view === 'scene' ? 'block' : 'none';
-    $('worldMap').style.display = sceneState.view === 'map' ? 'block' : 'none';
+    $('sceneHost').style.display = sceneState.view === 'scene' ? 'flex' : 'none';
+    $('worldMap').style.display = sceneState.view === 'map' ? 'flex' : 'none';
 }
 
 /* Khi có trận, khung chiến đấu được đưa vào khung thế giới, đè lên cảnh bên trong */
@@ -370,11 +371,13 @@ function isTypingTarget(target) {
 
 function scenePointer(event) {
     const rect = sceneState.canvas.getBoundingClientRect();
-    const scale = SCENE_VIEW_W / rect.width;
+    const scale = Math.max(SCENE_VIEW_W / rect.width, SCENE_VIEW_H / rect.height);
+    const padX = (rect.width - SCENE_VIEW_W / scale) / 2;
+    const padY = (rect.height - SCENE_VIEW_H / scale) / 2;
     const camX = Math.max(0, Math.min(SCENE_W - SCENE_VIEW_W, sceneState.x - SCENE_VIEW_W / 2));
     const camY = Math.max(0, Math.min(SCENE_H - SCENE_VIEW_H, sceneState.y - SCENE_VIEW_H / 2));
-    sceneState.tx = (event.clientX - rect.left) * scale + camX;
-    sceneState.ty = (event.clientY - rect.top) * scale + camY;
+    sceneState.tx = (event.clientX - rect.left - padX) * scale + camX;
+    sceneState.ty = (event.clientY - rect.top - padY) * scale + camY;
 }
 
 function initScene() {

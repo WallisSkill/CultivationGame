@@ -998,9 +998,7 @@ function onEnemyDefeated(enemy) {
     if (enemy.hunted) {
         const earned = enemyRenownPoints(enemy);
         state.mastery[state.location] = (state.mastery[state.location] || 0) + killed.length;
-        state.renown[state.location] = (state.renown[state.location] || 0) + earned;
-        log(`🏆 Thiên kiêu +${formatNumber(earned)} điểm tại ${currentLocation().name}.`);
-        reportRenown();
+        grantRenown(state.location, earned);
     }
     killed.forEach(unit => {
         state.questActive.slice().forEach(rt => {

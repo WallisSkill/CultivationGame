@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Tu Tiên Hồng Hoang Chi Giới</title>
-    <link rel="stylesheet" href="style.css?v=20261101_102108_vY0wca">
+    <link rel="stylesheet" href="style.css?v=20261101_105202_oaEHS2">
 </head>
 
-<body data-game-version="20261101_102108_vY0wca">
+<body data-game-version="20261101_105202_oaEHS2">
     <div id="toastLayer" aria-live="polite"></div>
     <div id="confirmLayer"></div>
     <div class="app">
@@ -30,116 +30,116 @@
         <header>
             <h1>Tu Tiên Hồng Hoang Chi Giới</h1>
             <div class="small" id="gameVersion"></div>
+            <div class="controls">
+                <button id="saveBtn">Lưu</button>
+                <button id="loadBtn">Tải</button>
+                <button id="openLook">Ngoại hình</button>
+                <button onclick="toggleTestPanel()">🧪 Test</button>
+                <button id="clearStorage">Bắt đầu lại</button>
+            </div>
         </header>
 
         <div class="topline" id="statsTop"></div>
-
         <div class="activity-bar" id="activityBar" role="status"></div>
-
-        <div class="controls">
-            <button id="saveBtn">Lưu</button>
-            <button id="loadBtn">Tải</button>
-            <button id="openLook">Ngoại hình</button>
-            <button onclick="toggleTestPanel()">🧪 Test</button>
-            <button id="clearStorage">Bắt đầu lại</button>
-        </div>
-
         <div class="panel test-panel" id="testPanel" style="display:none"></div>
 
         <div class="grid">
-            <!-- Left column: Chiến đấu, Kho đồ, Công pháp -->
-            <div>
+            <main class="stage">
                 <div class="panel panel-world">
-                    <strong>Thiên Hạ Đồ</strong>
                     <div id="locationPanel"></div>
                     <div id="worldViewTabs" class="filter-chips"></div>
                     <div id="sceneHost"></div>
                     <div id="worldMap"></div>
                 </div>
+            </main>
 
-                <div class="panel panel-combat" style="margin-top:12px">
-                    <strong>Chiến đấu</strong>
-                    <button id="runBtn" class="mini-btn" style="display:none">Chạy khỏi trận</button>
-                    <div class="small">Kẻ thù hiện tại:</div>
-                    <div id="currentEnemy" class="enemy-box">Không có</div>
-                    <div style="margin-top:8px" id="battleInfo" class="small"></div>
-                    <div id="boardArena" class="board-arena"></div>
+            <aside class="side">
+                <nav class="side-tabs" id="sideTabs" aria-label="Bảng chức năng">
+                    <button data-tab="hero" onclick="setSideTab('hero')">🧙 Nhân vật</button>
+                    <button data-tab="board" onclick="setSideTab('board')">🎴 Trận pháp</button>
+                    <button data-tab="bag" onclick="setSideTab('bag')">🎒 Túi đồ</button>
+                    <button data-tab="quest" onclick="setSideTab('quest')">📜 Nhiệm vụ</button>
+                    <button data-tab="sect" onclick="setSideTab('sect')">⛩️ Tông môn</button>
+                    <button data-tab="friends" onclick="setSideTab('friends')">👥 Bạn bè</button>
+                    <button data-tab="log" class="side-tab-log" onclick="setSideTab('log')">📖 Nhật ký</button>
+                </nav>
+
+                <div class="side-pane">
+                    <div class="panel panel-hero" data-tab="hero">
+                        <strong>Hình tượng & Trang bị</strong>
+                        <div id="appearancePanel"></div>
+                    </div>
+                    <div class="panel panel-realm" data-tab="hero">
+                        <strong>Hệ cảnh giới & Linh căn</strong>
+                        <div id="realms"></div>
+                        <div id="rootTable" class="small"></div>
+                    </div>
+                    <div class="panel panel-combat" data-tab="board">
+                        <strong>Chiến đấu</strong>
+                        <button id="runBtn" class="mini-btn" style="display:none">Chạy khỏi trận</button>
+                        <div class="small">Kẻ thù hiện tại:</div>
+                        <div id="currentEnemy" class="enemy-box">Không có</div>
+                        <div id="battleInfo" class="small"></div>
+                        <div id="boardArena" class="board-arena"></div>
+                    </div>
+                    <div class="panel panel-inventory" data-tab="bag">
+                        <strong>Kho đồ & Hỗn nguyên</strong>
+                        <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
+                        <div class="items" id="inventory"></div>
+                    </div>
+                    <div class="panel panel-quest" data-tab="quest">
+                        <strong>Nhiệm vụ</strong>
+                        <div id="questPanel"></div>
+                    </div>
+                    <div class="panel panel-sect" data-tab="sect">
+                        <strong>Tông môn của ta</strong>
+                        <div id="sectPanel"></div>
+                    </div>
+                    <div class="panel panel-room" data-tab="sect">
+                        <strong>Phòng tổ đội</strong>
+                        <div id="roomPanel"></div>
+                    </div>
+                    <div class="panel panel-friends" data-tab="friends">
+                        <div id="friendsPanel"></div>
+                    </div>
                 </div>
 
-                <div class="panel panel-inventory" style="margin-top:12px">
-                    <strong>Kho đồ & Hỗn nguyên</strong>
-                    <div class="small">Nhấn vật Phẩm để dùng / trang bị / hợp linh căn.</div>
-                    <div class="items" id="inventory"></div>
-                </div>
-            </div>
-
-            <!-- Right column: Nhật ký (small), Hệ cảnh giới, Bạn bè -->
-            <div>
-                <div class="panel panel-hero">
-                    <strong>Hình tượng & Trang bị</strong>
-                    <div id="appearancePanel"></div>
-                </div>
-
-                <div class="panel panel-sect" style="margin-top:12px">
-                    <strong>Tông môn của ta</strong>
-                    <div id="sectPanel"></div>
-                </div>
-
-                <div class="panel panel-room" style="margin-top:12px">
-                    <strong>Phòng tổ đội</strong>
-                    <div id="roomPanel"></div>
-                </div>
-
-                <div class="panel panel-quest" style="margin-top:12px">
-                    <strong>Nhiệm vụ</strong>
-                    <div id="questPanel"></div>
-                </div>
-
-                <div class="panel panel-log panel-log-small" style="margin-top:12px">
+                <div class="panel panel-log panel-log-small" data-tab="log">
                     <strong>Nhật ký tu luyện</strong>
                     <div class="log" id="log"></div>
                 </div>
-
-                <div class="panel panel-realm" style="margin-top:12px">
-                    <strong>Hệ cảnh giới & Linh căn</strong>
-                    <div id="realms"></div>
-                    <div id="rootTable" class="small" style="margin-top:8px"></div>
-                </div>
-
-                <!-- Bạn bè -->
-                <div class="panel panel-friends" style="margin-top:12px">
-                    <div id="friendsPanel"></div>
-                </div>
-            </div>
+            </aside>
         </div>
 
     </div>
     <div id="dialogueLayer"></div>
-    <script src="js/world/balance.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/avatar.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/atlas.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/storyline.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/renown.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/base/cultivation.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/exploring/shop.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/combat/enemy.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/combat/bonus.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/combat/dmgCalculate.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/combat/fight.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/combat/board.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/exploring/explore.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/exploring/saint.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/base/story.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/chat.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/playersect.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/presence.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/ranked.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/coop.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/social/friends.js?v=20261101_102108_vY0wca"></script>
+    <script src="js/world/balance.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/avatar.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/atlas.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/storyline.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/renown.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/base/cultivation.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/exploring/shop.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/combat/enemy.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/combat/bonus.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/combat/dmgCalculate.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/combat/fight.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/combat/board.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/exploring/explore.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/exploring/saint.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/base/story.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/chat.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/playersect.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/presence.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/ranked.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/worldboss.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/coop.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/social/friends.js?v=20261101_105202_oaEHS2"></script>
 
-    <script src="js/base/core.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/world.js?v=20261101_102108_vY0wca"></script>
-    <script src="js/world/scene.js?v=20261101_102108_vY0wca"></script>
+    <script src="js/base/core.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/world.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/scene.js?v=20261101_105202_oaEHS2"></script>
+    <script src="js/world/shell.js?v=20261101_105202_oaEHS2"></script>
 </body>
 
 </html>

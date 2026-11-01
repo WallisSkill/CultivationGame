@@ -112,4 +112,18 @@ function openTianjiaoBoard() {
     openWorldModal('tianjiaoModal', `🏆 Thiên Kiêu Bảng — ${LOCATIONS[locId].name}`, `${hint}${rows}`);
 }
 
+function sectHomeLocation() {
+    return state.ownSect?.hq || state.sectInfo?.hq || state.sect || null;
+}
+
+/* Điểm săn được cộng cho nơi săn, và cộng đúng số đó cho nơi đóng tông môn nếu là nơi khác */
+function grantRenown(locId, points) {
+    const home = sectHomeLocation();
+    [locId, home].filter((id, i) => id && LOCATIONS[id] && (i === 0 || id !== locId)).forEach(id => {
+        state.renown[id] = (state.renown[id] || 0) + points;
+        log(`🏆 Thiên kiêu +${formatNumber(points)} điểm tại ${LOCATIONS[id].name}.`);
+        reportRenown(id);
+    });
+}
+
 if (typeof window !== 'undefined') Object.assign(window, { openTianjiaoBoard });

@@ -1364,6 +1364,13 @@ function lbEndBattle(battle, result) {
 
     lbUpdateArena(battle);
 
+    if (enemy?.worldBoss) {
+        finishWorldBossFight(enemy, result);
+        window.__boardBattle = null;
+        renderAll();
+        return;
+    }
+
     if (result === 'win') {
         if (typeof winBattle === 'function' && enemy) winBattle(enemy);
         state.hp = state.totalMaxHp;

@@ -521,9 +521,7 @@ function coopOnEnd(data) {
     if (Object.hasOwn(LOCATIONS, renown?.loc ?? '')) {
         const cap = renownPoints(LOCATIONS[renown.loc].maxR) * COOP_MAX_PACK;
         const points = Math.min(cap, Math.max(0, Math.floor(Number(renown.points) || 0)));
-        state.renown[renown.loc] = (state.renown[renown.loc] || 0) + points;
-        log(`🏆 Thiên kiêu +${formatNumber(points)} điểm tại ${LOCATIONS[renown.loc].name}.`);
-        reportRenown(renown.loc);
+        grantRenown(renown.loc, points);
     }
     renderAll();
 }
