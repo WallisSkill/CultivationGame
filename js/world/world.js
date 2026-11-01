@@ -39,13 +39,13 @@ const ROAD_EVENT_LUCK_FACTOR = 0.1;
 const ROAD_EVENT_MAX_CHANCE = 0.15;
 const ROAD_BANDIT_XP_MINUTES = 0.5;
 const ROAD_BANDITS = {
-    pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Giới Đạo Tặc', thien: 'Cực Đạo Tán Tu',
-    hondon: 'Hỗn Độn Đạo Tặc', hongmong: 'Hồng Mông Đạo Tặc', chungnguyen: 'Chung Yên Đạo Tặc'
+    pham: 'Sơn Tặc', tien: 'Tiên Đạo Tặc', thanh: 'Thánh Giới Đạo Tặc', thien: 'Cực Đạo Tán Tu'
 };
 const BOUNTY_KILLS = 5;
 const BOUNTY_GOLD_REFS = 15;
 const BOUNTY_HOURS = 1;
 const BOUNTY_MATERIAL = 6;
+const EXPLORE_MATERIAL = 2;
 
 let worldLastTick = Date.now();
 let worldUiAccum = 0;
@@ -294,6 +294,7 @@ function finishActivity() {
             break;
         case 'explore':
             window.exploreOriginalImpl();
+            if (NO_MONSTER_WORLDS.includes(currentLocation().world)) grantMaterial(currentLocation().world, materialYield(state.realmIndex, EXPLORE_MATERIAL));
             break;
         case 'gather':
             completeGather(a.questId);
@@ -531,7 +532,7 @@ function roadEventChance() {
 
 function tickRoadEvents(realDt) {
     const a = state.activity;
-    if (!a || a.type !== 'travel' || window._battleActive) return;
+    if (!a || a.type !== 'travel' || window._battleActive || (state.realmIndex || 0) >= TELEPORT_MIN_REALM.thanh) return;
     a.eventClock = (a.eventClock || 0) + realDt;
     if (a.eventClock < ROAD_EVENT_INTERVAL) return;
     a.eventClock -= ROAD_EVENT_INTERVAL;
@@ -1152,6 +1153,7 @@ function worldEntry(worldId) {
 }
 
 function moveUpToRealmWorld() {
+    if ((state.realmIndex || 0) >= OVERSEER_REALM) return null;
     const home = realmWorld();
     if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive()) return null;
     const entry = worldEntry(home);
@@ -1709,10 +1711,11 @@ function renderAppearancePanel() {
     const slots = GEAR_SLOT_IDS.map(slot => {
         const it = equippedInSlot(slot);
         const color = it ? GEAR_QUALITIES[it.quality || 0].color : '#667';
-        const stale = it && (it.reqRealm || 0) < state.realmIndex;
-        return `<div class="gear-slot" style="border-color:${color}" data-slot="${slot}">
+        const stale = it && Math.max(it.reqRealm || 0, gearSeriesRealm(it)) < state.realmIndex;
+        const tier = it ? gearGateTier(it) : null;
+        return `<div class="gear-slot ${tier ? `gear-motif gear-motif-${tier.motif}` : ''}" style="border-color:${color}${tier ? `;--motif:${tier.color}` : ''}" data-slot="${slot}">
             <span>${GEAR_SLOTS[slot].icon}</span>
-            <div><div class="small">${GEAR_SLOTS[slot].label}${stale ? ' · lỗi thời' : ''}</div><b style="color:${color}">${it ? it.name.replace(` ${GEAR_SLOTS[slot].label}`, '') : '—'}</b></div>
+            <div><div class="small">${GEAR_SLOTS[slot].label}${tier ? ` · ${tier.icon} ${tier.label}` : ''}${stale ? ' · lỗi thời' : ''}</div><b style="color:${color}">${it ? it.name.replace(` ${GEAR_SLOTS[slot].label}`, '') : '—'}</b></div>
         </div>`;
     }).join('');
     const path = DAO_PATHS[state.daoPath];

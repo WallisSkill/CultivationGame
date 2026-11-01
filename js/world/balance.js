@@ -38,7 +38,9 @@ const WORLD_TIERS = [
 
 /* Cõi do người chơi tự sáng tạo sau viên mãn Hỗn Độn: không người, không quái, chỉ đi nói chuyện với bên dưới */
 const EMPTY_WORLDS = ['hongmong', 'chungnguyen'];
-const OVERSEER_REALM = 30;
+const OVERSEER_REALM = 29;
+/* Hỗn Độn Hải chỉ có Đạo Giả, không có quái để săn */
+const NO_MONSTER_WORLDS = ['hondon', ...EMPTY_WORLDS];
 
 function worldTierOfRealm(realm) {
     return WORLD_TIERS.find(w => realm >= w.from && realm <= w.to) || WORLD_TIERS[WORLD_TIERS.length - 1];
@@ -383,12 +385,12 @@ const THIEN_REALM = 22;
 const SAINT_SHOP_QUALITIES = [2, 1, 0];
 const GATE_QUEST_QUALITY = 2;
 const GATE_TIERS = [
-    { realm: 9, flag: 'tienGear', label: 'Tiên', title: 'Mặc đủ đồ cấp Tiên', shop: 'phi_thang' },
-    { realm: SAINT_REALM, flag: 'saintGear', label: 'Thánh', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh', shop: 'da_bao', exclusive: true },
-    { realm: THIEN_REALM, flag: 'thienGear', label: 'Thiên', title: 'Mặc đủ đồ cấp Thiên', shop: 'thanh_thi', exclusive: true },
-    { realm: 29, flag: 'hondonGear', label: 'Hỗn Độn', title: 'Mặc đủ đồ cấp Hỗn Độn', shop: 'vo_cuong' },
-    { realm: 30, flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' },
-    { realm: 31, flag: 'chungnguyenGear', label: 'Chung Nguyên', title: 'Mặc đủ đồ cấp Chung Nguyên', shop: 'co_thu' }
+    { realm: 9, motif: 'tien', icon: '☁️', color: '#7fd4ff', flag: 'tienGear', label: 'Tiên', title: 'Mặc đủ đồ cấp Tiên', shop: 'phi_thang' },
+    { realm: SAINT_REALM, motif: 'thanh', icon: '🪷', color: '#ff9d4d', flag: 'saintGear', label: 'Thánh', title: 'Thu đủ Hồng Mông Tử Khí: mặc đủ đồ cấp Thánh', shop: 'da_bao', exclusive: true },
+    { realm: THIEN_REALM, motif: 'thien', icon: '✴️', color: '#d9b8ff', flag: 'thienGear', label: 'Thiên', title: 'Mặc đủ đồ cấp Thiên', shop: 'thanh_thi', exclusive: true },
+    { realm: 29, motif: 'hondon', icon: '🌀', color: '#5fe6e6', flag: 'hondonGear', label: 'Hỗn Độn', title: 'Mặc đủ đồ cấp Hỗn Độn', shop: 'vo_cuong' },
+    { realm: 30, motif: 'hongmong', icon: '🌸', color: '#ffb3e6', flag: 'hongmongGear', label: 'Hồng Mông', title: 'Mặc đủ đồ cấp Hồng Mông', shop: 'dao_gia_am' },
+    { realm: 31, motif: 'chungnguyen', icon: '⚪', color: '#f5f5f5', flag: 'chungnguyenGear', label: 'Chung Nguyên', title: 'Mặc đủ đồ cấp Chung Nguyên', shop: 'co_thu' }
 ];
 
 function gateTierOf(realm) {
@@ -399,6 +401,12 @@ function gateTierOf(realm) {
 function gearSeriesRealm(item) {
     const name = String(item.name || '').replace(/^[⚡✨]\s*/u, '');
     return GEAR_SERIES.findIndex(series => name.startsWith(`${series} `));
+}
+
+/* Bậc mốc cao nhất mà món đồ đạt tới, dùng để vẽ họa tiết riêng */
+function gearGateTier(item) {
+    const realm = gearSeriesRealm(item);
+    return GATE_TIERS.filter(t => t.realm <= realm).pop() || null;
 }
 
 function makeGateGear(tier, slot, quality) {

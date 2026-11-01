@@ -30,6 +30,9 @@ function hashText(text) {
 function npcTianjiao(locId) {
     const loc = LOCATIONS[locId];
     const seed = hashText(locId);
+    if (loc.world === 'hondon') {
+        return HONDON_DAO_GIA.map((key, i) => ({ id: `npc_${key}`, name: NPCS[key].name, score: TIANJIAO_BASE_SCORE * renownPoints(loc.maxR) * (HONDON_DAO_GIA.length - i) }));
+    }
     return [3, 2, 1].map((weight, i) => ({
         id: `npc_${locId}_${i}`,
         name: TIANJIAO_NAMES[(seed + i * 7) % TIANJIAO_NAMES.length],
@@ -130,7 +133,9 @@ function openTianjiaoBoard() {
     const needed = npcTianjiao(locId)[2].score;
     const hint = rank >= 1 && rank <= 3
         ? `<div class="small"><b>Ưu đãi hạng ${rank} tại đây:</b></div>${perks}`
-        : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
+        : worldOf(locId).id === 'hondon'
+            ? '<div class="small">Hỗn Độn Hải không có quái để săn, bảng này chỉ có tám Đạo Giả.</div>'
+            : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
     const world = worldOf(locId);
     const board = thienHaBoard(world.id);
     const worldRows = board.slice(0, THIEN_HA_SHOWN).map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">

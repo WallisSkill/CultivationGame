@@ -136,13 +136,13 @@ const REGION_QUESTS = [
     },
     {
         loc: 'dao_gia_am', npc: 'vong_ky', title: 'Khôi Lỗi Trước Am', needs: [29, 0],
-        intro: [['vong_ky', 'Am không có gì để bán, chỉ có đồ người ta bỏ quên. Muốn lấy thì đánh thắng khôi lỗi ngoài sân.']],
-        steps: [{ hunt: { loc: 'dao_gia_am', name: 'Đạo Giả Thí Luyện Khôi', n: 6 }, say: [['vong_ky', 'Cứ lấy. Đừng hỏi của ai.']] }]
+        intro: [['vong_ky', 'Am không có gì để bán, chỉ có đồ người ta bỏ quên. Muốn lấy thì tự lục, tìm được gì là của ngươi.']],
+        steps: [{ gather: { loc: 'dao_gia_am', hours: 2, label: 'Lục đồ bỏ quên' }, say: [['vong_ky', 'Cứ lấy. Đừng hỏi của ai.']] }]
     },
     {
         loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Đốt Hài Ma Thần', needs: [29, 0],
-        intro: [['mo_nhan', 'Thần lò ở đây đốt bằng hài cốt Ma Thần. Mang về đủ, ta nhóm cho một mẻ.']],
-        steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 6 }, say: [['mo_nhan', 'Đủ cháy một kỷ nguyên. Lò này từ nay có tên ngươi.']] }]
+        intro: [['mo_nhan', 'Thần lò ở đây đốt bằng hài cốt Ma Thần. Nhặt về đủ, ta nhóm cho một mẻ.']],
+        steps: [{ gather: { loc: 'ma_than_mo', hours: 2, label: 'Nhặt hài cốt Ma Thần' }, say: [['mo_nhan', 'Đủ cháy một kỷ nguyên. Lò này từ nay có tên ngươi.']] }]
     }
 ].map(q => ({ ...q, id: `open_${q.loc}`, reward: { hours: 1, goldRefs: 5, opens: q.loc } }));
 
@@ -321,9 +321,9 @@ const GATE_QUEST_SETS = {
         { loc: 'than_dinh', npc: 'narr', title: 'Dấu Ấn Đạo Vệ', hunt: 'Đạo Vệ', slots: ['boots', 'amulet'], intro: 'Đạo Vệ đeo dấu ấn đi lại qua bờ Hỗn Độn. Lấy đủ thì ngươi cũng đi được.', done: 'Đủ sáu món cấp Hỗn Độn. Bờ bên kia không còn là chỗ chết nữa.' }
     ],
     30: [
-        { loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Long Cốt Hỗn Độn', hunt: 'Hỗn Độn Cự Long', slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
-        { loc: 'vo_chung_lau', npc: 'narr', title: 'Tầng Không Có Số', hunt: 'Lâu Chủ Tàn Ảnh', slots: ['weapon', 'ring'], intro: 'Tàn ảnh Lâu Chủ giữ thứ binh khí chưa từng được rèn. Hạ đủ bóng của lão, nó sẽ rơi ra.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
-        { loc: 'hai_tam', npc: 'narr', title: 'Hơi Thở Hải Tâm', hunt: 'Hải Tâm Ma Thần', slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ma Thần ở đây đã nuốt no, phải rạch ra mới lấy được.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
+        { loc: 'ma_than_mo', npc: 'mo_nhan', title: 'Long Cốt Hỗn Độn', gather: { loc: 'ma_than_mo', hours: GATE_QUEST_GATHER_HOURS, label: 'Nhặt long cốt' }, slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
+        { loc: 'vo_chung_lau', npc: 'narr', title: 'Tầng Không Có Số', gather: { loc: 'vo_chung_lau', hours: GATE_QUEST_GATHER_HOURS, label: 'Leo tầng không có số' }, slots: ['weapon', 'ring'], intro: 'Tháp này cất thứ binh khí chưa từng được rèn. Leo đủ lâu, nó sẽ tự rơi vào tay ngươi.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
+        { loc: 'hai_tam', npc: 'narr', title: 'Hơi Thở Hải Tâm', gather: { loc: 'hai_tam', hours: GATE_QUEST_GATHER_HOURS, label: 'Ngồi giữa mắt bão' }, slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ngồi giữa bão đủ lâu mà không tan thì hơi ấy đọng lại thành đồ.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
     ],
     31: [
         { loc: 'dao_gia_am', npc: 'vong_ky', title: 'Dệt Áo Bằng Tử Khí', gather: { loc: 'tu_khi', hours: GATE_QUEST_GATHER_HOURS, label: 'Thu Hồng Mông Tử Khí' }, slots: ['armor', 'helm'], intro: 'Cõi của ngươi không có ai để chém, nên phải tự làm lấy. Về Thiên Nguyên thu Tử Khí mà dệt áo, bước tới Trường Hà không có áo là tan.', done: 'Ngươi vừa mặc vào thứ đã tạo ra Đạo. Đừng giặt.' },
@@ -369,17 +369,24 @@ function npcLookFromSeed(seed) {
     return NPC_LOOK(seed % 2 ? 'm' : 'f', seed % 6, RESIDENT_COLORS[seed % 3], RESIDENT_COLORS[seed % RESIDENT_COLORS.length]);
 }
 
+/* Hỗn Độn Hải chỉ có tám Đạo Giả nên người ở mỗi nơi đều là một trong tám vị đó */
+const HONDON_DAO_GIA = ['hd_vo_thuc', 'hd_thu_cuu', 'am_duong', 'tich_diet', 'thich_thien', 'vo_luong', 'vo_danh', 'vong_ky'];
+
 const LOCATION_NPCS = {};
 Object.values(LOCATIONS).forEach(loc => {
     const seed = NPC_SEED(loc.id);
-    NPCS[residentKey(loc.id)] = {
+    const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];
+    const storySpeakers = MAIN_QUESTS.flatMap(q => q.steps).filter(step => step.go === loc.id).map(speakerOfStep);
+    const freeDaoGia = loc.world === 'hondon'
+        ? HONDON_DAO_GIA.map((_, i) => HONDON_DAO_GIA[(seed + i) % HONDON_DAO_GIA.length]).filter(key => !named.includes(key) && !storySpeakers.includes(key)).map(key => NPCS[key])
+        : [];
+    NPCS[residentKey(loc.id)] = freeDaoGia[0] || {
         name: `${RESIDENT_SURNAMES[seed % RESIDENT_SURNAMES.length]} ${RESIDENT_GIVEN[(seed >>> 4) % RESIDENT_GIVEN.length]}`,
         title: RESIDENT_ROLES[loc.type] || 'Người qua đường', look: npcLookFromSeed(seed)
     };
-    const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];
     if ((loc.services || []).includes('forge') && !named.some(key => /thợ/i.test(NPCS[key].title || ''))) {
         const key = `ren_${loc.id}`;
-        NPCS[key] = { name: SMITH_NAMES[seed % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
+        NPCS[key] = { name: freeDaoGia[1]?.name || SMITH_NAMES[seed % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
         named.push(key);
     }
     LOCATION_NPCS[loc.id] = EMPTY_WORLDS.includes(loc.world) ? [] : [...named, residentKey(loc.id)];

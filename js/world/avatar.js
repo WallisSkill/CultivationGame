@@ -172,6 +172,23 @@ function ribbonLayer(color) {
         <path d="M74 62 Q106 72 104 104 Q103 126 116 146" stroke="${color}" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/>`;
 }
 
+/* Họa tiết thêu trên áo theo bậc mốc: ngực để còn thấy ở khung chân dung, tà áo để thấy khi đứng cả người */
+const ROBE_MOTIFS = {
+    tien: 'M-5 2 q-1 -3 2 -3 q1 -3 4 -2 q3 -1 3 2 q2 1 1 3 Z',
+    thanh: 'M0 4 Q-4 0 0 -5 Q4 0 0 4 M0 4 Q-6 3 -6 -2 Q-3 -1 0 4 M0 4 Q6 3 6 -2 Q3 -1 0 4',
+    thien: 'M0 -6 L1.6 -1.6 L6 0 L1.6 1.6 L0 6 L-1.6 1.6 L-6 0 L-1.6 -1.6 Z',
+    hondon: 'M0 0 q2 -2 3 1 q-1 4 -5 2 q-4 -3 -1 -7 q5 -3 8 2',
+    hongmong: 'M0 0 Q-3 -6 0 -6 Q3 -6 0 0 M0 0 Q6 -3 6 0 Q6 3 0 0 M0 0 Q3 6 0 6 Q-3 6 0 0 M0 0 Q-6 3 -6 0 Q-6 -3 0 0',
+    chungnguyen: 'M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0'
+};
+const ROBE_MOTIF_SPOTS = [[46, 64, 0.8], [74, 64, 0.8], [43, 116, 1.3], [77, 116, 1.3], [38, 136, 1], [82, 136, 1]];
+
+function robeMotifLayer(motif, color) {
+    const shape = ROBE_MOTIFS[motif];
+    if (!shape) return '';
+    return ROBE_MOTIF_SPOTS.map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="${shape}" fill="${color}" fill-opacity=".28" stroke="${color}" stroke-width=".7"/>`).join('');
+}
+
 function robeDefs(l, id) {
     const robe = l.robe;
     return `<defs>
@@ -213,6 +230,7 @@ function humanoidSvg(look, opts = {}) {
             <path d="M67.6 44.6 L64.6 43.6 L56 62 L58.4 64.4 Z" fill="${shadeColor(trim, -0.18)}" stroke="${INK}" stroke-width=".4"/>
             <path d="M${60 - waist - 1} 75.4 Q60 79 ${60 + waist + 1} 75.4 L${60 + waist + 1.4} 81.6 Q60 85 ${60 - waist - 1.4} 81.6 Z" fill="${sash}" ${inkLine}/>
             <path d="M57 83 Q55 96 56.4 108 M59.4 83.4 Q60 98 58.8 112" stroke="${sash}" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            ${robeMotifLayer(l.motif, trim)}
             <circle cx="63.6" cy="92" r="2.1" fill="#bff2d2" stroke="${INK}" stroke-width=".4"/><path d="M63.6 84 L63.6 90 M63.6 94 L63.6 101" stroke="#a33" stroke-width=".7"/>
             <path d="M${L + 1} 47 Q${L - 9} 62 ${L - 12} 96 Q${L - 17} 120 ${L - 11} 131 Q${L - 2} 137 ${L + 7} 121 Q${L + 8} 100 ${L + 7} 68 Z" fill="url(#${id}-sleeve)" ${inkLine}/>
             <path d="M${L - 11} 131 Q${L - 2} 137 ${L + 7} 121" stroke="${trim}" stroke-width="1.9" fill="none"/>
@@ -299,7 +317,9 @@ function playerLook() {
     const fabric = item => shadeColor(GEAR_QUALITIES[item.quality || 0].color, GEAR_FABRIC_SHADE);
     if (armor) {
         look.robe = fabric(armor);
-        look.trim = WORLD_TRIMS[worldTierOfRealm(armor.reqRealm || 0).id];
+        const tier = gearGateTier(armor);
+        look.trim = tier?.color || WORLD_TRIMS[worldTierOfRealm(Math.max(armor.reqRealm || 0, gearSeriesRealm(armor))).id];
+        look.motif = tier?.motif;
     }
     if (boots) look.boots = fabric(boots);
     if (amulet) look.sash = fabric(amulet);

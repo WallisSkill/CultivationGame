@@ -162,5 +162,5 @@ const OPENED_ENEMY_MAX = 20;
 const OPENED_REALM = 21;
 Object.values(LOCATIONS).forEach(loc => {
     if (loc.world === 'thanh') loc.enemyMax = loc.minR >= OPENED_REALM ? OPENED_ENEMY_MAX : SAINT_ENEMY_MAX;
-    if (EMPTY_WORLDS.includes(loc.world)) loc.enemies = [];
+    if (NO_MONSTER_WORLDS.includes(loc.world)) loc.enemies = [];
 });

@@ -1522,7 +1522,7 @@ function renderInventory() {
         if (item.type === 'xp') desc = `(${item.minutes || XP_ITEM_MINUTES} phút bế quan)`;
         else if (item.type === 'power') desc = `(+${item.value} Sức mạnh)`;
         else if (item.type === 'life') desc = `(+${item.value} Thọ nguyên)`;
-        else if (item.type === 'weapon' || item.type === 'armor') desc = `${GEAR_SLOTS[item.slot]?.icon || ''} (${gearStatText(item)})`;
+        else if (item.type === 'weapon' || item.type === 'armor') desc = `${GEAR_SLOTS[item.slot]?.icon || ''}${gearGateTier(item)?.icon || ''} (${gearStatText(item)})`;
         else if (item.type === 'defense') desc = `(maxDEF +${item.value})`;
         else if (item.type === 'relic') desc = `💠 Linh Bảo — ${item.effect} (${item.uses} lần)`;
         else if (item.type === 'consumable') desc = `(Hồi ${Math.round((item.healPct || 0) * 100)}% HP)`;

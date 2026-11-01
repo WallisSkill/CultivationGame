@@ -117,6 +117,10 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     if (G.LB_GRADE_UNLOCK_REALM[grade] !== realm) fail.push(`pháp giai ${grade} phải mở ở cảnh giới ${realm}`);
 });
 
+Object.values(G.LOCATIONS).filter(l => l.world === 'hondon').forEach(l => {
+    if (l.enemies.length) fail.push(`${l.name}: Hỗn Độn Hải không được có quái`);
+});
+
 G.GATE_TIERS.forEach(tier => {
     const shop = G.LOCATIONS[tier.shop];
     if (!shop.services.includes('shop') || shop.minR > tier.realm - 1) fail.push(`mốc ${tier.realm}: ${shop.name} không bán được đồ mốc`);
