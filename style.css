@@ -1547,7 +1547,7 @@ header { justify-content: flex-start; min-width: 0; }
 header h1 { font-size: 1.15rem; white-space: nowrap; }
 header .controls { margin: 0 0 0 auto; display: flex; flex: none; }
 header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem; }
-.topline { flex-wrap: nowrap; gap: 6px; margin: 0; overflow-x: auto; scrollbar-width: none; }
+.topline { flex-wrap: wrap; gap: 6px; margin: 0; }
 .topline .stat { flex: 1 0 auto; min-width: 104px; padding: 4px 8px; font-size: 0.82rem; line-height: 1.25; background: rgba(9, 15, 25, 0.82); }
 .activity-bar { margin: 0; padding: 3px 10px; font-size: 0.85rem; background: rgba(9, 15, 25, 0.82); }
 .activity-bar:empty { display: none; }
@@ -1649,3 +1649,10 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 @media (max-width: 900px) {
     .side { display: contents; }
 }
+
+#xpPrediction { max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guide-section { margin-bottom: 8px; }
+.guide-section summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.guide-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 0.88rem; }
+.fusion-picks { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; max-height: 40vh; overflow: auto; }
+@media (max-width: 600px) { .guide-row { grid-template-columns: 1fr; gap: 2px; } }

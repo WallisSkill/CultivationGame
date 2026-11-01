@@ -101,7 +101,6 @@ function upgradeAllLinhBaoToRealmTier() {
 
             totalCost += upgradeCost;
             it.grade = currentGrade + 1;
-            it.level = 1; // Reset to level 1 when upgrading grade
             upgraded++;
         }
     });

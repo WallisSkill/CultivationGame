@@ -277,10 +277,10 @@ function expectedLinhBaoScale(realm) {
 
 /* --------- kẻ địch --------- */
 const ENEMY_TIERS = {
-    'Thường': { atk: 0.80, hp: 0.80, def: 0.80, xpMinutes: 8, goldMult: 1, matChance: 0.5, gearChance: 0.04 },
-    'Tinh anh': { atk: 0.90, hp: 1.10, def: 0.90, xpMinutes: 20, goldMult: 3, matChance: 1, gearChance: 0.15 },
-    'Thống lĩnh': { atk: 1.00, hp: 1.30, def: 1.00, xpMinutes: 45, goldMult: 8, matChance: 1, gearChance: 0.4 },
-    'Boss': { atk: 0.95, hp: 1.40, def: 1.00, xpMinutes: 180, goldMult: 25, matChance: 1, gearChance: 1 }
+    'Thường': { atk: 1.00, hp: 1.00, def: 1.00, xpMinutes: 8, goldMult: 1, matChance: 0.5, gearChance: 0.04 },
+    'Tinh anh': { atk: 1.10, hp: 1.30, def: 1.05, xpMinutes: 20, goldMult: 3, matChance: 1, gearChance: 0.15 },
+    'Thống lĩnh': { atk: 1.20, hp: 1.50, def: 1.10, xpMinutes: 45, goldMult: 8, matChance: 1, gearChance: 0.4 },
+    'Boss': { atk: 1.05, hp: 1.50, def: 1.05, xpMinutes: 180, goldMult: 25, matChance: 1, gearChance: 1 }
 };
 
 function enemyStatsFor(realm, stage, tierName = 'Thường', scale = 1) {

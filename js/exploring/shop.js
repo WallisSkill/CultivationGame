@@ -482,71 +482,76 @@ function countLinhBaoForFusion(grade) {
     }).length;
 }
 
+/* Vật liệu hợp nhất do người chơi chọn; pháp bảo đang trên trận không bao giờ là vật liệu */
+function fusionMaterials(target) {
+    const g = lbGradeOf(target);
+    return state.inventory.filter(item => item && item.type === 'linhbao' && item !== target && lbGradeOf(item) === g
+        && !state.board.includes(item.uid) && canLinhBaoFuse(state.inventory.indexOf(item)))
+        .sort((x, y) => lbLevelOf(x) - lbLevelOf(y));
+}
+
+let _fusionPick = null;
+
 function fuseLinhBao(inventoryIndex) {
     if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất.'); return; }
     const it = state.inventory[inventoryIndex];
     if (!it || it.type !== 'linhbao') return;
+    if (!canLinhBaoFuse(inventoryIndex)) { log(`🔒 ${it.name} không thể hợp nhất!`); return; }
+    _fusionPick = { uid: it.uid, picked: [] };
+    renderFusionPick();
+}
 
-    const maxG = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
-    const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
+function renderFusionPick() {
+    const target = state.inventory.find(item => item && item.uid === _fusionPick.uid);
+    if (!target) return;
+    const g = lbGradeOf(target);
+    const need = LB_LINHBAO_FUSION_MATERIALS[g] || 2;
+    const gold = LB_LINHBAO_FUSION_GOLD[g] || 100;
+    const list = fusionMaterials(target);
+    const rows = list.map(item => {
+        const on = _fusionPick.picked.includes(item.uid);
+        return `<button class="look-chip ${on ? 'active' : ''}" onclick="toggleFusionMaterial('${item.uid}')">${item.name} Lv.${lbLevelOf(item)}</button>`;
+    }).join('') || '<div class="small">Không có pháp bảo cùng giai ngoài trận.</div>';
+    const ready = _fusionPick.picked.length === need && state.gold >= gold;
+    openWorldModal('fusionModal', `🔥 Hợp nhất ${target.name}`, `<div class="small">Thăng lên ${LB_GRADE_NAMES[g + 1]}, giữ nguyên Lv.${lbLevelOf(target)}. Pháp bảo đang trên trận không bị lấy làm vật liệu.</div>
+        <div>Đã chọn <b>${_fusionPick.picked.length}/${need}</b> · ${gold.toLocaleString()} linh thạch</div>
+        <div class="fusion-picks">${rows}</div>
+        <button class="mini-btn" onclick="autoPickFusion()">Chọn cấp thấp nhất</button>
+        <button class="mini-btn" ${ready ? '' : 'disabled'} onclick="confirmFusion()">🔥 Hợp nhất</button>`);
+}
 
-    if (g >= maxG) {
-        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
-        log(`🔒 ${it.name} đã đạt ${gName} (tối đa), không thể thăng giai thêm!`);
-        return;
-    }
+function toggleFusionMaterial(uid) {
+    const target = state.inventory.find(item => item && item.uid === _fusionPick.uid);
+    const need = LB_LINHBAO_FUSION_MATERIALS[lbGradeOf(target)] || 2;
+    const picked = _fusionPick.picked;
+    if (picked.includes(uid)) _fusionPick.picked = picked.filter(x => x !== uid);
+    else if (picked.length < need) picked.push(uid);
+    renderFusionPick();
+}
 
-    // Check if item can be fused
-    if (!canLinhBaoFuse(inventoryIndex)) {
-        log(`🔒 ${it.name} không thể hợp nhất!`);
-        return;
-    }
+function autoPickFusion() {
+    const target = state.inventory.find(item => item && item.uid === _fusionPick.uid);
+    const need = LB_LINHBAO_FUSION_MATERIALS[lbGradeOf(target)] || 2;
+    _fusionPick.picked = fusionMaterials(target).slice(0, need).map(item => item.uid);
+    renderFusionPick();
+}
 
+function confirmFusion() {
+    if (window._battleActive) { log('🔒 Đang giao chiến — không thể hợp nhất.'); return; }
+    const it = state.inventory.find(item => item && item.uid === _fusionPick.uid);
+    if (!it) return;
+    const maxG = LB_MAX_GRADE;
+    const g = lbGradeOf(it);
     const materialCost = LB_LINHBAO_FUSION_MATERIALS[g] || 2;
     const goldCost = LB_LINHBAO_FUSION_GOLD[g] || 100;
+    const allowed = fusionMaterials(it).map(item => item.uid);
+    const picked = _fusionPick.picked.filter(uid => allowed.includes(uid));
+    if (picked.length !== materialCost) { log(`⚠️ Cần chọn đủ ${materialCost} vật liệu ngoài trận.`); return; }
+    if (state.gold < goldCost) { log(`⚠️ Cần ${goldCost.toLocaleString()} linh thạch để hợp nhất! Hiện có: ${state.gold.toLocaleString()}`); return; }
 
-    // Check if we have enough materials (same grade Linh Bảo)
-    const available = countLinhBaoForFusion(g);
-    if (available < materialCost) {
-        log(`⚠️ Cần ${materialCost} Trận Pháp Bảo ${LB_GRADE_NAMES ? LB_GRADE_NAMES[g] : 'Giai ' + g} để hợp nhất! Hiện có: ${available}`);
-        return;
-    }
-
-    // Check gold cost
-    if (state.gold < goldCost) {
-        log(`⚠️ Cần ${goldCost.toLocaleString()} linh thạch để hợp nhất! Hiện có: ${state.gold.toLocaleString()}`);
-        return;
-    }
-
-    // Find material Linh Bảo items to consume (excluding the one we're upgrading)
-    const toRemove = [];
-    for (let i = 0; i < state.inventory.length && toRemove.length < materialCost; i++) {
-        const item = state.inventory[i];
-        if (!item || item.type !== 'linhbao') continue;
-        if (i === inventoryIndex) continue; // Don't include the target item
-        const ig = (typeof lbGradeOf === 'function') ? lbGradeOf(item) : (item.grade || 0);
-        if (ig !== g) continue; // Must be same grade
-        if (!canLinhBaoFuse(i)) continue; // Must be fusible
-        toRemove.push(i);
-    }
-
-    if (toRemove.length < materialCost) {
-        log(`⚠️ Không đủ Trận Pháp Bảo cùng giai đoạn để hợp nhất!`);
-        return;
-    }
-
-    // Deduct gold
     state.gold -= goldCost;
-
-    // Remove material items (highest index first to avoid shifting issues)
-    toRemove.sort((a, b) => b - a);
-    for (const idx of toRemove) {
-        state.inventory.splice(idx, 1);
-    }
-
-    // Upgrade the target item
+    state.inventory = state.inventory.filter(item => !item || !picked.includes(item.uid));
     it.grade = g + 1;
-    it.level = 1;
     it.fusionLocked = true; // Lock from further fusion (can only ascend once)
 
     const gradeTitle = it.grade >= 6 ? '🔱' : (it.grade >= 3 ? '⭐' : '✨');
@@ -563,9 +568,10 @@ function fuseLinhBao(inventoryIndex) {
 
     if (it.grade >= maxG) log(`🏆 ${it.name} đã đạt cảnh giới tối cao tuyệt đối!`);
 
+    document.getElementById('fusionModal').style.display = 'none';
     renderAll();
 }
-if (typeof window !== 'undefined') window.fuseLinhBao = fuseLinhBao;
+if (typeof window !== 'undefined') Object.assign(window, { fuseLinhBao, toggleFusionMaterial, autoPickFusion, confirmFusion });
 
 // Guard useItem during battle
 if (typeof window.useItem === 'function') {

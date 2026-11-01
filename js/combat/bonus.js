@@ -97,11 +97,11 @@ function calcRealmBonusFull(attackerRealmIndex, attackerRealmStage, defenderReal
     if (mainDiff > 0) {
         mult *= (1 + mainDiff * 0.35);     // mỗi cảnh cao hơn +35%
     } else if (mainDiff < 0) {
-        mult *= Math.max(0.25, 1 + mainDiff * 0.25); // thấp cảnh giảm nhưng không tụt quá 0.25x
+        mult *= Math.max(0.2, 1 + mainDiff * 0.35); // thấp cảnh giảm nhưng không tụt quá 0.2x
     }
 
     // Tiểu cảnh tác động nhẹ
-    if (stageDiff !== 0) {
+    if (mainDiff === 0 && stageDiff !== 0) {
         mult *= (1 + stageDiff * 0.15);
     }
 
