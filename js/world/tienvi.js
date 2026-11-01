@@ -15,6 +15,7 @@ const TIEN_VI = [
 const COURT_MERIT_BASE = 10;
 const COURT_MAX_ORDERS = 5;
 const COURT_OFFERS = 6;
+const COURT_ANYWHERE_REALM = 13;
 /* Độ khó theo mức nguy hiểm của nơi trong Giới của nó; nơi có boss cốt truyện lấy cảnh giới boss */
 const COURT_GRADES = [
     { name: 'Thường', upTo: 0.33, mult: 1, kills: 6 },
@@ -30,6 +31,7 @@ const COURT_RIVAL_MIN = 0.4;
 const COURT_RIVAL_SPREAD = 0.8;
 
 function courtOpenHere() {
+    if (tienViRegistered() && state.realmIndex >= COURT_ANYWHERE_REALM) return true;
     return currentLocation().world !== 'pham' && hasService('board');
 }
 

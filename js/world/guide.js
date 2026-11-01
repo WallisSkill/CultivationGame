@@ -52,7 +52,7 @@ const GUIDE_SECTIONS = [
             ['Chợ Đen', 'Hàng đổi mỗi giờ thật, mỗi món mua được một lần. Đấu giá: ra giá xong đối thủ sẽ trả cao hơn tới khi vượt hạn mức của họ, thắng mới mất tiền.'],
             ['Thiên Kiêu Bảng', 'Xếp hạng theo từng nơi, điểm có từ việc diệt quái ở nơi đó.'],
             ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.'],
-            ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Nơi càng nguy hiểm thì lệnh càng khó và công lao càng cao; nơi có Tiên Đế là Tử Lệnh, khó nhất.']
+            ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Nơi càng nguy hiểm thì lệnh càng khó và công lao càng cao; nơi có Tiên Đế là Tử Lệnh, khó nhất. Từ Huyền Tiên, ở đâu cũng mở được Thiên Đình Điện để nhận lệnh của Giới đang đứng.']
         ]
     }
 ];
