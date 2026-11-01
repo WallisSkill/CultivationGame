@@ -302,8 +302,8 @@ const INTEL_QUESTS = WORLD_TIERS.flatMap(tier => {
     const source = sites.reduce((best, l) => l.minR < best.minR ? l : best);
     const forges = sites.filter(l => (l.services || []).includes('forge')).sort((a, b) => (a.forgeGrade || 0) - (b.forgeGrade || 0));
     const chain = [
-        ...forges.map(l => ({ loc: l, label: forgeGradeOf(l).name, hours: INTEL_FORGE_HOURS[l.forgeGrade || 0] })),
-        ...sites.filter(l => l.blackMarket).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS }))
+        ...forges.map(l => ({ loc: l, label: forgeGradeOf(l).name + (l.blackMarket ? ' và Chợ Đen' : ''), hours: INTEL_FORGE_HOURS[l.forgeGrade || 0] })),
+        ...sites.filter(l => l.blackMarket && !forges.includes(l)).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS }))
     ];
     return chain.map((entry, i) => intelQuest(tier, source, entry.loc, entry.label, entry.hours, i ? `intel_${chain[i - 1].loc.id}` : null));
 });
