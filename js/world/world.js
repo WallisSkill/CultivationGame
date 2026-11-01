@@ -1324,7 +1324,7 @@ function completeStep(rt) {
         advanceMainQuest();
     } else {
         const next = q.steps[rt.step];
-        if (next.go === state.location || (BOSSES[next.boss]?.huVoPiece && !huVoPiece(next.boss))) completeStep(rt);
+        if (next.go === state.location || huVoStepEmpty(next.boss)) completeStep(rt);
     }
     renderAll();
 }
@@ -1426,7 +1426,7 @@ function questAction(id) {
     if (step.boss) {
         if (!requireFree()) return;
         const boss = BOSSES[step.boss];
-        if (boss.huVoPiece && !huVoPiece(step.boss)) return completeStep(rt);
+        if (huVoStepEmpty(step.boss)) return completeStep(rt);
         const start = () => spawnBoss(step.boss, QUEST_INDEX[id]);
         if (boss.scriptedLoss) start();
         else coopGate(`Khiêu chiến ${bossName(step.boss)}`, start);
@@ -1439,6 +1439,12 @@ function huVoPiece(id) {
     if (kind === 'gear') return GEAR_SLOT_IDS.map(equippedInSlot).find(it => it && !it.huVo) || null;
     if (kind === 'lb') return boardItems().find(it => it && it.linhBaoId !== HU_VO_LB) || null;
     return null;
+}
+
+/* Bước không còn gì để đánh: hết món tách ra, hoặc ngôi đang trống */
+function huVoStepEmpty(id) {
+    const b = BOSSES[id];
+    return !!b && ((b.huVoPiece && !huVoPiece(id)) || (b.huVoHolder && !huVoHolder()));
 }
 
 function huVoLinhBao() {
@@ -1552,7 +1558,8 @@ function takeHuVoName() {
 
 function bossName(id) {
     const b = BOSSES[id];
-    if (b.huVoFinal) return huVoHolder()?.name || state.huVoName || state.name;
+    if (b.huVoSelf) return state.huVoName || state.name;
+    if (b.huVoHolder) return huVoHolder()?.name || b.name;
     const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
     return huVoPiece(id)?.name || npc?.name || b.name;
 }
@@ -1567,7 +1574,7 @@ function spawnBoss(id, quest) {
         stage = Math.min(stage, quest.needs[1]);
     }
     const enemy = buildEnemy({
-        name: bossName(id), kind: b.kind, look: b.huVoFinal ? playerLook() : npc?.look || null, tier: 'Boss', scale: b.scale || 1,
+        name: bossName(id), kind: b.kind, look: b.huVoSelf ? playerLook() : npc?.look || null, tier: 'Boss', scale: b.scale || 1,
         boardSize: b.board || 4, realmIndex: realm, realmStage: stage, elements: b.elements, path: b.path,
         rootRank: rollEnemyRootRank(realm, 1)
     });
@@ -1575,8 +1582,8 @@ function spawnBoss(id, quest) {
     enemy.shownRealm = b.shownRealm;
     if (b.hpMult) enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * b.hpMult);
     if (huVoBoard(piece)) enemy.boardDefs = huVoBoard(piece);
-    if (b.huVoFinal) enemy.escorts = huVoFinalEscorts(realm, stage);
-    if (b.huVoFinal && huVoHolder()) applyHuVoHolder(enemy, huVoHolder());
+    if (b.huVoSelf) enemy.escorts = huVoFinalEscorts(realm, stage);
+    if (b.huVoHolder && huVoHolder()) applyHuVoHolder(enemy, huVoHolder());
     if (b.adds) {
         enemy.escorts = Array.from({ length: b.adds.n }, () => {
             const add = buildEnemy({ name: b.adds.name, kind: b.adds.kind, realmIndex: realm, realmStage: stage, boardSize: 1 });

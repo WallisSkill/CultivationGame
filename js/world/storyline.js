@@ -95,7 +95,8 @@ const BOSSES = {
     cs_10: { kind: 'chaos', name: 'Tất Cả Chúng Sinh', realm: 31, stage: 3, shownRealm: 29, board: 6, scale: 1.6, adds: { n: 5, name: 'Chúng Sinh' } },
     hv_gear: { kind: 'chaos', name: 'Trang Bị Tách Ra', realm: 31, stage: 3, board: 4, scale: 0.8, huVoPiece: 'gear' },
     hv_lb: { kind: 'chaos', name: 'Pháp Bảo Tách Ra', realm: 31, stage: 3, scale: 1, huVoPiece: 'lb' },
-    hu_vo: { kind: 'chaos', name: 'Hư Vô Chí Đạo', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoFinal: true },
+    hu_ten: { kind: 'chaos', name: 'Hư Vô Chí Đạo', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoSelf: true },
+    hu_vo: { kind: 'chaos', name: 'Hư Vô Chi Chủ', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoHolder: true },
 };
 
 const MAIN_QUESTS = [
@@ -489,6 +490,7 @@ const MAIN_QUESTS = [
             { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] },
             { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ thuở mười tuổi lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
             { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']] },
+            { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó đang nhìn xuống ngươi.']] },
             { boss: 'hu_vo', say: [['narr', 'Không có ai ngã xuống. Người đó chỉ mỉm cười rồi tan đi, và Hư Vô mở ra.'], ['narr', 'Từ đây không còn cảnh giới nào phía trên, không còn con đường nào phía trước. Chỉ còn ngươi, và tất cả những gì ngươi muốn làm.'], ['narr', 'Hư Vô Giới chỉ có một người. Con đường xuống đã biến mất, và ngươi không cần nó nữa.']] }
         ],
         reward: { finalRealm: true, hours: 0, goldRefs: 0 }
