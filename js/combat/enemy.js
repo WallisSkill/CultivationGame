@@ -102,14 +102,14 @@ function enemyPackMembers(enemy) {
     return [enemy, ...(enemy.escorts || [])];
 }
 
-function enemyRankText(e) {
+function unitRankText(e) {
     return `${REALMS[e.realmIndex || 0]} ${STAGES[e.realmStage || 0]}${e.tier ? ` · ${e.tier}` : ''}`;
 }
 
 function startEncounter(enemy) {
     state.currentEnemy = enemy;
     window._battleActive = true;
-    enemyPackMembers(enemy).forEach(unit => log(`⚔️ Gặp ${unit.name} — ${enemyRankText(unit)} · Linh căn: ${unit.elements.map(colorizeElement).join(' ')}`));
+    enemyPackMembers(enemy).forEach(unit => log(`⚔️ Gặp ${unit.name} — ${unitRankText(unit)} · Linh căn: ${unit.elements.map(colorizeElement).join(' ')}`));
     renderAllImmediate();
 }
 
@@ -163,6 +163,6 @@ function renderCurrentEnemy() {
         <div>Cảnh giới: ${REALMS[e.realmIndex]} <span class="badge">${stageName}</span></div>
         <div>HP ${formatNumber(Math.floor(e.hp))}/${formatNumber(Math.floor(e.maxHp))}, ATK ${formatNumber(e.str)}, DEF ${formatNumber(e.def)}</div>
         <div class="small">Linh căn: ${elementsText} (${ROOT_RANKS[e.rootRank || 0]})</div>
-        ${(e.escorts || []).map(unit => `<div><b>${unit.name}</b> — ${enemyRankText(unit)}</div>`).join('')}
+        ${(e.escorts || []).map(unit => `<div><b>${unit.name}</b> — ${unitRankText(unit)}</div>`).join('')}
     `);
 }

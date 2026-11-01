@@ -1430,7 +1430,7 @@ function lbUnitHTML(c, side, idx, team) {
             <span class="lb-side-name">${c.name} ${path}</span>
             <span class="lb-side-hp-txt" data-role="hp"></span>
         </div>
-        ${c.side === 'enemy' ? `<div class="small">${enemyRankText(c)}</div>` : ''}
+        <div class="small">${unitRankText(c)}</div>
         <div class="lb-hpbar"><div class="lb-hpfill lb-hpfill-${side}" data-role="hpfill"></div>
             <div class="lb-shieldfill" data-role="shield"></div></div>
         <div class="lb-duel">
