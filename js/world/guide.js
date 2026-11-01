@@ -13,6 +13,7 @@ const GUIDE_SECTIONS = [
             ['Phòng thủ', 'Giảm sát thương phải nhận.'],
             ['Bản thể / Trang bị', 'Tỉ lệ sức mạnh đến từ bản thân và từ đồ. Số trước là bản thể, số sau là trang bị.'],
             ['Linh căn', 'Các hệ ngũ hành và phẩm chất của ngươi. Phẩm càng cao chỉ số gốc càng lớn.'],
+            ['Căn cơ', 'Mặc định 100%. Cấm vật ở Chợ Đen làm tổn căn cơ vĩnh viễn, giảm mọi chỉ số bản thể theo đúng phần trăm đó; Bổ Căn Đan hồi lại một ít. Dưới 50% thì không dùng thêm cấm vật được.'],
             ['Tuổi thọ', 'Hết tuổi thọ là chết. Đột phá cảnh giới giúp sống lâu hơn.'],
             ['Linh thạch', 'Tiền để mua đồ, rèn đúc và mua ở Chợ Đen.'],
             ['Chi tiết chỉ số', 'Nút ở cuối hàng chỉ số, xem đầy đủ các nguồn cộng thêm.']
@@ -44,6 +45,7 @@ const GUIDE_SECTIONS = [
             ['Phi thăng', 'Đủ cảnh giới sẽ được đưa lên Giới mới. Đã lên thì không được xuống, trừ hai cách dưới đây.'],
             ['Thiên Hạ Bảng', 'Tổng điểm của ngươi ở mọi nơi trong một Giới. Đứng đầu bảng được tự do xuống Giới thấp hơn.'],
             ['Tinh Không Thạch', 'Mua ở Chợ Đen. Mỗi viên đưa xuống Giới liền dưới 30 phút giờ thật, hết giờ bị kéo về.'],
+            ['Chợ Đen', 'Hàng đổi mỗi giờ thật, mỗi món mua được một lần. Đấu giá: ra giá xong đối thủ sẽ trả cao hơn tới khi vượt hạn mức của họ, thắng mới mất tiền.'],
             ['Thiên Kiêu Bảng', 'Xếp hạng theo từng nơi, điểm có từ việc diệt quái ở nơi đó.'],
             ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.']
         ]

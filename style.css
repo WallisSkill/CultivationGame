@@ -1656,3 +1656,13 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 .guide-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 0.88rem; }
 .fusion-picks { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; max-height: 40vh; overflow: auto; }
 @media (max-width: 600px) { .guide-row { grid-template-columns: 1fr; gap: 2px; } }
+
+.lb-board-editor { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lb-board-editor .lb-tile { width: auto; min-height: 92px; padding: 5px; box-sizing: border-box; }
+.lb-board-editor .lb-tile-name { font-size: 0.8rem; line-height: 1.2; }
+.lb-board-editor .lb-tile-sub { font-size: 0.7rem; line-height: 1.25; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.lb-board-editor .lb-tile-tier { font-size: 0.68rem; }
+
+.market-head { margin-top: 10px; font-weight: 600; }
+.market-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.market-row > :last-child { flex: none; text-align: right; }

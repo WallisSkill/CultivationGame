@@ -942,14 +942,6 @@ function canUseStarStone() {
     return (state.starStones || 0) > 0 && !descentActive() && !!worldEntry(realmWorld()) && currentLocation().world === realmWorld();
 }
 
-function openBlackMarket() {
-    const stones = state.starStones || 0;
-    openWorldModal('blackMarketModal', '🕯️ Chợ Đen', `<div class="small">Tinh Không Thạch xé một khe xuống Giới dưới, giữ được ${STAR_STONE_MINUTES} phút rồi kéo người dùng trở lại.</div>
-        <div>Đang có: <b>${stones}</b> viên</div>
-        <button class="mini-btn" onclick="buyStarStone()">💠 Mua 1 viên (${formatNumber(starStonePrice())} linh thạch)</button>
-        ${canUseStarStone() ? '<button class="mini-btn" onclick="useStarStone()">🌌 Dùng ngay</button>' : ''}`);
-}
-
 function buyStarStone() {
     if (!currentLocation().blackMarket) return;
     if (state.gold < starStonePrice()) { showToast('Không đủ linh thạch.', 'warn'); return; }
@@ -1475,7 +1467,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    goToStageQuest, openBlackMarket, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    goToStageQuest, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

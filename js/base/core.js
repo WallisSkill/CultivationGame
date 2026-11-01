@@ -771,7 +771,6 @@ function renderAllImmediate() {
     renderInventory();
     renderShop();
     if (state.currentEnemy) syncEnemyToRealm(state.currentEnemy);
-    renderCurrentEnemy();
     if (typeof renderBoardArena === 'function') renderBoardArena();
     renderRootTable();
     if (typeof renderWorldPanels === 'function') renderWorldPanels();
@@ -828,9 +827,11 @@ if (typeof window !== 'undefined') window.syncEnemyToRealm = syncEnemyToRealm;
 
 function recalculateStats() {
     // Chỉ số gốc
-    const baseHp = state.maxHp;
-    const basePower = state.power;
-    const baseDef = state.defense;
+    const rootKeep = 1 - (state.flaw || 0) / 100;
+    const bloodMult = (state.bloodBuffUntil || 0) > Date.now() ? BLOOD_BUFF_MULT : 1;
+    const baseHp = Math.floor(state.maxHp * rootKeep);
+    const basePower = Math.floor(state.power * rootKeep * bloodMult);
+    const baseDef = Math.floor(state.defense * rootKeep);
 
     // Bonus từ trang bị
     const bonusHp = getEquippedHp();
@@ -921,7 +922,7 @@ function renderTopStats() {
         </div>
 
         <div class="stat"><b>Linh căn</b>
-            <div id="rootTxt">${state.root.elements.map(colorizeElement).join(' ')} (${rootRankDisplay})</div>
+            <div id="rootTxt">${state.root.elements.map(colorizeElement).join(' ')} (${rootRankDisplay})${state.flaw ? ` · Căn cơ ${100 - state.flaw}%` : ''}</div>
         </div>
 
         <div class="stat"><b>Tuổi thọ</b>

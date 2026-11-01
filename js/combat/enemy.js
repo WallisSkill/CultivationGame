@@ -145,24 +145,3 @@ function spawnSpecific(e) {
     log(`Mục tiêu đặt: ${state.currentEnemy.name} — ${REALMS[state.currentEnemy.realmIndex]}`);
 }
 
-function renderCurrentEnemy() {
-    const div = $('currentEnemy');
-    if (!state.currentEnemy) {
-        div.innerText = 'Không có';
-        return;
-    }
-
-    const e = state.currentEnemy;
-    const stageName = STAGES[e.realmStage || 0];
-    const elementsText = (e.elements && e.elements.length)
-        ? e.elements.map(colorizeElement).join(' ')
-        : 'Không rõ';
-
-    div.innerHTML = colorizeWithMap(`
-        <div><b>${e.name}</b> (${e.tier || ''}) ${e.path ? `· ${DAO_PATHS[e.path].icon} ${DAO_PATHS[e.path].name}` : ''}</div>
-        <div>Cảnh giới: ${REALMS[e.realmIndex]} <span class="badge">${stageName}</span></div>
-        <div>HP ${formatNumber(Math.floor(e.hp))}/${formatNumber(Math.floor(e.maxHp))}, ATK ${formatNumber(e.str)}, DEF ${formatNumber(e.def)}</div>
-        <div class="small">Linh căn: ${elementsText} (${ROOT_RANKS[e.rootRank || 0]})</div>
-        ${(e.escorts || []).map(unit => `<div><b>${unit.name}</b> — ${unitRankText(unit)}</div>`).join('')}
-    `);
-}
