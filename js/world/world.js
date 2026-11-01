@@ -435,7 +435,7 @@ function roadItem() {
     } else if (roll < 0.8) {
         grantMaterial(worldTierOfRealm(realm).id, materialYield(realm, 2));
     } else if (roll < 0.95) {
-        addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 1, desc: 'Bằng 1 giờ bế quan' });
+        addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', minutes: XP_ITEM_MINUTES, desc: `Bằng ${XP_ITEM_MINUTES} phút bế quan` });
     } else {
         const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
         addItemToInventory(makeGearItem(realm, slot, 1));

@@ -1192,7 +1192,7 @@ function showItemDetailModal(itemIndex) {
     } else if (item.type === 'consumable') {
         statsHtml = `<div style="color:#69db7c;margin:8px 0;">🧪 Hồi phục: ${item.heal || 0} HP</div>`;
     } else if (item.type === 'xp') {
-        statsHtml = `<div style="color:#ffd43b;margin:8px 0;">📘 Tăng tu vi: +${item.value}</div>`;
+        statsHtml = `<div style="color:#ffd43b;margin:8px 0;">📘 Bằng ${item.minutes || XP_ITEM_MINUTES} phút bế quan</div>`;
     } else if (item.type === 'power') {
         statsHtml = `<div style="color:#ff6b6b;margin:8px 0;">💪 Sức mạnh: +${item.value}</div>`;
     } else if (item.type === 'defense') {
@@ -1321,7 +1321,7 @@ function renderInventory() {
         d.className = 'item';
 
         let desc = '';
-        if (item.type === 'xp') desc = `(${item.hours} giờ bế quan)`;
+        if (item.type === 'xp') desc = `(${item.minutes || XP_ITEM_MINUTES} phút bế quan)`;
         else if (item.type === 'power') desc = `(+${item.value} Sức mạnh)`;
         else if (item.type === 'life') desc = `(+${item.value} Thọ nguyên)`;
         else if (item.type === 'weapon' || item.type === 'armor') desc = `${GEAR_SLOTS[item.slot]?.icon || ''} (${gearStatText(item)})`;

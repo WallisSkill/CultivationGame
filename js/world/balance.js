@@ -221,6 +221,7 @@ function materialYield(realm, n) {
     return n * (realm - worldTierOfRealm(realm).from + 1);
 }
 const FORGE_HOURS = 0.05;
+const XP_ITEM_MINUTES = 5;
 
 /* --------- pháp bảo --------- */
 const LB_GRADE_POWER = [1, 1.4, 1.9, 2.6, 3.5, 4.6, 6, 7.5, 9, 10, 10.8, 11.4, 12];

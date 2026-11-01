@@ -74,7 +74,7 @@ function mysteryGood() {
 	}
 	// 🌟 Ngọc Linh Đan — tăng tu vi
 	if (r < 0.52) {
-		addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 0.5, desc: 'Bằng 30 phút bế quan' });
+		addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', minutes: 2, desc: 'Bằng 2 phút bế quan' });
 	}
 	// 🌟 Trấn Pháp — tăng sức mạnh vĩnh viễn
 	else if (r < 0.62) {

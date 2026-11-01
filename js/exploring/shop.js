@@ -12,7 +12,7 @@ function buildShopStock() {
     }));
     stock.push(
         { id: 'pill_heal', name: 'Hồi Thiên Đan', type: 'consumable', healPct: 0.5, price: g * 3 },
-        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', hours: 6, price: g * 60 },
+        { id: 'jade_cult', name: 'Tụ Linh Ngọc Giản', type: 'xp', minutes: XP_ITEM_MINUTES, price: g * 60 },
         { id: 'pill_power', name: 'Lực Cốt Đan', type: 'power', value: Math.ceil(base.power * 0.02), price: g * 150 },
         { id: 'pill_barrier', name: 'Huyền Giáp Đan', type: 'defense', value: Math.ceil(base.defense * 0.02), price: g * 150 },
         { id: 'nectar_life', name: 'Tiên Tủy Sinh Mệnh', type: 'life', value: 30 + realm * 20, price: g * 20 },
@@ -36,7 +36,8 @@ function useItem(index) {
     let needsFullRender = false;
     
     if (it.type === 'xp') {
-        const gained = gainCultivationHours(it.hours || 1);
+        if (window._battleActive) { showToast('Đang chiến đấu, chưa thể bế quan.', 'warn'); return; }
+        const gained = gainCultivationSeconds((it.minutes || XP_ITEM_MINUTES) * 60);
         log(`📘 Dùng ${it.name}, tu vi +${formatNumber(gained)}.`);
         needsFullRender = true;
     }
@@ -271,7 +272,7 @@ function shopItemDesc(si) {
         case 'weapon':
         case 'armor': return gearStatText(si);
         case 'consumable': return `Hồi ${Math.round(si.healPct * 100)}% HP`;
-        case 'xp': return `Bằng ${si.hours} giờ bế quan`;
+        case 'xp': return `Bằng ${si.minutes} phút bế quan`;
         case 'power': return `Sức mạnh vĩnh viễn +${formatNumber(si.value)}`;
         case 'defense': return `Phòng thủ vĩnh viễn +${formatNumber(si.value)}`;
         case 'life': return `Tuổi thọ +${si.value}`;
