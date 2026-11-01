@@ -9,7 +9,7 @@
    TRỤC SỨC MẠNH
    - refAtk(r, s): chuẩn sức mạnh của tu sĩ đủ đồ ở cảnh giới r, tiểu cảnh s.
    - realmShare(x): phần trăm sức mạnh đến từ BẢN THỂ, còn lại từ TRANG BỊ.
-     Đồ áp đảo tới hết Thiên Ngoại, chỉ 3 cảnh giới tuyệt đỉnh mới đảo chiều, Chung Nguyên 94%.
+     Giữa mỗi Giới đồ chiếm khoảng 60%, đầu Giới nhẹ hơn, chỉ 3 cảnh giới tuyệt đỉnh mới đảo chiều, Chung Nguyên 94%.
 =========================================================== */
 const REALM_FIRST_MINUTES = 5;
 const REALM_LAST_DAYS = 30;
@@ -61,7 +61,7 @@ function cultivationRate(realm, root, qi = 1) {
 }
 
 /* --------- chỉ số chuẩn --------- */
-const SHARE_CURVE = [[0, 0.45], [6, 0.25], [15, 0.15], [23, 0.15], [25, 0.22], [26, 0.45], [27, 0.75], [28, 0.94]];
+const SHARE_CURVE = [[0, 0.45], [4, 0.34], [8.75, 0.34], [9, 0.37], [12, 0.34], [15.75, 0.34], [16, 0.37], [17.5, 0.34], [19.75, 0.34], [20, 0.37], [22.5, 0.34], [25, 0.40], [26, 0.55], [27, 0.78], [28, 0.94]];
 const HP_PER_ATK = 30;
 const DEF_PER_ATK = 0.5;
 
