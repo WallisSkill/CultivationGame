@@ -860,6 +860,14 @@ function openWorldModal(id, title, body) {
     modal.style.display = 'flex';
 }
 
+function freeGoods() {
+    return (state.realmIndex || 0) >= FREE_GOODS_REALM;
+}
+
+function forgeSeconds() {
+    return freeGoods() ? 0 : hastedSeconds(FORGE_HOURS * 3600);
+}
+
 function selfForging() {
     return (state.realmIndex || 0) >= OVERSEER_REALM;
 }
@@ -897,7 +905,7 @@ function startGateForge(slot) {
     const matCost = forgeMaterialCost();
     if ((state.mats[worldId] || 0) < matCost) { showToast('Thiếu nguyên liệu.', 'warn'); return; }
     state.mats[worldId] -= matCost;
-    const seconds = hastedSeconds(FORGE_HOURS * 3600);
+    const seconds = forgeSeconds();
     state.forgeQueue.push({ slot, gateRealm: tier.realm, total: seconds, remaining: seconds });
     log(`🔨 Tự rèn ${GEAR_SLOTS[slot].label} cấp ${tier.label}, xong sau ${formatRealDuration(seconds)}.`);
     openForge();
@@ -931,7 +939,7 @@ function openForge() {
     }).join('');
     const capNote = realm < state.realmIndex ? ` Lò này chỉ rèn tới ${REALMS[forgeCapAt(loc)]}.` : '';
     const overNote = grade.overChance ? ` ${Math.round(grade.overChance * 100)}% rèn vượt tới ${grade.overRealms} cảnh giới, dùng được ngay.` : '';
-    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${matCost} ${MATERIAL_NAMES[worldId]} (có ${have})${price ? ` + ${formatNumber(price)} linh thạch` : ''}, ${formatRealDuration(hastedSeconds(FORGE_HOURS * 3600))}, ${selfForging() ? 'tự rèn' : 'thợ rèn'} làm nền, rèn được nhiều món cùng lúc. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
+    openWorldModal('forgeModal', `🔨 ${grade.name} ${loc.name}`, `<div class="small">Mỗi món: ${freeGoods() ? 'không tốn gì, xong ngay' : `${matCost} ${MATERIAL_NAMES[worldId]} (có ${have})${price ? ` + ${formatNumber(price)} linh thạch` : ''}, ${formatRealDuration(forgeSeconds())}, ${selfForging() ? 'tự rèn' : 'thợ rèn'} làm nền, rèn được nhiều món cùng lúc`}. ${Math.round(grade.topChance * 100)}% ra phẩm Tiên.${overNote}${capNote}</div>${forgeQueueHTML()}${forgeSubPicker(loc, realm)}${rows}<div class="small" style="margin-top:10px"><b>Nâng cấp đồ đang mặc</b> (tức thì)</div>${gearUpgradeRows()}`);
 }
 
 let forgeChosenSubs = [];
@@ -960,7 +968,7 @@ function toggleForgeSub(kind) {
 
 function gearUpgradeCost(item) {
     const next = (item.plus || 0) + 1;
-    return { gold: selfForging() ? 0 : goldRef(item.reqRealm || 0) * 2 * next, mats: next };
+    return { gold: selfForging() ? 0 : goldRef(item.reqRealm || 0) * 2 * next, mats: freeGoods() ? 0 : next };
 }
 
 function upgradeGear(uidIndex) {
@@ -991,7 +999,7 @@ function gearUpgradeRows() {
         const worldId = worldTierOfRealm(item.reqRealm || 0).id;
         return `<div class="shop-item forge-row">
             <div><b>${item.name}</b><div class="small">${gearStatText(item)} · +${plus}/${cap} · mỗi cấp +${step}%</div>
-            <div class="small">${cost.gold ? `${formatNumber(cost.gold)} linh thạch, ` : ''}${cost.mats} ${MATERIAL_NAMES[worldId]}</div></div>
+            <div class="small">${cost.mats ? `${cost.gold ? `${formatNumber(cost.gold)} linh thạch, ` : ''}${cost.mats} ${MATERIAL_NAMES[worldId]}` : 'Không tốn gì'}</div></div>
             <button onclick="upgradeGear(${index})">Nâng cấp</button></div>`;
     }).join('');
 }
@@ -1006,7 +1014,7 @@ function startForge(slot) {
     if ((state.mats[worldId] || 0) < matCost || state.gold < price) { showToast('Thiếu nguyên liệu hoặc linh thạch.', 'warn'); return; }
     state.mats[worldId] -= matCost;
     state.gold -= price;
-    const seconds = hastedSeconds(FORGE_HOURS * 3600);
+    const seconds = forgeSeconds();
     state.forgeQueue.push({ slot, realm, grade: loc.forgeGrade || 0, subs, total: seconds, remaining: seconds });
     log(`🔨 ${selfForging() ? 'Tự rèn' : 'Giao thợ rèn'} ${GEAR_SLOTS[slot].label}, xong sau ${formatRealDuration(seconds)}.`);
     openForge();

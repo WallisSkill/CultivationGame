@@ -398,7 +398,7 @@ function renderShop() {
 
 /* Hỗn Độn Đạo Giả không dùng linh thạch: đan dược đổi bằng elo thắng luận đạo */
 function eloPillStock() {
-    return buildShopStock(SELF_FORGE_SITE).filter(si => !si.slot).map(si => ({ ...si, elo: state.realmIndex >= ELO_FREE_REALM ? 0 : Math.max(1, Math.round(si.price / (goldRef(state.realmIndex) * ELO_PILL_GOLD_REFS))) }));
+    return buildShopStock(SELF_FORGE_SITE).filter(si => !si.slot).map(si => ({ ...si, elo: state.realmIndex >= FREE_GOODS_REALM ? 0 : Math.max(1, Math.round(si.price / (goldRef(state.realmIndex) * ELO_PILL_GOLD_REFS))) }));
 }
 
 function openPillExchange() {
@@ -406,7 +406,7 @@ function openPillExchange() {
         <div><b>${si.name}</b><div class="small">${shopItemDesc(si)}</div></div>
         <button onclick="buyPillWithElo('${si.id}')" ${(state.luanElo || 0) < si.elo ? 'disabled' : ''}>${si.elo ? `${si.elo} elo` : 'Nhận'}</button>
     </div>`).join('');
-    openWorldModal('pillModal', '⚗️ Đổi đan dược', `<div class="small">${state.realmIndex >= ELO_FREE_REALM ? 'Từ Hồng Mông Chúa Tể trở lên đan dược không cần elo.' : `Elo hiện có: ${state.luanElo || 0}. Mỗi trận thắng luận đạo được ${LUAN_DAO_ELO} elo.`}</div>${rows}`);
+    openWorldModal('pillModal', '⚗️ Đổi đan dược', `<div class="small">${state.realmIndex >= FREE_GOODS_REALM ? 'Từ Hồng Mông Chúa Tể trở lên đan dược không cần elo.' : `Elo hiện có: ${state.luanElo || 0}. Mỗi trận thắng luận đạo được ${LUAN_DAO_ELO} elo.`}</div>${rows}`);
 }
 
 function buyPillWithElo(id) {

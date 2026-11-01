@@ -48,6 +48,7 @@ function sectLocationQiMult(locId) {
 }
 
 function forgeMaterialCost() {
+    if (freeGoods()) return 0;
     const level = state.ownSect?.buildings.luyen_khi || 0;
     return FORGE_MATERIAL_COST - level * SECT_FORGE_DISCOUNT_PER_LEVEL;
 }
