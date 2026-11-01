@@ -186,16 +186,22 @@ function runFromBattle() {
     renderAll();
 }
 
+/* Mỗi con trong bầy tự gieo và rơi theo cấp, cảnh giới của chính nó */
+function grantEnemyMaterial(unit) {
+    const tier = ENEMY_TIERS[unit.tier] || ENEMY_TIERS['Thường'];
+    if (Math.random() >= tier.matChance) return;
+    grantMaterial(worldTierOfRealm(unit.realmIndex).id, materialYield(unit.realmIndex, unit.tier === 'Thường' ? 1 : 3), unit.name);
+}
+
 function grantBattleRewards(enemy) {
     const tier = ENEMY_TIERS[enemy.tier] || ENEMY_TIERS['Thường'];
-    const worldId = worldTierOfRealm(enemy.realmIndex).id;
     const gold = Math.floor((enemy.gold || goldRef(enemy.realmIndex)) * renownGoldMult());
 
     state.gold += gold;
     const xp = gainCultivationSeconds(battleXpSeconds(enemy.xpMinutes || tier.xpMinutes));
     log(`🏵️ Hạ ${enemy.name}! +${formatNumber(xp)} tu vi, +${formatNumber(gold)} linh thạch.`);
 
-    if (Math.random() < tier.matChance) grantMaterial(worldId, enemy.tier === 'Thường' ? 1 : 3);
+    enemyPackMembers(enemy).forEach(grantEnemyMaterial);
     if (Math.random() < tier.gearChance) {
         const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
         const quality = enemy.tier === 'Boss' ? 3 : (enemy.tier === 'Thống lĩnh' ? 2 : 1);
@@ -489,6 +495,7 @@ function startPvPBattle(oppProfile, matchId = null) {
     log(pvpSession.myTurn ? '🎲 Ngươi ra tay trước.' : '🎲 Đối thủ ra tay trước.');
     if (matchId) log('📊 Trận xếp hạng: kết quả tính vào elo.');
     startPvPHeartbeat();
+    startAutoFight();
 }
 
 // Faster heartbeat and timeout to auto-win when opponent refreshes
@@ -577,7 +584,6 @@ function onMatchMessage(ev) {
                     endPvPSession();
                 } else {
                     pvpSession.myTurn = true;
-                    syncPvpAttack();
 
                     renderAll();
                 }
@@ -637,15 +643,6 @@ function pvpLogHit(prefix, total, det, burnExtra = 0, wasDodge = false) {
     const elePct = det?.elePercent ?? (((det?.elementFactor || 1) - 1) * 100);
     log(`${prefix} gây ${Number(total).toFixed(2)} sát thương. (Ngũ hành ${Number(elePct).toFixed(2)}%, Phẩm chất x${Number(det?.rankFactor || 1).toFixed(2)}, Cảnh giới x${Number(det?.realmFactor || 1).toFixed(2)})`);
     if (burnExtra > 0) log(`🔥 Thiêu đốt thêm ${burnExtra} sát thương.`);
-}
-
-/* Trận PvP đánh theo lượt nên cần nút ra đòn, các trận khác tự đánh */
-function syncPvpAttack() {
-    const btn = $('pvpAttackBtn');
-    if (!btn) return;
-    btn.style.display = state.currentEnemy?.isPvP ? 'inline-block' : 'none';
-    btn.disabled = !pvpSession.myTurn;
-    btn.innerText = pvpSession.myTurn ? '⚔️ Ra đòn' : '⏳ Lượt đối thủ';
 }
 
 // Attack: PvP path now mirrors attackTurn() effects (element buffs, dodge, burn)
@@ -788,7 +785,6 @@ function pvpAttackOrLocal() {
         });
     }
     pvpSession.myTurn = false;
-    syncPvpAttack();
 
     if (state.currentEnemy.hp <= 0 && !wasDodge) {
         log('🎉 Ngươi thắng PvP!');
@@ -869,7 +865,7 @@ window.stopAutoTrainingHard = stopAutoTrainingHard;
 })();
 
 function findMatchPvP() {
-    if (state.realmIndex < 1) { log('❌ Cần đạt ít nhất Cảnh giới Trúc Cơ để giao lưu với các đạo hữu.'); return; }
+    if (state.realmIndex < 1) { log('❌ Cần đạt ít nhất Cảnh giới Trúc Cơ để giao lưu với các đạo hữu.'); showToast('Cần Trúc Cơ để vào đấu trường.', 'warn'); return; }
     if (state.currentEnemy) { log('Đang chiến đấu, không thể tìm đối thủ PvP.'); return; }
     connectMatchWS().then(ok => {
         if (!ok) { log('❌ Không thể kết nối PvP (hãy chạy server ws://localhost:8080).'); return; }
@@ -881,6 +877,7 @@ function findMatchPvP() {
             if (btn) btn.innerText = 'Tìm đối thủ PvP';
             wsSend({ type: 'cancel_find' }); // server may ignore; local toggle is enough
             log('🛑 Dừng tìm đối thủ PvP.');
+            renderAll();
             return;
         }
 
@@ -889,12 +886,15 @@ function findMatchPvP() {
         if (btn) btn.innerText = 'Dừng tìm đối thủ PvP';
         const profile = buildPublicProfile();
         wsSend({ type: 'find_match', profile, token: profileToken() });
-        log('🔍 Đang tìm đối thủ PvP (ưu tiên cùng cảnh giới)...');
+        log('🔍 Đang tìm đối thủ xếp hạng: chỉ ghép người cũng đang tìm và lệch tối đa 1 cảnh giới.');
+        showToast('Đang tìm đối thủ xếp hạng...', 'info');
+        renderAll();
     });
 }
 
 function endPvPSession() {
     stopPvPHeartbeat();
+    stopAutoFight();
     pvpSession.matchId = null;
     pvpSession.active = false;
     pvpSession.sessionId = null;

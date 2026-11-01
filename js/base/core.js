@@ -191,7 +191,7 @@ function createDefaultState() {
         gold: 200,
         inventory: [],
         root: {},
-        age: 6,
+        age: START_AGE,
         maxAge: 200,
         autoTrain: false,
         autoFight: false,
@@ -700,6 +700,8 @@ function updateTrainingUI() {
 }
 function stopAutoTrain() { state.autoTrain = false; }
 
+const PVP_AUTO_TURN_MS = 800;
+
 function startAutoFight() {
     window._autoFightOn = true;
     try { $('autoFight').innerText = 'Tắt auto chiến'; } catch { }
@@ -751,8 +753,8 @@ function updateAutoFightLoop() {
             return;
         }
 
-        pvpAttackOrLocal();
-    }, 2400);
+        if (pvpSession.myTurn) pvpAttackOrLocal();
+    }, PVP_AUTO_TURN_MS);
 }
 window.updateAutoFightLoop = updateAutoFightLoop;
 

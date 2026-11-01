@@ -155,7 +155,7 @@ function coopTick(units, kind = 'tick') {
 function coopUnitSpec(c) {
     return {
         side: c.side, name: c.name, path: c.path, maxHp: c.maxHp, kind: c.ref?.kind || null,
-        look: c.ref ? c.ref.look || null : c.viewLook || null, realmIndex: c.realmIndex,
+        look: c.ref ? c.ref.look || null : c.viewLook || null, realmIndex: c.realmIndex, realmStage: c.realmStage, tier: c.tier || null,
         slots: c.slots.map(slot => ({
             id: slot.def.linhBaoId || slot.def.id, grade: lbGradeOf(slot.def), level: slot.def.level || 1, cooldown: slot.cooldown
         }))
@@ -462,7 +462,8 @@ function coopMirrorUnit(spec) {
         return { def, cooldown: Math.max(0.25, Number(slot?.cooldown) || 2), elapsed: 0, fillNode: null, tileNode: null };
     });
     return Object.assign(lbBaseCombatant(), {
-        side, name, path: DAO_PATHS[spec?.path] ? spec.path : null,
+        side, name, path: DAO_PATHS[spec?.path] ? spec.path : null, realmIndex,
+        realmStage: lbClamp(Number(spec?.realmStage) || 0, 0, 3), tier: ENEMY_TIERS[spec?.tier] ? spec.tier : null,
         hp: Math.max(1, Number(spec?.maxHp) || 1), maxHp: Math.max(1, Number(spec?.maxHp) || 1), slots,
         avatar: side === 'enemy' ? enemyAvatarSvg({ name, kind, look, realmIndex }) : humanoidSvg(look || defaultLook(), { title: name })
     });

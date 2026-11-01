@@ -21,11 +21,6 @@ const sceneState = {
     keys: new Set(), spots: [], decor: [], nearest: null, lastFrame: 0, bubble: null, canvas: null, ctx: null, images: new Map()
 };
 
-function findMatchFromScene() {
-    if (window._findingMatch) return window.findMatchPvP();
-    coopGate('Tìm đối thủ PvP', () => window.findMatchPvP());
-}
-
 function sceneSpots(loc) {
     const spots = [];
     const add = (icon, label, action, available = true, id = null) => { if (available) spots.push({ icon, label, action, id }); };
@@ -41,7 +36,7 @@ function sceneSpots(loc) {
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), !!loc.path);
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), !!loc.path && state.daoPath !== loc.path);
-    add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => findMatchFromScene(), loc.type === 'town' || loc.type === 'sect');
+    add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     SIDE_QUESTS.filter(q => q.loc === loc.id && !state.questDone.includes(q.id)
         && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
@@ -351,7 +346,6 @@ function renderWorldViewTabs() {
 
 /* Khi có trận, khung chiến đấu được đưa vào khung thế giới, đè lên cảnh bên trong */
 function syncBattleOverlay() {
-    syncPvpAttack();
     const panel = document.querySelector('.panel-combat');
     const stage = $('sceneHost');
     if (!panel || !stage) return;

@@ -134,6 +134,7 @@ for (let r = 0; r < 29; r++) {
     if (a.tKill < 6) fail.push(`realm ${r}: trận quá ngắn ${a.tKill.toFixed(1)}s`);
     if (b.tKill > 80) fail.push(`realm ${r}: boss quá lâu, chạm mốc 90s`);
     if (r <= 14 && d.win) fail.push(`realm ${r}: không đồ vẫn thắng — đồ chưa đủ quan trọng`);
+    if (r >= 6 && r <= 25 && on.selfShare > 0.4) fail.push(`realm ${r}: bản thể ${(on.selfShare * 100).toFixed(0)}% — đồ không còn áp đảo`);
 }
 
 if (fail.length) {

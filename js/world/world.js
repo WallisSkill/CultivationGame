@@ -70,14 +70,18 @@ function initWorldState() {
     state.activity = state.activity || null;
     state.testSpeed = state.testSpeed || 1;
     state.lastSeen = state.lastSeen || Date.now();
+    if (!state.ageRateFixed) {
+        state.age = START_AGE + (state.age - START_AGE) * AGE_YEARS_PER_DAY;
+        state.ageRateFixed = true;
+    }
 }
 
 /* ---------- đồng hồ ---------- */
 function advanceWorld(sec) {
     if (state.dead || !state.root?.elements) return;
     advanceForgeQueue(sec);
+    state.age += sec * AGE_YEARS_PER_DAY / SECONDS_PER_DAY;
     if (window._battleActive) return;
-    state.age += sec / SECONDS_PER_DAY;
     accrueSectIncome(sec);
     let left = sec;
     while (left > 0 && state.activity) {
@@ -132,6 +136,7 @@ function applyOfflineProgress() {
     if (gap < 60) return;
     const before = { realm: state.realmIndex, stage: state.realmStage, xp: state.xp };
     advanceWorld(gap);
+    state.age = Math.min(state.age, state.maxAge - 1);
     const moved = before.realm !== state.realmIndex || before.stage !== state.realmStage;
     showToast(`Vắng mặt ${formatRealDuration(gap)}. ${moved ? `Đã đạt ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}.` : ''}`, 'info');
     log(`⏳ Trong ${formatRealDuration(gap)} ngươi vắng mặt, thế giới vẫn tiếp diễn.`);
@@ -428,7 +433,7 @@ function roadItem() {
         state.gold += gold;
         log(`💰 Nhặt được túi linh thạch ven đường: +${formatNumber(gold)}.`);
     } else if (roll < 0.8) {
-        grantMaterial(worldTierOfRealm(realm).id, 2);
+        grantMaterial(worldTierOfRealm(realm).id, materialYield(realm, 2));
     } else if (roll < 0.95) {
         addItemToInventory({ name: 'Ngọc Linh Đan', type: 'xp', hours: 1, desc: 'Bằng 1 giờ bế quan' });
     } else {
@@ -615,9 +620,9 @@ function openServiceShop() {
     window.openShopModal();
 }
 
-function grantMaterial(worldId, n) {
+function grantMaterial(worldId, n, source = null) {
     state.mats[worldId] = (state.mats[worldId] || 0) + n;
-    log(`⛏️ Nhận ${n} ${MATERIAL_NAMES[worldId]}.`);
+    log(`⛏️ ${source ? `${source} rơi` : 'Nhận'} ${n} ${MATERIAL_NAMES[worldId]}.`);
 }
 
 function openWorldModal(id, title, body) {
@@ -740,7 +745,7 @@ function finishBounty() {
     state.gold += gold;
     const xp = gainCultivationHours(1);
     log(`📜 Hoàn thành treo thưởng! +${formatNumber(gold)} linh thạch, +${formatNumber(xp)} tu vi.`);
-    grantMaterial(worldId, 6);
+    grantMaterial(worldId, materialYield(state.realmIndex, 6));
     state.bounty = null;
 }
 
@@ -976,7 +981,7 @@ function grantPvpWinReward() {
     state.gold += gold;
     const xp = gainCultivationSeconds(battleXpSeconds(tier.xpMinutes));
     log(`🏆 Thưởng PvP: +${formatNumber(gold)} linh thạch, +${formatNumber(xp)} tu vi.`);
-    grantMaterial(worldTierOfRealm(realm).id, 1);
+    grantMaterial(worldTierOfRealm(realm).id, materialYield(realm, 1));
     if (Math.random() < tier.gearChance) {
         const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
         addItemToInventory(makeGearItem(realm, slot, 1));

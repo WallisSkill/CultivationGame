@@ -4,18 +4,20 @@
 
    TRỤC THỜI GIAN
    - REALM_FIRST_MINUTES / REALM_LAST_DAYS: thời gian bế quan của cảnh giới đầu và cuối.
-   - 1 ngày đời thực = 1 năm trong game (tuổi thọ).
+   - 1 giờ đời thực = 1 năm trong game (tuổi thọ), kể cả lúc đang chiến đấu.
 
    TRỤC SỨC MẠNH
    - refAtk(r, s): chuẩn sức mạnh của tu sĩ đủ đồ ở cảnh giới r, tiểu cảnh s.
    - realmShare(x): phần trăm sức mạnh đến từ BẢN THỂ, còn lại từ TRANG BỊ.
-     Hạ/trung kỳ tụt dần (đồ áp đảo), từ Thánh cảnh đảo chiều, Chung Nguyên 94%.
+     Đồ áp đảo tới hết Thiên Ngoại, chỉ 3 cảnh giới tuyệt đỉnh mới đảo chiều, Chung Nguyên 94%.
 =========================================================== */
 const REALM_FIRST_MINUTES = 5;
 const REALM_LAST_DAYS = 30;
 const SECONDS_PER_DAY = 86400;
 const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
+const START_AGE = 6;
+const AGE_YEARS_PER_DAY = 24;
 
 const WORLD_TIERS = [
     { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
@@ -59,7 +61,7 @@ function cultivationRate(realm, root, qi = 1) {
 }
 
 /* --------- chỉ số chuẩn --------- */
-const SHARE_CURVE = [[0, 0.45], [15, 0.15], [19, 0.30], [22, 0.50], [25, 0.72], [26, 0.80], [27, 0.88], [28, 0.94]];
+const SHARE_CURVE = [[0, 0.45], [6, 0.25], [15, 0.15], [23, 0.15], [25, 0.22], [26, 0.45], [27, 0.75], [28, 0.94]];
 const HP_PER_ATK = 30;
 const DEF_PER_ATK = 0.5;
 
@@ -213,6 +215,11 @@ const MATERIAL_NAMES = {
     hondon: 'Hỗn Độn Thạch', hongmong: 'Hồng Mông Tử Khí', chungnguyen: 'Chung Nguyên Tàn Quang'
 };
 const FORGE_MATERIAL_COST = 20;
+
+/* Cảnh giới càng cao trong cùng giới thì rơi càng nhiều: bậc thứ k của giới nhân k lần */
+function materialYield(realm, n) {
+    return n * (realm - worldTierOfRealm(realm).from + 1);
+}
 const FORGE_HOURS = 0.05;
 
 /* --------- pháp bảo --------- */

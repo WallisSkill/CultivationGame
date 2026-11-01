@@ -1124,7 +1124,7 @@ function lbBuildEnemyCombatant(enemy) {
         maxHp: Math.max(1, enemy.maxHp || enemy.hp || 100),
         baseAtk: enemy.str || 10, atk: enemy.str || 10, def: enemy.def || 0,
         elements: enemy.elements || [], rootRank: enemy.rootRank || 0,
-        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0,
+        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0, tier: enemy.tier || null,
         slots: defs.map(lbMakeSlot), ref: enemy, avatar: enemyAvatarSvg(enemy)
     });
 }
@@ -1430,6 +1430,7 @@ function lbUnitHTML(c, side, idx, team) {
             <span class="lb-side-name">${c.name} ${path}</span>
             <span class="lb-side-hp-txt" data-role="hp"></span>
         </div>
+        ${c.side === 'enemy' ? `<div class="small">${enemyRankText(c)}</div>` : ''}
         <div class="lb-hpbar"><div class="lb-hpfill lb-hpfill-${side}" data-role="hpfill"></div>
             <div class="lb-shieldfill" data-role="shield"></div></div>
         <div class="lb-duel">

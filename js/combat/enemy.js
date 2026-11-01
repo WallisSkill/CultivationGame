@@ -98,11 +98,18 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     startEncounter(enemy);
 }
 
+function enemyPackMembers(enemy) {
+    return [enemy, ...(enemy.escorts || [])];
+}
+
+function enemyRankText(e) {
+    return `${REALMS[e.realmIndex || 0]} ${STAGES[e.realmStage || 0]}${e.tier ? ` · ${e.tier}` : ''}`;
+}
+
 function startEncounter(enemy) {
     state.currentEnemy = enemy;
     window._battleActive = true;
-    const extra = enemy.escorts?.length ? ` cùng ${enemy.escorts.length} đồng bọn` : '';
-    log(`⚔️ Gặp ${enemy.name}${extra} (${enemy.tier}) — ${REALMS[enemy.realmIndex]} ${STAGES[enemy.realmStage]} · Linh căn: ${enemy.elements.map(colorizeElement).join(' ')}`);
+    enemyPackMembers(enemy).forEach(unit => log(`⚔️ Gặp ${unit.name} — ${enemyRankText(unit)} · Linh căn: ${unit.elements.map(colorizeElement).join(' ')}`));
     renderAllImmediate();
 }
 
@@ -152,9 +159,10 @@ function renderCurrentEnemy() {
         : 'Không rõ';
 
     div.innerHTML = colorizeWithMap(`
-        <div><b>${e.name}</b> (${e.tier || ''})${e.escorts?.length ? ` + ${e.escorts.length} đồng bọn` : ''} ${e.path ? `· ${DAO_PATHS[e.path].icon} ${DAO_PATHS[e.path].name}` : ''}</div>
+        <div><b>${e.name}</b> (${e.tier || ''}) ${e.path ? `· ${DAO_PATHS[e.path].icon} ${DAO_PATHS[e.path].name}` : ''}</div>
         <div>Cảnh giới: ${REALMS[e.realmIndex]} <span class="badge">${stageName}</span></div>
         <div>HP ${formatNumber(Math.floor(e.hp))}/${formatNumber(Math.floor(e.maxHp))}, ATK ${formatNumber(e.str)}, DEF ${formatNumber(e.def)}</div>
         <div class="small">Linh căn: ${elementsText} (${ROOT_RANKS[e.rootRank || 0]})</div>
+        ${(e.escorts || []).map(unit => `<div><b>${unit.name}</b> — ${enemyRankText(unit)}</div>`).join('')}
     `);
 }
