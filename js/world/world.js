@@ -80,9 +80,9 @@ function initWorldState() {
     state.activity = state.activity || null;
     state.testSpeed = state.testSpeed || 1;
     state.lastSeen = state.lastSeen || Date.now();
-    if (!state.ageCurveFixed) {
-        state.age = Math.max(state.age, realmEntryAge(state.realmIndex, state.maxAge));
-        state.ageCurveFixed = true;
+    if (state.ageCurveFixed) {
+        state.age = Math.max(START_AGE, state.age - legacyEntryAge(state.realmIndex, state.maxAge));
+        delete state.ageCurveFixed;
     }
     migrateStatCurve();
     moveUpToRealmWorld();

@@ -181,7 +181,6 @@ function attemptMajorBreakthrough(isForce = false) {
     const gain = calculateMajorGain({ prevRealm, newRealm: state.realmIndex, rootRank: state.root?.rank || 0 });
     applyBaseGain(gain);
     state.maxAge += gain.ageInc;
-    state.age = Math.max(state.age, realmEntryAge(state.realmIndex, state.maxAge));
 
     const story = (typeof getBreakthroughStory === 'function') ? getBreakthroughStory(prevRealm, state.realmIndex, gain) : null;
     if (story) {

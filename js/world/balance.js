@@ -18,7 +18,8 @@ const STAGE_SHARE = [0.15, 0.20, 0.30, 0.35];
 const REALM_COUNT = 29;
 const START_AGE = 6;
 const BASE_LIFESPAN = 200;
-const AGE_SPEND_SHARE = 0.15;
+const AGE_SPEND_SHARE = 0.05;
+const LEGACY_AGE_SHARE = 0.15;
 const AGE_MIN_REALM_DAYS = 3;
 const AGE_FLOOR_MAX_SHARE = 0.5;
 const AGE_OFFLINE_MAX_SHARE = 0.9;
@@ -62,10 +63,10 @@ function ageYearsPerSecond(realm) {
     return realmLifespan(realm) * AGE_SPEND_SHARE / Math.max(realmRealSeconds(realm), AGE_MIN_REALM_DAYS * SECONDS_PER_DAY);
 }
 
-/* Tuổi tối thiểu khi đặt chân vào một cảnh giới: những năm bế quan của các cảnh trước */
-function realmEntryAge(realm, maxAge) {
+/* Phần tuổi bản trước đã cộng cứng khi vào cảnh giới, chỉ dùng để trả lại cho save cũ */
+function legacyEntryAge(realm, maxAge) {
     let years = START_AGE;
-    for (let r = 0; r < realm; r++) years += realmLifespan(r) * AGE_SPEND_SHARE;
+    for (let r = 0; r < realm; r++) years += realmLifespan(r) * LEGACY_AGE_SHARE;
     return Math.min(years, maxAge * AGE_FLOOR_MAX_SHARE);
 }
 
