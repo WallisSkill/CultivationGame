@@ -64,10 +64,10 @@ const LOCATIONS = {
     chua_te: { world: 'hongmong', name: 'Chúa Tể Tọa', icon: '🪑', x: 860, y: 320, type: 'gate', qi: 1.8, minR: 30, maxR: 30, links: ['co_thu'], gate: { to: 'truong_ha', minutes: 2160, flag: 'world_chungnguyen' }, desc: 'Chiếc ngai trống đặt trên vực thẳm cuối cùng. Chưa từng có ai ngồi.', enemies: [E('Chúa Tể Thân Vệ', 'chaos')] },
 
     /* ---- Hư Vô Giới: không có đường nối, chỉ vào được bằng cách thắng Đại Kết Cục ---- */
-    hu_vo_cung: { world: 'huvo', name: 'Hư Vô Cung', icon: '🌌', x: 500, y: 280, type: 'dungeon', qi: 3.0, minR: 32, maxR: 32, links: [], desc: 'Chỗ ở của Hư Vô Chi Chủ. Cả Giới này chỉ có một người.', enemies: [] },
+    hu_vo_cung: { world: 'huvo', seat: 'Hư Vô Tọa', seatOnly: true, name: 'Hư Vô Cung', icon: '🌌', x: 500, y: 280, type: 'dungeon', qi: 3.0, minR: 32, maxR: 32, links: [], desc: 'Chỗ ở của Hư Vô Chi Chủ. Cả Giới này chỉ có một người.', enemies: [] },
     /* ---- Chung Nguyên ---- */
     truong_ha: { world: 'chungnguyen', forgeGrade: 2, name: 'Trường Hà Tận Cùng', icon: '🌅', x: 220, y: 300, type: 'gate', qi: 1.8, minR: 31, maxR: 31, links: ['chung_dai'], gate: { to: 'chua_te', minutes: 2160 }, services: ['shop', 'forge'], desc: 'Nơi dòng thời gian đổ xuống hư vô.', enemies: [E('Dư Ảnh Của Ngươi', 'spirit')] },
-    chung_dai: { world: 'chungnguyen', name: 'Chung Nguyên Đài', icon: '⚪', x: 780, y: 300, type: 'dungeon', qi: 2.0, minR: 31, maxR: 31, links: ['truong_ha'], desc: 'Điểm kết của mọi đạo. Một chiếc ghế trống, cạnh ghế dựng một cây chổi.', enemies: [E('Chung Yên Chi Ảnh', 'chaos')] }
+    chung_dai: { world: 'chungnguyen', seat: 'Chung Nguyên Tọa', name: 'Chung Nguyên Đài', icon: '⚪', x: 780, y: 300, type: 'dungeon', qi: 2.0, minR: 31, maxR: 31, links: ['truong_ha'], desc: 'Điểm kết của mọi đạo. Một chiếc ghế trống, cạnh ghế dựng một cây chổi.', enemies: [E('Chung Yên Chi Ảnh', 'chaos')] }
 };
 
 /* ---- Đạo tràng các hệ tu: bái nhập, học truyền thừa, săn quái cùng hệ ---- */

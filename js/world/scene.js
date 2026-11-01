@@ -24,11 +24,16 @@ const sceneState = {
     keys: new Set(), spots: [], decor: [], nearest: null, lastFrame: 0, bubble: null, canvas: null, ctx: null, images: new Map()
 };
 
+function sceneSeatSpot() {
+    return { x: SCENE_W / 2, y: SCENE_H / 2 + 40 };
+}
+
 function sceneSpots(loc) {
     const spots = [];
     const add = (icon, label, action, available = true, id = null) => { if (available) spots.push({ icon, label, action, id }); };
     const huntable = (loc.enemies || []).length > 0;
-    add('🧘', state.autoTrain ? 'Đứng dậy' : 'Ngồi bế quan', () => toggleMeditate(), true, 'meditate');
+    add(loc.seat ? '🪑' : '🧘', state.autoTrain ? 'Đứng dậy' : loc.seat ? `Ngồi ${loc.seat}` : 'Ngồi bế quan', () => toggleMeditate(), true, 'meditate');
+    if (loc.seatOnly) return [{ ...spots[0], ...sceneSeatSpot() }];
     add('🏆', 'Thiên Kiêu Bảng', () => openTianjiaoBoard());
     add('🗡️', 'Săn quái', () => startHunt(), huntable);
     add('🧭', 'Thám hiểm', () => startExplore());
@@ -55,6 +60,7 @@ function sceneSpots(loc) {
         spot.x = SCENE_W / 2 + Math.cos(angle) * radiusX * ring;
         spot.y = SCENE_H / 2 + 40 + Math.sin(angle) * radiusY * ring;
     });
+    if (loc.seat) Object.assign(spots[0], sceneSeatSpot());
     spots.push({ icon: '🚪', label: 'Ra bản đồ', action: () => setWorldView('map'), x: SCENE_W / 2, y: SCENE_H - 60 });
     return spots;
 }

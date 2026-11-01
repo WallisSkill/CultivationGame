@@ -1329,6 +1329,20 @@ function completeStep(rt) {
     renderAll();
 }
 
+/* Ở Hư Vô Cung tu vi đầy không còn cảnh giới để lên, mà luyện ra thêm một ô trận pháp */
+function growHuVoBoard() {
+    if (state.location !== HU_VO_HOME) return false;
+    state.xp -= getNeed();
+    state.maxBoardSlots = getEffectiveBoardSlots() + 1;
+    ensureBoardState();
+    const lb = huVoLinhBao();
+    state.inventory.push(lb);
+    state.board[state.board.indexOf(null)] = lb.uid;
+    log(`🎴 Bế quan xong: trận pháp thêm một ô, ${state.maxBoardSlots} ô ${lb.name}.`);
+    renderAll();
+    return true;
+}
+
 function moveToHuVoWorld() {
     state.flags['world_' + HU_VO_WORLD] = true;
     state.location = HU_VO_HOME;
@@ -1541,7 +1555,7 @@ function applyHuVoHolder(enemy, holder) {
     enemy.shownRealm = REALM_COUNT - 1;
     enemy.elements = holder.elements;
     enemy.path = holder.path;
-    enemy.boardDefs = Array.from({ length: LB_BOARD_SLOTS }, huVoLinhBao).map(lbDuelDef);
+    enemy.boardDefs = Array.from({ length: getEffectiveBoardSlots() }, huVoLinhBao).map(lbDuelDef);
     enemy.duel = true;
     log(`🌌 ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, đang đợi ngươi.`);
 }

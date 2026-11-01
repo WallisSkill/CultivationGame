@@ -82,6 +82,7 @@ function checkRealmProgress() {
             continue;
         }
         if (state.realmIndex >= REALMS.length - 1) {
+            if (growHuVoBoard()) continue;
             state.xp = getNeed();
             break;
         }
