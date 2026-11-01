@@ -434,6 +434,7 @@ function attachPvPOpponent(opp) {
         maxHp: Math.max(1, Math.floor(opp.hp || 100)),
         elements: Array.isArray(opp.elements) && opp.elements.length ? opp.elements.slice(0, 5) : ['Hỏa'],
         rootRank: Math.max(0, Math.floor(opp.rootRank || 0)),
+        look: opp.look || null,
         isPvP: true
     };
 

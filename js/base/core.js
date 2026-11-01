@@ -10,7 +10,6 @@ const REALMS = [
     'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao', 'Hư Vô Chí Đạo'
 ];
 const HU_VO_PLAYER_NAME = 'Hư Vô Chi Chủ';
-const HU_VO_HOLDER_CAP = 1.2;
 const STAGES = ['Sơ Kỳ', 'Trung Kỳ', 'Hậu Kỳ', 'Đại Viên Mãn'];
 const GAME_VERSION = '1.0.0';
 // Expose for cross-file access

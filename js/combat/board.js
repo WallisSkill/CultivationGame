@@ -1179,13 +1179,17 @@ function lbBuildPlayerCombatant() {
         realmIndex: state.realmIndex || 0, realmStage: state.realmStage || 0,
         slots: defs.map(lbMakeSlot), viewLook: playerLook(), avatar: playerAvatarSvg()
     });
+    lbApplyCombatKit(c);
+    return c;
+}
+
+function lbApplyCombatKit(c) {
     lbApplyPathPassive(c);
     const subs = gearSubTotals();
     c.crit = subs.crit;
     c.critMult = CRIT_BASE_MULT + subs.critDmg;
     c.dodge = subs.dodge;
     c.lifesteal = (c.lifesteal || 0) + subs.lifesteal;
-    return c;
 }
 
 /* Đồng đội: đệ tử của tông môn và hộ pháp thuê theo trận */
@@ -1225,9 +1229,14 @@ function lbBuildAllies(player) {
     ];
 }
 
+/* Đấu như PvP: chỉ số quyết định, bỏ hệ số phẩm cấp của pháp bảo ở cả hai bên */
+function lbDuelDef(def) {
+    return { ...def, flatPower: true };
+}
+
 function lbBuildEnemyCombatant(enemy) {
     const defs = enemy.boardDefs || buildEnemyBoard(enemy);
-    return Object.assign(lbBaseCombatant(), {
+    const c = Object.assign(lbBaseCombatant(), {
         side: 'enemy',
         name: enemy.name || 'Địch',
         path: enemy.path || null,
@@ -1235,9 +1244,14 @@ function lbBuildEnemyCombatant(enemy) {
         maxHp: Math.max(1, enemy.maxHp || enemy.hp || 100),
         baseAtk: enemy.str || 10, atk: enemy.str || 10, def: enemy.def || 0,
         elements: enemy.elements || [], rootRank: enemy.rootRank || 0,
-        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0, tier: enemy.tier || null, shownRealm: enemy.shownRealm,
+        realmIndex: enemy.realmIndex || 0, realmStage: enemy.realmStage || 0, tier: enemy.tier || null, shownRealm: enemy.shownRealm, duel: enemy.duel,
         slots: defs.map(lbMakeSlot), ref: enemy, avatar: enemyAvatarSvg(enemy)
     });
+    if (enemy.duel) {
+        c.rootRank = state.root?.rank || 0;
+        lbApplyCombatKit(c);
+    }
+    return c;
 }
 
 /* ---------- damage application (respects parry + shield) ---------- */
@@ -1278,7 +1292,7 @@ function lbFire(battle, source, slot) {
     const item = slot.def;
     const effects = lbEffectList(item);
     const now = performance.now();
-    const dmgScale = source.side !== 'enemy' ? 1 : source.realmIndex < LB_EARLY_REALMS ? LB_EARLY_DMG_SCALE : LB_ENEMY_DMG_SCALE;
+    const dmgScale = source.side !== 'enemy' || source.duel ? 1 : source.realmIndex < LB_EARLY_REALMS ? LB_EARLY_DMG_SCALE : LB_ENEMY_DMG_SCALE;
     const ownTeam = source.side === 'player' ? battle.allies : battle.foes;
     const foes = lbAlive(source.side === 'player' ? battle.foes : battle.allies);
     if (!foes.length) return;
@@ -1399,7 +1413,8 @@ function runBoardBattle() {
 
     const enemy = state.currentEnemy;
     const player = lbBuildPlayerCombatant();
-    const allies = [player, ...lbBuildAllies(player)];
+    if (enemy.duel) player.slots = player.slots.map(slot => lbMakeSlot(lbDuelDef(slot.def)));
+    const allies = enemy.duel ? [player] : [player, ...lbBuildAllies(player)];
     const foes = [enemy, ...(enemy.escorts || [])].map(lbBuildEnemyCombatant);
     const ownBond = lbApplyTeamBonds(allies)[0];
     lbApplyTeamBonds(foes);
@@ -1642,12 +1657,36 @@ function lbFloat(unit, text, kind) {
 }
 
 /* Static board panel shown out of combat (board editor view). */
+/* PvP chạy theo lượt qua relay, không có sàn đấu thời gian thực nên vẽ khung riêng */
+function lbPvpRowHTML(name, rank, hp, maxHp, avatar, color) {
+    const pct = lbClamp(hp / Math.max(1, maxHp) * 100, 0, 100);
+    return `<div style="display:flex;gap:12px;align-items:center;margin:10px 0">
+        <div style="width:72px;flex:none">${avatar}</div>
+        <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;gap:8px"><b style="color:${color}">${name}</b><span class="small">${fmtVal(hp)}/${fmtVal(maxHp)}</span></div>
+            <div class="small">${rank}</div>
+            <div style="height:12px;background:#0006;border-radius:6px;overflow:hidden;margin-top:4px"><div style="height:100%;width:${pct}%;background:${color}"></div></div>
+        </div>
+    </div>`;
+}
+
+function lbPvpDuelHTML(enemy) {
+    const me = `${REALMS[state.realmIndex || 0]} ${STAGES[state.realmStage || 0]}`;
+    return `<div class="lb-editor-head">⚔️ Đấu PvP <span class="small">${pvpSession.myTurn ? 'Lượt của ngươi' : 'Lượt đối thủ'}</span></div>
+        ${lbPvpRowHTML(enemy.name, unitRankText(enemy), enemy.hp, enemy.maxHp, enemyAvatarSvg(enemy), '#ff7a7a')}
+        ${lbPvpRowHTML(state.name || 'Ngươi', me, state.hp, state.totalMaxHp, playerAvatarSvg(), '#6fd17a')}`;
+}
+
 function renderBoardArena() {
     const el = lbArenaEl();
     if (!el) return;
     if ((window.__boardBattle && window.__boardBattle.running) || coop.helping?.arena) return;
 
     el.classList.remove('lb-active');
+    if (state.currentEnemy?.isPvP && pvpSession.active) {
+        el.innerHTML = lbPvpDuelHTML(state.currentEnemy);
+        return;
+    }
     ensureBoardState();
     const slots = boardItems();
 

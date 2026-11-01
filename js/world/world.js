@@ -1531,21 +1531,18 @@ function handleHuVoThrone(msg) {
     renderAll();
 }
 
-/* Người giữ ngôi là boss cuối: mạnh hơn người thách đấu bao nhiêu thì boss mạnh lên bấy nhiêu, có trần để người sau còn đường thắng */
-function huVoHolderRatio(theirs, mine) {
-    return Math.min(HU_VO_HOLDER_CAP, Math.max(1, theirs / mine));
-}
-
+/* Người giữ ngôi là boss cuối, giữ nguyên chỉ số và trận pháp lúc họ thắng */
 function applyHuVoHolder(enemy, holder) {
-    recalculateStats();
     enemy.name = holder.name;
     enemy.look = holder.look || enemy.look;
-    enemy.str = Math.floor(enemy.str * huVoHolderRatio(holder.atk, state.totalPower));
-    enemy.def = Math.floor(enemy.def * huVoHolderRatio(holder.def, state.totalDef));
-    enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * huVoHolderRatio(holder.hp, state.totalMaxHp));
+    enemy.str = holder.atk;
+    enemy.def = holder.def;
+    enemy.hp = enemy.maxHp = holder.hp;
+    enemy.shownRealm = REALM_COUNT - 1;
     enemy.elements = holder.elements;
     enemy.path = holder.path;
-    enemy.boardDefs = Array.from({ length: LB_BOARD_SLOTS }, () => ({ ...LINH_BAO_MAP[HU_VO_LB], grade: LB_MAX_GRADE, level: 1, flatPower: true }));
+    enemy.boardDefs = Array.from({ length: LB_BOARD_SLOTS }, huVoLinhBao).map(lbDuelDef);
+    enemy.duel = true;
     log(`🌌 ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, đang đợi ngươi.`);
 }
 
