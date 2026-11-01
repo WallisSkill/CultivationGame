@@ -44,7 +44,7 @@ function sceneSpots(loc) {
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), DAO_PATHS[loc.path]?.race === state.race && state.daoPath !== loc.path);
     add('📜', 'Truyền thừa các hệ', () => openAllHall(), !!loc.hallAll);
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
-    add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect' || (loc.type === 'town' && loc.world === 'hondon'));
+    add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect' || (loc.type === 'town' && NO_MONSTER_WORLDS.includes(loc.world)));
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), (loc.type === 'town' || loc.type === 'sect') && !NO_MONSTER_WORLDS.includes(loc.world));
     LOCATION_NPCS[loc.id].filter(key => !npcGone(key)).forEach(key => add(npcOffers(key).length || npcReports(key).length ? '❗' : '💬', NPCS[key].name, () => openNpcTalk(key)));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());

@@ -92,7 +92,7 @@ G.MAIN_QUESTS.forEach((q, i) => {
     q.steps.forEach(step => { if (step.talk && !G.LOCATION_NPCS[step.loc].includes(step.talk)) fail.push(`${q.id}: ${step.talk} không có ở ${step.loc}`); });
     if (q.unlock && q.needs[0] !== q.unlock - 1) fail.push(`${q.id}: needs ${q.needs} lệch unlock ${q.unlock}`);
 });
-['tien', 'thanh', 'thien', 'hongmong', 'chungnguyen'].forEach(w => {
+['tien', 'thanh', 'thien'].forEach(w => {
     const list = Object.values(G.LOCATIONS).filter(l => l.world === w);
     if (!list.some(l => (l.services || []).includes('shop'))) fail.push(`${w}: không có shop`);
     if (!list.some(l => (l.services || []).includes('forge'))) fail.push(`${w}: không có forge`);
@@ -101,7 +101,7 @@ G.MAIN_QUESTS.forEach((q, i) => {
 for (let r = 0; r < 29; r++) {
     if (!Object.values(G.LOCATIONS).some(l => (l.services || []).includes('forge') && l.minR <= r && l.maxR >= r)) fail.push(`cảnh giới ${r}: không có lò rèn`);
 }
-G.WORLD_TIERS.filter(w => w.id !== 'hondon').forEach(w => {
+G.WORLD_TIERS.filter(w => !['hondon', 'hongmong', 'chungnguyen'].includes(w.id)).forEach(w => {
     if (!Object.values(G.LOCATIONS).some(l => l.world === w.id && l.forgeGrade === 2)) fail.push(`${w.id}: không có Thần lò`);
 });
 
@@ -117,15 +117,17 @@ G.SIDE_QUESTS.filter(q => q.reward?.opens).forEach(q => q.steps.forEach(step => 
     if (G.LB_GRADE_UNLOCK_REALM[grade] !== realm) fail.push(`pháp giai ${grade} phải mở ở cảnh giới ${realm}`);
 });
 
-Object.values(G.LOCATIONS).filter(l => l.world === 'hondon').forEach(l => {
-    if (l.enemies.length) fail.push(`${l.name}: Hỗn Độn Hải không được có quái`);
-    if (l.services.length || l.blackMarket) fail.push(`${l.name}: Hỗn Độn Hải không được có dịch vụ`);
+Object.values(G.LOCATIONS).filter(l => ['hondon', 'hongmong', 'chungnguyen'].includes(l.world)).forEach(l => {
+    if (l.enemies.length) fail.push(`${l.name}: không được có quái`);
+    if (l.services.length || l.blackMarket) fail.push(`${l.name}: không được có dịch vụ`);
 });
 
 G.GATE_TIERS.forEach(tier => {
     const shop = G.LOCATIONS[tier.shop];
     if (shop && (!shop.services.includes('shop') || shop.minR > tier.realm - 1)) fail.push(`mốc ${tier.realm}: ${shop.name} không bán được đồ mốc`);
-    const slots = G.GATE_QUESTS.filter(q => q.reward.gateGear.realm === tier.realm).flatMap(q => q.reward.gateGear.slots);
+    if (tier.forged && !tier.pieces) return;
+    const reward = q => q.reward.gateGear || q.reward.forgePieces;
+    const slots = G.GATE_QUESTS.filter(q => reward(q).realm === tier.realm).flatMap(q => reward(q).slots);
     if (slots.length !== G.GEAR_SLOT_IDS.length || G.GEAR_SLOT_IDS.some(k => !slots.includes(k))) fail.push(`mốc ${tier.realm}: nhiệm vụ phụ không đủ bộ đồ`);
 });
 

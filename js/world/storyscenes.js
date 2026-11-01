@@ -138,7 +138,7 @@ const REGION_QUESTS = [
 SIDE_QUESTS.push(...REGION_QUESTS);
 REGION_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 
-const FREE_SERVICE_LOCATIONS = ['thanh_thuy', 'co_thu', 'truong_ha'];
+const FREE_SERVICE_LOCATIONS = ['thanh_thuy'];
 
 const ROAD_TALES = {
     pham: [
@@ -312,12 +312,7 @@ const GATE_QUEST_SETS = {
     30: [
         { loc: 'ma_than_mo', npc: 'hd_thu_cuu', title: 'Long Cốt Hỗn Độn', gather: { loc: 'ma_than_mo', hours: GATE_QUEST_GATHER_HOURS, label: 'Nhặt long cốt' }, slots: ['armor', 'helm'], intro: 'Hồng Mông có trước cả Hỗn Độn, đồ thường vào đó là thành không có. Long cốt ở đây đủ cũ để sống sót.', done: 'Long cốt không chịu mục. Ngươi mặc nó thì cũng không mục.' },
         { loc: 'vo_chung_lau', npc: 'am_duong', title: 'Tầng Không Có Số', gather: { loc: 'vo_chung_lau', hours: GATE_QUEST_GATHER_HOURS, label: 'Leo tầng không có số' }, slots: ['weapon', 'ring'], intro: 'Tháp này cất thứ binh khí chưa từng được rèn. Leo đủ lâu, nó sẽ tự rơi vào tay ngươi.', done: 'Tháp vẫn không có tầng cuối, nhưng ngươi đã có thứ để mang đi.' },
-        { loc: 'hai_tam', npc: 'vo_danh', title: 'Hơi Thở Hải Tâm', gather: { loc: 'hai_tam', hours: GATE_QUEST_GATHER_HOURS, label: 'Ngồi giữa mắt bão' }, slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ngồi giữa bão đủ lâu mà không tan thì hơi ấy đọng lại thành đồ.', done: 'Đủ sáu món cấp Hồng Mông. Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
-    ],
-    31: [
-        { loc: 'dao_gia_am', npc: 'vong_ky', title: 'Dệt Áo Bằng Tử Khí', gather: { loc: 'tu_khi', hours: GATE_QUEST_GATHER_HOURS, label: 'Thu Hồng Mông Tử Khí' }, slots: ['armor', 'helm'], intro: 'Cõi của ngươi không có ai để chém, nên phải tự làm lấy. Về Thiên Nguyên thu Tử Khí mà dệt áo, bước tới Trường Hà không có áo là tan.', done: 'Ngươi vừa mặc vào thứ đã tạo ra Đạo. Đừng giặt.' },
-        { loc: 'vo_cuong', npc: 'ly_khach', title: 'Lửa Đầu Tiên', gather: { loc: 'so_hoa', hours: GATE_QUEST_GATHER_HOURS, label: 'Lấy lửa Sơ Hỏa Đài' }, slots: ['weapon', 'ring'], intro: 'Bếp ta tắt lửa rồi. Ngươi có ngọn lửa chưa từng tắt trên đó, xin một mồi. Tiện tay tôi luôn binh khí của ngươi.', done: 'Lửa tốt. Bữa này ta trả công bằng hai món, khỏi ghi sổ.' },
-        { loc: 'ma_than_mo', npc: 'hd_thu_cuu', title: 'Bào Thai Của Đạo', gather: { loc: 'dao_thai', hours: GATE_QUEST_GATHER_HOURS, label: 'Canh Đạo Thai' }, slots: ['boots', 'amulet'], intro: 'Người chết ở đây đều không thấy được đoạn cuối. Ngồi canh Đạo Thai đi, thứ chưa ra đời mới dẫn được ngươi tới chỗ mọi thứ đã kết thúc.', done: 'Đủ sáu món cấp Chung Nguyên. Từ đây không còn ai đào mộ giúp ngươi nữa.' }
+        { loc: 'hai_tam', npc: 'vo_danh', title: 'Hơi Thở Hải Tâm', gather: { loc: 'hai_tam', hours: GATE_QUEST_GATHER_HOURS, label: 'Ngồi giữa mắt bão' }, slots: ['boots', 'amulet'], intro: 'Mắt bão này thở ra hơi của Hồng Mông. Ngồi giữa bão đủ lâu mà không tan thì hơi ấy đọng lại thành đồ.', done: 'Đủ sáu mảnh rèn Hồng Mông. Giờ tự rèn lấy, Tử Khí Thiên Nguyên sẽ nhận ra ngươi.' }
     ]
 };
 
@@ -329,7 +324,9 @@ const GATE_QUESTS = Object.entries(GATE_QUEST_SETS).flatMap(([gate, set]) => set
         after: stage ? `gate_${gate}_${stage - 1}` : null,
         intro: [[speaker, entry.intro]],
         steps: [{ ...(entry.gather ? { gather: entry.gather } : { hunt: { loc: entry.loc, name: entry.hunt, n: GATE_QUEST_HUNT } }), say: [[speaker, entry.done]] }],
-        reward: { hours: 2, goldRefs: 10, gateGear: { realm: Number(gate), slots: entry.slots } }
+        reward: gateTierOf(Number(gate)).pieces
+            ? { forgePieces: { realm: Number(gate), slots: entry.slots } }
+            : { hours: 2, goldRefs: 10, gateGear: { realm: Number(gate), slots: entry.slots } }
     };
 }));
 SIDE_QUESTS.push(...GATE_QUESTS);

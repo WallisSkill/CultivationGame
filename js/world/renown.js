@@ -29,6 +29,7 @@ function hashText(text) {
 
 function npcTianjiao(locId) {
     const loc = LOCATIONS[locId];
+    if (EMPTY_WORLDS.includes(loc.world)) return [];
     const seed = hashText(locId);
     if (loc.world === 'hondon') {
         return HONDON_DAO_GIA.map((key, i) => ({ id: `npc_${key}`, name: NPCS[key].name, score: TIANJIAO_BASE_SCORE * renownPoints(loc.maxR) * (HONDON_DAO_GIA.length - i) }));
@@ -40,10 +41,14 @@ function npcTianjiao(locId) {
     }));
 }
 
+/* Hồng Mông và Chung Nguyên không có ai khác, bảng chỉ có mình người chơi */
+function boardRivals(locId) {
+    return EMPTY_WORLDS.includes(LOCATIONS[locId].world) ? [] : [...npcTianjiao(locId), ...knownPlayerScores(locId)];
+}
+
 function tianjiaoBoard(locId) {
     const me = { id: 'me', name: state.name, score: state.renown?.[locId] || 0, isMe: true };
-    const others = knownPlayerScores(locId);
-    return [...npcTianjiao(locId), ...others, me]
+    return [...boardRivals(locId), me]
         .sort((a, b) => b.score - a.score || (b.isMe ? 1 : 0) - (a.isMe ? 1 : 0))
         .slice(0, TIANJIAO_BOARD_SIZE);
 }
@@ -62,7 +67,7 @@ function thienHaBoard(worldId) {
         totals.set(key, row);
     };
     Object.keys(LOCATIONS).filter(id => LOCATIONS[id].world === worldId).forEach(id => {
-        [...npcTianjiao(id), ...knownPlayerScores(id)].forEach(entry => add(entry.name, entry));
+        boardRivals(id).forEach(entry => add(entry.name, entry));
         add('me', { name: state.name, score: state.renown?.[id] || 0, isMe: true });
     });
     return [...totals.values()].sort((a, b) => b.score - a.score || (b.isMe ? 1 : 0) - (a.isMe ? 1 : 0));
@@ -134,10 +139,12 @@ function openTianjiaoBoard() {
         <b>${formatNumber(entry.score)}</b></div>`).join('');
     const rank = tianjiaoRank(locId);
     const perks = renownPerkLines(rank).map(line => `<div class="small">${line}</div>`).join('');
-    const needed = npcTianjiao(locId)[2].score;
+    const needed = npcTianjiao(locId)[2]?.score || 0;
     const hint = rank >= 1 && rank <= 3
         ? `<div class="small"><b>Ưu đãi hạng ${rank} tại đây:</b></div>${perks}`
-        : worldOf(locId).id === 'hondon'
+        : EMPTY_WORLDS.includes(worldOf(locId).id)
+            ? '<div class="small">Cõi này không có ai ngoài ngươi.</div>'
+            : worldOf(locId).id === 'hondon'
             ? '<div class="small">Hỗn Độn Hải không có quái để săn, bảng này chỉ có sáu Đạo Giả. Gặp họ để luận đạo: thắng được cộng điểm, thua bị trừ, đối thủ càng cao càng đáng.</div>'
             : `<div class="small">Săn tại đây để tăng điểm, quái cảnh giới càng cao càng nhiều điểm. Cần vượt ${formatNumber(needed)} điểm để vào top 3.</div>`;
     const world = worldOf(locId);

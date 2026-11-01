@@ -861,11 +861,47 @@ function openWorldModal(id, title, body) {
 }
 
 function selfForging() {
-    return realmWorld() === SELF_FORGE_SITE.world;
+    return (state.realmIndex || 0) >= OVERSEER_REALM;
 }
 
 function forgeSite() {
-    return selfForging() ? SELF_FORGE_SITE : currentLocation();
+    return selfForging() ? { ...SELF_FORGE_SITE, world: realmWorld() } : currentLocation();
+}
+
+function selfGateTier() {
+    const tier = selfForging() ? gateTierOf(state.realmIndex + 1) : null;
+    return tier?.forged ? tier : null;
+}
+
+function hasForgePiece(tier, slot) {
+    return !tier.pieces || !!state.forgePieces?.[tier.realm]?.includes(slot);
+}
+
+function selfGateRows(have, matCost) {
+    const tier = selfGateTier();
+    if (!tier) return '';
+    return GEAR_SLOT_IDS.map(slot => {
+        const it = makeGateGear(tier, slot, GATE_QUEST_QUALITY);
+        const ready = hasForgePiece(tier, slot);
+        return `<div class="shop-item forge-row">
+            <div><b style="color:${tier.color}">${GEAR_SLOTS[slot].icon} ${tier.icon} ${it.name}</b><div class="small">${gearStatText({ ...it, subs: [] })}</div></div>
+            <button onclick="startGateForge('${slot}')" ${!ready || have < matCost ? 'disabled' : ''}>${ready ? 'Rèn' : 'Thiếu mảnh'}</button>
+        </div>`;
+    }).join('');
+}
+
+function startGateForge(slot) {
+    const tier = selfGateTier();
+    if (!tier || !hasForgePiece(tier, slot)) return;
+    const worldId = realmWorld();
+    const matCost = forgeMaterialCost();
+    if ((state.mats[worldId] || 0) < matCost) { showToast('Thiếu nguyên liệu.', 'warn'); return; }
+    state.mats[worldId] -= matCost;
+    const seconds = hastedSeconds(FORGE_HOURS * 3600);
+    state.forgeQueue.push({ slot, gateRealm: tier.realm, total: seconds, remaining: seconds });
+    log(`🔨 Tự rèn ${GEAR_SLOTS[slot].label} cấp ${tier.label}, xong sau ${formatRealDuration(seconds)}.`);
+    openForge();
+    renderAll();
 }
 
 function accrueChaosStone(sec) {
@@ -873,7 +909,7 @@ function accrueChaosStone(sec) {
     const clock = (state.chaosStoneClock || 0) + sec;
     const stones = Math.floor(clock / CHAOS_STONE_SECONDS);
     state.chaosStoneClock = clock - stones * CHAOS_STONE_SECONDS;
-    if (stones) state.mats.hondon = (state.mats.hondon || 0) + stones;
+    if (stones) state.mats[realmWorld()] = (state.mats[realmWorld()] || 0) + stones;
 }
 
 function openForge() {
@@ -886,7 +922,7 @@ function openForge() {
     const matCost = forgeMaterialCost();
     const picking = forgeCanChooseSubs(loc, realm);
     const price = forgePriceWith(realm, picking ? forgeChosenSubs.length : 0);
-    const rows = GEAR_SLOT_IDS.map(slot => {
+    const rows = selfGateRows(have, matCost) + GEAR_SLOT_IDS.map(slot => {
         const it = makeGearItem(realm, slot, 2);
         return `<div class="shop-item forge-row">
             <div><b style="color:${GEAR_QUALITIES[2].color}">${GEAR_SLOTS[slot].icon} ${it.name}</b><div class="small">${gearStatText({ ...it, subs: [] })}</div></div>
@@ -988,7 +1024,7 @@ function advanceForgeQueue(sec) {
 }
 
 function finishForge(job) {
-    const gear = makeForgedGear(job.realm, job.slot, job.grade, job.subs);
+    const gear = job.gateRealm ? makeGateGear(gateTierOf(job.gateRealm), job.slot, GATE_QUEST_QUALITY) : makeForgedGear(job.realm, job.slot, job.grade, job.subs);
     addItemToInventory(gear);
     log(`🔨 Rèn xong ${gear.name}!`);
     showToast(`Rèn xong ${gear.name}`, 'info');
@@ -1075,7 +1111,7 @@ function gearGate(realm) {
     if (!tier) return null;
     const worn = gateGearWorn(tier);
     if (worn >= GEAR_SLOT_IDS.length) return null;
-    return { id: `gate_gear_${realm}`, title: `${tier.title}, nhận từ nhiệm vụ phụ${tier.shop ? ` hoặc mua ở ${LOCATIONS[tier.shop].name}` : ''} (${worn}/${GEAR_SLOT_IDS.length})` };
+    return { id: `gate_gear_${realm}`, title: `${tier.title}, ${tier.forged ? `tự rèn ở nút Rèn đồ${tier.pieces ? ' khi có mảnh rèn từ các Đạo Giả' : ''}` : `nhận từ nhiệm vụ phụ${tier.shop ? ` hoặc mua ở ${LOCATIONS[tier.shop].name}` : ''}`} (${worn}/${GEAR_SLOT_IDS.length})` };
 }
 
 function getBreakthroughGate(realm) {
@@ -1264,7 +1300,12 @@ function grantQuestReward(q) {
         state.gold += gold;
         log(`💰 +${formatNumber(gold)} linh thạch`);
     }
-    if (selfForging()) grantMaterial(SELF_FORGE_SITE.world, CHAOS_STONE_QUEST);
+    if (selfForging()) grantMaterial(realmWorld(), CHAOS_STONE_QUEST);
+    if (r.forgePieces) {
+        const held = state.forgePieces?.[r.forgePieces.realm] || [];
+        state.forgePieces = { ...state.forgePieces, [r.forgePieces.realm]: [...new Set([...held, ...r.forgePieces.slots])] };
+        log(`🧩 Nhận mảnh rèn: ${r.forgePieces.slots.map(slot => GEAR_SLOTS[slot].label).join(', ')}.`);
+    }
     if (r.gear) addItemToInventory(makeGearItem(state.realmIndex, r.gear[0], r.gear[1]));
     if (r.gateGear) r.gateGear.slots.forEach(slot => addItemToInventory(makeGateGear(gateTierOf(r.gateGear.realm), slot, GATE_QUEST_QUALITY)));
     if (r.treasure) addItemToInventory(makeTreasureGear(state.realmIndex, randomGearSlot(), TREASURE_REWARD.quality, TREASURE_REWARD.bonus));
@@ -1453,6 +1494,7 @@ function questRewardText(q) {
     if (r.hours) parts.push(`+${formatNumber(cultivationSecondsXp(cultivationHoursToSeconds(r.hours)))} tu vi`);
     if (r.goldRefs) parts.push(`+${formatNumber(goldRef(state.realmIndex) * r.goldRefs)} linh thạch`);
     if (r.gear) parts.push(`${GEAR_SLOTS[r.gear[0]].label} phẩm ${GEAR_QUALITIES[r.gear[1]].name}`);
+    if (r.forgePieces) parts.push(`Mảnh rèn ${r.forgePieces.slots.map(slot => GEAR_SLOTS[slot].label).join(', ')} cấp ${gateTierOf(r.forgePieces.realm).label}`);
     if (r.gateGear) parts.push(`${r.gateGear.slots.map(slot => GEAR_SLOTS[slot].label).join(', ')} cấp ${gateTierOf(r.gateGear.realm).label}`);
     if (r.treasure) parts.push(`1 món ngẫu nhiên phẩm ${GEAR_QUALITIES[TREASURE_REWARD.quality].name}, vượt ${TREASURE_REWARD.bonus} cảnh giới`);
     if (r.lb) parts.push('1 linh bảo ngẫu nhiên');
@@ -1959,6 +2001,6 @@ setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true);
 
 Object.assign(window, {
     openHuntRange, setHuntRange, openNpcTalk, talkAboutArea, acceptFromNpc, reportToNpc, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
-    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, challengeSaint, challengeLuanDao, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
+    startForge, toggleForgeSub, upgradeGear, acceptBounty, openBountyBoard, talkStory, challengeSaint, challengeLuanDao, startGateForge, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });
