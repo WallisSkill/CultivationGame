@@ -192,7 +192,21 @@ LINH_BAO.push(
     { id: 'thien_loi', name: 'Thiên Lôi Đại Trận', element: 'Thủy', cooldown: 3.8, cost: 720, path: 'phap', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.2 }], desc: 'Trận sét phủ toàn chiến trường.' },
     { id: 'bang_thuat', name: 'Băng Phong Thuật', element: 'Thủy', cooldown: 4.2, cost: 700, path: 'phap', target: 'aoe', effects: [{ action: 'freeze', magnitude: 1.2 }, { action: 'damage', magnitude: 0.7 }], desc: 'Đóng băng cả bầy địch.' },
     { id: 'van_thu', name: 'Vạn Thú Hống', element: 'Mộc', cooldown: 3.4, cost: 690, path: 'yeu', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'buffAtk', magnitude: 0.04 }], desc: 'Tiếng gầm xé tai, càng gầm càng hăng.' },
-    { id: 'yeu_trao', name: 'Yêu Trảo', element: 'Mộc', cooldown: 2.4, cost: 660, path: 'yeu', effects: [{ action: 'damage', magnitude: 1.4 }, { action: 'burn', magnitude: 0.2 }], desc: 'Vuốt yêu xé rách, vết thương âm ỉ.' }
+    { id: 'yeu_trao', name: 'Yêu Trảo', element: 'Mộc', cooldown: 2.4, cost: 660, path: 'yeu', effects: [{ action: 'damage', magnitude: 1.4 }, { action: 'burn', magnitude: 0.2 }], desc: 'Vuốt yêu xé rách, vết thương âm ỉ.' },
+    { id: 'dai_nhat', name: 'Đại Nhật Phật Quang', element: 'Kim', cooldown: 3.6, cost: 700, path: 'phat', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.0 }, { action: 'shield', magnitude: 0.05 }], desc: 'Phật quang phủ khắp, vừa diệt tà vừa hộ thân.' },
+    { id: 'phuc_ma', name: 'Kim Cương Phục Ma', element: 'Kim', cooldown: 3.0, cost: 680, path: 'phat', effects: [{ action: 'damage', magnitude: 1.8 }, { action: 'shield', magnitude: 0.1 }], desc: 'Một chưởng trấn ma, thân như kim cương.' },
+    { id: 'dan_hoa', name: 'Đan Hỏa Phần Thiên', element: 'Mộc', cooldown: 3.6, cost: 700, path: 'dan', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'burn', magnitude: 0.2 }], desc: 'Đan hỏa lan khắp chiến trường.' },
+    { id: 'hoi_xuan', name: 'Hồi Xuân Đan', element: 'Mộc', cooldown: 3.2, cost: 680, path: 'dan', effects: [{ action: 'damage', magnitude: 1.2 }, { action: 'heal', magnitude: 0.08 }], desc: 'Nuốt đan hồi sức, ném đan nổ địch.' },
+    { id: 'khon_long', name: 'Khốn Long Trận', element: 'Thổ', cooldown: 3.8, cost: 700, path: 'tran', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.8 }, { action: 'stun', magnitude: 0.5 }], desc: 'Trận khởi, cả bầy địch không nhấc nổi chân.' },
+    { id: 'phong_an', name: 'Phong Ma Trận Ấn', element: 'Thổ', cooldown: 3.4, cost: 680, path: 'tran', effects: [{ action: 'damage', magnitude: 1.7 }, { action: 'freeze', magnitude: 0.5 }], desc: 'Ấn trận đè lên một mục tiêu.' },
+    { id: 'long_tuc', name: 'Long Tức', element: 'Thủy', cooldown: 3.6, cost: 710, path: 'long', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.1 }], desc: 'Hơi thở của rồng quét toàn trận.' },
+    { id: 'long_trao', name: 'Thương Long Trảo', element: 'Thủy', cooldown: 3.4, cost: 690, path: 'long', effects: [{ action: 'damage', magnitude: 2.0 }], desc: 'Vuốt rồng xé một mục tiêu.' },
+    { id: 'van_doc', name: 'Vạn Độc Vụ', element: 'Mộc', cooldown: 3.6, cost: 700, path: 'doc', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.7 }, { action: 'burn', magnitude: 0.4 }], desc: 'Khói độc thấm vào từng kẻ địch.' },
+    { id: 'xa_nha', name: 'Xà Nha', element: 'Mộc', cooldown: 2.8, cost: 670, path: 'doc', effects: [{ action: 'damage', magnitude: 1.5 }, { action: 'lifesteal', magnitude: 0.3 }], desc: 'Nanh rắn hút sinh lực mục tiêu.' },
+    { id: 'phuong_viem', name: 'Phượng Hoàng Liệt Diễm', element: 'Hỏa', cooldown: 3.4, cost: 710, path: 'cam', target: 'aoe', effects: [{ action: 'damage', magnitude: 1.0 }, { action: 'burn', magnitude: 0.2 }], desc: 'Lửa phượng rơi như mưa.' },
+    { id: 'bang_kich', name: 'Kim Bằng Kích', element: 'Hỏa', cooldown: 3.2, cost: 690, path: 'cam', effects: [{ action: 'damage', magnitude: 2.1 }], desc: 'Lao xuống từ chín tầng mây.' },
+    { id: 'me_hon', name: 'Mê Hồn Thuật', element: 'Thổ', cooldown: 3.8, cost: 700, path: 'ho', target: 'aoe', effects: [{ action: 'damage', magnitude: 0.7 }, { action: 'stun', magnitude: 0.6 }], desc: 'Một ánh mắt, cả bầy địch đứng ngẩn.' },
+    { id: 'ho_hoa', name: 'Hồ Hỏa', element: 'Thổ', cooldown: 3.0, cost: 680, path: 'ho', effects: [{ action: 'damage', magnitude: 1.5 }, { action: 'burn', magnitude: 0.3 }], desc: 'Lửa hồ ly cháy âm ỉ trong thần hồn.' }
 );
 [['phi_kiem', 'kiem'], ['cuong_phong', 'kiem'], ['vo_cuc', 'kiem'], ['loi_dinh', 'phap'], ['huyen_bang', 'phap'], ['tu_linh', 'phap'],
  ['hau_tho', 'the'], ['huyen_vu', 'the'], ['kim_cang', 'the'], ['huyet_sat', 'ma'], ['huyet_ma', 'ma'], ['cuu_u', 'ma'],
@@ -653,7 +667,7 @@ function grantStartingLinhBao() {
     const matching = LINH_BAO.filter(lb => playerElements.includes(lb.element) && lb.cost <= 620);
     const offensive = matching.find(lb => lb.effects.some(e => e.action === 'damage')) || LINH_BAO_MAP.phi_kiem;
     const support = matching.find(lb => lb !== offensive) || LINH_BAO_MAP.thanh_moc;
-    const startPath = ORIGINS[originFor(state.root)].path;
+    const startPath = state.startPath || ORIGINS[pickOrigin()].path;
     const pathAoe = LINH_BAO.find(lb => lb.path === startPath && lb.target === 'aoe' && lb.cost >= 660 && lb.effects.some(e => e.action === 'damage'));
     return [offensive, support, pathAoe].map((def, i) => {
         const lb = makeLinhBao(def.id, 0, 1);
@@ -1054,7 +1068,27 @@ function lbApplyPathPassive(c) {
         case 'the': c.maxHp = Math.floor(c.maxHp * 1.3); c.hp = Math.floor(c.hp * 1.3); c.def = Math.floor(c.def * 1.2); break;
         case 'yeu': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.05); c.regen = 0.01; break;
         case 'ma': c.lifesteal = 0.1; break;
+        case 'phat': c.maxHp = Math.floor(c.maxHp * 1.1); c.hp = Math.floor(c.hp * 1.1); c.def = Math.floor(c.def * 1.25); break;
+        case 'dan': c.maxHp = Math.floor(c.maxHp * 1.1); c.hp = Math.floor(c.hp * 1.1); c.regen = 0.01; break;
+        case 'tran': c.aoeBonus = 1.2; c.def = Math.floor(c.def * 1.15); break;
+        case 'long': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.1); c.maxHp = Math.floor(c.maxHp * 1.15); c.hp = Math.floor(c.hp * 1.15); break;
+        case 'doc': c.aoeBonus = 1.15; c.lifesteal = 0.05; break;
+        case 'cam': c.slots.forEach(slot => { slot.cooldown *= 0.8; }); break;
+        case 'ho': c.slots.forEach(slot => { slot.cooldown *= 0.85; }); c.lifesteal = 0.05; break;
     }
+}
+
+function lbApplyTeamBonds(team) {
+    const members = team.filter(c => c.path);
+    const paths = members.map(c => c.path);
+    return members.map(c => {
+        const bond = pathTeamBond(c.path, paths);
+        c.atk = c.baseAtk = Math.floor(c.baseAtk * bond.atk);
+        c.def = Math.floor(c.def * bond.def);
+        c.maxHp = Math.floor(c.maxHp * bond.hp);
+        c.hp = Math.floor(c.hp * bond.hp);
+        return bond;
+    });
 }
 
 function lbBuildPlayerCombatant() {
@@ -1085,10 +1119,12 @@ const LB_ALLY_LOOK = { robe: '#3f6f9e', hairStyle: 4, weapon: 'sword' };
 const LB_ALLY_STAT = { atk: 0.35, hp: 0.4, def: 0.6 };
 
 function lbMakeAlly(player, name) {
-    const skills = LINH_BAO.filter(lb => lb.path === player.path).slice(0, LB_ALLY_SKILLS)
+    const paths = pathsOfRace(state.race);
+    const path = paths[Math.floor(Math.random() * paths.length)];
+    const skills = LINH_BAO.filter(lb => lb.path === path).slice(0, LB_ALLY_SKILLS)
         .map(lb => ({ ...lb, grade: maxLinhBaoGradeForRealm(player.realmIndex), level: 1, flatPower: true }));
     return Object.assign(lbBaseCombatant(), {
-        side: 'player', name, path: player.path,
+        side: 'player', name, path,
         hp: Math.floor(player.maxHp * LB_ALLY_STAT.hp), maxHp: Math.floor(player.maxHp * LB_ALLY_STAT.hp),
         baseAtk: Math.floor(player.atk * LB_ALLY_STAT.atk), atk: Math.floor(player.atk * LB_ALLY_STAT.atk),
         def: Math.floor(player.def * LB_ALLY_STAT.def),
@@ -1279,6 +1315,8 @@ function runBoardBattle() {
     const player = lbBuildPlayerCombatant();
     const allies = [player, ...lbBuildAllies(player)];
     const foes = [enemy, ...(enemy.escorts || [])].map(lbBuildEnemyCombatant);
+    const ownBond = lbApplyTeamBonds(allies)[0];
+    lbApplyTeamBonds(foes);
     const battle = { running: true, elapsedMs: 0, player, allies, foes, enemy: foes[0], timer: null };
     window.__boardBattle = battle;
 
@@ -1286,6 +1324,9 @@ function runBoardBattle() {
     lbBuildArenaDOM(battle);
     coopBroadcastArena(battle);
     log(`🎴 Khai chiến: ${allies.length} đấu ${foes.length}!`);
+    if (ownBond?.sinh) log('🌱 Đồng đội tương sinh: sức mạnh +10%.');
+    if (ownBond?.khac) log('⚡ Đồng đội tương khắc: phòng thủ -5%.');
+    if (ownBond?.five) log('☯️ Đủ ngũ hành: sức mạnh và HP +15%.');
 
     battle.timer = setInterval(() => lbStep(battle), LB_TICK_MS);
     lbUpdateArena(battle);

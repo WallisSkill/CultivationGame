@@ -13,7 +13,15 @@ const TIEN_VI = [
     { name: 'Đế Quân', merit: 700, realm: 15 }
 ];
 const COURT_MERIT_BASE = 10;
-const COURT_KILLS = 6;
+const COURT_MAX_ORDERS = 5;
+const COURT_OFFERS = 6;
+/* Độ khó theo mức nguy hiểm của nơi trong Giới của nó; nơi có boss cốt truyện lấy cảnh giới boss */
+const COURT_GRADES = [
+    { name: 'Thường', upTo: 0.33, mult: 1, kills: 6 },
+    { name: 'Khó', upTo: 0.66, mult: 2, kills: 8 },
+    { name: 'Hiểm', upTo: 0.99, mult: 3, kills: 10 },
+    { name: 'Tử Lệnh', upTo: 1, mult: 5, kills: 12 }
+];
 const COURT_GOLD_REFS = 10;
 const COURT_RENOWN_KILLS = 12;
 const COURT_TOP_MULT = 1.5;
@@ -56,10 +64,44 @@ function courtBoard() {
     return [...courtRivals(), { name: state.name, merit: state.merit || 0, isMe: true }].sort((a, b) => b.merit - a.merit);
 }
 
-function courtMeritReward() {
-    const step = WORLD_TIERS.findIndex(w => w.id === currentLocation().world);
-    const base = COURT_MERIT_BASE * Math.pow(2, step);
+const LOCATION_BOSS_REALMS = {};
+MAIN_QUESTS.forEach(q => {
+    let site = null;
+    q.steps.forEach(step => {
+        site = step.go || site;
+        if (step.boss && site) LOCATION_BOSS_REALMS[site] = Math.max(LOCATION_BOSS_REALMS[site] || 0, BOSSES[step.boss].realm);
+    });
+});
+
+function courtGrade(loc) {
+    const tier = WORLD_TIERS.find(w => w.id === loc.world);
+    const danger = LOCATION_BOSS_REALMS[loc.id] ?? (loc.minR + loc.maxR) / 2;
+    const share = tier.to > tier.from ? (danger - tier.from) / (tier.to - tier.from) : 1;
+    return COURT_GRADES.find(grade => share <= grade.upTo) || COURT_GRADES[COURT_GRADES.length - 1];
+}
+
+function courtMeritReward(loc) {
+    const step = WORLD_TIERS.findIndex(w => w.id === loc.world);
+    const base = COURT_MERIT_BASE * Math.pow(2, step) * courtGrade(loc).mult;
     return Math.floor(base * (courtBoard()[0].isMe ? COURT_TOP_MULT : 1));
+}
+
+function courtOffers() {
+    const world = currentLocation().world;
+    const active = state.courtOrders.map(order => order.loc);
+    const offers = (state.courtOffers || []).filter(o => LOCATIONS[o.loc].world === world && !active.includes(o.loc));
+    if (offers.length) return state.courtOffers = offers;
+    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && l.minR <= state.realmIndex && !active.includes(l.id));
+    state.courtOffers = pool.sort(() => Math.random() - 0.5).slice(0, COURT_OFFERS)
+        .map(l => ({ loc: l.id, name: l.enemies[Math.floor(Math.random() * l.enemies.length)].name }));
+    return state.courtOffers;
+}
+
+function migrateCourtOrders() {
+    state.courtOrders = state.courtOrders || [];
+    if (!state.court) return;
+    state.courtOrders.push(state.court);
+    delete state.court;
 }
 
 function registerTienVi() {
@@ -71,29 +113,31 @@ function registerTienVi() {
     renderAll();
 }
 
-function acceptCourtOrder() {
-    if (!tienViRegistered() || state.court || !courtOpenHere()) return;
-    const world = currentLocation().world;
-    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && l.minR <= state.realmIndex);
-    const loc = pool[Math.floor(Math.random() * pool.length)];
-    const pick = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
-    state.court = { loc: loc.id, name: pick.name, need: COURT_KILLS, done: 0 };
-    log(`🏛️ Lệnh Thiên Đình: diệt ${COURT_KILLS} ${pick.name} tại ${loc.name}.`);
+function acceptCourtOrder(index) {
+    if (!tienViRegistered() || !courtOpenHere() || state.courtOrders.length >= COURT_MAX_ORDERS) return;
+    const offer = courtOffers()[index];
+    if (!offer) return;
+    const loc = LOCATIONS[offer.loc];
+    const need = courtGrade(loc).kills;
+    state.courtOrders.push({ loc: loc.id, name: offer.name, need, done: 0 });
+    state.courtOffers.splice(index, 1);
+    log(`🏛️ Lệnh Thiên Đình (${courtGrade(loc).name}): diệt ${need} ${offer.name} tại ${loc.name}.`);
     openCourt();
     renderAll();
 }
 
 function noteCourtKill(unit) {
-    const order = state.court;
-    if (!order || order.name !== unit.name || order.loc !== state.location) return;
+    const order = state.courtOrders.find(o => o.name === unit.name && o.loc === state.location);
+    if (!order) return;
     order.done++;
     if (order.done < order.need) return;
     const before = tienViIndex();
-    const merit = courtMeritReward();
-    const gold = goldRef(state.realmIndex) * COURT_GOLD_REFS;
+    const loc = LOCATIONS[order.loc];
+    const merit = courtMeritReward(loc);
+    const gold = goldRef(state.realmIndex) * COURT_GOLD_REFS * courtGrade(loc).mult;
     state.merit += merit;
     state.gold += gold;
-    state.court = null;
+    state.courtOrders = state.courtOrders.filter(o => o !== order);
     grantRenown(state.location, renownPoints(state.realmIndex) * COURT_RENOWN_KILLS);
     log(`🏛️ Hoàn thành lệnh Thiên Đình: +${merit} công lao, +${formatNumber(gold)} linh thạch.`);
     if (tienViIndex() > before) {
@@ -115,9 +159,15 @@ function openCourt() {
     const rows = courtBoard().map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
         <span>${i < 3 ? ['🥇', '🥈', '🥉'][i] : `${i + 1}.`} ${sectEscape(entry.name)}</span><b>${formatNumber(entry.merit)}</b></div>`).join('');
     const ranks = TIEN_VI.map((rank, i) => `<div class="small">${i === index ? '▶ ' : ''}${rank.name}: ${formatNumber(rank.merit)} công lao, cần để lên ${REALMS[rank.realm]}</div>`).join('');
-    const order = state.court
-        ? `<div class="small">Đang nhận lệnh: ${state.court.name} tại ${LOCATIONS[state.court.loc].name} (${state.court.done}/${state.court.need}).</div>`
-        : `<button class="mini-btn" onclick="acceptCourtOrder()">📜 Nhận lệnh (+${courtMeritReward()} công lao)</button>`;
+    const orders = state.courtOrders.map(order => `<div class="small">• ${order.name} tại ${LOCATIONS[order.loc].name} (${order.done}/${order.need}) · ${courtGrade(LOCATIONS[order.loc]).name}</div>`).join('');
+    const full = state.courtOrders.length >= COURT_MAX_ORDERS;
+    const offers = courtOffers().map((offer, i) => {
+        const loc = LOCATIONS[offer.loc];
+        return `<div class="market-row"><span class="small"><b>${courtGrade(loc).name}</b> · diệt ${courtGrade(loc).kills} ${offer.name} tại ${loc.name}</span>
+            <button class="mini-btn" ${full ? 'disabled' : ''} onclick="acceptCourtOrder(${i})">+${courtMeritReward(loc)} công lao</button></div>`;
+    }).join('');
+    const order = `<div class="small" style="margin-top:8px"><b>Lệnh đang làm ${state.courtOrders.length}/${COURT_MAX_ORDERS}</b></div>${orders}
+        <div class="small" style="margin-top:8px"><b>Lệnh có thể nhận</b></div>${offers}`;
     openWorldModal('courtModal', '🏛️ Thiên Đình Điện', `<div><b>${tienViName()}</b> · ${formatNumber(state.merit)} công lao${next ? ` / ${formatNumber(next.merit)}` : ''}</div>
         ${order}
         <div class="small" style="margin-top:10px"><b>Bảng tranh công</b> (đứng đầu được công lao x${COURT_TOP_MULT})</div>${rows}

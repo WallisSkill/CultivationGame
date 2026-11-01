@@ -1666,3 +1666,13 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 .market-head { margin-top: 10px; font-weight: 600; }
 .market-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; border-top: 1px solid rgba(255, 255, 255, 0.07); }
 .market-row > :last-child { flex: none; text-align: right; }
+
+#raceHost { flex: none; width: 100%; }
+.race-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 560px; margin: 12px auto 0; }
+.race-card { display: flex; flex-direction: column; gap: 2px; padding: 8px; text-align: center; }
+.race-card.active { background: #7b5633; color: #fff; }
+.path-grid { grid-template-columns: repeat(4, 1fr); margin-top: 8px; }
+.path-grid .race-card { padding: 5px; font-size: 0.78rem; }
+@media (max-width: 720px) {
+    .path-grid { grid-template-columns: repeat(2, 1fr); }
+}

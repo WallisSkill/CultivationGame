@@ -366,6 +366,29 @@ function characterCreatorHTML() {
     </div>`;
 }
 
+function renderRacePicker() {
+    state.race = state.race || 'nhan';
+    const cards = Object.entries(RACES).map(([id, race]) => `<button type="button" class="race-card ${state.race === id ? 'active' : ''}" onclick="setRace('${id}')">
+        <b>${race.icon} ${race.name}</b><span class="small">${race.desc}</span>
+    </button>`).join('');
+    const paths = pathsOfRace(state.race);
+    if (!paths.includes(state.startPath)) state.startPath = paths[0];
+    const pathCards = paths.map(id => `<button type="button" class="race-card ${state.startPath === id ? 'active' : ''}" onclick="setStartPath('${id}')">
+        <b>${DAO_PATHS[id].icon} ${DAO_PATHS[id].name}</b><span class="small">Hành ${DAO_PATHS[id].hanh}. ${DAO_PATHS[id].desc}</span>
+    </button>`).join('');
+    document.getElementById('raceHost').innerHTML = `<div class="race-grid">${cards}</div><div class="race-grid path-grid">${pathCards}</div>`;
+}
+
+function setRace(id) {
+    state.race = id;
+    renderRacePicker();
+}
+
+function setStartPath(id) {
+    state.startPath = id;
+    renderRacePicker();
+}
+
 let _creatorHost = null;
 
 function renderCharacterCreator(host) {
@@ -394,4 +417,4 @@ function openLookModal() {
     modal.style.display = 'flex';
 }
 
-if (typeof window !== 'undefined') Object.assign(window, { setLook, openLookModal });
+if (typeof window !== 'undefined') Object.assign(window, { setLook, openLookModal, setRace, setStartPath });

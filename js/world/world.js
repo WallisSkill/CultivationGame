@@ -69,6 +69,8 @@ function initWorldState() {
     state.questActive = state.questActive || [];
     state.forgeQueue = state.forgeQueue || [];
     state.hired = state.hired || 0;
+    migrateCourtOrders();
+    state.race = state.race || (DAO_PATHS[state.daoPath]?.race === 'yeu' ? 'yeu' : 'nhan');
     state.origin = state.origin || 'thuy';
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
     applyOriginQuest();
@@ -897,13 +899,13 @@ function getBreakthroughGate(realm) {
 }
 
 function pickOrigin() {
-    return originFor(state.root);
+    return state.race === 'yeu' ? 'yeu' : originFor(state.root);
 }
 
 function applyStartingOrigin() {
     state.origin = pickOrigin();
     state.location = ORIGINS[state.origin].loc;
-    state.daoPath = ORIGINS[state.origin].path;
+    state.daoPath = state.startPath || ORIGINS[state.origin].path;
     log(`🌱 Xuất thân: ${ORIGINS[state.origin].name}.`);
 }
 
@@ -1279,10 +1281,9 @@ function renderQuestPanel() {
         cards.push(`<div class="quest-card"><div class="small">Tiểu cảnh giới · ${LOCATIONS[q.loc].name}</div><b>${q.title}</b>
             <button class="mini-btn" onclick="goToStageQuest('${q.id}')">${here ? 'Nhận' : 'Đi tới'}</button></div>`);
     });
-    if (state.court) {
-        const c = state.court;
-        cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình</div><b>${c.name}</b><div class="small">${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div></div>`);
-    }
+    (state.courtOrders || []).forEach(c => {
+        cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc]).name}</div><b>${c.name}</b><div class="small">${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div></div>`);
+    });
     if (state.bounty) {
         const b = state.bounty;
         cards.push(`<div class="quest-card"><div class="small">Treo thưởng</div><b>${b.name}</b><div class="small">${LOCATIONS[b.loc].name} (${b.done}/${b.need})</div></div>`);
@@ -1364,15 +1365,17 @@ function renderAppearancePanel() {
         </div>`;
     }).join('');
     const path = DAO_PATHS[state.daoPath];
-    const beatenBy = Object.values(DAO_PATHS).find(p => p.beats === state.daoPath);
+    const countered = Object.keys(HANH_KHAC).find(h => HANH_KHAC[h] === path.hanh);
     el.innerHTML = `<div class="hero-card"><div class="hero-portrait">${playerAvatarSvg(true)}</div><div class="gear-slots">${slots}</div></div>
         <div class="loc-actions">
             <button class="mini-btn" onclick="equipForRealm()">Đúng cảnh giới</button>
             <button class="mini-btn" onclick="equipAll()">Mạnh nhất</button>
             <button class="mini-btn" onclick="sellOutdatedGear()">Bán lỗi thời (${outdatedGear().length})</button>
         </div>
+        <div class="small">${raceOf().icon} <b>${raceOf().name}</b> · ${raceOf().desc}</div>
         <div class="small">${path.icon} <b>${path.name}</b> · ${path.desc}</div>
-        <div class="small">Khắc ${DAO_PATHS[path.beats].name} (+25%) · bị ${beatenBy.name} khắc (-20%)</div>`;
+        <div class="small">Hành ${path.hanh}: khắc hệ ${HANH_KHAC[path.hanh]} (+25%) · bị hệ ${countered} khắc (-20%)</div>
+        <div class="small">Đồng đội hệ ${Object.keys(HANH_SINH).find(h => HANH_SINH[h] === path.hanh)} sinh cho ngươi: sức mạnh +10%. Đồng đội hệ ${countered} khắc ngươi: phòng thủ -5%.</div>`;
 }
 
 function renderWorldPanels() {

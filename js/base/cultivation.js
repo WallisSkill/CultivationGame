@@ -9,7 +9,7 @@ function getNeed(realmIndex = state.realmIndex, stage = state.realmStage) {
 
 function getEstimatedXpPerSecond() {
     const qi = (typeof currentLocationQi === 'function') ? currentLocationQi() : 1;
-    return cultivationRate(state.realmIndex || 0, state.root, qi);
+    return cultivationRate(state.realmIndex || 0, state.root, qi) * raceOf().xp;
 }
 
 function formatTime(seconds) {
@@ -51,7 +51,7 @@ function battleXpSeconds(minutes) {
 }
 
 function gainCultivationSeconds(seconds) {
-    const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * seconds);
+    const amount = Math.floor(cultivationRate(state.realmIndex || 0, state.root, 1) * raceOf().xp * seconds);
     gainXP(amount);
     return amount;
 }

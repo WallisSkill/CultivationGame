@@ -452,6 +452,16 @@ const SIDE_QUESTS = [
     { id: 's_mo', loc: 'dao_gia_am', npc: 'vong_ky', title: 'Tảo Mộ Ma Thần', needs: [26, 1], steps: [{ hunt: { loc: 'ma_than_mo', name: 'Ma Thần Tàn Hài', n: 8 }, say: [['vong_ky', 'Kẻ không có trật tự cũng cần người chôn.']] }], reward: { hours: 48, goldRefs: 150, gear: ['boots', 4] } }
 ];
 
+/* Chủng tộc: chọn lúc tạo nhân vật cùng hệ tu đầu tiên, cố định cả đời; Yêu tộc luôn có xuất thân yeu */
+const RACES = {
+    nhan: { name: 'Nhân tộc', icon: '🧑', desc: 'Tu vi nhanh hơn 10%. Xuất thân theo linh căn.', xp: 1.1, hp: 1, def: 1 },
+    yeu: { name: 'Yêu tộc', icon: '🐾', desc: 'HP +10%, phòng thủ +5%. Bắt đầu ở Vạn Thú Sơn.', xp: 1, hp: 1.1, def: 1.05 }
+};
+
+function raceOf() {
+    return RACES[state.race] || RACES.nhan;
+}
+
 /* Xuất thân: nơi bắt đầu, hệ tu đầu tiên và chương mở đầu riêng; tất cả hội tụ tại Thanh Vân Tông */
 const ORIGINS = {
     thuy: { name: 'Đứa trẻ Thanh Thủy Thôn', loc: 'thanh_thuy', path: 'phap' },
@@ -465,7 +475,7 @@ const ORIGINS = {
         ]
     },
     moc: {
-        name: 'Đứa trẻ thú nuôi', loc: 'van_thu', path: 'yeu', title: 'Tiếng Gầm Trên Vạn Thú Sơn',
+        name: 'Đứa trẻ thú nuôi', loc: 'van_thu', path: 'dan', title: 'Tiếng Gầm Trên Vạn Thú Sơn',
         boss: { id: 'ho_vuong', kind: 'beast', name: 'Bạch Ngạch Hổ Vương' },
         steps: [
             { go: 'van_thu', say: [['narr', 'Một con sói cái nhặt ngươi về từ xác đoàn thương nhân. Ngươi biết gầm trước khi biết nói.']] },
@@ -480,6 +490,15 @@ const ORIGINS = {
             { go: 'huyet_sat', say: [['narr', 'Huyết Sát Giáo trích máu ngươi từ năm năm tuổi. Máu ngươi mang hỏa linh căn, nên ngươi được sống lâu hơn những đứa khác.']] },
             { hunt: { loc: 'huyet_sat', name: 'Huyết Nô Vệ', n: 2 }, say: [['narr', 'Xiềng đứt. Thứ công pháp ngươi trộm nghe qua vách đá đang nóng lên trong mạch máu.']] },
             { boss: 'huyet_do', say: [['mac', 'Công pháp tà, nhưng tay ngươi không run. Thanh Vân Tông sẽ không hỏi ngươi từ đâu đến nếu ngươi không nói.']] }
+        ]
+    },
+    yeu: {
+        name: 'Yêu thú khai linh trí', loc: 'van_thu', path: 'yeu', title: 'Khai Linh',
+        boss: { id: 'lang_vuong', kind: 'beast', name: 'Xích Nhãn Lang Vương' },
+        steps: [
+            { go: 'van_thu', say: [['narr', 'Ngươi vốn là một con yêu thú trên Vạn Thú Sơn. Một đêm trăng tròn, linh trí bừng mở và ngươi nhớ được cái tên {name}.']] },
+            { hunt: { loc: 'van_thu', name: 'Yêu Lang', n: 2 }, say: [['narr', 'Bầy sói không còn nhận ra ngươi. Kẻ biết suy nghĩ thì không thuộc về bầy nữa.']] },
+            { boss: 'lang_vuong', say: [['mac', 'Thân yêu mà tâm biết nghĩ, hiếm đấy. Hóa hình đi rồi tới Thanh Vân Tông, lão sẽ không nói ngươi từ đâu đến.']] }
         ]
     },
     tho: {

@@ -221,6 +221,7 @@ window.addEventListener("load", () => {
     }
 
     renderCharacterCreator(document.getElementById('creatorHost'));
+    renderRacePicker();
 
     btn.addEventListener("click", () => {
         const val = input.value.trim();
@@ -235,6 +236,7 @@ window.addEventListener("load", () => {
         btn.disabled = true;
         btn.innerText = 'Đang khởi tạo...';
         document.getElementById('creatorHost').style.display = 'none';
+        document.getElementById('raceHost').style.display = 'none';
         startRootRank = randomRootRank();
         startRootElement = randomElements();
         state.root.elements = startRootElement;
@@ -825,13 +827,19 @@ function syncEnemyToRealm(enemy) {
 
 if (typeof window !== 'undefined') window.syncEnemyToRealm = syncEnemyToRealm;
 
-function recalculateStats() {
-    // Chỉ số gốc
+function bodyStats() {
     const rootKeep = 1 - (state.flaw || 0) / 100;
     const bloodMult = (state.bloodBuffUntil || 0) > Date.now() ? BLOOD_BUFF_MULT : 1;
-    const baseHp = Math.floor(state.maxHp * rootKeep);
-    const basePower = Math.floor(state.power * rootKeep * bloodMult);
-    const baseDef = Math.floor(state.defense * rootKeep);
+    return {
+        baseHp: Math.floor(state.maxHp * rootKeep * raceOf().hp),
+        basePower: Math.floor(state.power * rootKeep * bloodMult),
+        baseDef: Math.floor(state.defense * rootKeep * raceOf().def)
+    };
+}
+
+function recalculateStats() {
+    // Chỉ số gốc
+    const { baseHp, basePower, baseDef } = bodyStats();
 
     // Bonus từ trang bị
     const bonusHp = getEquippedHp();
@@ -955,9 +963,7 @@ function showStatDetails() {
     recalculateStats();
 
     // Calculate bonuses
-    const baseHp = state.maxHp;
-    const basePower = state.power;
-    const baseDef = state.defense;
+    const { baseHp, basePower, baseDef } = bodyStats();
     const equipHp = getEquippedHp();
     const equipAtk = getEquippedAtk();
     const equipDef = getEquippedDef();

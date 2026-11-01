@@ -14,6 +14,9 @@ const GUIDE_SECTIONS = [
             ['Bản thể / Trang bị', 'Tỉ lệ sức mạnh đến từ bản thân và từ đồ. Số trước là bản thể, số sau là trang bị.'],
             ['Linh căn', 'Các hệ ngũ hành và phẩm chất của ngươi. Phẩm càng cao chỉ số gốc càng lớn.'],
             ['Căn cơ', 'Mặc định 100%. Cấm vật ở Chợ Đen làm tổn căn cơ vĩnh viễn, giảm mọi chỉ số bản thể theo đúng phần trăm đó; Bổ Căn Đan hồi lại một ít. Dưới 50% thì không dùng thêm cấm vật được.'],
+            ['Chủng tộc', 'Chọn khi tạo nhân vật, không đổi được. Nhân tộc tu vi nhanh hơn 10%, có 7 hệ tu. Yêu tộc HP +10%, phòng thủ +5%, có 5 hệ tu, bắt đầu ở Vạn Thú Sơn.'],
+            ['Hệ tu', 'Mỗi hệ thuộc một hành. Kim khắc Mộc, Mộc khắc Thổ, Thổ khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim: đánh hệ bị khắc +25%, đánh hệ khắc mình -20%. Đổi hệ ở điểm Truyền thừa của đúng chủng tộc.'],
+            ['Đồng đội sinh khắc', 'Mộc sinh Hỏa, Hỏa sinh Thổ, Thổ sinh Kim, Kim sinh Thủy, Thủy sinh Mộc. Đội có người sinh cho ngươi: sức mạnh +10%. Đội có người khắc ngươi: phòng thủ -5%. Đủ cả 5 hành: sức mạnh và HP +15%. Hộ pháp và đệ tử mang hệ ngẫu nhiên cùng chủng tộc.'],
             ['Tuổi thọ', 'Hết tuổi thọ là chết. Đột phá cảnh giới giúp sống lâu hơn.'],
             ['Linh thạch', 'Tiền để mua đồ, rèn đúc và mua ở Chợ Đen.'],
             ['Chi tiết chỉ số', 'Nút ở cuối hàng chỉ số, xem đầy đủ các nguồn cộng thêm.']
@@ -48,7 +51,8 @@ const GUIDE_SECTIONS = [
             ['Địa Chí', 'Bản đồ chỉ hiện lò rèn, Chợ Đen và dịch vụ của nơi đã tới hoặc đã dò la. Làm chuỗi Dò La ở điểm đầu mỗi Giới để lần ra từ lò thường tới Thần lò. Xem ở nút Địa Chí trên bản đồ.'],
             ['Chợ Đen', 'Hàng đổi mỗi giờ thật, mỗi món mua được một lần. Đấu giá: ra giá xong đối thủ sẽ trả cao hơn tới khi vượt hạn mức của họ, thắng mới mất tiền.'],
             ['Thiên Kiêu Bảng', 'Xếp hạng theo từng nơi, điểm có từ việc diệt quái ở nơi đó.'],
-            ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.']
+            ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.'],
+            ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Nơi càng nguy hiểm thì lệnh càng khó và công lao càng cao; nơi có Tiên Đế là Tử Lệnh, khó nhất.']
         ]
     }
 ];

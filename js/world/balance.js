@@ -175,21 +175,57 @@ function realmHaste(realm) {
 
 /* --------- hệ tu: vòng khắc chế --------- */
 const DAO_PATHS = {
-    kiem: { name: 'Kiếm tu', icon: '🗡️', beats: 'phap', desc: 'Sát thương +15%, đòn đơn thể +15%' },
-    phap: { name: 'Pháp tu', icon: '🔮', beats: 'the', desc: 'Kỹ năng diện rộng +30%, hồi chiêu -10%' },
-    the: { name: 'Thể tu', icon: '💪', beats: 'yeu', desc: 'HP +30%, phòng thủ +20%' },
-    yeu: { name: 'Yêu tu', icon: '🐾', beats: 'ma', desc: 'Hồi 1% HP mỗi giây, sát thương +5%' },
-    ma: { name: 'Ma tu', icon: '🩸', beats: 'kiem', desc: 'Mọi đòn hút máu 10%' }
+    kiem: { name: 'Kiếm tu', icon: '🗡️', race: 'nhan', hanh: 'Kim', desc: 'Sát thương +15%, đòn đơn thể +15%' },
+    phat: { name: 'Phật tu', icon: '🪔', race: 'nhan', hanh: 'Kim', desc: 'Phòng thủ +25%, HP +10%' },
+    dan: { name: 'Đan tu', icon: '⚗️', race: 'nhan', hanh: 'Mộc', desc: 'HP +10%, hồi 1% HP mỗi giây' },
+    phap: { name: 'Pháp tu', icon: '🔮', race: 'nhan', hanh: 'Thủy', desc: 'Kỹ năng diện rộng +30%, hồi chiêu -10%' },
+    ma: { name: 'Ma tu', icon: '🩸', race: 'nhan', hanh: 'Hỏa', desc: 'Mọi đòn hút máu 10%' },
+    the: { name: 'Thể tu', icon: '💪', race: 'nhan', hanh: 'Thổ', desc: 'HP +30%, phòng thủ +20%' },
+    tran: { name: 'Trận tu', icon: '🧿', race: 'nhan', hanh: 'Thổ', desc: 'Kỹ năng diện rộng +20%, phòng thủ +15%' },
+    yeu: { name: 'Thú tu', icon: '🐯', race: 'yeu', hanh: 'Kim', desc: 'Hồi 1% HP mỗi giây, sát thương +5%' },
+    doc: { name: 'Xà tu', icon: '🐍', race: 'yeu', hanh: 'Mộc', desc: 'Kỹ năng diện rộng +15%, mọi đòn hút máu 5%' },
+    long: { name: 'Long tu', icon: '🐲', race: 'yeu', hanh: 'Thủy', desc: 'Sát thương +10%, HP +15%' },
+    cam: { name: 'Cầm tu', icon: '🦅', race: 'yeu', hanh: 'Hỏa', desc: 'Hồi chiêu -20%' },
+    ho: { name: 'Hồ tu', icon: '🦊', race: 'yeu', hanh: 'Thổ', desc: 'Hồi chiêu -15%, mọi đòn hút máu 5%' }
 };
 const PATH_COUNTER_BONUS = 1.25;
 const PATH_COUNTERED_PENALTY = 0.8;
-const KIND_PATHS = { beast: 'yeu', dragon: 'yeu', demon: 'ma', golem: 'the', spirit: 'phap', chaos: 'ma' };
+const KIND_PATHS = { beast: 'yeu', dragon: 'long', demon: 'ma', golem: 'the', spirit: 'phap', chaos: 'ma' };
+
+/* Ngũ hành của hệ tu: khắc tính trên đòn đánh, sinh và khắc trong cùng đội tính ở pathTeamBond */
+const HANH_SINH = { 'Mộc': 'Hỏa', 'Hỏa': 'Thổ', 'Thổ': 'Kim', 'Kim': 'Thủy', 'Thủy': 'Mộc' };
+const HANH_KHAC = { 'Kim': 'Mộc', 'Mộc': 'Thổ', 'Thổ': 'Thủy', 'Thủy': 'Hỏa', 'Hỏa': 'Kim' };
+const TEAM_SINH_ATK = 0.1;
+const TEAM_KHAC_DEF = 0.05;
+const TEAM_FIVE_BONUS = 0.15;
+const HANH_COUNT = 5;
 
 function pathDamageMult(attacker, defender) {
     if (!attacker || !defender) return 1;
-    if (DAO_PATHS[attacker].beats === defender) return PATH_COUNTER_BONUS;
-    if (DAO_PATHS[defender].beats === attacker) return PATH_COUNTERED_PENALTY;
+    const own = DAO_PATHS[attacker].hanh, other = DAO_PATHS[defender].hanh;
+    if (HANH_KHAC[own] === other) return PATH_COUNTER_BONUS;
+    if (HANH_KHAC[other] === own) return PATH_COUNTERED_PENALTY;
     return 1;
+}
+
+function pathsOfRace(race) {
+    return Object.keys(DAO_PATHS).filter(id => DAO_PATHS[id].race === race);
+}
+
+function pathTeamBond(path, teamPaths) {
+    const hanh = DAO_PATHS[path].hanh;
+    const others = [...teamPaths];
+    others.splice(others.indexOf(path), 1);
+    const otherHanh = others.map(id => DAO_PATHS[id].hanh);
+    const sinh = otherHanh.some(h => HANH_SINH[h] === hanh);
+    const khac = otherHanh.some(h => HANH_KHAC[h] === hanh);
+    const five = new Set([hanh, ...otherHanh]).size === HANH_COUNT;
+    return {
+        sinh, khac, five,
+        atk: 1 + (sinh ? TEAM_SINH_ATK : 0) + (five ? TEAM_FIVE_BONUS : 0),
+        def: 1 - (khac ? TEAM_KHAC_DEF : 0),
+        hp: 1 + (five ? TEAM_FIVE_BONUS : 0)
+    };
 }
 
 /* --------- nâng cấp trang bị: đồ cảnh giới cao có giới hạn cao hơn, mỗi cấp tăng nhiều hơn --------- */
@@ -333,7 +369,7 @@ function formatRealDuration(seconds) {
 if (typeof module !== 'undefined') {
     module.exports = {
         realmRealSeconds, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
-        LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
+        LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, pathTeamBond, pathsOfRace, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
         makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, goldRef, gearPrice, realmProgress
     };
 }
