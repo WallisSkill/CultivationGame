@@ -142,6 +142,8 @@ Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
 Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
     site.links.filter(other => !LOCATIONS[other].links.includes(id)).forEach(other => LOCATIONS[other].links.push(id));
 });
-Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am: 'phap', co_thu: 'yeu', thanh_thuy: 'phat', thanh_van: 'tran', van_long: 'dan', hac_phong: 'ho', vu_moc_lam: 'doc', bang_phong: 'long', xich_diem: 'cam', van_tien: 'tran', dao_tri: 'dan', quang_han: 'phat', cuc_lac: 'phat', thanh_khau: 'ho', thap_van_son: 'doc', hoa_long_tri: 'long', kim_bang: 'cam' }).forEach(([id, path]) => { LOCATIONS[id].path = path; });
+Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am: 'phap', co_thu: 'yeu', thanh_thuy: 'phat', thanh_van: 'tran', van_long: 'dan', hac_phong: 'ho', vu_moc_lam: 'doc', bang_phong: 'long', xich_diem: 'cam', van_tien: 'tran', dao_tri: 'dan', quang_han: 'phat', cuc_lac: 'phat', thanh_khau: 'ho', thap_van_son: 'doc', hoa_long_tri: 'long', kim_bang: 'cam', ngoc_hu: 'tran', da_bao: 'dan', oa_hoang: 'doc', tu_tieu: 'long', loi_trach: 'cam', linh_son: 'ho', vo_cuong: 'dan', khai_thien: 'tran', luan_hoi: 'phat', tinh_mo: 'doc', than_dinh: 'long', hu_nhan: 'ho', van_gioi: 'cam' }).forEach(([id, path]) => { LOCATIONS[id].path = path; });
+
+['bo_hondon', 'tu_khi', 'truong_ha'].forEach(id => { LOCATIONS[id].hallAll = true; });
 
 Object.keys(LOCATIONS).forEach(id => { LOCATIONS[id].id = id; });

@@ -927,8 +927,13 @@ function setDaoPath(path) {
     renderAll();
 }
 
-function openDaoHall() {
-    const path = currentLocation().path;
+function openAllHall() {
+    const rows = pathsOfRace(state.race).map(id => `<div class="market-row"><span>${DAO_PATHS[id].icon} <b>${DAO_PATHS[id].name}</b> <span class="small">${DAO_PATHS[id].desc}</span></span>
+        <span><button class="mini-btn" onclick="openDaoHall('${id}')">Kỹ năng</button> <button class="mini-btn" ${state.daoPath === id ? 'disabled' : ''} onclick="setDaoPath('${id}')">Chuyển</button></span></div>`).join('');
+    openWorldModal('allHallModal', '📜 Truyền thừa các hệ', rows);
+}
+
+function openDaoHall(path = currentLocation().path) {
     if (!path) return;
     const grade = maxLinhBaoGradeForRealm(state.realmIndex);
     const rows = LINH_BAO.filter(lb => lb.path === path).map(lb => `<div class="shop-item forge-row">
@@ -1534,7 +1539,7 @@ window.addEventListener('load', () => initScene());
 setInterval(() => { if (state.root?.elements && !state.dead) saveProgress(true); }, 30000);
 
 Object.assign(window, {
-    goToStageQuest, openAtlasBook, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
+    goToStageQuest, openAtlasBook, openDaoHall, setDaoPath, buyStarStone, useStarStone, setDaoPath, openDaoHall, buyDaoSkill, hireGuard, travelTo, teleportTo, joinSect, selectMapNode, setMapWorld, cancelActivity, startHunt, startExplore, toggleAutoHunt, openServiceShop, openForge,
     startForge, upgradeGear, acceptBounty, questAction, acceptSideQuest, nextDialogue, toggleTestPanel, setTestSpeed, testJumpRealm,
     testTeleport, testFillXp, testGearUp, testSkipStep, testFinishActivity, testWinBattle, testRich
 });

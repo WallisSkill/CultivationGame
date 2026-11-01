@@ -176,13 +176,13 @@ function realmHaste(realm) {
 /* --------- hệ tu: vòng khắc chế --------- */
 const DAO_PATHS = {
     kiem: { name: 'Kiếm tu', icon: '🗡️', race: 'nhan', hanh: 'Kim', desc: 'Sát thương +15%, đòn đơn thể +15%' },
-    phat: { name: 'Phật tu', icon: '🪔', race: 'nhan', hanh: 'Kim', desc: 'Phòng thủ +25%, HP +10%' },
-    dan: { name: 'Đan tu', icon: '⚗️', race: 'nhan', hanh: 'Mộc', desc: 'HP +10%, hồi 1% HP mỗi giây' },
+    phat: { name: 'Phật tu', icon: '🪔', race: 'nhan', hanh: 'Kim', desc: 'Phòng thủ +30%, HP +15%' },
+    dan: { name: 'Đan tu', icon: '⚗️', race: 'nhan', hanh: 'Mộc', desc: 'HP +10%, hồi 0.4% HP mỗi giây' },
     phap: { name: 'Pháp tu', icon: '🔮', race: 'nhan', hanh: 'Thủy', desc: 'Kỹ năng diện rộng +30%, hồi chiêu -10%' },
     ma: { name: 'Ma tu', icon: '🩸', race: 'nhan', hanh: 'Hỏa', desc: 'Mọi đòn hút máu 10%' },
     the: { name: 'Thể tu', icon: '💪', race: 'nhan', hanh: 'Thổ', desc: 'HP +30%, phòng thủ +20%' },
     tran: { name: 'Trận tu', icon: '🧿', race: 'nhan', hanh: 'Thổ', desc: 'Kỹ năng diện rộng +20%, phòng thủ +15%' },
-    yeu: { name: 'Thú tu', icon: '🐯', race: 'yeu', hanh: 'Kim', desc: 'Hồi 1% HP mỗi giây, sát thương +5%' },
+    yeu: { name: 'Thú tu', icon: '🐯', race: 'yeu', hanh: 'Kim', desc: 'Hồi 0.4% HP mỗi giây, sát thương +5%' },
     doc: { name: 'Xà tu', icon: '🐍', race: 'yeu', hanh: 'Mộc', desc: 'Kỹ năng diện rộng +15%, mọi đòn hút máu 5%' },
     long: { name: 'Long tu', icon: '🐲', race: 'yeu', hanh: 'Thủy', desc: 'Sát thương +10%, HP +15%' },
     cam: { name: 'Cầm tu', icon: '🦅', race: 'yeu', hanh: 'Hỏa', desc: 'Hồi chiêu -20%' },

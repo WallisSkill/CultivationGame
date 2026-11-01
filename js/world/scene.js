@@ -41,6 +41,7 @@ function sceneSpots(loc) {
     add('⛩️', `Nhập ${loc.name}`, () => joinSect(loc.id), loc.type === 'sect' && state.sect !== loc.id && !state.ownSect);
     add(DAO_PATHS[loc.path]?.icon, 'Truyền thừa', () => openDaoHall(), DAO_PATHS[loc.path]?.race === state.race);
     add(DAO_PATHS[loc.path]?.icon, `Chuyển ${DAO_PATHS[loc.path]?.name}`, () => setDaoPath(loc.path), DAO_PATHS[loc.path]?.race === state.race && state.daoPath !== loc.path);
+    add('📜', 'Truyền thừa các hệ', () => openAllHall(), !!loc.hallAll);
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), loc.type === 'town' || loc.type === 'sect');

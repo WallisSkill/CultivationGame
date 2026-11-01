@@ -1066,10 +1066,10 @@ function lbApplyPathPassive(c) {
         case 'kiem': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.15); c.singleBonus = 1.15; break;
         case 'phap': c.aoeBonus = 1.3; c.slots.forEach(slot => { slot.cooldown *= 0.9; }); break;
         case 'the': c.maxHp = Math.floor(c.maxHp * 1.3); c.hp = Math.floor(c.hp * 1.3); c.def = Math.floor(c.def * 1.2); break;
-        case 'yeu': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.05); c.regen = 0.01; break;
+        case 'yeu': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.05); c.regen = 0.004; break;
         case 'ma': c.lifesteal = 0.1; break;
-        case 'phat': c.maxHp = Math.floor(c.maxHp * 1.1); c.hp = Math.floor(c.hp * 1.1); c.def = Math.floor(c.def * 1.25); break;
-        case 'dan': c.maxHp = Math.floor(c.maxHp * 1.1); c.hp = Math.floor(c.hp * 1.1); c.regen = 0.01; break;
+        case 'phat': c.maxHp = Math.floor(c.maxHp * 1.15); c.hp = Math.floor(c.hp * 1.15); c.def = Math.floor(c.def * 1.3); break;
+        case 'dan': c.maxHp = Math.floor(c.maxHp * 1.1); c.hp = Math.floor(c.hp * 1.1); c.regen = 0.004; break;
         case 'tran': c.aoeBonus = 1.2; c.def = Math.floor(c.def * 1.15); break;
         case 'long': c.atk = c.baseAtk = Math.floor(c.baseAtk * 1.1); c.maxHp = Math.floor(c.maxHp * 1.15); c.hp = Math.floor(c.hp * 1.15); break;
         case 'doc': c.aoeBonus = 1.15; c.lifesteal = 0.05; break;
