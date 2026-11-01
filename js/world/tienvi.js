@@ -75,35 +75,45 @@ MAIN_QUESTS.forEach(q => {
     });
 });
 
-function courtGrade(loc) {
+function courtGrade(loc, realm) {
     const tier = WORLD_TIERS.find(w => w.id === loc.world);
-    const danger = LOCATION_BOSS_REALMS[loc.id] ?? (loc.minR + loc.maxR) / 2;
+    const danger = Math.max(realm, Math.min(LOCATION_BOSS_REALMS[loc.id] ?? realm, realm + 1));
     const share = tier.to > tier.from ? (danger - tier.from) / (tier.to - tier.from) : 1;
     return COURT_GRADES.find(grade => share <= grade.upTo) || COURT_GRADES[COURT_GRADES.length - 1];
 }
 
-function courtMeritReward(loc) {
+function courtMeritReward(loc, realm) {
     const step = WORLD_TIERS.findIndex(w => w.id === loc.world);
-    const base = COURT_MERIT_BASE * Math.pow(2, step) * courtGrade(loc).mult;
+    const base = COURT_MERIT_BASE * Math.pow(2, step) * courtGrade(loc, realm).mult;
     return Math.floor(base * (courtBoard()[0].isMe ? COURT_TOP_MULT : 1));
+}
+
+function courtRollRank(loc) {
+    const realm = loc.minR + Math.floor(Math.random() * (loc.maxR - loc.minR + 1));
+    const stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : 3;
+    return { realm, stage: Math.floor(Math.random() * (stageCap + 1)) };
+}
+
+function courtRankText(order) {
+    return `${REALMS[order.realm]} ${STAGES[order.stage]}`;
 }
 
 function courtOffers() {
     const world = currentLocation().world;
     const active = state.courtOrders.map(order => order.loc);
-    const offers = (state.courtOffers || []).filter(o => LOCATIONS[o.loc].world === world && !active.includes(o.loc));
+    const offers = (state.courtOffers || []).filter(o => o.realm != null && LOCATIONS[o.loc].world === world && !active.includes(o.loc));
     if (offers.length) return state.courtOffers = offers;
     const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && l.minR <= state.realmIndex && !active.includes(l.id));
     state.courtOffers = pool.sort(() => Math.random() - 0.5).slice(0, COURT_OFFERS)
-        .map(l => ({ loc: l.id, name: l.enemies[Math.floor(Math.random() * l.enemies.length)].name }));
+        .map(l => ({ loc: l.id, name: l.enemies[Math.floor(Math.random() * l.enemies.length)].name, ...courtRollRank(l) }));
     return state.courtOffers;
 }
 
 function migrateCourtOrders() {
     state.courtOrders = state.courtOrders || [];
-    if (!state.court) return;
-    state.courtOrders.push(state.court);
+    if (state.court) state.courtOrders.push(state.court);
     delete state.court;
+    state.courtOrders.filter(order => order.realm == null).forEach(order => Object.assign(order, courtRollRank(LOCATIONS[order.loc])));
 }
 
 function registerTienVi() {
@@ -120,23 +130,23 @@ function acceptCourtOrder(index) {
     const offer = courtOffers()[index];
     if (!offer) return;
     const loc = LOCATIONS[offer.loc];
-    const need = courtGrade(loc).kills;
-    state.courtOrders.push({ loc: loc.id, name: offer.name, need, done: 0 });
+    const grade = courtGrade(loc, offer.realm);
+    state.courtOrders.push({ loc: loc.id, name: offer.name, realm: offer.realm, stage: offer.stage, need: grade.kills, done: 0 });
     state.courtOffers.splice(index, 1);
-    log(`🏛️ Lệnh Thiên Đình (${courtGrade(loc).name}): diệt ${need} ${offer.name} tại ${loc.name}.`);
+    log(`🏛️ Lệnh Thiên Đình (${grade.name}): diệt ${grade.kills} ${offer.name} ${courtRankText(offer)} tại ${loc.name}.`);
     openCourt();
     renderAll();
 }
 
 function noteCourtKill(unit) {
-    const order = state.courtOrders.find(o => o.name === unit.name && o.loc === state.location);
+    const order = state.courtOrders.find(o => o.name === unit.name && o.loc === state.location && o.realm === unit.realmIndex && o.stage === unit.realmStage);
     if (!order) return;
     order.done++;
     if (order.done < order.need) return;
     const before = tienViIndex();
     const loc = LOCATIONS[order.loc];
-    const merit = courtMeritReward(loc);
-    const gold = goldRef(state.realmIndex) * COURT_GOLD_REFS * courtGrade(loc).mult;
+    const merit = courtMeritReward(loc, order.realm);
+    const gold = goldRef(state.realmIndex) * COURT_GOLD_REFS * courtGrade(loc, order.realm).mult;
     state.merit += merit;
     state.gold += gold;
     state.courtOrders = state.courtOrders.filter(o => o !== order);
@@ -161,12 +171,13 @@ function openCourt() {
     const rows = courtBoard().map((entry, i) => `<div class="sect-row ${entry.isMe ? 'tj-me' : ''}">
         <span>${i < 3 ? ['🥇', '🥈', '🥉'][i] : `${i + 1}.`} ${sectEscape(entry.name)}</span><b>${formatNumber(entry.merit)}</b></div>`).join('');
     const ranks = TIEN_VI.map((rank, i) => `<div class="small">${i === index ? '▶ ' : ''}${rank.name}: ${formatNumber(rank.merit)} công lao, cần để lên ${REALMS[rank.realm]}</div>`).join('');
-    const orders = state.courtOrders.map(order => `<div class="small">• ${order.name} tại ${LOCATIONS[order.loc].name} (${order.done}/${order.need}) · ${courtGrade(LOCATIONS[order.loc]).name}</div>`).join('');
+    const orders = state.courtOrders.map(order => `<div class="small">• ${order.name} ${courtRankText(order)} tại ${LOCATIONS[order.loc].name} (${order.done}/${order.need}) · ${courtGrade(LOCATIONS[order.loc], order.realm).name}</div>`).join('');
     const full = state.courtOrders.length >= COURT_MAX_ORDERS;
     const offers = courtOffers().map((offer, i) => {
         const loc = LOCATIONS[offer.loc];
-        return `<div class="market-row"><span class="small"><b>${courtGrade(loc).name}</b> · diệt ${courtGrade(loc).kills} ${offer.name} tại ${loc.name}</span>
-            <button class="mini-btn" ${full ? 'disabled' : ''} onclick="acceptCourtOrder(${i})">+${courtMeritReward(loc)} công lao</button></div>`;
+        const grade = courtGrade(loc, offer.realm);
+        return `<div class="market-row"><span class="small"><b>${grade.name}</b> · diệt ${grade.kills} ${offer.name} <b>${courtRankText(offer)}</b> tại ${loc.name}</span>
+            <button class="mini-btn" ${full ? 'disabled' : ''} onclick="acceptCourtOrder(${i})">+${courtMeritReward(loc, offer.realm)} công lao</button></div>`;
     }).join('');
     const order = `<div class="small" style="margin-top:8px"><b>Lệnh đang làm ${state.courtOrders.length}/${COURT_MAX_ORDERS}</b></div>${orders}
         <div class="small" style="margin-top:8px"><b>Lệnh có thể nhận</b></div>${offers}`;

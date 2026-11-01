@@ -9,7 +9,7 @@ function exploreOriginalImpl() {
 		return;
 	}
 
-	const luck = state.luckBonus || 0;
+	const luck = totalLuck();
 	const roll = Math.random();
 
 	if (roll < Math.min(0.75, 0.55 + luck)) {

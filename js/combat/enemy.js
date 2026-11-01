@@ -62,9 +62,12 @@ const ENEMY_REALM_STEP_CHANCE = 0.25;
 const UNDERLEVEL_XP_MULT = 0.25;
 
 function rollLocationRealm(loc, capRealm = Infinity) {
-    let realm = loc.minR;
-    const top = Math.min(loc.maxR, Math.max(loc.minR, capRealm));
-    while (realm < top && Math.random() < ENEMY_REALM_STEP_CHANCE) realm++;
+    const chosen = state.huntRange?.[loc.id];
+    const [low, high] = chosen || [loc.minR, loc.maxR];
+    const top = Math.min(high, Math.max(loc.minR, capRealm));
+    let realm = Math.min(low, top);
+    if (chosen) realm += Math.floor(Math.random() * (top - realm + 1));
+    else while (realm < top && Math.random() < ENEMY_REALM_STEP_CHANCE) realm++;
     const stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : 3;
     return { realmIndex: realm, realmStage: Math.min(stageCap, randomRealmStage()) };
 }
@@ -84,7 +87,12 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     const pool = loc.enemies || [];
     if (!pool.length) { log(`${loc.name} yên bình, không có gì để săn.`); return; }
     const wanted = (state.questActive || []).map(rt => questStep(rt)?.hunt).find(h => h && h.loc === loc.id);
+    const order = (state.courtOrders || []).find(o => o.loc === loc.id);
     const makeUnit = () => {
+        if (order && (!wanted || Math.random() < 0.5)) {
+            const target = pool.find(e => e.name === order.name);
+            return buildEnemy({ name: order.name, kind: target?.kind, realmIndex: order.realm, realmStage: order.stage, tier: rollEnemyTier() });
+        }
         const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
         const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
         const questCap = wanted && pick.name === wanted.name ? state.realmIndex : Infinity;

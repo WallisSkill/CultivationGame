@@ -1676,3 +1676,9 @@ header .controls button { margin: 0 0 0 4px; padding: 4px 9px; font-size: 0.8rem
 @media (max-width: 720px) {
     .path-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+#gearTip { position: fixed; z-index: 10001; display: none; pointer-events: none; max-width: 360px; padding: 8px 10px; font-size: 0.8rem; line-height: 1.5; color: #e8e8ee; background: #12162a; border: 1px solid rgba(230, 201, 122, 0.5); border-radius: 8px; }
+.gear-slot { cursor: help; }
+#gearTip .tip-head { margin-top: 6px; color: #e6c97a; font-weight: 600; }
+.quest-card[data-quest] { cursor: help; }
+.npc-options { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }

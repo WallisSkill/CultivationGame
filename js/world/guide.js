@@ -29,6 +29,9 @@ const GUIDE_SECTIONS = [
             ['Chênh tiểu kỳ', 'Chỉ tính khi cùng đại cảnh giới: mỗi tiểu kỳ chênh 15% sát thương.'],
             ['Khác Giới', 'Đánh kẻ ở Giới cao hơn bị giảm mạnh sát thương, đánh kẻ ở Giới thấp hơn được tăng thêm.'],
             ['Ngũ hành', 'Khắc được +20%, bị khắc -20%: Kim khắc Mộc, Mộc khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim, Thổ khắc Mộc. Dưới Kim Đan chưa dùng được ngũ hành.'],
+            ['Hiệu ứng trận pháp', 'Thiêu đốt, đóng băng, choáng, hồi máu, hộ thuẫn, đỡ đòn và tăng lực đều chịu áp chế cảnh giới như sát thương. Đánh kẻ cảnh giới cao hơn thì khống chế ngắn và khó trúng hơn, hồi máu và hộ thuẫn yếu đi.'],
+            ['Hết giờ trận', 'Sau 90 giây mà địch chưa chết thì tính là thua.'],
+            ['Chọn cấp săn', 'Bấm nút Chọn cấp săn ở thông tin khu vực để chỉ gặp quái trong khoảng cảnh giới của nơi đó.'],
             ['Bậc quái', 'Thường, Tinh anh, Thống lĩnh, Boss: bậc càng cao càng khỏe và thưởng càng nhiều.']
         ]
     },
@@ -39,7 +42,11 @@ const GUIDE_SECTIONS = [
             ['Trận Pháp Bảo', 'Pháp bảo đặt lên trận sẽ tự đánh theo thời gian hồi.'],
             ['Nâng giai pháp bảo', 'Lên giai vẫn giữ nguyên cấp đang có. Hợp nhất cho ngươi tự chọn vật liệu; pháp bảo đang ở trên trận không bị lấy làm vật liệu.'],
             ['Rèn đồ', 'Lò rèn chỉ rèn tới cảnh giới của nơi đó. Thần lò rèn được mọi cấp trong Giới của nó, vượt cấp tối đa tới cảnh giới đầu của Giới sau.'],
-            ['Nhiệm vụ tiểu cảnh giới', 'Mỗi tiểu kỳ có 3 việc riêng. Qua tiểu kỳ thì việc chưa nhận sẽ mất.']
+            ['Nhiệm vụ tiểu cảnh giới', 'Mỗi tiểu kỳ có 3 việc riêng. Qua tiểu kỳ thì việc chưa nhận sẽ mất.'],
+            ['Nói chuyện với NPC', 'Mỗi nơi đều có người để hỏi chuyện, nơi có lò thì có cả thợ rèn. Nhiệm vụ phụ phải nhận và báo lại với đúng người, đi tới nơi thôi chưa đủ. Dấu ❗ là người đó có việc cho ngươi.'],
+            ['Nhiệm vụ ẩn', 'Chỉ NPC của nơi đó kể, và chỉ khi ngươi đang ở đúng một cảnh giới; qua cảnh giới đó là mất. Thưởng một món đồ phẩm Thần cao hơn 2 cảnh giới. Thần lò cũng có việc riêng, thưởng tương tự.'],
+            ['Chính tuyến và phụ tuyến', 'Một số nhiệm vụ phụ chỉ có sau nhiệm vụ chính nhất định. Một số nhiệm vụ chính phải chờ nhiệm vụ phụ; thẻ nhiệm vụ sẽ ghi cần gặp ai.'],
+            ['Xem chi tiết nhiệm vụ', 'Rê chuột vào thẻ nhiệm vụ để đọc vì sao có nhiệm vụ đó và diễn biến đã qua.']
         ]
     },
     {
@@ -51,14 +58,29 @@ const GUIDE_SECTIONS = [
             ['Địa Chí', 'Bản đồ chỉ hiện lò rèn, Chợ Đen và dịch vụ của nơi đã tới hoặc đã dò la. Làm chuỗi Dò La ở điểm đầu mỗi Giới để lần ra từ lò thường tới Thần lò. Xem ở nút Địa Chí trên bản đồ.'],
             ['Chợ Đen', 'Hàng đổi mỗi giờ thật, mỗi món mua được một lần. Đấu giá: ra giá xong đối thủ sẽ trả cao hơn tới khi vượt hạn mức của họ, thắng mới mất tiền.'],
             ['Thiên Kiêu Bảng', 'Xếp hạng theo từng nơi, điểm có từ việc diệt quái ở nơi đó.'],
+            ['Chỉ số phụ', 'Đồ từ Địa Tiên trở lên có thêm dòng ngẫu nhiên: chí mạng, sát thương chí mạng, né tránh, hút máu, may mắn. Phẩm càng cao càng nhiều dòng. Xem tổng ở Chi tiết chỉ số. Chí mạng, né tránh và hút máu từ đồ có tác dụng trong trận thường, chưa áp dụng cho Đấu trường xếp hạng.'],
             ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.'],
-            ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Nơi càng nguy hiểm thì lệnh càng khó và công lao càng cao; nơi có Tiên Đế là Tử Lệnh, khó nhất. Từ Huyền Tiên, ở đâu cũng mở được Thiên Đình Điện để nhận lệnh của Giới đang đứng.']
+            ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Mỗi lệnh ghi rõ tên và cảnh giới quái; săn ở đúng nơi đó sẽ gặp đúng quái ấy, không theo Chọn cấp săn, và chỉ quái đúng cảnh giới mới được tính. Quái cảnh giới càng cao thì lệnh càng khó và công lao càng lớn; cảnh giới cao nhất của Giới là Tử Lệnh. Từ Huyền Tiên, ở đâu cũng mở được Thiên Đình Điện để nhận lệnh của Giới đang đứng.']
         ]
     }
 ];
 
+/* Cảnh giới hiện dần theo Giới đã tới; nhiệm vụ ẩn chỉ hiện tên sau khi làm xong */
+function guideRealmSection() {
+    const items = WORLD_TIERS.flatMap(world => {
+        if (!worldUnlocked(world.id)) return [['🔒 ???', 'Chưa tới Giới này.']];
+        return Array.from({ length: world.to - world.from + 1 }, (_, i) => world.from + i).map(realm => {
+            const quests = HIDDEN_QUESTS.filter(q => q.realmOnly === realm);
+            const done = quests.filter(q => state.questDone.includes(q.id)).map(q => `✔ ${q.title}`);
+            const locked = quests.length - done.length;
+            return [`${realm + 1}. ${REALMS[realm]}`, [world.name, ...done, locked ? `🔒 ${locked} nhiệm vụ ẩn chưa mở` : ''].filter(Boolean).join(' · ')];
+        });
+    });
+    return { title: '🗻 Cảnh giới và nhiệm vụ ẩn', items };
+}
+
 function openGuide() {
-    const body = GUIDE_SECTIONS.map((section, i) => `<details class="guide-section" ${i === 0 ? 'open' : ''}>
+    const body = [...GUIDE_SECTIONS, guideRealmSection()].map((section, i) => `<details class="guide-section" ${i === 0 ? 'open' : ''}>
         <summary>${section.title}</summary>
         ${section.items.map(([name, text]) => `<div class="guide-row"><b>${name}</b><span>${text}</span></div>`).join('')}
     </details>`).join('');

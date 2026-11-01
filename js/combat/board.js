@@ -221,7 +221,9 @@ const LB_TICK_MS = 100;
 const LB_BURN_SECS = 4;
 const LB_FREEZE_SLOW = 0.35; // frozen board advances at 35% speed
 const LB_MAX_SECONDS = 90;   // safety cap so a stalemate cannot run forever
-const LB_ENEMY_DMG_SCALE = 0.5;
+const LB_ENEMY_DMG_SCALE = 0.7;
+const LB_EARLY_DMG_SCALE = 0.5;
+const LB_EARLY_REALMS = 5;
 const LB_STUN_CHANCE = 0.5;  // chance a stun effect lands
 const LB_STUN_IMMUNE = 2.0;  // seconds a target is immune after a stun (no perma-stun)
 const LB_PARRY_SECS = 3.5;   // how long a parry charge lingers
@@ -1109,6 +1111,11 @@ function lbBuildPlayerCombatant() {
         slots: defs.map(lbMakeSlot), viewLook: playerLook(), avatar: playerAvatarSvg()
     });
     lbApplyPathPassive(c);
+    const subs = gearSubTotals();
+    c.crit = subs.crit;
+    c.critMult = CRIT_BASE_MULT + subs.critDmg;
+    c.dodge = subs.dodge;
+    c.lifesteal = (c.lifesteal || 0) + subs.lifesteal;
     return c;
 }
 
@@ -1187,6 +1194,11 @@ const LB_PATH_SKILL_BONUS = 1.2;
 
 function lbAlive(team) { return team.filter(c => c.hp > 0); }
 
+/* Áp chế cảnh giới lên hiệu ứng: cùng hệ số với sát thương; khống chế và phụ trợ không vượt quá 100% */
+function lbSuppress(source, target) {
+    return calcRealmBonusFull(source.realmIndex, source.realmStage, target.realmIndex, target.realmStage) * calcTierBonus(source.realmIndex, target.realmIndex);
+}
+
 function lbPickTarget(source, foes) {
     if (source.side === 'player') return foes.reduce((a, b) => (b.hp / b.maxHp < a.hp / a.maxHp ? b : a));
     return foes[Math.floor(Math.random() * foes.length)];
@@ -1197,7 +1209,7 @@ function lbFire(battle, source, slot) {
     const item = slot.def;
     const effects = lbEffectList(item);
     const now = performance.now();
-    const dmgScale = source.side === 'enemy' ? LB_ENEMY_DMG_SCALE : 1;
+    const dmgScale = source.side !== 'enemy' ? 1 : source.realmIndex < LB_EARLY_REALMS ? LB_EARLY_DMG_SCALE : LB_ENEMY_DMG_SCALE;
     const ownTeam = source.side === 'player' ? battle.allies : battle.foes;
     const foes = lbAlive(source.side === 'player' ? battle.foes : battle.allies);
     if (!foes.length) return;
@@ -1210,37 +1222,41 @@ function lbFire(battle, source, slot) {
 
     let dealt = 0;
     targets.forEach(target => {
+        if (Math.random() < (target.dodge || 0)) { lbFloat(target, 'Né', 'buff'); return; }
         const elemMod = calcLinhBaoElementMod(source, target, item.element);
         const counter = pathDamageMult(source.path, target.path);
+        const suppress = lbSuppress(source, target);
+        const control = Math.min(1, suppress);
+        const crit = Math.random() < (source.crit || 0);
         let hit = 0;
         for (const ef of effects) {
             if (ef.action !== 'damage') continue;
-            const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach;
+            const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach * (crit ? source.critMult : 1);
             const d = computeDamage(
                 basePower, source.elements, source.rootRank, source.realmIndex, source.realmStage,
                 target.def, target.elements, target.rootRank, target.realmIndex, target.realmStage
             );
             hit += lbApplyDamage(target, d.final);
         }
-        if (hit > 0) lbFloat(target, `-${fmtVal(hit)}`, counter > 1 ? 'crit' : 'dmg');
+        if (hit > 0) lbFloat(target, `${crit ? '💥' : ''}-${fmtVal(hit)}`, crit || counter > 1 ? 'crit' : 'dmg');
         dealt += hit;
 
         for (const ef of effects) {
             switch (ef.action) {
                 case 'burn': {
-                    const dps = Math.max(1, source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach);
+                    const dps = Math.max(1, source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach * suppress);
                     target.burns.push({ dps, remaining: LB_BURN_SECS });
                     lbFloat(target, '🔥', 'burn');
                     break;
                 }
                 case 'freeze': {
-                    target.freezeUntil = Math.max(target.freezeUntil, now + lbDurMag(ef.magnitude, item) * 1000);
+                    target.freezeUntil = Math.max(target.freezeUntil, now + lbDurMag(ef.magnitude, item) * control * 1000);
                     lbFloat(target, '❄️', 'freeze');
                     break;
                 }
                 case 'stun': {
-                    if (Math.random() < LB_STUN_CHANCE && now >= target.stunImmuneUntil) {
-                        const dur = lbDurMag(ef.magnitude, item);
+                    if (Math.random() < LB_STUN_CHANCE * control && now >= target.stunImmuneUntil) {
+                        const dur = lbDurMag(ef.magnitude, item) * control;
                         target.stunUntil = now + dur * 1000;
                         target.stunImmuneUntil = target.stunUntil + LB_STUN_IMMUNE * 1000;
                         lbFloat(target, '💫', 'stun');
@@ -1253,6 +1269,7 @@ function lbFire(battle, source, slot) {
 
     const gemMods = lbGemMods(item);
     const selfMod = calcLinhBaoElementMod(source, targets[0], item.element);
+    const support = Math.min(1, ...foes.map(foe => lbSuppress(source, foe)));
 
     let lsFrac = gemMods.leech + (source.lifesteal || 0);
     for (const ef of effects) if (ef.action === 'lifesteal') lsFrac += ef.magnitude * selfMod;
@@ -1262,7 +1279,7 @@ function lbFire(battle, source, slot) {
     }
 
     if (gemMods.guard > 0) {
-        source.parryFrac = Math.max(source.parryFrac, gemMods.guard);
+        source.parryFrac = Math.max(source.parryFrac, gemMods.guard * support);
         source.parryUntil = now + LB_PARRY_SECS * 1000;
     }
 
@@ -1271,26 +1288,26 @@ function lbFire(battle, source, slot) {
         switch (ef.action) {
             case 'heal':
                 supportTargets.forEach(unit => {
-                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * (aoe ? LB_AOE_MULT : 1));
+                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * support * (aoe ? LB_AOE_MULT : 1));
                     unit.hp = Math.min(unit.maxHp, unit.hp + amt);
                     lbFloat(unit, `+${fmtVal(amt)}`, 'heal');
                 });
                 break;
             case 'shield':
                 supportTargets.forEach(unit => {
-                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * (aoe ? LB_AOE_MULT : 1));
+                    const amt = Math.floor(unit.maxHp * lbEffMag(ef.magnitude, item) * selfMod * support * (aoe ? LB_AOE_MULT : 1));
                     unit.shield += amt;
                     lbFloat(unit, `🛡️${fmtVal(amt)}`, 'shield');
                 });
                 break;
             case 'parry':
-                source.parryFrac = Math.max(source.parryFrac, ef.magnitude);
+                source.parryFrac = Math.max(source.parryFrac, ef.magnitude * support);
                 source.parryUntil = now + LB_PARRY_SECS * 1000;
                 lbFloat(source, '🛡', 'parry');
                 break;
             case 'buffAtk': {
                 const before = source.atk;
-                source.atk = Math.floor(source.atk * (1 + lbEffMag(ef.magnitude, item) * selfMod));
+                source.atk = Math.floor(source.atk * (1 + lbEffMag(ef.magnitude, item) * selfMod * support));
                 lbFloat(source, `⬆️${fmtVal(source.atk - before)}`, 'buff');
                 break;
             }
@@ -1376,10 +1393,7 @@ function lbStep(battle) {
     const result = lbBattleResult(battle);
     if (result) return lbEndBattle(battle, result);
     if (battle.elapsedMs >= LB_MAX_SECONDS * 1000) {
-        const pPct = battle.player.hp / battle.player.maxHp;
-        const foeHp = battle.foes.reduce((sum, c) => sum + Math.max(0, c.hp), 0);
-        const foeMax = battle.foes.reduce((sum, c) => sum + c.maxHp, 0);
-        return lbEndBattle(battle, pPct >= foeHp / foeMax ? 'win' : 'lose');
+        return lbEndBattle(battle, 'lose');
     }
 }
 

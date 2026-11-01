@@ -141,6 +141,29 @@ const GEAR_SERIES = [
     'Hỗn Độn', 'Hồng Mông', 'Chung Nguyên'
 ];
 
+/* Chỉ số phụ: đồ từ Địa Tiên trở lên, phẩm càng cao càng nhiều dòng, tổng mỗi loại có trần */
+const GEAR_SUB_REALM = 10;
+const GEAR_SUB_ROLL = [0.7, 1.3];
+const GEAR_SUBS = {
+    crit: { label: 'Chí mạng', base: 0.02, perRealm: 0.002, cap: 0.6 },
+    critDmg: { label: 'Sát thương chí mạng', base: 0.1, perRealm: 0.01, cap: 2 },
+    dodge: { label: 'Né tránh', base: 0.015, perRealm: 0.001, cap: 0.4 },
+    lifesteal: { label: 'Hút máu', base: 0.01, perRealm: 0.001, cap: 0.25 },
+    luck: { label: 'May mắn', base: 0.01, perRealm: 0.001, cap: 0.3 }
+};
+const CRIT_BASE_MULT = 1.5;
+
+function rollGearSubs(realm, quality) {
+    if (realm < GEAR_SUB_REALM) return [];
+    const q = GEAR_QUALITIES[quality];
+    const kinds = Object.keys(GEAR_SUBS).sort(() => Math.random() - 0.5).slice(0, 1 + Math.floor(quality / 2));
+    return kinds.map(kind => {
+        const sub = GEAR_SUBS[kind];
+        const roll = GEAR_SUB_ROLL[0] + Math.random() * (GEAR_SUB_ROLL[1] - GEAR_SUB_ROLL[0]);
+        return { kind, value: +((sub.base + sub.perRealm * (realm - GEAR_SUB_REALM)) * q.mult * roll).toFixed(4) };
+    });
+}
+
 function gearBudget(realm) {
     const midStage = GEAR_MID_STAGE;
     const ref = refStats(realm, midStage);
@@ -162,6 +185,7 @@ function makeGearItem(realm, slot, quality = 0) {
         def: Math.floor(b.def * s.def * q.mult),
         hp: Math.floor(b.hp * s.hp * q.mult),
         speed: slot === 'boots' ? 0.05 + quality * 0.05 : 0,
+        subs: rollGearSubs(realm, quality),
         desc: `Yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
     };
 }
@@ -293,6 +317,17 @@ function makeForgedGear(realm, slot, gradeIndex = 0) {
         name: `⚡ ${GEAR_SERIES[gearRealm]} ${GEAR_SLOTS[slot].label} [${GEAR_QUALITIES[quality].name}] vượt cấp`,
         reqRealm: realm,
         desc: `Rèn vượt ${gearRealm - realm} cảnh giới, yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
+    };
+}
+
+/* Bảo vật nhiệm vụ: chỉ số của cảnh giới cao hơn nhưng yêu cầu vẫn là cảnh giới hiện tại */
+function makeTreasureGear(realm, slot, quality, bonus) {
+    const gearRealm = Math.min(REALM_COUNT - 1, realm + bonus);
+    return {
+        ...makeGearItem(gearRealm, slot, quality),
+        name: `✨ ${GEAR_SERIES[gearRealm]} ${GEAR_SLOTS[slot].label} [${GEAR_QUALITIES[quality].name}] thất truyền`,
+        reqRealm: realm,
+        desc: `Bảo vật thất truyền, yêu cầu ${GEAR_SERIES[realm]} cảnh trở lên`
     };
 }
 

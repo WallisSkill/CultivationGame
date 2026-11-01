@@ -985,6 +985,12 @@ function showStatDetails() {
     const realmName = REALMS[state.realmIndex] || 'Luyện Khí';
     const stageName = STAGES[state.realmStage] || 'Sơ Kỳ';
 
+    const subs = gearSubTotals();
+    const path = DAO_PATHS[state.daoPath];
+    const pct = value => `${(value * 100).toFixed(1)}%`;
+    const subRow = (label, value, cap) => `<div>${label}: <span style="color:#fff">${pct(value)}</span>${value >= cap ? ' <span style="color:#ffa94d">(đạt trần)</span>' : ` <span style="color:#888">/ trần ${pct(cap)}</span>`}</div>`;
+    const bootSpeed = equippedInSlot('boots')?.speed || 0;
+
     // Cultivation boost
     const cultivateBoost = state.cultivateBoost || 1.0;
 
@@ -1030,6 +1036,32 @@ function showStatDetails() {
 
             <div style="color:#888;font-size:0.9em;margin-bottom:16px;text-align:center;">
                 ${colorizeWithMap(realmName)} ${colorizeWithMap(stageName)} · ${colorizeWithMap(rootRankName)} · ${state.root.elements.map(colorizeElement).join(' ')}
+            </div>
+
+            <!-- Identity -->
+            <div style="background:rgba(230,201,122,0.1);border:1px solid rgba(230,201,122,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#e6c97a;font-weight:600;margin-bottom:10px;font-size:1.1em;">🏛️ Thân Phận</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    <div>${raceOf().icon} Chủng tộc: <span style="color:#fff">${raceOf().name}</span> · ${raceOf().desc}</div>
+                    <div>${path.icon} Hệ tu: <span style="color:#fff">${path.name}</span> (hành ${path.hanh}) · ${path.desc}</div>
+                    <div>🏛️ Tiên vị: <span style="color:#fff">${tienViName()}</span>${tienViRegistered() ? ` · ${formatNumber(state.merit)} công lao` : ''}</div>
+                    <div>⛩️ Tông môn: <span style="color:#fff">${sectEscape(sectName() || 'chưa có')}</span></div>
+                    <div>🌱 Căn cơ: <span style="color:#fff">${100 - (state.flaw || 0)}%</span></div>
+                </div>
+            </div>
+
+            <!-- Secondary stats -->
+            <div style="background:rgba(177,151,252,0.1);border:1px solid rgba(177,151,252,0.3);border-radius:12px;padding:16px;margin-bottom:12px;">
+                <div style="color:#b197fc;font-weight:600;margin-bottom:10px;font-size:1.1em;">🎯 Chỉ Số Phụ</div>
+                <div style="color:#ccc;font-size:0.9em;line-height:1.8;">
+                    ${subRow('💥 Chí mạng', subs.crit, GEAR_SUBS.crit.cap)}
+                    <div>💢 Hệ số chí mạng: <span style="color:#fff">x${(CRIT_BASE_MULT + subs.critDmg).toFixed(2)}</span></div>
+                    ${subRow('💨 Né tránh', subs.dodge, GEAR_SUBS.dodge.cap)}
+                    ${subRow('🩸 Hút máu từ đồ', subs.lifesteal, GEAR_SUBS.lifesteal.cap)}
+                    <div>🍀 May mắn: <span style="color:#fff">${pct(totalLuck())}</span> <span style="color:#888">(đồ ${pct(subs.luck)})</span></div>
+                    <div>🥾 Tốc hành: <span style="color:#fff">+${Math.round(bootSpeed * 100)}%</span></div>
+                    <div>⚡ Mọi việc nhanh: <span style="color:#fff">x${realmHaste(state.realmIndex).toFixed(2)}</span></div>
+                </div>
             </div>
 
             <!-- Power Section -->
@@ -1275,7 +1307,7 @@ function fitInventoryPage(listEl) {
     const free = pane.getBoundingClientRect().bottom - listEl.firstElementChild.getBoundingClientRect().top - 44;
     const columns = getComputedStyle(listEl).gridTemplateColumns.split(' ').length;
     const fit = Math.max(1, Math.floor(free / (tallest + 8))) * columns;
-    if (fit === inventoryPerPage) return;
+    if (fit === inventoryPerPage || inventoryPage > 0) return;
     inventoryPerPage = fit;
     renderInventory();
 }
@@ -1542,7 +1574,12 @@ function gearStatText(item) {
     if (item.def) parts.push(`DEF +${formatNumber(item.def)}`);
     if (item.hp) parts.push(`HP +${formatNumber(item.hp)}`);
     if (item.speed) parts.push(`Tốc hành +${Math.round(item.speed * 100)}%`);
+    (item.subs || []).forEach(sub => parts.push(gearSubText(sub)));
     return parts.join(', ');
+}
+
+function gearSubText(sub) {
+    return `${GEAR_SUBS[sub.kind].label} +${(sub.value * 100).toFixed(1)}%`;
 }
 
 function gearScore(item) {
@@ -1627,6 +1664,19 @@ function getEquippedHp() {
     let total = 0;
     state.inventory.filter(i => i.equipped && i.hp).forEach(i => total += i.hp);
     return total;
+}
+
+function gearSubTotals() {
+    const totals = {};
+    Object.entries(GEAR_SUBS).forEach(([kind, sub]) => {
+        const sum = state.inventory.filter(i => i.equipped).flatMap(i => i.subs || []).filter(s => s.kind === kind).reduce((a, s) => a + s.value, 0);
+        totals[kind] = Math.min(sub.cap, sum);
+    });
+    return totals;
+}
+
+function totalLuck() {
+    return (state.luckBonus || 0) + gearSubTotals().luck;
 }
 
 /* ===========================

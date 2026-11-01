@@ -154,7 +154,7 @@ function calculateMajorGain({ prevRealm = 0, newRealm = prevRealm + 1, rootRank 
 
 function getMajorBreakthroughChance() {
     const rootRank = state.root?.rank || 0;
-    const chance = 0.85 - (state.realmIndex || 0) * 0.01 + rootRank * 0.01 + (state.luckBonus || 0) + (state.breakBonus || 0);
+    const chance = 0.85 - (state.realmIndex || 0) * 0.01 + rootRank * 0.01 + totalLuck() + (state.breakBonus || 0);
     return Math.min(0.98, Math.max(0.5, chance));
 }
 

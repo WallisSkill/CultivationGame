@@ -45,10 +45,7 @@ function sceneSpots(loc) {
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect');
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), loc.type === 'town' || loc.type === 'sect');
-    SIDE_QUESTS.filter(q => q.loc === loc.id && !questExpired(q) && !state.questDone.includes(q.id)
-        && (!q.after || state.questDone.includes(q.after))
-        && !state.questActive.some(rt => rt.id === q.id) && needsMet(q))
-        .forEach(q => add('❓', `${NPCS[q.npc].name}: ${q.title}`, () => acceptSideQuest(q.id)));
+    LOCATION_NPCS[loc.id].forEach(key => add(npcOffers(key).length || npcReports(key).length ? '❗' : '💬', NPCS[key].name, () => openNpcTalk(key)));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
     const radiusX = SCENE_W / 2 - 170, radiusY = SCENE_H / 2 - 140;
     spots.forEach((spot, i) => {

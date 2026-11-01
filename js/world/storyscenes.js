@@ -310,3 +310,125 @@ const INTEL_QUESTS = WORLD_TIERS.flatMap(tier => {
 SIDE_QUESTS.push(...INTEL_QUESTS);
 INTEL_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => (names[LOCATIONS[q.loc].world] = LOCATIONS[q.loc].name, names), {});
+
+/* Cư dân: mỗi nơi có một người để hỏi chuyện, nơi có lò thêm thợ rèn; nhiệm vụ không có NPC riêng do cư dân giao */
+const NPC_SEED = text => [...text].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7);
+const RESIDENT_SURNAMES = ['Lâm', 'Trần', 'Vân', 'Thẩm', 'Mộ', 'Tần', 'Hứa', 'Liễu', 'Phong', 'Bạch', 'Cố', 'Diệp'];
+const RESIDENT_GIVEN = ['Đại Thúc', 'Lão Nhân', 'Nương Tử', 'Tiểu Ca', 'Bà Bà', 'Đạo Hữu', 'Tán Nhân', 'Khách'];
+const RESIDENT_ROLES = { town: 'Dân trong thành', sect: 'Đệ tử trông sân', wild: 'Kẻ quen đường', dungeon: 'Người sống sót', gate: 'Người giữ cửa' };
+const RESIDENT_COLORS = ['#55524a', '#3f6f9e', '#8c6a3a', '#6b4a8f', '#3e7d5a', '#8c3a3a'];
+const RESIDENT_AREA_LINES = {
+    town: 'Ở đây tin đồn chạy nhanh hơn ngựa, nhưng người hỏi đúng chuyện thì không nhiều.',
+    sect: 'Quy củ ở đây nghiêm, đừng để người trên trông thấy ta nói nhiều.',
+    wild: 'Đi đường này phải biết lúc nào nên dừng. Kẻ không biết đều nằm lại cả.',
+    dungeon: 'Ta còn đứng đây là vì biết chỗ nào không được bước vào.',
+    gate: 'Kẻ qua cổng này ai cũng vội. Chẳng mấy người quay lại kể chuyện bên kia.'
+};
+const SMITH_NAMES = ['Lão Thiết', 'Hỏa Thủ', 'Kim Chùy', 'Đoàn Lão', 'Lô Sư'];
+
+function residentKey(locId) {
+    return `dan_${locId}`;
+}
+
+function npcLookFromSeed(seed) {
+    return NPC_LOOK(seed % 2 ? 'm' : 'f', seed % 6, RESIDENT_COLORS[seed % 3], RESIDENT_COLORS[seed % RESIDENT_COLORS.length]);
+}
+
+const LOCATION_NPCS = {};
+Object.values(LOCATIONS).forEach(loc => {
+    const seed = NPC_SEED(loc.id);
+    NPCS[residentKey(loc.id)] = {
+        name: `${RESIDENT_SURNAMES[seed % RESIDENT_SURNAMES.length]} ${RESIDENT_GIVEN[(seed >> 4) % RESIDENT_GIVEN.length]}`,
+        title: RESIDENT_ROLES[loc.type] || 'Người qua đường', look: npcLookFromSeed(seed)
+    };
+    const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];
+    if ((loc.services || []).includes('forge') && !named.some(key => /thợ/i.test(NPCS[key].title || ''))) {
+        const key = `ren_${loc.id}`;
+        NPCS[key] = { name: SMITH_NAMES[seed % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
+        named.push(key);
+    }
+    LOCATION_NPCS[loc.id] = [...named, residentKey(loc.id)];
+});
+
+function locationSmith(loc) {
+    return LOCATION_NPCS[loc.id].find(key => /thợ/i.test(NPCS[key].title || ''));
+}
+
+function questGiver(q) {
+    return q.npc === 'narr' ? residentKey(q.loc) : q.npc;
+}
+
+/* Về đến nơi chưa đủ: bước đi tới của nhiệm vụ phụ phải nói chuyện với người ở đó */
+SIDE_QUESTS.forEach(q => (q.steps || []).forEach(step => {
+    if (!step.go) return;
+    const speaker = step.say?.find(line => line[0] !== 'narr')?.[0];
+    step.talk = LOCATION_NPCS[step.go]?.includes(speaker) ? speaker : residentKey(step.go);
+    step.loc = step.go;
+    delete step.go;
+}));
+
+/* Nhiệm vụ ẩn: chỉ cư dân kể, chỉ trong đúng một cảnh giới; Thần lò giao việc đổi lấy một món ngẫu nhiên */
+const HIDDEN_QUEST_RATE = 3;
+const HIDDEN_HUNT = 12;
+const HIDDEN_BOSS_SCALE = 1.5;
+const TREASURE_REWARD = { quality: 4, bonus: 2 };
+const HIDDEN_TITLES = ['Mật Tàng', 'Lời Trăn Trối', 'Vết Máu Cũ', 'Lời Thề Bị Quên', 'Ngôi Mộ Không Tên'];
+const HIDDEN_FOES = ['Kẻ Canh Mật Tàng', 'Oán Linh Cổ Xưa', 'Thủ Mộ Nhân', 'Kẻ Phản Thệ'];
+
+function treasureSteps(loc, key, bossId, thanks) {
+    const seed = NPC_SEED(loc.id);
+    return [
+        { hunt: { loc: loc.id, name: loc.enemies[seed % loc.enemies.length].name, n: HIDDEN_HUNT } },
+        { boss: bossId },
+        { talk: key, loc: loc.id, say: [[key, thanks]] }
+    ];
+}
+
+function treasureBoss(loc, id, realm) {
+    const seed = NPC_SEED(id);
+    BOSSES[id] = { npc: { name: HIDDEN_FOES[seed % HIDDEN_FOES.length], look: { ...npcLookFromSeed(seed), aura: '#c58bff' } }, realm, stage: 2, scale: HIDDEN_BOSS_SCALE, board: 5 };
+}
+
+const HIDDEN_QUESTS = Object.values(LOCATIONS).filter(loc => (loc.enemies || []).length && NPC_SEED(loc.id) % HIDDEN_QUEST_RATE === 0).map(loc => {
+    const seed = NPC_SEED(loc.id);
+    const realm = loc.minR + seed % (loc.maxR - loc.minR + 1);
+    const key = residentKey(loc.id);
+    const id = `an_${loc.id}`;
+    treasureBoss(loc, id, realm);
+    return {
+        id, loc: loc.id, npc: 'narr', hidden: true, realmOnly: realm, needs: [realm, 0],
+        title: `${HIDDEN_TITLES[seed % HIDDEN_TITLES.length]} Ở ${loc.name}`,
+        intro: [[key, `Tu vi như ngươi thì ta mới dám nói. Ở ${loc.name} có thứ người xưa chôn lại, và thứ giữ nó vẫn còn thức. Quét sạch đường vào, hạ nó rồi quay về gặp ta.`]],
+        steps: treasureSteps(loc, key, id, 'Ta đợi người như ngươi đã lâu. Vật này vốn không thuộc về cảnh giới của ngươi, cầm lấy.'),
+        reward: { hours: 4, goldRefs: 20, treasure: true }
+    };
+});
+
+const FORGE_TREASURE_QUESTS = Object.values(LOCATIONS).filter(loc => forgeGradeOf(loc).wholeWorld && (loc.enemies || []).length).map(loc => {
+    const key = locationSmith(loc);
+    const id = `lo_${loc.id}`;
+    treasureBoss(loc, id, loc.minR);
+    return {
+        id, loc: loc.id, npc: key, title: `Mẻ Rèn Cuối Của ${NPCS[key].name}`, needs: [loc.minR, 0],
+        intro: [[key, 'Lò này còn một mẻ ta chưa dám mở, thiếu đúng một thứ nguyên liệu nằm trong thân kẻ đang chặn đường vào. Lấy về đây, ra món gì là do trời định.']],
+        steps: treasureSteps(loc, key, id, 'Đủ rồi. Lửa lên... Ra món gì ta cũng không biết trước, nhưng cả đời ta chưa rèn thứ nào hơn thế.'),
+        reward: { hours: 2, goldRefs: 10, treasure: true }
+    };
+});
+
+SIDE_QUESTS.push(...HIDDEN_QUESTS, ...FORGE_TREASURE_QUESTS);
+[...HIDDEN_QUESTS, ...FORGE_TREASURE_QUESTS].forEach(q => { QUEST_INDEX[q.id] = q; });
+
+/* Xen kẽ cốt truyện: việc mở khu vực chờ nhiệm vụ chính trước đó, một số nhiệm vụ chính chờ lại việc này */
+const MAIN_GATE_LOCATIONS = ['thanh_van', 'xich_diem', 'phi_thang', 'van_tien', 'dao_tri', 'da_bao', 'vo_cuong', 'khai_thien', 'dao_gia_am', 'co_thu'];
+const needsBefore = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
+
+[...REGION_QUESTS, ...FORGE_TREASURE_QUESTS].forEach(q => {
+    const before = MAIN_QUESTS.filter(m => needsBefore(m.needs, q.needs)).pop();
+    if (before) q.afterMain = before.id;
+});
+REGION_QUESTS.filter(q => MAIN_GATE_LOCATIONS.includes(q.loc)).forEach(q => {
+    const world = LOCATIONS[q.loc].world;
+    const gated = MAIN_QUESTS.find(m => needsBefore(q.needs, m.needs) && worldTierOfRealm(m.needs[0]).id === world);
+    if (gated) gated.needsSide = [...(gated.needsSide || []), q.id];
+});

@@ -120,12 +120,12 @@ function playerAt(r, s, gearRealm, quality, lbSlots, rootRank = 3, lbRealm = r) 
     };
 }
 
-/* trận trung bình: mỗi ô pháp bảo ~1.3 hệ số, hồi 2.5 giây; địch nhân 0.5 sát thương */
+/* trận trung bình: mỗi ô pháp bảo ~1.3 hệ số, hồi 2.5 giây; địch nhân 0.7 sát thương, 5 cảnh đầu 0.5 */
 function duel(p, tier, enemyRealm = p.r, enemyStage = p.s, scale = 1, board = 3) {
     const e = G.enemyStatsFor(enemyRealm, enemyStage, tier, scale);
     const elements = ['Kim'];
     const hit = G.computeDamage(p.atk * 1.3 * p.lb, elements, p.rootRank, p.r, p.s, e.def, elements, p.rootRank, enemyRealm, enemyStage).final;
-    const back = G.computeDamage(e.str * 1.3 * 0.5, elements, p.rootRank, enemyRealm, enemyStage, p.def, elements, p.rootRank, p.r, p.s).final;
+    const back = G.computeDamage(e.str * 1.3 * (enemyRealm < 5 ? 0.5 : 0.7), elements, p.rootRank, enemyRealm, enemyStage, p.def, elements, p.rootRank, p.r, p.s).final;
     const dps = hit * p.lbSlots / 2.5, taken = back * board / 2.5;
     const tKill = e.maxHp / dps, tDie = p.hp / taken;
     return { win: tKill < tDie, tKill, tDie };
@@ -148,6 +148,7 @@ for (let r = 0; r < 29; r++) {
     if (!b.win) fail.push(`realm ${r}: thua boss dù đủ đồ`);
     if (a.tKill < 6) fail.push(`realm ${r}: trận quá ngắn ${a.tKill.toFixed(1)}s`);
     if (b.tKill > 80) fail.push(`realm ${r}: boss quá lâu, chạm mốc 90s`);
+    if (r <= 26 && duel(on, 'Boss', r + 2, s, 1, bossBoard).win) fail.push(`realm ${r}: thắng boss cao hơn 2 cảnh`);
     if (r <= 14 && d.win) fail.push(`realm ${r}: không đồ vẫn thắng — đồ chưa đủ quan trọng`);
     if ([4, 12, 17, 22].includes(r) && Math.abs(on.selfShare - 0.4) > 0.05) fail.push(`realm ${r}: giữa Giới bản thể ${(on.selfShare * 100).toFixed(0)}%, cần khoảng 40%`);
 }

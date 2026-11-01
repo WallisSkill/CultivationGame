@@ -18,7 +18,7 @@ const SAINTS = [
             log(`💰 Thái Thanh mở kho Linh Bảo — Ngươi nhận được ${goldGain.toLocaleString()} linh thạch!`);
 
             // ✨ Có cơ hội ban thêm pháp bảo
-            if (Math.random() < 0.3 + state.luckBonus) {
+            if (Math.random() < 0.3 + totalLuck()) {
                 const relic = { name: "Thái Cực Đồ", type: "relic", uses: 3, effect: "Bất tử 3 lần tấn công" };
 
                 // 🪶 Không cho trùng (chỉ 1 lần trong túi)
@@ -45,7 +45,7 @@ const SAINTS = [
         onTalk: () => {
             state.power = Math.floor(state.power * 1.6);
             log("⚡ Thông Thiên truyền đạo — Sức mạnh tăng 60%!");
-            if (Math.random() < 0.3 + state.luckBonus) {
+            if (Math.random() < 0.3 + totalLuck()) {
                 const relic = { name: "Tru Tiên Kiếm", type: "relic", uses: 3, effect: "Có cơ hội giết địch ngay lập tức" };
                 const exists = state.inventory.some(i => i.name === relic.name && i.type === "relic");
                 if (exists) {
@@ -74,7 +74,7 @@ const SAINTS = [
 
             log(`💧 Nguyên Thủy truyền pháp — HP tối đa gấp 1.25 lần (${state.totalMaxHp}), đã hồi full!`);
 
-            if (Math.random() < 0.3 + state.luckBonus) {
+            if (Math.random() < 0.3 + totalLuck()) {
                 const relic = { name: "Tam Bảo Ngọc Như Ý", type: "relic", uses: 3, effect: "Phản 75% sát thương trong 3 lượt" };
                 const exists = state.inventory.some(i => i.name === relic.name && i.type === "relic");
                 if (exists) {
@@ -165,7 +165,7 @@ const SAINTS = [
             }
 
             // 💮 Nữ Oa cũng có cơ duyên sinh bảo (30%)
-            if (Math.random() < 0.3 + state.luckBonus) {
+            if (Math.random() < 0.3 + totalLuck()) {
                 const relic = { name: "Chiêu Yêu Phiến", type: "relic", uses: 3, effect: "Phần thưởng quái x2 trong 3 lần" };
                 const exists = state.inventory.some(i => i.name === relic.name && i.type === "relic");
                 if (exists) {
@@ -196,7 +196,7 @@ const SAINTS = [
                 attemptMajorBreakthrough(true);
                 log(`🌿 Chuẩn Đề điểm hóa — Đại cảnh giới tăng lên: ${REALMS[state.realmIndex]}!`);
             }
-            if (Math.random() < 0.3 + state.luckBonus) {
+            if (Math.random() < 0.3 + totalLuck()) {
                 const relic = { name: "Thất Bảo Diệu Thọ", type: "relic", uses: 2, effect: "Thu phục vũ khí địch, 2 lần" };
                 const exists = state.inventory.some(i => i.name === relic.name && i.type === "relic");
                 if (exists) {
@@ -238,7 +238,7 @@ const SAINTS = [
                 }
 
                 // 💎 10% cơ hội ban thêm Tiếp Dẫn Bảo Tràng
-                if (Math.random() < 0.1 + state.luckBonus) {
+                if (Math.random() < 0.1 + totalLuck()) {
                     const relic = { name: "Tiếp Dẫn Bảo Tràng", type: "relic", uses: 1, effect: "Gọi Tam Thanh một lần" };
                     const exists = state.inventory.some(i => i.name === relic.name && i.type === "relic");
                     if (exists) {
