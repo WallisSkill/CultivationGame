@@ -92,6 +92,7 @@ function initWorldState() {
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
     applyOriginQuest();
     restoreHuVoQuests();
+    if (state.huVoDisciple) takeHuVoName(HU_VO_DISCIPLE_NAME);
     state.ringTale = state.ringTale ?? state.realmIndex ?? 0;
     state.activity = state.activity || null;
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
@@ -517,7 +518,7 @@ function beginRoute(id, route) {
 /* Đồng đội đưa đi: được đi qua vùng chưa đủ cảnh giới, không bao giờ chậm hơn tự đi.
    Người đưa đã mở khóa dịch chuyển tới đó thì tới ngay, không cần có đường đi */
 function carriedTravel(id, seconds, carrier) {
-    if (!requireFree()) return;
+    if (!requireFree() || !huVoMayGo(id)) return;
     if (seconds <= 0) {
         state.location = id;
         log(`⚡ ${carrier} đưa ngươi tới ngay ${LOCATIONS[id].name}.`);
@@ -543,6 +544,7 @@ function carriedTravel(id, seconds, carrier) {
 function travelTo(id) {
     if (!requireFree()) return;
     if (id === state.location) return;
+    if (!huVoMayGo(id)) { showToast('Đệ tử của Chủ chỉ được xuống Giới dưới khi có việc tại nơi đó.', 'warn'); return; }
     const route = findPath(state.location, id);
     if (!route) { showToast('Chưa có đường tới đó.', 'warn'); return; }
     beginRoute(id, route);
@@ -1124,7 +1126,7 @@ function questExpired(q) {
 
 function questOpen(q) {
     if (state.questDone.includes(q.id) || state.questActive.some(rt => rt.id === q.id)) return false;
-    if (!needsMet(q) || questExpired(q) || !endingAllows(q)) return false;
+    if (!needsMet(q) || questExpired(q) || !endingAllows(q) || !huVoSeedOpen(q)) return false;
     if (q.realmOnly != null && state.realmIndex !== q.realmOnly) return false;
     return [q.after, q.afterMain].every(id => !id || state.questDone.includes(id));
 }
@@ -1424,6 +1426,7 @@ function grantQuestReward(q) {
     if (r.ending) queueEndingChoice();
     if (r.finalRealm) huVoHolder() ? offerHuVoChoice() : enterFinalRealm();
     if (r.huVoOrder) reportHuVoOrder(r.huVoOrder);
+    if (r.huVoSeed) wsSend({ type: 'huvo_seed_done', id: r.huVoSeed });
 }
 
 function queueEndingChoice() {
@@ -1573,14 +1576,14 @@ function handleHuVoThrone(msg) {
     huVoThrone = msg.throne || null;
     if (huVoThrone?.id === state.profileId) state.huVoPending = false;
     else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1 && !state.huVoDisciple)) reportHuVoWin();
-    (huVoThrone?.seeds || []).forEach(registerHuVoQuest);
+    syncHuVoSeeds();
     const seat = huVoThrone?.disciples?.[state.profileId];
-    if (state.huVoDisciple && huVoThrone && (!seat?.atk || seat.stage !== state.realmStage)) joinHuVoThrone();
+    if (state.huVoDisciple && huVoThrone && (!seat?.atk || seat.stage !== state.realmStage || seat.name !== state.name)) joinHuVoThrone();
     if (msg.news && huVoThrone) {
         log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
         showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);
     }
-    renderAll();
+    if (state.questDone) renderAll();
 }
 
 /* Trận cuối chỉ là phân thân của người giữ ngôi; muốn lấy ngôi phải khiêu chiến người thật */
@@ -1597,10 +1600,10 @@ function applyHuVoRival(enemy, holder, share = 1) {
 }
 
 /* Trận cuối đánh với chính cái tên của người chơi, thắng mới thành Hư Vô Chi Chủ */
-function takeHuVoName() {
+function takeHuVoName(title = HU_VO_PLAYER_NAME) {
     if (state.huVoName) return;
     state.huVoName = state.name;
-    state.name = HU_VO_PLAYER_NAME;
+    state.name = title;
 }
 
 function bossName(id) {
@@ -2059,7 +2062,8 @@ function talkAboutArea(key) {
 
 function acceptFromNpc(id) {
     closeNpcTalk();
-    acceptSideQuest(id);
+    if (huVoSeedOf(QUEST_INDEX[id])?.target === 'first') wsSend({ type: 'huvo_claim', id: QUEST_INDEX[id].huVoSeedId });
+    else acceptSideQuest(id);
 }
 
 function reportToNpc(id) {
