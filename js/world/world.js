@@ -1571,7 +1571,8 @@ function handleHuVoThrone(msg) {
     if (huVoThrone?.id === state.profileId) state.huVoPending = false;
     else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1 && !state.huVoDisciple)) reportHuVoWin();
     (huVoThrone?.seeds || []).forEach(registerHuVoQuest);
-    if (state.huVoDisciple && huVoThrone && !huVoThrone.disciples?.[state.profileId]) joinHuVoThrone();
+    const seat = huVoThrone?.disciples?.[state.profileId];
+    if (state.huVoDisciple && huVoThrone && (!seat?.atk || seat.stage !== state.realmStage)) joinHuVoThrone();
     if (msg.news && huVoThrone) {
         log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
         showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);
@@ -1580,18 +1581,16 @@ function handleHuVoThrone(msg) {
 }
 
 /* Trận cuối chỉ là phân thân của người giữ ngôi; muốn lấy ngôi phải khiêu chiến người thật */
-function applyHuVoHolder(enemy, holder) {
-    enemy.name = bossName(enemy.bossId);
+function applyHuVoRival(enemy, holder, share = 1) {
     enemy.look = holder.look || enemy.look;
-    enemy.str = holder.atk * HU_VO_CLONE_SHARE;
-    enemy.def = holder.def * HU_VO_CLONE_SHARE;
-    enemy.hp = enemy.maxHp = holder.hp * HU_VO_CLONE_SHARE;
+    enemy.str = holder.atk * share;
+    enemy.def = holder.def * share;
+    enemy.hp = enemy.maxHp = holder.hp * share;
     enemy.shownRealm = REALM_COUNT - 1;
     enemy.elements = holder.elements;
     enemy.path = holder.path;
     enemy.boardDefs = Array.from({ length: getEffectiveBoardSlots() }, huVoLinhBao).map(lbDuelDef);
     enemy.duel = true;
-    log(`🌌 Phân thân của ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, chặn đường ngươi.`);
 }
 
 /* Trận cuối đánh với chính cái tên của người chơi, thắng mới thành Hư Vô Chi Chủ */
@@ -1629,7 +1628,17 @@ function spawnBoss(id, quest) {
     if (b.hpMult) enemy.hp = enemy.maxHp = Math.floor(enemy.maxHp * b.hpMult);
     if (huVoBoard(piece)) enemy.boardDefs = huVoBoard(piece);
     if (b.huVoSelf) enemy.escorts = huVoFinalEscorts(realm, stage);
-    if (b.huVoHolder && huVoHolder()) applyHuVoHolder(enemy, huVoHolder());
+    if (b.huVoHolder && huVoHolder()) {
+        applyHuVoRival(enemy, huVoHolder(), HU_VO_CLONE_SHARE);
+        enemy.name = bossName(id);
+        log(`🌌 Phân thân của ${huVoHolder().name}, Hư Vô Chi Chủ đời thứ ${huVoHolder().reign}, chặn đường ngươi.`);
+    }
+    if (id === 'hv_de_tu') {
+        const foe = huVoNextDisciple();
+        applyHuVoRival(enemy, foe);
+        enemy.name = foe.name;
+        enemy.huVoFoe = foe.id;
+    }
     if (b.adds) {
         enemy.escorts = Array.from({ length: b.adds.n }, () => {
             const add = buildEnemy({ name: b.adds.name, kind: b.adds.kind, realmIndex: realm, realmStage: stage, boardSize: 1 });
@@ -1671,6 +1680,7 @@ function enemyRenownPoints(enemy) {
 
 function onEnemyDefeated(enemy) {
     if (enemy.bossId) clearBossStep(enemy.bossId);
+    if (enemy.huVoFoe) beatHuVoDisciple(enemy.huVoFoe);
     onSaintDuelWon(enemy);
     onLuanDaoWon(enemy);
     const killed = [enemy, ...(enemy.escorts || [])];

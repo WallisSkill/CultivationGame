@@ -1528,6 +1528,7 @@ function lbEndBattle(battle, result) {
         if (enemy && enemy.scriptedLoss) onScriptedLoss(enemy);
         else loseBattle();
         if (enemy?.huVoEnd) huVoFallBack();
+        if (enemy?.huVoFoe) loseToHuVoDisciple();
     }
 
     window.__boardBattle = null;

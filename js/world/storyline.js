@@ -96,6 +96,7 @@ const BOSSES = {
     hv_gear: { kind: 'chaos', name: 'Trang Bị Tách Ra', realm: 31, stage: 3, board: 4, scale: 0.8, huVoPiece: 'gear' },
     hv_lb: { kind: 'chaos', name: 'Pháp Bảo Tách Ra', realm: 31, stage: 3, scale: 1, huVoPiece: 'lb' },
     hu_ten: { kind: 'chaos', name: 'Hư Vô Chí Đạo', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoSelf: true },
+    hv_de_tu: { kind: 'chaos', name: 'Hư Vô Đạo Giả', realm: 31, stage: 3, board: 6 },
     hu_vo: { kind: 'chaos', name: 'Hư Vô Chi Chủ Phân Thân', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoHolder: true },
 };
 
@@ -491,7 +492,7 @@ const MAIN_QUESTS = [
             { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ những ngày đầu lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
             { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']] },
             { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó chỉ gửi xuống một phân thân.']] },
-            { boss: 'hu_vo', say: [['narr', 'Phân thân tan đi. Người thật trên ngôi Hư Vô vẫn chưa nhúc nhích, chỉ nhìn xuống và đợi ngươi chọn.']] }
+            { boss: 'hu_vo', say: [['narr', 'Phân thân tan đi. Người thật trên ngôi Hư Vô vẫn chưa nhúc nhích, chỉ nhìn xuống. Giữa ngươi và ngôi ấy còn các đệ tử của người đó.']] }
         ],
         reward: { finalRealm: true, hours: 0, goldRefs: 0 }
     }

@@ -149,12 +149,14 @@ function weaponLayer(kind, color) {
         case 'fan': return `<g transform="translate(97 92)"><path d="M0 0 L-17 -22 Q0 -36 17 -22 Z" fill="#efe8da" stroke="${INK}" stroke-width=".6"/><path d="M0 0 L-9 -29M0 0 L0 -32M0 0 L9 -29" stroke="${INK}" stroke-width=".4" opacity=".6"/><path d="M-14 -24 Q0 -34 14 -24" stroke="${color}" stroke-width="2" fill="none" opacity=".7"/></g>`;
         case 'orb': return `<circle cx="99" cy="76" r="8" fill="${color}" stroke="${glow}" stroke-width="1"/><circle cx="96.6" cy="73.6" r="2.2" fill="#fff" opacity=".75"/>`;
         case 'staff': return `<rect x="97.4" y="20" width="1.8" height="130" fill="#4b3320"/><path d="M98.2 8 Q106 14 98.2 22 Q90.6 14 98.2 8 Z" fill="${color}" stroke="${INK}" stroke-width=".5"/>`;
+        case 'huvo': return huVoBladeLayer(color);
         default: return `<g transform="rotate(9 98 92)"><path d="M96.7 22 L98 12 L99.3 22 L99.3 84 L96.7 84 Z" fill="${shadeColor(color, 0.35)}" stroke="${INK}" stroke-width=".5"/><path d="M98 14 L98 84" stroke="${color}" stroke-width=".7"/><path d="M92.6 84 Q98 86.6 103.4 84" stroke="#caa24a" stroke-width="1.8" fill="none" stroke-linecap="round"/><rect x="97.1" y="85" width="1.8" height="11" fill="#2f2118"/><path d="M98 96 Q95 104 98 110" stroke="#a33" stroke-width="1" fill="none"/></g>`;
     }
 }
 
-function crownLayer(crown, color) {
+function crownLayer(crown, color, stage = 0) {
     switch (crown) {
+        case 'huvo': return huVoCrownLayer(color, stage);
         case 'guan': return `<path d="M54 10 L55.6 2 Q60 .4 64.4 2 L66 10 Q60 12 54 10 Z" fill="${color}" stroke="${INK}" stroke-width=".5"/><path d="M49 7.6 L71 5.4" stroke="#e6c97a" stroke-width="1" stroke-linecap="round"/>`;
         case 'halo': return `<ellipse cx="60" cy="5" rx="13" ry="3" fill="none" stroke="${color}" stroke-width="1.6"/>`;
         case 'wheel': return `<circle cx="60" cy="27" r="25" fill="none" stroke="${color}" stroke-width="1.2" stroke-dasharray="3 3" opacity=".8"/>`;
@@ -181,7 +183,7 @@ const ROBE_MOTIFS = {
     hondon: 'M0 0 q2 -2 3 1 q-1 4 -5 2 q-4 -3 -1 -7 q5 -3 8 2',
     hongmong: 'M0 0 Q-3 -6 0 -6 Q3 -6 0 0 M0 0 Q6 -3 6 0 Q6 3 0 0 M0 0 Q3 6 0 6 Q-3 6 0 0 M0 0 Q-6 3 -6 0 Q-6 -3 0 0',
     chungnguyen: 'M-5 0 a5 5 0 1 0 10 0 a5 5 0 1 0 -10 0 M-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0',
-    huvo: 'M-6 0 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0'
+    huvo: 'M-6 0 A6 6 0 1 1 3 5.2 A4.6 4.6 0 1 0 -6 0 Z M5 -6 L5.7 -4 L7.6 -3.4 L5.7 -2.8 L5 -.8 L4.3 -2.8 L2.4 -3.4 L4.3 -4 Z'
 };
 const ROBE_MOTIF_SPOTS = [[46, 64, 0.8], [74, 64, 0.8], [43, 116, 1.3], [77, 116, 1.3], [38, 136, 1], [82, 136, 1]];
 
@@ -189,6 +191,82 @@ function robeMotifLayer(motif, color) {
     const shape = ROBE_MOTIFS[motif];
     if (!shape) return '';
     return ROBE_MOTIF_SPOTS.map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="${shape}" fill="${color}" fill-opacity=".28" stroke="${color}" stroke-width=".7"/>`).join('');
+}
+
+/* Bộ đồ Hư Vô: nền vũ trụ tím đen viền ánh trăng; mỗi món một hình riêng, Đạo Quan lớn dần theo tiểu cảnh giới */
+const HU_VO_VOID = '#1c0b3a';
+const HU_VO_GLOW = '#d9c2ff';
+const HU_VO_STARS = [[45, 104, 1], [38, 128, 1.3], [52, 138, 0.8], [75, 104, 1.1], [83, 126, 0.9], [70, 140, 1.3], [33, 142, 0.8], [87, 141, 1], [48, 70, 0.8], [72, 70, 0.8]];
+const HU_VO_CROWN_PEAKS = [1, 3, 5, 7];
+const HU_VO_CROWN_HEIGHT = [7, 11, 15, 21];
+
+function huVoStar(x, y, k, color = '#ffffff') {
+    return `<path transform="translate(${x} ${y}) scale(${k})" d="M0 -2.6 L.5 -.5 L2.6 0 L.5 .5 L0 2.6 L-.5 .5 L-2.6 0 L-.5 -.5 Z" fill="${color}"/>`;
+}
+
+function huVoBladeLayer(color) {
+    return `<g transform="rotate(9 98 92)">
+        <path d="M98 -8 L103.4 12 L102 84 L94 84 L92.6 12 Z" fill="${color}" opacity=".22"/>
+        <path d="M98 -6 L101.8 12 L100.6 84 L95.4 84 L94.2 12 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".9"/>
+        <path d="M98 2 L98 82" stroke="#ffffff" stroke-width=".7" opacity=".9"/>
+        <path d="M88 86 Q92 80 98 84 Q104 80 108 86 Q98 91 88 86 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".8"/>
+        <circle cx="98" cy="85.4" r="1.8" fill="#ffffff"/>
+        <rect x="96.8" y="88" width="2.4" height="12" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".5"/>
+        <path d="M108 26 l3 6 l-3 6 l-3 -6 Z M86 44 l2.4 5 l-2.4 5 l-2.4 -5 Z M110 58 l2 4 l-2 4 l-2 -4 Z" fill="${color}" opacity=".85"/>
+    </g>`;
+}
+
+function huVoCrownLayer(color, stage) {
+    const n = HU_VO_CROWN_PEAKS[stage];
+    const tall = HU_VO_CROWN_HEIGHT[stage];
+    const spread = 10.5;
+    const step = n > 1 ? spread * 2 / (n - 1) : 0;
+    const peaks = Array.from({ length: n }, (_, i) => {
+        const x = 60 - (n > 1 ? spread : 0) + step * i;
+        const off = n > 1 ? Math.abs(x - 60) / spread : 0;
+        const top = 9 - tall * (1 - off * 0.55);
+        return `<path d="M${x - 2} 12 L${x} ${top} L${x + 2} 12 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".6"/>${stage >= 2 ? `<circle cx="${x}" cy="${top}" r=".9" fill="#ffffff"/>` : ''}`;
+    }).join('');
+    return `<g>${peaks}
+        <path d="M48.6 13.6 Q60 7.6 71.4 13.6 L70.4 9.8 Q60 4.4 49.6 9.8 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".7"/>
+        <path d="M50 11 Q60 6.2 70 11" stroke="${color}" stroke-width=".5" fill="none" opacity=".8"/>
+        <circle cx="60" cy="8.8" r="${1.5 + stage * 0.45}" fill="${color}" stroke="#ffffff" stroke-width=".5"/>
+    </g>`;
+}
+
+function huVoHaloLayer(color, stage) {
+    if (stage === 0) return '';
+    const ticks = Array.from({ length: 24 }, (_, i) => `<path transform="rotate(${i * 15} 60 27)" d="M60 -5 L61 ${i % 2 ? -1 : -9} L59 ${i % 2 ? -1 : -9} Z" fill="${color}"/>`).join('');
+    return `<g>
+        ${stage === 3 ? `<circle cx="60" cy="27" r="31" fill="#07030f"/><circle cx="60" cy="27" r="31" fill="none" stroke="#ffffff" stroke-width=".9"/>` : ''}
+        <circle cx="60" cy="27" r="${stage === 1 ? 25 : 29}" fill="none" stroke="${color}" stroke-width="${stage === 1 ? 0.8 : 1.3}" opacity=".9"/>
+        ${stage >= 2 ? ticks : ''}
+        ${stage === 3 ? [[24, 12], [96, 12], [20, 40], [100, 40], [60, -12]].map(([x, y]) => huVoStar(x, y, 1.3)).join('') : ''}
+    </g>`;
+}
+
+function huVoWingLayer(color) {
+    const feathers = [[46, 56, 2, 40, 12, 70], [46, 58, -2, 66, 12, 88], [46, 60, 2, 92, 16, 104], [47, 62, 10, 114, 24, 112]];
+    const wing = feathers.map(([x1, y1, x2, y2, cx, cy]) => `<path d="M${x1} ${y1} Q${cx} ${y1 - 8} ${x2} ${y2} Q${cx + 6} ${cy - 4} ${x1 + 2} ${y1 + 6} Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".7"/>`).join('');
+    const stars = [[14, 50], [8, 78], [12, 98], [26, 106]].map(([x, y]) => huVoStar(x, y, 0.9)).join('');
+    return `<g>${wing}${stars}</g><g transform="matrix(-1 0 0 1 120 0)">${wing}${stars}</g>`;
+}
+
+function huVoRobeLayer(l, L, R, hem) {
+    const gear = l.huVoGear;
+    if (!gear.armor) return '';
+    const shoulder = (x, dir) => `<path d="M${x - dir * 3} 45 L${x + dir * 13} 39 L${x + dir * 9} 47 L${x + dir * 15} 47 L${x + dir * 8} 54 L${x + dir * 2} 58 Z" fill="${HU_VO_VOID}" stroke="${l.trim}" stroke-width=".8"/><circle cx="${x + dir * 5}" cy="49" r="1.4" fill="#ffffff"/>`;
+    return `${HU_VO_STARS.map(([x, y, k]) => huVoStar(x, y, k)).join('')}
+        <path d="M${60 - hem} 147 q4 -9 7 -3 q3 -11 7 -2 q3 -8 6 0 M${60 + hem} 147 q-4 -9 -7 -3 q-3 -11 -7 -2 q-3 -8 -6 0" stroke="${l.trim}" stroke-width="1" fill="none"/>
+        ${shoulder(L, -1)}${shoulder(R, 1)}`;
+}
+
+function huVoFrontLayer(l, L) {
+    const gear = l.huVoGear;
+    const glow = l.trim || HU_VO_GLOW;
+    return `${gear.amulet ? `<circle cx="63.6" cy="92" r="5.4" fill="${glow}" opacity=".3"/><path d="M63.6 84 L63.6 88" stroke="${glow}" stroke-width=".7"/><circle cx="63.6" cy="92" r="3.2" fill="#07030f" stroke="${glow}" stroke-width=".9"/>${huVoStar(63.6, 92, 0.9)}` : ''}
+        ${gear.ring ? `<ellipse cx="${L - 3}" cy="133" rx="9" ry="3" fill="none" stroke="${glow}" stroke-width=".8" transform="rotate(-18 ${L - 3} 133)"/><circle cx="${L - 11}" cy="135" r="1.3" fill="#ffffff"/>` : ''}
+        ${gear.boots ? `<g fill="${glow}"><ellipse cx="42" cy="152" rx="10" ry="2.4" opacity=".35"/><ellipse cx="78" cy="152" rx="10" ry="2.4" opacity=".35"/></g><path d="M34 153 q4 -3 8 0 M70 153 q4 -3 8 0" stroke="#ffffff" stroke-width=".6" fill="none"/>` : ''}`;
 }
 
 function robeDefs(l, id) {
@@ -213,11 +291,14 @@ function humanoidSvg(look, opts = {}) {
     const sh = fem ? 13.5 : 17, waist = fem ? 7.6 : 10.4, hem = fem ? 27 : 30;
     const L = 60 - sh, R = 60 + sh;
     const inkLine = `stroke="${INK}" stroke-width=".55" stroke-linejoin="round"`;
-    const view = opts.bust ? '22 0 76 101' : '0 0 120 160';
+    const gear = l.huVoGear;
+    const tall = l.crown === 'huvo' || gear?.armor;
+    const view = tall ? (opts.bust ? '17 -14 86 115' : '-5 -14 130 174') : (opts.bust ? '22 0 76 101' : '0 0 120 160');
     return `<svg class="avatar ${opts.cls || ''}" viewBox="${view}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.title || 'nhân vật'}">
         ${robeDefs(l, id)}
         ${auraLayer(l.aura, id)}
-        ${wingLayer(l.wing)}
+        ${gear?.armor ? huVoWingLayer(trim) : wingLayer(l.wing)}
+        ${l.crown === 'huvo' ? huVoHaloLayer(l.crownColor || trim, l.crownStage) : ''}
         <ellipse cx="60" cy="153" rx="34" ry="4" fill="#000" opacity=".28"/>
         ${ribbonLayer(l.aura)}
         ${hairBack(l)}
@@ -233,12 +314,14 @@ function humanoidSvg(look, opts = {}) {
             <path d="M${60 - waist - 1} 75.4 Q60 79 ${60 + waist + 1} 75.4 L${60 + waist + 1.4} 81.6 Q60 85 ${60 - waist - 1.4} 81.6 Z" fill="${sash}" ${inkLine}/>
             <path d="M57 83 Q55 96 56.4 108 M59.4 83.4 Q60 98 58.8 112" stroke="${sash}" stroke-width="1.3" fill="none" stroke-linecap="round"/>
             ${robeMotifLayer(l.motif, trim)}
+            ${gear ? huVoRobeLayer(l, L, R, hem) : ''}
             <circle cx="63.6" cy="92" r="2.1" fill="#bff2d2" stroke="${INK}" stroke-width=".4"/><path d="M63.6 84 L63.6 90 M63.6 94 L63.6 101" stroke="#a33" stroke-width=".7"/>
             <path d="M${L + 1} 47 Q${L - 9} 62 ${L - 12} 96 Q${L - 17} 120 ${L - 11} 131 Q${L - 2} 137 ${L + 7} 121 Q${L + 8} 100 ${L + 7} 68 Z" fill="url(#${id}-sleeve)" ${inkLine}/>
             <path d="M${L - 11} 131 Q${L - 2} 137 ${L + 7} 121" stroke="${trim}" stroke-width="1.9" fill="none"/>
             <path d="M${L - 3} 66 Q${L - 7} 96 ${L - 7} 124 M${L + 2} 72 Q${L + 1} 100 ${L + 1} 124" stroke="${INK}" stroke-width=".6" fill="none" opacity=".35"/>
             <path d="M${L - 4} 131.6 q2 4 4.6 3 q2 -1 1.4 -4.6 Z" fill="${l.skin}" stroke="${INK}" stroke-width=".4"/>
         </g>
+        ${gear ? huVoFrontLayer(l, L) : ''}
         ${weaponLayer(l.weapon, l.weaponColor || '#c8d4e0')}
         <g filter="url(#${id}-ink)">
             <path d="M${R - 1} 47 Q${R + 8} 56 ${R + 11} 72 L97 78 Q102 84 99 92 Q99 118 86 128 Q76 124 ${R - 3} 96 Q${R - 6} 80 ${R - 7} 64 Z" fill="url(#${id}-sleeve)" ${inkLine}/>
@@ -251,7 +334,7 @@ function humanoidSvg(look, opts = {}) {
         <path d="${FACE_SHAPES[l.face || 0]}" fill="url(#${id}-skin)" stroke="${shadeColor(l.skin, -0.4)}" stroke-width=".35"/>
         ${faceLayer(l, id)}
         ${hairFront(l)}
-        ${crownLayer(l.crown, l.crownColor || trim)}
+        ${crownLayer(l.crown, l.crownColor || trim, l.crownStage)}
     </svg>`;
 }
 
@@ -335,6 +418,18 @@ function playerLook() {
     }
     if ((state.realmIndex || 0) >= 20) look.crown = 'wheel';
     if ((state.realmIndex || 0) >= 9) look.wing = shadeColor(look.aura || '#ffffff', 0.2);
+    if (armor?.huVo) Object.assign(look, { robe: HU_VO_VOID, trim: HU_VO_GLOW, sash: '#0d0520', motif: 'huvo' });
+    if (boots?.huVo) look.boots = '#120726';
+    if (weapon?.huVo) Object.assign(look, { weapon: 'huvo', weaponColor: HU_VO_GLOW });
+    if (helm?.huVo) {
+        look.crown = 'huvo';
+        look.crownColor = HU_VO_GLOW;
+        look.crownStage = (state.realmIndex || 0) === REALM_COUNT - 1 ? state.realmStage || 0 : 0;
+    }
+    const ring = (typeof equippedInSlot === 'function') ? equippedInSlot('ring') : null;
+    if ([armor, weapon, helm, boots, amulet, ring].some(it => it?.huVo)) {
+        look.huVoGear = { armor: !!armor?.huVo, boots: !!boots?.huVo, amulet: !!amulet?.huVo, ring: !!ring?.huVo };
+    }
     return look;
 }
 
