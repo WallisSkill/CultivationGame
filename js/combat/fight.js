@@ -195,7 +195,7 @@ function runFromBattle() {
 function grantEnemyMaterial(unit) {
     const tier = ENEMY_TIERS[unit.tier] || ENEMY_TIERS['Thường'];
     if (Math.random() >= tier.matChance) return;
-    grantMaterial(worldTierOfRealm(unit.realmIndex).id, materialYield(unit.realmIndex, unit.tier === 'Thường' ? 1 : 3), unit.name);
+    grantMaterial(worldTierOfRealm(unit.realmIndex).id, Math.round(materialYield(unit.realmIndex, unit.tier === 'Thường' ? 1 : 3) * (unit.lootMult || 1)), unit.name);
 }
 
 function grantBattleRewards(enemy) {
@@ -208,7 +208,7 @@ function grantBattleRewards(enemy) {
 
     enemyPackMembers(enemy).forEach(grantEnemyMaterial);
     lbGainMastery(enemyPackMembers(enemy).length);
-    if (Math.random() < tier.gearChance) {
+    if (Math.random() < tier.gearChance * (enemy.lootMult || 1)) {
         const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
         const quality = enemy.tier === 'Boss' ? 3 : (enemy.tier === 'Thống lĩnh' ? 2 : 1);
         const gear = makeGearItem(enemy.realmIndex, slot, quality);

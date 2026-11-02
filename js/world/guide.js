@@ -32,8 +32,9 @@ const GUIDE_SECTIONS = [
             ['Ngũ hành', 'Khắc được +20%, bị khắc -20%: Kim khắc Mộc, Mộc khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim, Thổ khắc Mộc. Dưới Kim Đan chưa dùng được ngũ hành.'],
             ['Hiệu ứng trận pháp', 'Thiêu đốt, đóng băng, choáng, hồi máu, hộ thuẫn, đỡ đòn và tăng lực đều chịu áp chế cảnh giới như sát thương. Đánh kẻ cảnh giới cao hơn thì khống chế ngắn và khó trúng hơn, hồi máu và hộ thuẫn yếu đi.'],
             ['Hết giờ trận', 'Sau 90 giây mà địch chưa chết thì tính là thua.'],
-            ['Chọn cấp săn', 'Bấm nút Chọn cấp săn ở thông tin khu vực để chỉ gặp quái trong khoảng cảnh giới của nơi đó.'],
-            ['Bậc quái', 'Thường, Tinh anh, Thống lĩnh, Boss: bậc càng cao càng khỏe và thưởng càng nhiều.']
+            ['Chọn cấp săn', 'Bấm nút Chọn cấp săn ở thông tin khu vực để chỉ gặp quái trong khoảng cảnh giới của nơi đó, và chọn số kẻ địch tối thiểu mỗi lần gặp (1 đến 3, áp dụng mọi nơi).'],
+            ['Bậc quái', 'Thường, Tinh anh, Thống lĩnh, Boss: bậc càng cao càng khỏe và thưởng càng nhiều.'],
+            ['Thưởng khi hạ quái', 'Quái cao hơn mình bao nhiêu tiểu cảnh giới thì thưởng nhân thêm 1,4 lần cho mỗi bậc (một đại cảnh giới khoảng gấp 4). Tu vi tăng theo hệ số này nhưng mỗi trận không quá 5% tu vi của cảnh giới hiện tại. Linh thạch, nguyên liệu và tỉ lệ rơi trang bị cũng tăng, tối đa gấp 10. Quái thấp hơn mình từ hai đại cảnh giới chỉ cho một phần tư tu vi.']
         ]
     },
     {

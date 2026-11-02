@@ -60,6 +60,14 @@ function applyPackScale(unit, count) {
 /* Kẻ địch thuộc về khu vực: cảnh giới lấy trong khoảng của địa điểm, không theo người chơi */
 const ENEMY_REALM_STEP_CHANCE = 0.25;
 const UNDERLEVEL_XP_MULT = 0.25;
+/* Quái cao hơn mình: mỗi tiểu cảnh giới chênh lệch nhân thêm thưởng; tu vi còn bị chặn bởi trần mỗi trận */
+const OVERLEVEL_REWARD_STEP = 1.4;
+const OVERLEVEL_LOOT_MAX = 10;
+
+function overlevelRewardMult(unit) {
+    const gap = (unit.realmIndex * STAGES.length + (unit.realmStage || 0)) - ((state.realmIndex || 0) * STAGES.length + (state.realmStage || 0));
+    return gap > 0 ? Math.pow(OVERLEVEL_REWARD_STEP, gap) : 1;
+}
 
 function enemyRealmRange(loc) {
     const top = loc.enemyMax ?? loc.maxR;
@@ -112,6 +120,10 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
         const unit = buildEnemy({ name: pick.name, kind: pick.kind, ...(wanted ? rollQuestRealm(loc) : rollLocationRealm(loc)), tier: rollEnemyTier() });
         if (unit.realmIndex < state.realmIndex - 1) unit.xpMinutes *= UNDERLEVEL_XP_MULT;
         if (huntedSeconds) unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
+        const mult = overlevelRewardMult(unit);
+        unit.xpMinutes *= mult;
+        unit.lootMult = Math.min(OVERLEVEL_LOOT_MAX, mult);
+        unit.gold = Math.floor(unit.gold * unit.lootMult);
         return unit;
     };
     const enemy = spawnEnemyPack(makeUnit, count);

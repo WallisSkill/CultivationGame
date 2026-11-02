@@ -818,7 +818,7 @@ function huntSeconds() {
 function startHunt() {
     if (!requireFree()) return;
     if (!(currentLocation().enemies || []).length) return;
-    const pack = rollPackSize();
+    const pack = Math.max(state.huntPackMin || 1, rollPackSize());
     const seconds = huntSeconds() * (0.4 + Math.random()) / Math.sqrt(pack);
     startActivity({ type: 'hunt', label: '🗡️ Lùng sục con mồi', seconds, pack });
 }
@@ -833,7 +833,15 @@ function openHuntRange() {
     openWorldModal('huntRangeModal', `🎚️ Cấp quái ở ${loc.name}`, `<div class="small">Khi săn ở đây chỉ gặp quái trong khoảng đã chọn.</div>
         ${row('Từ', low, r => `${r}, ${Math.max(r, high)}`)}
         ${row('Đến', high, r => `${Math.min(low, r)}, ${r}`)}
-        <button class="mini-btn" style="margin-top:10px" onclick="setHuntRange(${range[0]}, ${range[1]})">Bỏ giới hạn</button>`);
+        <button class="mini-btn" style="margin-top:10px" onclick="setHuntRange(${range[0]}, ${range[1]})">Bỏ giới hạn</button>
+        <div class="small" style="margin-top:12px"><b>Số kẻ địch tối thiểu mỗi lần gặp</b> (áp dụng mọi nơi)</div><div class="loc-actions">${[1, 2, 3].map(n => `<button class="mini-btn" ${n === (state.huntPackMin || 1) ? 'disabled' : ''} onclick="setHuntPackMin(${n})">${n}</button>`).join('')}</div>`);
+}
+
+function setHuntPackMin(n) {
+    if (n > 1) state.huntPackMin = n;
+    else delete state.huntPackMin;
+    openHuntRange();
+    renderAll();
 }
 
 function setHuntRange(low, high) {
@@ -1880,7 +1888,7 @@ function renderLocationPanel() {
     el.innerHTML = `<div class="loc-head"><b>${loc.icon} ${loc.name}</b>
         <span class="small">${worldOf(loc.id).name} · linh khí x${loc.qi.toFixed(2)} · ${MATERIAL_NAMES[mats]}: ${state.mats[mats] || 0}</span></div>
         <div class="small">${loc.desc}</div>
-        ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[enemyRealmRange(loc)[0]]} – ${REALMS[enemyRealmRange(loc)[1]]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}${state.huntRange?.[loc.id] ? ` · đang săn ${REALMS[state.huntRange[loc.id][0]]} – ${REALMS[state.huntRange[loc.id][1]]}` : ''} <button class="mini-btn" onclick="openHuntRange()">🎚️ Chọn cấp săn</button></div>` : ''}
+        ${(loc.enemies || []).length ? `<div class="small">⚔️ Kẻ địch: ${REALMS[enemyRealmRange(loc)[0]]} – ${REALMS[enemyRealmRange(loc)[1]]}${loc.maxS != null ? ` ${STAGES[loc.maxS]}` : ''}${state.huntRange?.[loc.id] ? ` · đang săn ${REALMS[state.huntRange[loc.id][0]]} – ${REALMS[state.huntRange[loc.id][1]]}` : ''}${state.huntPackMin > 1 ? ` · ít nhất ${state.huntPackMin} con` : ''} <button class="mini-btn" onclick="openHuntRange()">🎚️ Chọn cấp săn</button></div>` : ''}
         <div class="small">⛩️ Tông môn: ${sectEscape(sectName() || 'chưa có')}</div>
         ${(loc.enemies || []).length ? `<div class="small">🎯 Thành thạo khu vực: ${state.mastery[loc.id] || 0} điểm · ⚡ Cảnh giới: mọi việc nhanh x${realmHaste(state.realmIndex).toFixed(2)}</div>` : ''}
         ${renownStatusHTML()}
