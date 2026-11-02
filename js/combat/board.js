@@ -1305,16 +1305,17 @@ function lbFire(battle, source, slot) {
 
     let dealt = 0;
     targets.forEach(target => {
-        if (Math.random() < (target.dodge || 0)) { lbFloat(target, 'Né', 'buff'); return; }
+        if (Math.random() < edgeDodge(target, source)) { lbFloat(target, 'Né', 'buff'); return; }
         const elemMod = calcLinhBaoElementMod(source, target, item.element);
         const counter = pathDamageMult(source.path, target.path);
-        const suppress = lbSuppress(source, target);
+        const edge = edgeDamage(source, target);
+        const suppress = lbSuppress(source, target) * edge;
         const control = Math.min(1, suppress);
-        const crit = Math.random() < (source.crit || 0);
+        const crit = Math.random() < edgeCrit(source, target);
         let hit = 0;
         for (const ef of effects) {
             if (ef.action !== 'damage') continue;
-            const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach * (crit ? source.critMult : 1);
+            const basePower = source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach * edge * (crit ? edgeCritMult(source, target) : 1);
             const d = computeDamage(
                 basePower, source.elements, source.rootRank, source.realmIndex, source.realmStage,
                 target.def, target.elements, target.rootRank, target.realmIndex, target.realmStage
@@ -1354,7 +1355,7 @@ function lbFire(battle, source, slot) {
     const selfMod = calcLinhBaoElementMod(source, targets[0], item.element);
     const support = Math.min(1, ...foes.map(foe => lbSuppress(source, foe)));
 
-    let lsFrac = gemMods.leech + (source.lifesteal || 0);
+    let lsFrac = edgeLeech(source, targets[0], gemMods.leech + (source.lifesteal || 0));
     for (const ef of effects) if (ef.action === 'lifesteal') lsFrac += ef.magnitude * selfMod;
     if (lsFrac > 0 && dealt > 0) {
         const heal = Math.floor(dealt * lsFrac);

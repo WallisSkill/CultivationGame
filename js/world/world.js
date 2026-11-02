@@ -1595,6 +1595,10 @@ function applyHuVoRival(enemy, holder, share = 1) {
     enemy.def = holder.def * share;
     enemy.hp = enemy.maxHp = holder.hp * share;
     enemy.shownRealm = REALM_COUNT - 1;
+    if (share === 1) {
+        enemy.realmIndex = REALM_COUNT - 1;
+        enemy.realmStage = holder.stage ?? STAGES.length - 1;
+    }
     enemy.elements = holder.elements;
     enemy.path = holder.path;
     enemy.boardDefs = Array.from({ length: getEffectiveBoardSlots() }, huVoLinhBao).map(lbDuelDef);

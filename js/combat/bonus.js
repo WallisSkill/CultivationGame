@@ -126,6 +126,46 @@ function calcRealmBonusFull(attackerRealmIndex, attackerRealmStage, defenderReal
 }
 
 
+/* Khắc chế cảnh giới: hơn từ một đại cảnh giới trở lên thì kẻ dưới gần như mất né và chí mạng, kẻ trên tăng mạnh.
+   Ở cảnh giới cuối, mỗi tiểu cảnh giới tính bằng REALM_EDGE.finalStage đại cảnh giới. */
+const REALM_EDGE = { finalRealm: 32, finalStage: 3, floor: 0.01, dodgeMax: 0.9, dodgePerGap: 0.25, critPerGap: 0.2, critDmgPerGap: 0.5, leechPerGap: 0.1, damageBase: 1.5 };
+
+function realmStep(unit) {
+    const realm = unit.realmIndex || 0, stage = unit.realmStage || 0;
+    return realm >= REALM_EDGE.finalRealm ? realm + stage * REALM_EDGE.finalStage : realm + stage / 4;
+}
+
+function realmGap(unit, other) {
+    const gap = realmStep(unit) - realmStep(other);
+    return Math.abs(gap) < 1 ? 0 : gap;
+}
+
+function edgeChance(own, gap, perGap, max) {
+    if (gap < 0) return Math.min(own, REALM_EDGE.floor);
+    return gap > 0 ? Math.min(max, own + gap * perGap) : own;
+}
+
+function edgeDodge(target, source) {
+    return edgeChance(target.dodge || 0, realmGap(target, source), REALM_EDGE.dodgePerGap, REALM_EDGE.dodgeMax);
+}
+
+function edgeCrit(source, target) {
+    return edgeChance(source.crit || 0, realmGap(source, target), REALM_EDGE.critPerGap, 1);
+}
+
+function edgeCritMult(source, target) {
+    return (source.critMult || CRIT_BASE_MULT) + Math.max(0, realmGap(source, target)) * REALM_EDGE.critDmgPerGap;
+}
+
+function edgeLeech(source, target, leech) {
+    const gap = realmGap(source, target);
+    return gap < 0 ? leech * REALM_EDGE.floor : leech + gap * REALM_EDGE.leechPerGap;
+}
+
+function edgeDamage(source, target) {
+    return Math.pow(REALM_EDGE.damageBase, realmGap(source, target));
+}
+
 function calcRankBonus(attackerRank, defenderRank) {
     const diff = Math.floor(attackerRank || 0) - Math.floor(defenderRank || 0);
     const mult = (1 + diff * 0.06) * (0.97 + Math.random() * 0.06);

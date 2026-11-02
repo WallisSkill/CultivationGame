@@ -78,6 +78,14 @@ function rollLocationRealm(loc, capRealm = Infinity) {
     return { realmIndex: realm, realmStage: Math.min(stageCap, randomRealmStage()) };
 }
 
+/* Đang làm nhiệm vụ săn ở đây thì không gặp quái vượt cảnh giới và tiểu cảnh giới của mình */
+function rollQuestRealm(loc) {
+    const rolled = rollLocationRealm(loc, state.realmIndex);
+    const realmIndex = Math.min(rolled.realmIndex, state.realmIndex);
+    const realmStage = realmIndex === state.realmIndex ? Math.min(rolled.realmStage, state.realmStage || 0) : rolled.realmStage;
+    return { realmIndex, realmStage };
+}
+
 function spawnEnemyPack(makeUnit, count) {
     const members = Array.from({ length: count }, () => makeUnit());
     members.forEach(unit => applyPackScale(unit, count));
@@ -101,8 +109,7 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
         }
         const preferred = wanted && Math.random() < 0.7 ? pool.find(e => e.name === wanted.name) : null;
         const pick = preferred || pool[Math.floor(Math.random() * pool.length)];
-        const questCap = wanted && pick.name === wanted.name ? state.realmIndex : Infinity;
-        const unit = buildEnemy({ name: pick.name, kind: pick.kind, ...rollLocationRealm(loc, questCap), tier: rollEnemyTier() });
+        const unit = buildEnemy({ name: pick.name, kind: pick.kind, ...(wanted ? rollQuestRealm(loc) : rollLocationRealm(loc)), tier: rollEnemyTier() });
         if (unit.realmIndex < state.realmIndex - 1) unit.xpMinutes *= UNDERLEVEL_XP_MULT;
         if (huntedSeconds) unit.xpMinutes = unit.xpMinutes / ENEMY_TIERS['Thường'].xpMinutes * (huntedSeconds / 60) * HUNT_XP_PER_SEARCH_MINUTE;
         return unit;

@@ -26,6 +26,7 @@ const GUIDE_SECTIONS = [
         title: '⚔️ Tương quan trong trận',
         items: [
             ['Chênh đại cảnh giới', 'Mỗi cảnh giới cao hơn được +35% sát thương. Mỗi cảnh giới thấp hơn bị -35%, thấp nhất còn 20%. Chỉ số gốc của cảnh trên cũng lớn hơn nhiều, nên vượt cảnh rất khó thắng.'],
+            ['Khắc chế cảnh giới', 'Hơn từ một đại cảnh giới trở lên: kẻ dưới chỉ còn tối đa 1% né tránh và 1% chí mạng, hút máu còn 1%; kẻ trên tăng né tránh, chí mạng, sát thương chí mạng và hút máu theo khoảng cách. Mỗi bậc chênh còn nhân sát thương 1,5 lần. Ở Hư Vô Chí Đạo, mỗi tiểu cảnh giới tính bằng 3 đại cảnh giới.'],
             ['Chênh tiểu kỳ', 'Chỉ tính khi cùng đại cảnh giới: mỗi tiểu kỳ chênh 15% sát thương.'],
             ['Khác Giới', 'Đánh kẻ ở Giới cao hơn bị giảm mạnh sát thương, đánh kẻ ở Giới thấp hơn được tăng thêm.'],
             ['Ngũ hành', 'Khắc được +20%, bị khắc -20%: Kim khắc Mộc, Mộc khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim, Thổ khắc Mộc. Dưới Kim Đan chưa dùng được ngũ hành.'],
