@@ -43,7 +43,7 @@ function coopPeers() {
 function coopAllyData() {
     recalculateStats();
     return {
-        name: state.name, look: state.look, path: state.daoPath,
+        name: state.name, look: playerLook(), path: state.daoPath,
         atk: state.totalPower, def: state.totalDef, hp: state.totalMaxHp,
         realmIndex: state.realmIndex, realmStage: state.realmStage,
         rootRank: state.root?.rank || 0, elements: state.root?.elements || [],

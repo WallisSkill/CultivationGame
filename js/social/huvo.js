@@ -445,7 +445,8 @@ function openHuVoOrders() {
         <input id="hvoTitle" maxlength="40" placeholder="Tên việc">
         <textarea id="hvoText" maxlength="200" placeholder="Lời truyền, hoặc chi tiết việc giao"></textarea>
         <button class="mini-btn" onclick="sendHuVoOrder()">Giao</button>` : '<div class="small">Chưa có ai để sai khiến.</div>';
-    openWorldModal('huVoOrderModal', '📜 Giao việc cho đệ tử', `${form}${rows ? `<div class="tip-head">Việc đã giao</div>${rows}` : ''}`);
+    const seats = isHuVoHolder() ? Object.entries(huVoThrone.disciples || {}).map(([id, d], i) => `<div class="small">• Ghế ${i + 1} · ${sectEscape(d.name)} · ${STAGES[d.stage || 0]} <button class="mini-btn" onclick="expelHuVoDisciple('${sectEscape(id)}', ${i + 1})">🚪 Trục xuất</button></div>`).join('') : '';
+    openWorldModal('huVoOrderModal', '📜 Giao việc cho đệ tử', `${form}${rows ? `<div class="tip-head">Việc đã giao</div>${rows}` : ''}${seats ? `<div class="tip-head">Ghế đệ tử</div>${seats}` : ''}`);
 }
 
 function sendHuVoOrder() {
@@ -458,6 +459,13 @@ function sendHuVoOrder() {
     });
     $('huVoOrderModal')?.remove();
     log(`📜 Đã giao việc: ${sectEscape(title)}.`);
+}
+
+function expelHuVoDisciple(id, seat) {
+    if (!isHuVoHolder() || !confirm(`Trục xuất đệ tử ở ghế ${seat}? Họ về lại Chung Nguyên Chí Cao Viên Mãn và phải thách đấu lại.`)) return;
+    wsSend({ type: 'huvo_expel', id });
+    $('huVoOrderModal')?.remove();
+    log(`🚪 Đã trục xuất đệ tử ở ghế ${seat}.`);
 }
 
 function deleteHuVoOrder(id) {

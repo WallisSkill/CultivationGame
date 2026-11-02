@@ -12,6 +12,7 @@ const WORLD_SESSION = 'world';
 const PRESENCE_INTERVAL_MS = 15000;
 const PRESENCE_EXPIRE_MS = 40000;
 const PRESENCE_FULL_MS = 60000;
+const LOOK_CHECK_MS = 2000;
 const POSITION_SEND_MS = 250;
 const POSITION_PEER_LIMIT = 20;
 const SAY_MAX_LENGTH = 120;
@@ -29,6 +30,7 @@ let renownCache = {};
 let positionSentAt = 0;
 let positionSent = null;
 let presenceFullAt = 0;
+let lookSent = null;
 let renownSaveTimer = null;
 
 function initPresence() {
@@ -40,6 +42,7 @@ function initPresence() {
     const now = Date.now();
     Object.keys(renownCache).forEach(id => { if (now - renownCache[id].ts > RENOWN_CACHE_MS) delete renownCache[id]; });
     setInterval(sendPresence, PRESENCE_INTERVAL_MS);
+    setInterval(syncLook, LOOK_CHECK_MS);
     setInterval(expirePlayers, PRESENCE_EXPIRE_MS / 2);
 }
 
@@ -74,6 +77,17 @@ function sendPresence() {
         wsSend({ type: 'ranked_claim', token: profileToken() });
         wsSend({ type: 'boss_get' });
     }
+}
+
+/* Đổi trang phục là báo ngay, không đợi lượt đăng ký hồ sơ định kỳ */
+function syncLook() {
+    if (!window.matchConnected || !state.root?.elements) return;
+    const look = playerLook();
+    const text = JSON.stringify(look);
+    if (text === lookSent) return;
+    lookSent = text;
+    registerProfile();
+    if (isHuVoHolder() || state.huVoDisciple) wsSend({ type: 'huvo_look', look });
 }
 
 function profileToken() {

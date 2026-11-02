@@ -349,7 +349,7 @@ function buildPublicProfile() {
         str: state.totalPower || state.power || 10,
         def: state.totalDef || state.defense || 5,
         hp: state.totalMaxHp || state.maxHp || 100,
-        look: state.look || null,
+        look: playerLook(),
         loc: state.location || null,
         renown: sharedRenown()
     };
