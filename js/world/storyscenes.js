@@ -409,6 +409,7 @@ SIDE_QUESTS.forEach(q => (q.steps || []).forEach(step => {
 }));
 
 MAIN_QUESTS.forEach(q => q.steps.forEach(step => {
+    if (step.ruled?.talk && !LOCATION_NPCS[step.ruled.loc].includes(step.ruled.talk)) LOCATION_NPCS[step.ruled.loc].unshift(step.ruled.talk);
     const speaker = speakerOfStep(step);
     if (!step.go || !speaker) return;
     if (!LOCATION_NPCS[step.go].includes(speaker)) LOCATION_NPCS[step.go].unshift(speaker);

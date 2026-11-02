@@ -1109,7 +1109,12 @@ function finishBounty() {
 
 /* ---------- nhiệm vụ ---------- */
 function questStep(rt) {
-    return QUEST_INDEX[rt.id].steps[rt.step];
+    return ruledStory(QUEST_INDEX[rt.id].steps[rt.step]);
+}
+
+/* Đã có Hư Vô Chi Chủ thì các cảnh giới có sẵn: truyện dùng phần ruled, nghe Đạo Giả kể thay vì tự sáng tạo */
+function ruledStory(part) {
+    return part?.ruled && huVoHolder() ? { ...part, ...part.ruled } : part;
 }
 
 function mainQuestRuntime() {
@@ -1320,7 +1325,7 @@ function questsOnLocation() {
 
 function completeStep(rt) {
     const q = QUEST_INDEX[rt.id];
-    const step = q.steps[rt.step];
+    const step = questStep(rt);
     if (huVoClaim(step.boss)) { renderAll(); return; }
     rt.step++;
     rt.n = 0;
@@ -1332,7 +1337,7 @@ function completeStep(rt) {
         grantQuestReward(q);
         advanceMainQuest();
     } else {
-        const next = q.steps[rt.step];
+        const next = questStep(rt);
         if (next.go === state.location || huVoStepEmpty(next.boss)) completeStep(rt);
     }
     renderAll();
@@ -1901,9 +1906,9 @@ function questTipHTML(id) {
     const done = state.questDone.includes(id);
     const reached = done ? q.steps.length : rt?.step || 0;
     const giver = id[0] === 'm' ? ACTS[q.act - 1].name : `${NPCS[questGiver(q)].name} · ${LOCATIONS[q.loc].name}`;
-    const why = (q.intro || []).map(speechText).join('<br>') || (id[0] === 'm' ? ACTS[q.act - 1].desc : 'Việc của người trong vùng, phải tới hỏi mới rõ.');
+    const why = (q.intro || []).map(speechText).join('<br>') || (id[0] === 'm' ? ruledStory(ACTS[q.act - 1]).desc : 'Việc của người trong vùng, phải tới hỏi mới rõ.');
     const steps = q.steps.map((step, i) => {
-        if (i < reached) return `<div>✔ ${(step.say || []).map(speechText).join(' ') || 'Đã xong.'}</div>`;
+        if (i < reached) return `<div>✔ ${(ruledStory(step).say || []).map(speechText).join(' ') || 'Đã xong.'}</div>`;
         if (rt && i === rt.step) return `<div>▶ ${questStepText(rt)}</div>`;
         return '<div>• ???</div>';
     }).join('');

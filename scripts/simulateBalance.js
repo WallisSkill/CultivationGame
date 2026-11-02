@@ -38,7 +38,8 @@ for (const q of Object.values(G.QUEST_INDEX)) {
             if (!loc) fail.push(`${q.id}: hunt loc ${s.hunt.loc}`);
             else if (!loc.enemies.some(e => e.name === s.hunt.name)) fail.push(`${q.id}: ${loc.name} không có ${s.hunt.name}`);
         }
-        (s.say || []).forEach(([who]) => { if (who !== 'me' && !G.NPCS[who]) fail.push(`${q.id}: speaker ${who}`); });
+        [...(s.say || []), ...(s.ruled?.say || [])].forEach(([who]) => { if (who !== 'me' && !G.NPCS[who]) fail.push(`${q.id}: speaker ${who}`); });
+        if (s.ruled?.talk && !G.LOCATIONS[s.ruled.loc]) fail.push(`${q.id}: ruled loc ${s.ruled.loc}`);
     });
 }
 for (const [id, o] of Object.entries(G.ORIGINS)) {
@@ -49,7 +50,7 @@ for (const [id, o] of Object.entries(G.ORIGINS)) {
         if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
     });
 }
-const storyTokens = JSON.stringify([G.MAIN_QUESTS, G.ENDINGS]).match(/\{\w+\}/g).map(t => t.slice(1, -1)).filter(t => t !== 'name');
+const storyTokens = JSON.stringify([G.MAIN_QUESTS, G.ENDINGS]).match(/\{\w+\}/g).map(t => t.slice(1, -1)).filter(t => t !== 'name' && t !== 'holder');
 for (const id of Object.keys(G.ORIGINS)) {
     const story = G.ORIGIN_STORY[id];
     if (!story) { fail.push(`origin ${id}: thiếu ORIGIN_STORY`); continue; }

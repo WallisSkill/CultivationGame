@@ -12,7 +12,7 @@ const ACTS = [
     { id: 3, name: 'Hồi III — Thất Thánh', desc: 'Thế gian chỉ có sáu vị Thánh, và ngươi là người thứ bảy. Việc nhiều ở Tiên Giới, thỉnh thoảng lên Thánh Giới nghị chính sự.' },
     { id: 4, name: 'Hồi IV — Đại Đạo Chí Thượng', desc: 'Các cảnh giới Thiên là cực đạo cảnh. Sau lưng Lục Thánh còn rất nhiều người.' },
     { id: 5, name: 'Hồi V — Hỗn Độn Đạo Giả', desc: 'Bên ngoài vũ trụ có những kẻ xem vũ trụ như hạt bụi.' },
-    { id: 6, name: 'Hồi VI — Hồng Mông', desc: 'Cảnh giới do chính ngươi sáng tạo. Bên trên không có ai, chỉ còn việc xuống nói chuyện với bên dưới.' },
+    { id: 6, name: 'Hồi VI — Hồng Mông', desc: 'Cảnh giới do chính ngươi sáng tạo. Bên trên không có ai, chỉ còn việc xuống nói chuyện với bên dưới.', ruled: { desc: 'Cảnh giới do người đi trước mở ra. Bên trên đã có chủ, ngươi mới chỉ biết tên.' } },
     { id: 7, name: 'Hồi VII — Chung Nguyên', desc: 'Điểm kết. Một chiếc ghế trống.' }
 ];
 
@@ -417,8 +417,8 @@ const MAIN_QUESTS = [
     {
         id: 'm33', act: 5, title: 'Hải Tâm', unlock: 30, needs: [29, 2],
         steps: [
-            { go: 'hai_tam', say: [['vo_danh', 'Bên trên chúng ta không còn cảnh giới nào. Sáu người ngồi đây, không ai đi tiếp được. Thắng ta rồi nói chuyện.']] },
-            { boss: 'vo_danh', say: [['vo_danh', 'Hay. Viên mãn Hỗn Độn rồi, không còn đường nào có sẵn nữa. Muốn đi tiếp thì tự mà làm ra đường.'], ['narr', 'Ngươi ngồi xuống giữa Hải Tâm và tự sáng tạo một cảnh giới chưa từng có. Ngươi đặt tên nó là Hồng Mông Chúa Tể.']] }
+            { go: 'hai_tam', say: [['vo_danh', 'Bên trên chúng ta không còn cảnh giới nào. Sáu người ngồi đây, không ai đi tiếp được. Thắng ta rồi nói chuyện.']], ruled: { say: [['vo_danh', 'Sáu người ngồi đây đều biết bên trên còn cảnh giới, vì đã có kẻ đi qua Hải Tâm này và không quay lại. Thắng ta rồi ta kể.']] } },
+            { boss: 'vo_danh', say: [['vo_danh', 'Hay. Viên mãn Hỗn Độn rồi, không còn đường nào có sẵn nữa. Muốn đi tiếp thì tự mà làm ra đường.'], ['narr', 'Ngươi ngồi xuống giữa Hải Tâm và tự sáng tạo một cảnh giới chưa từng có. Ngươi đặt tên nó là Hồng Mông Chúa Tể.']], ruled: { say: [['vo_danh', 'Hay. Viên mãn Hỗn Độn rồi thì nghe cho rõ. Trên Hỗn Độn là Hồng Mông Chúa Tể, trên nữa là Chung Nguyên Chí Cao. Không ai trong sáu người này mở ra chúng.'], ['vo_danh', 'Toàn giới này, từ Hải Tâm đến chiếc lá cuối cùng, đều có chủ. Tên người đó là {holder}.'], ['narr', 'Ngươi ngồi xuống giữa Hải Tâm và đi theo lối vừa nghe kể. Không có gì phải sáng tạo, lối ấy đã có sẵn dấu chân.']] } }
         ],
         reward: { flag: 'world_hongmong', hours: 120, goldRefs: 1000 }
     },
@@ -427,8 +427,8 @@ const MAIN_QUESTS = [
     {
         id: 'm34', act: 6, title: 'Tử Khí', needs: [30, 0],
         steps: [
-            { go: 'tu_khi', say: [['narr', 'Cõi này do chính ngươi tạo ra. Không trời, không đất, không một ai. Chỉ có một màu tím đang chờ ngươi nghĩ.']] },
-            { go: 'dao_gia_am', say: [['vong_ky', 'Bên trên có gì?'], ['me', 'Không có ai.'], ['vong_ky', 'Vậy ngươi xuống đây làm gì?'], ['me', 'Giao việc. Giữ Ma Thần trong mộ, đừng để chúng ra Hải Tâm.']] }
+            { go: 'tu_khi', say: [['narr', 'Cõi này do chính ngươi tạo ra. Không trời, không đất, không một ai. Chỉ có một màu tím đang chờ ngươi nghĩ.']], ruled: { say: [['narr', 'Cõi này đã có người mở từ trước. Không trời, không đất, không một ai. Chỉ có một màu tím và một hàng dấu chân đi thẳng lên trên.']] } },
+            { go: 'dao_gia_am', say: [['vong_ky', 'Bên trên có gì?'], ['me', 'Không có ai.'], ['vong_ky', 'Vậy ngươi xuống đây làm gì?'], ['me', 'Giao việc. Giữ Ma Thần trong mộ, đừng để chúng ra Hải Tâm.']], ruled: { say: [['vong_ky', 'Bên trên có gì?'], ['me', 'Dấu chân của {holder}.'], ['vong_ky', 'Vậy ngươi xuống đây làm gì?'], ['me', 'Giao việc. Giữ Ma Thần trong mộ, đừng để chúng ra Hải Tâm.']] } }
         ],
         reward: { hours: 96, goldRefs: 800 }
     },
@@ -445,7 +445,7 @@ const MAIN_QUESTS = [
         id: 'm36', act: 6, title: 'Chúa Tể Tọa', unlock: 31, needs: [30, 2],
         steps: [
             { go: 'chua_te', say: [['narr', 'Ngươi dựng một chiếc ngai, ngồi thử rồi đứng dậy. Ở đây không có ai để làm chúa tể của.']] },
-            { gather: { loc: 'chua_te', hours: 12, label: 'Sáng tạo cảnh giới cuối cùng' }, say: [['narr', 'Ngươi vẽ thêm một cảnh giới phía trên chiếc ngai trống và gọi nó là Chung Nguyên Chí Cao. Sau đó không còn gì để vẽ.']] }
+            { gather: { loc: 'chua_te', hours: 12, label: 'Sáng tạo cảnh giới cuối cùng' }, say: [['narr', 'Ngươi vẽ thêm một cảnh giới phía trên chiếc ngai trống và gọi nó là Chung Nguyên Chí Cao. Sau đó không còn gì để vẽ.']], ruled: { gather: null, talk: 'vong_ky', loc: 'dao_gia_am', say: [['vong_ky', 'Ngồi thử ngai rồi à? Đó chưa phải chỗ cuối. Phía trên là Chung Nguyên Chí Cao, sáu người chúng ta đã thấy có kẻ bước lên đó.'], ['me', 'Ai?'], ['vong_ky', '{holder}, chủ nhân của toàn giới này. Cõi ấy mở sẵn cho kẻ đủ sức, ngươi không cần vẽ gì cả.']] } }
         ],
         reward: { flag: 'world_chungnguyen', hours: 144, goldRefs: 1200 }
     },
@@ -455,7 +455,7 @@ const MAIN_QUESTS = [
         id: 'm37', act: 7, title: 'Trường Hà Tận Cùng', needs: [31, 0],
         steps: [
             { go: 'truong_ha', say: [['narr', 'Dòng thời gian đổ xuống hư vô như một thác nước im lặng. Trong nước là mọi kiếp của ngươi. Trên bờ không có ai.']] },
-            { go: 'thanh_van', say: [['to_dao', 'Đệ về rồi à? Cao đến đâu rồi?'], ['me', 'Hết trời rồi, tỷ.'], ['to_dao', 'Vậy thì ăn cơm đi. Trên đó chắc không có ai nấu.']] }
+            { go: 'thanh_van', say: [['to_dao', 'Đệ về rồi à? Cao đến đâu rồi?'], ['me', 'Hết trời rồi, tỷ.'], ['to_dao', 'Vậy thì ăn cơm đi. Trên đó chắc không có ai nấu.']], ruled: { say: [['to_dao', 'Đệ về rồi à? Cao đến đâu rồi?'], ['me', 'Chưa hết trời, tỷ. Trên đó còn một người.'], ['to_dao', 'Vậy thì ăn cơm đi rồi hẵng lên. Người đó chắc cũng chẳng có ai nấu cho.']] } }
         ],
         reward: { hours: 144, goldRefs: 1200 }
     },
@@ -463,7 +463,7 @@ const MAIN_QUESTS = [
         id: 'm38', act: 7, title: 'Người Quét Lá', needs: [31, 2],
         steps: [
             { go: 'chung_dai', say: [['narr', 'Trên Chung Nguyên Đài có một chiếc ghế trống, cạnh ghế dựng một cây chổi cũ. Ngươi nhận ra cây chổi đó.']] },
-            { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. {chore}'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']] }
+            { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. {chore}'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']], ruled: { say: [['mac', 'Con đến rồi. {chore}'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng đi hết lối người khác để lại, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Phía trên ghế ấy, {holder} vẫn đang nhìn xuống. Giờ cầm chổi hay ngồi ghế, con là người chọn.']] } }
         ],
         reward: { ending: true, hours: 0, goldRefs: 0 }
     },
@@ -472,7 +472,7 @@ const MAIN_QUESTS = [
         steps: [
             { go: 'chung_dai', say: [['narr', 'Ngươi vừa ngồi xuống, Chung Nguyên Giới bắt đầu nuốt các Giới bên dưới. Hồng Mông, Hỗn Độn, Thiên Ma Ngoại Vực lần lượt mờ đi.'], ['narr', 'Những kẻ đã sáng tạo ra các Giới ấy không chịu ngồi yên. Sáu Đạo Giả bước lên Đài, phía sau họ là tất cả chúng sinh.']] },
             { boss: 'cs_1', say: [['vong_ky', 'Am của ta không còn gì để ai bỏ quên nữa. Ta thua, người sau đến.']] },
-            { boss: 'cs_2', say: [['vo_danh', 'Ta từng nói bên trên không còn cảnh giới nào. Ngươi vẽ thêm một cái, rồi nuốt hết cả phần dưới.']] },
+            { boss: 'cs_2', say: [['vo_danh', 'Ta từng nói bên trên không còn cảnh giới nào. Ngươi vẽ thêm một cái, rồi nuốt hết cả phần dưới.']], ruled: { say: [['vo_danh', 'Ta đã kể cho ngươi nghe ai ngồi bên trên. Ngươi không đi gặp người đó, lại ngồi xuống nuốt hết cả phần dưới.']] } },
             { boss: 'cs_3', say: [['thich_thien', 'Ta thích hết bao nhiêu vũ trụ, chưa từng bị thứ gì thích lại. Hóa ra là cảm giác này.']] },
             { boss: 'cs_4', say: [['am_duong', 'Áo ta dính bụi rồi. Mọi thứ đều diệt, kể cả ta.']] },
             { boss: 'cs_5', say: [['hd_vo_thuc', 'Ta quyết định rồi. Ta tồn tại, để đứng đây thua ngươi.']] },
@@ -488,10 +488,10 @@ const MAIN_QUESTS = [
         id: 'm40', act: 7, title: 'Đại Kết Cục', needs: [31, 3], needsEnding: 'ngoi', unlock: 32,
         steps: [
             { go: 'chung_dai', say: [['narr', 'Các Giới đã trở về chỗ cũ, nhưng ngươi vẫn chưa xong. Còn một thứ chưa từng thua ngươi, vì nó chưa từng rời khỏi ngươi.']] },
-            { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] },
+            { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']], ruled: { gather: null, talk: 'hd_thu_cuu', loc: 'hai_tam', say: [['hd_thu_cuu', 'Trên Chung Nguyên còn một cảnh giới cuối, Hư Vô Chí Đạo. Không ai vẽ ra nó. Đó là chính con người, cả lục đạo, khi đã rời khỏi vạn giới.'], ['hd_thu_cuu', 'Kẻ đầu tiên đến đó là {holder}. Toàn giới này đều nằm dưới ngôi Hư Vô của kẻ đó, kể cả Hải Tâm ta đang ngồi.'], ['hd_thu_cuu', 'Muốn lên, ngươi phải trả lại mọi thứ đang mang trên người.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] } },
             { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ những ngày đầu lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
-            { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']] },
-            { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó chỉ gửi xuống một phân thân.']] },
+            { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']], ruled: { say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Ngôi Hư Vô đã có {holder} ngồi. Muốn đến được đó, ngươi phải thắng chính cái tên của mình trước.']] } },
+            { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó chỉ gửi xuống một phân thân.']], ruled: { say: [['narr', 'Người mang tên ngươi lùi lại một bước. Từ trên ngôi Hư Vô, {holder} gửi xuống một phân thân.']] } },
             { boss: 'hu_vo', say: [['narr', 'Phân thân tan đi. Người thật trên ngôi Hư Vô vẫn chưa nhúc nhích, chỉ nhìn xuống. Giữa ngươi và ngôi ấy còn các đệ tử của người đó.']] }
         ],
         reward: { finalRealm: true, hours: 0, goldRefs: 0 }
@@ -779,7 +779,7 @@ function originStory() {
 }
 
 function storyText(text) {
-    return text.replace(/\{(\w+)\}/g, (token, key) => key === 'name' ? state.name : originStory().text[key] ?? token);
+    return text.replace(/\{(\w+)\}/g, (token, key) => key === 'name' ? state.name : key === 'holder' ? sectEscape(huVoHolder()?.name || HU_VO_PLAYER_NAME) : originStory().text[key] ?? token);
 }
 
 const QUEST_INDEX = [...MAIN_QUESTS, ...SIDE_QUESTS].reduce((m, q) => (m[q.id] = q, m), {});

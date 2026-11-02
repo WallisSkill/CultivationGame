@@ -19,6 +19,7 @@ const SCENE_DECOR_COUNT = 46;
 const SCENE_MAX_DT = 0.05;
 const SCENE_INNER_RING = 0.68;
 const SEAT_NEAR = 70;
+const MAT_NEAR = 3;
 const SEAT_SIT_MS = 450;
 const SEAT_BREATH_MS = 600;
 const SEAT_DRAW_MS = 100;
@@ -229,17 +230,19 @@ function seatBuffer(image) {
     return s.seatCanvas;
 }
 
-/* Ngồi ghế: tựa ghế phía sau, chân gập lại, thân thở nhẹ; progress đi từ đứng sang ngồi */
-function drawSeated(ctx, image, x, y, name, color, progress = 1) {
+/* Ngồi: chân gập lại, thân thở nhẹ; progress đi từ đứng sang ngồi. Có ghế thì tựa ghế, không thì ngồi bế quan trên đất */
+function drawSeated(ctx, image, x, y, name, color, progress = 1, chair = true) {
     const w = SCENE_AVATAR_W, h = SCENE_AVATAR_H;
     const breath = Math.sin(performance.now() / SEAT_BREATH_MS) * 1.5;
-    ctx.fillStyle = '#2a1450';
-    ctx.strokeStyle = '#d9c2ff';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.rect(x - 26, y - h + 6, 52, h - 12);
-    ctx.fill();
-    ctx.stroke();
+    if (chair) {
+        ctx.fillStyle = '#2a1450';
+        ctx.strokeStyle = '#d9c2ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(x - 26, y - h + 6, 52, h - 12);
+        ctx.fill();
+        ctx.stroke();
+    }
     ctx.fillStyle = 'rgba(179,136,255,.18)';
     ctx.beginPath();
     ctx.arc(x, y - h * 0.5, 34 + breath * 2, 0, Math.PI * 2);
@@ -256,8 +259,10 @@ function drawSeated(ctx, image, x, y, name, color, progress = 1) {
         ctx.drawImage(buffer, 0, sh * SEAT_TORSO, sw, sh * (1 - SEAT_TORSO), x - spread / 2, y - legs, spread, legs);
         ctx.drawImage(buffer, 0, 0, sw, sh * SEAT_TORSO, x - w / 2, y - legs - h * SEAT_TORSO + breath, w, h * SEAT_TORSO);
     }
-    ctx.fillStyle = '#d9c2ff';
-    ctx.fillRect(x - 30, y - 3, 60, 6);
+    if (chair) {
+        ctx.fillStyle = '#d9c2ff';
+        ctx.fillRect(x - 30, y - 3, 60, 6);
+    }
     ctx.font = 'bold 14px sans-serif';
     ctx.textAlign = 'center';
     ctx.lineWidth = 3;
@@ -361,9 +366,12 @@ function drawScene() {
     const units = playersHere().filter(p => p.x != null).map(p => {
         const look = p.look || defaultLook();
         const seat = s.spots.find(spot => spot.seatOf === p.id && Math.hypot(spot.x - p.x, spot.y + 46 - p.y) < SEAT_NEAR);
+        const mat = meditateSpot();
+        const onMat = !seat && mat && !currentLocation().seat && Math.hypot(mat.x - p.x, mat.y + 46 - p.y) < MAT_NEAR;
         return { y: p.y, draw: () => {
             const image = sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: p.name }));
             if (seat) drawSeated(ctx, image, seat.x, seat.y + 10, p.name, '#a6ffd1');
+            else if (onMat) drawSeated(ctx, image, mat.x, mat.y + 10, p.name, '#a6ffd1', 1, false);
             else drawUnit(ctx, image, p.x, p.y, p.name, '#a6ffd1');
             if (p.bubble && Date.now() < p.bubbleUntil) drawBubble(ctx, p.x, p.y, p.bubble);
         } };
@@ -373,12 +381,12 @@ function drawScene() {
         const look = spot.look || defaultLook();
         units.push({ y: spot.y, draw: () => drawSeated(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: spot.seatName })), spot.x, spot.y + 10, spot.seatName, '#d9c2ff') });
     });
-    const seated = state.autoTrain && currentLocation().seat ? meditateSpot() : null;
+    const seated = state.autoTrain ? meditateSpot() : null;
     s.sitAt = seated ? s.sitAt || performance.now() : 0;
     units.push({ y: s.y, draw: () => {
         const look = playerLook();
         const image = sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name }));
-        if (seated) drawSeated(ctx, image, seated.x, seated.y + 10, state.name || '', '#ffe9a0', Math.min(1, (performance.now() - s.sitAt) / SEAT_SIT_MS));
+        if (seated) drawSeated(ctx, image, seated.x, seated.y + 10, state.name || '', '#ffe9a0', Math.min(1, (performance.now() - s.sitAt) / SEAT_SIT_MS), !!currentLocation().seat);
         else drawUnit(ctx, image, s.x, s.y, state.name || '', '#ffe9a0');
         if (s.bubble && Date.now() < s.bubble.until) drawBubble(ctx, s.x, s.y, s.bubble.text);
         if (state.autoTrain) {
