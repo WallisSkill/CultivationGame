@@ -1276,6 +1276,10 @@ function lbBuildEnemyCombatant(enemy) {
 /* ---------- damage application (respects parry + shield) ---------- */
 function lbApplyDamage(target, amount) {
     let dmg = Math.max(0, Math.floor(amount));
+    if (target.remote) {
+        pvpRelay('bhit', { d: dmg });
+        return dmg;
+    }
     const now = performance.now();
     if (target.parryFrac > 0 && now < target.parryUntil) {
         dmg = Math.floor(dmg * (1 - target.parryFrac));
@@ -1349,11 +1353,13 @@ function lbFire(battle, source, slot) {
                 case 'burn': {
                     const dps = Math.max(1, source.atk * lbEffMag(ef.magnitude, item) * dmgScale * elemMod * counter * reach * suppress);
                     target.burns.push({ dps, remaining: LB_BURN_SECS });
+                    if (target.remote) pvpRelay('bhit', { burn: dps });
                     lbFloat(target, '🔥', 'burn');
                     break;
                 }
                 case 'freeze': {
                     target.freezeUntil = Math.max(target.freezeUntil, now + lbDurMag(ef.magnitude, item) * control * 1000);
+                    if (target.remote) pvpRelay('bhit', { freeze: lbDurMag(ef.magnitude, item) * control });
                     lbFloat(target, '❄️', 'freeze');
                     break;
                 }
@@ -1361,6 +1367,7 @@ function lbFire(battle, source, slot) {
                     if (Math.random() < LB_STUN_CHANCE * control && now >= target.stunImmuneUntil) {
                         const dur = lbDurMag(ef.magnitude, item) * control;
                         target.stunUntil = now + dur * 1000;
+                        if (target.remote) pvpRelay('bhit', { stun: dur });
                         target.stunImmuneUntil = target.stunUntil + LB_STUN_IMMUNE * 1000;
                         lbFloat(target, '💫', 'stun');
                     }
@@ -1456,6 +1463,7 @@ if (typeof window !== 'undefined') window.runBoardBattle = runBoardBattle;
 
 function lbBattleResult(battle) {
     if (battle.player.hp <= 0) return 'lose';
+    if (battle.pvp) return null;
     if (!lbAlive(battle.foes).length) return 'win';
     return null;
 }
@@ -1476,6 +1484,7 @@ function lbStep(battle) {
             slot.elapsed += LB_TICK_MS * slow;
             if (slot.elapsed >= slot.cooldown * 1000) {
                 slot.elapsed -= slot.cooldown * 1000;
+                if (self.remote) continue;
                 lbFire(battle, self, slot);
                 lbLunge(self);
                 const result = lbBattleResult(battle);
@@ -1485,7 +1494,7 @@ function lbStep(battle) {
     }
 
     for (const c of [...battle.allies, ...battle.foes]) {
-        if (c.hp <= 0) continue;
+        if (c.hp <= 0 || c.remote) continue;
         if (c.regen) c.hp = Math.min(c.maxHp, c.hp + c.maxHp * c.regen * tickSec);
         if (!c.burns.length) continue;
         for (const b of c.burns) { lbApplyDamage(c, b.dps * tickSec); b.remaining -= tickSec; }
@@ -1496,6 +1505,7 @@ function lbStep(battle) {
 
     const result = lbBattleResult(battle);
     if (result) return lbEndBattle(battle, result);
+    if (battle.pvp) return pvpBoardTick(battle);
     if (battle.elapsedMs >= LB_MAX_SECONDS * 1000) {
         return lbEndBattle(battle, 'lose');
     }
@@ -1514,6 +1524,7 @@ function lbEndBattle(battle, result) {
     battle.running = false;
     if (battle.timer) { clearInterval(battle.timer); battle.timer = null; }
     window._battleActive = false;
+    if (battle.pvp) return pvpBoardLost();
 
     const enemy = state.currentEnemy;
     coopBattleEnd(result, enemy);
@@ -1553,6 +1564,133 @@ function lbEndBattle(battle, result) {
 
     window.__boardBattle = null;
     if (typeof renderAll === 'function') renderAll();
+}
+
+/* ---------- PvP trận pháp ----------
+   Mỗi bên tự chạy pháp bảo của mình và gửi đòn sang máy đối thủ; máy nào giữ máu của chính người đó.
+   Đối thủ còn dùng bản cũ thì hết PVP_KIT_WAIT_MS sẽ đánh theo lượt như trước */
+const PVP_KIT_WAIT_MS = 5000;
+const PVP_KIT_RESEND_MS = 1000;
+const PVP_STATE_MS = 300;
+const PVP_DRAW_GRACE_MS = 5000;
+const PVP_KIT_SLOTS = 40;
+
+function pvpRelay(kind, data) {
+    if (pvpSession.opponentId && pvpSession.sessionId) wsSend({ type: 'pvp_relay', to: pvpSession.opponentId, sessionId: pvpSession.sessionId, kind, data });
+}
+
+function pvpSendKit() {
+    const c = lbBuildPlayerCombatant();
+    pvpRelay('kit', {
+        slots: boardItems().filter(Boolean).map(lb => ({ id: lb.linhBaoId || lb.id, grade: lbGradeOf(lb), level: lbLevelOf(lb) })),
+        realmIndex: c.realmIndex, realmStage: c.realmStage, maxHp: c.maxHp, atk: c.atk, def: c.def,
+        dodge: c.dodge, path: c.path, rootRank: c.rootRank, elements: c.elements
+    });
+}
+
+function pvpExchangeKit() {
+    ensureBoardState();
+    pvpSession.oppKit = null;
+    pvpSession.legacy = false;
+    const until = Date.now() + PVP_KIT_WAIT_MS;
+    pvpSendKit();
+    pvpSession.kitTimer = setInterval(() => {
+        if (Date.now() < until) return pvpSendKit();
+        clearInterval(pvpSession.kitTimer);
+        pvpSession.legacy = true;
+        log(pvpSession.myTurn ? '🎲 Ngươi ra tay trước.' : '🎲 Đối thủ ra tay trước.');
+        startAutoFight();
+    }, PVP_KIT_RESEND_MS);
+}
+
+function pvpReceiveKit(kit) {
+    if (pvpSession.oppKit || pvpSession.legacy || !state.currentEnemy?.isPvP) return;
+    pvpSession.oppKit = kit;
+    clearInterval(pvpSession.kitTimer);
+    pvpSendKit();
+    runPvpBoard(kit);
+}
+
+function runPvpBoard(kit) {
+    const enemy = state.currentEnemy;
+    const defs = (Array.isArray(kit.slots) ? kit.slots : []).slice(0, PVP_KIT_SLOTS).filter(slot => LINH_BAO_MAP[slot?.id])
+        .map(slot => ({ ...LINH_BAO_MAP[slot.id], grade: lbClamp(Number(slot.grade) || 0, 0, LB_MAX_GRADE), level: lbClamp(Number(slot.level) || 1, 1, LB_MAX_LEVEL) }));
+    Object.assign(enemy, {
+        realmIndex: Math.max(0, Math.floor(kit.realmIndex) || 0), realmStage: Math.max(0, Math.floor(kit.realmStage) || 0),
+        hp: Math.max(1, Number(kit.maxHp) || enemy.maxHp), maxHp: Math.max(1, Number(kit.maxHp) || enemy.maxHp),
+        str: Math.max(1, Number(kit.atk) || enemy.str), def: Math.max(0, Number(kit.def) || 0),
+        rootRank: Math.max(0, Math.floor(kit.rootRank) || 0), path: kit.path || null,
+        boardDefs: defs.length ? defs : [LB_DEFAULT_ATTACK]
+    });
+    if (Array.isArray(kit.elements) && kit.elements.length) enemy.elements = kit.elements.slice(0, 5);
+    const player = lbBuildPlayerCombatant();
+    player.hp = player.maxHp;
+    const foe = Object.assign(lbBuildEnemyCombatant(enemy), { remote: true, dodge: Math.max(0, Number(kit.dodge) || 0) });
+    const battle = { running: true, pvp: true, elapsedMs: 0, stateAt: 0, player, allies: [player], foes: [foe], enemy: foe, timer: null };
+    window.__boardBattle = battle;
+    window._battleActive = true;
+    syncBattleOverlay();
+    lbBuildArenaDOM(battle);
+    log(`🎴 Dàn trận đấu với ${enemy.name}!`);
+    battle.timer = setInterval(() => lbStep(battle), LB_TICK_MS);
+    lbUpdateArena(battle);
+}
+
+function pvpBoardHit(data) {
+    const battle = window.__boardBattle;
+    if (!battle?.pvp || !data) return;
+    const unit = battle.player, now = performance.now();
+    const hit = Number(data.d) || 0, burn = Number(data.burn) || 0, freeze = Number(data.freeze) || 0, stun = Number(data.stun) || 0;
+    if (hit > 0) lbFloat(unit, `-${fmtVal(lbApplyDamage(unit, hit))}`, 'dmg');
+    if (burn > 0) { unit.burns.push({ dps: burn, remaining: LB_BURN_SECS }); lbFloat(unit, '🔥', 'burn'); }
+    if (freeze > 0) { unit.freezeUntil = Math.max(unit.freezeUntil, now + freeze * 1000); lbFloat(unit, '❄️', 'freeze'); }
+    if (stun > 0 && now >= unit.stunImmuneUntil) {
+        unit.stunUntil = now + stun * 1000;
+        unit.stunImmuneUntil = unit.stunUntil + LB_STUN_IMMUNE * 1000;
+        lbFloat(unit, '💫', 'stun');
+    }
+}
+
+function pvpBoardState(data) {
+    const foe = window.__boardBattle?.pvp && window.__boardBattle.foes[0];
+    if (!foe || !data) return;
+    foe.hp = Math.max(0, Number(data.hp) || 0);
+    foe.shield = Math.max(0, Number(data.shield) || 0);
+}
+
+/* Hết giờ: ai còn ít máu hơn thì thua, bằng nhau sau thời gian chờ thì hòa */
+function pvpBoardTick(battle) {
+    if (battle.elapsedMs - battle.stateAt >= PVP_STATE_MS) {
+        battle.stateAt = battle.elapsedMs;
+        pvpRelay('bstate', { hp: Math.floor(battle.player.hp), shield: Math.floor(battle.player.shield) });
+    }
+    const limit = LB_MAX_SECONDS * 1000;
+    if (battle.elapsedMs < limit) return;
+    const foe = battle.foes[0];
+    if (battle.player.hp / battle.player.maxHp < foe.hp / foe.maxHp) return lbEndBattle(battle, 'lose');
+    if (battle.elapsedMs >= limit + PVP_DRAW_GRACE_MS) {
+        log('🤝 Hết giờ, trận PvP hòa.');
+        pvpRelay('end', { result: 'draw' });
+        endPvPSession();
+    }
+}
+
+function pvpBoardLost() {
+    log('💀 Ngươi bại trận trong PvP.');
+    reportRankedLoss();
+    pvpRelay('end', { result: 'win' });
+    endPvPSession();
+}
+
+function pvpStopBoard() {
+    clearInterval(pvpSession.kitTimer);
+    pvpSession.oppKit = null;
+    pvpSession.legacy = false;
+    const battle = window.__boardBattle;
+    if (!battle?.pvp) return;
+    battle.running = false;
+    clearInterval(battle.timer);
+    window.__boardBattle = null;
 }
 
 function forfeitBoardBattle() {
@@ -1694,7 +1832,7 @@ function lbPvpRowHTML(name, rank, hp, maxHp, avatar, color) {
 
 function lbPvpDuelHTML(enemy) {
     const me = `${REALMS[state.realmIndex || 0]} ${STAGES[state.realmStage || 0]}`;
-    return `<div class="lb-editor-head">⚔️ Đấu PvP <span class="small">${pvpSession.myTurn ? 'Lượt của ngươi' : 'Lượt đối thủ'}</span></div>
+    return `<div class="lb-editor-head">⚔️ Đấu PvP <span class="small">${!pvpSession.legacy ? 'Đang dàn trận' : pvpSession.myTurn ? 'Lượt của ngươi' : 'Lượt đối thủ'}</span></div>
         ${lbPvpRowHTML(enemy.name, unitRankText(enemy), enemy.hp, enemy.maxHp, enemyAvatarSvg(enemy), '#ff7a7a')}
         ${lbPvpRowHTML(state.name || 'Ngươi', me, state.hp, state.totalMaxHp, playerAvatarSvg(), '#6fd17a')}`;
 }

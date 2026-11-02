@@ -493,10 +493,9 @@ function startPvPBattle(oppProfile, matchId = null) {
     log(`🤺 Ghép PvP — ${state.currentEnemy.name} (${REALMS[state.currentEnemy.realmIndex]} ${STAGES[state.currentEnemy.realmStage]})`);
     log(`💠 Linh căn: ${state.currentEnemy.elements.map(colorizeElement).join(' ')} — ${ROOT_RANKS[state.currentEnemy.rootRank]}`);
     log(`⚔️ HP: ${state.currentEnemy.hp}, ATK: ${state.currentEnemy.str}, DEF: ${state.currentEnemy.def}`);
-    log(pvpSession.myTurn ? '🎲 Ngươi ra tay trước.' : '🎲 Đối thủ ra tay trước.');
     if (matchId) log('📊 Trận xếp hạng: kết quả tính vào elo.');
     startPvPHeartbeat();
-    startAutoFight();
+    pvpExchangeKit();
 }
 
 // Faster heartbeat and timeout to auto-win when opponent refreshes
@@ -546,10 +545,22 @@ function onMatchMessage(ev) {
         switch (msg.kind) {
             case 'hb':
                 break;
+            case 'kit':
+                pvpReceiveKit(msg.data);
+                break;
+            case 'bhit':
+                pvpBoardHit(msg.data);
+                break;
+            case 'bstate':
+                pvpBoardState(msg.data);
+                break;
             case 'attack': {
-                const dmg = Math.max(0, Math.floor(msg.data?.damage || 0));
-                const burn = Math.max(0, Math.floor(msg.data?.burn || 0));
-                const wasDodge = msg.data?.miss || false;
+                /* Đòn từ bản cũ chưa tính khắc chế cảnh giới thì máy người nhận tự tính */
+                const self = { realmIndex: state.realmIndex || 0, realmStage: state.realmStage || 0, dodge: gearSubTotals().dodge };
+                const edge = msg.data?.edged ? 1 : edgeDamage(state.currentEnemy || self, self);
+                const dmg = Math.max(0, Math.floor((msg.data?.damage || 0) * edge));
+                const burn = Math.max(0, Math.floor((msg.data?.burn || 0) * edge));
+                const wasDodge = msg.data?.miss || (!msg.data?.edged && Math.random() < edgeDodge(self, state.currentEnemy || self));
                 const detail = msg.data?.detail || {};
 
                 const name = state.currentEnemy?.name || 'Đối thủ';
@@ -593,7 +604,7 @@ function onMatchMessage(ev) {
             case 'end': {
                 const result = msg.data?.result || 'end';
                 if (result === 'win' || result === 'forfeit') {
-                    log('🏳️ Đối thủ đã rời trận. Ngươi chiến thắng!');
+                    log(result === 'win' ? '🎉 Ngươi thắng PvP!' : '🏳️ Đối thủ đã rời trận. Ngươi chiến thắng!');
                     grantPvpWinReward();
                 } else {
                     log('🏁 Trận PvP kết thúc.');
@@ -648,6 +659,7 @@ function pvpLogHit(prefix, total, det, burnExtra = 0, wasDodge = false) {
 
 // Attack: PvP path now mirrors attackTurn() effects (element buffs, dodge, burn)
 function pvpAttackOrLocal() {
+    if (state.currentEnemy?.isPvP && !pvpSession.legacy) return;
     if (!state.currentEnemy || !state.currentEnemy.isPvP) {
         if (typeof attackTurn === 'function') return attackTurn();
         return;
@@ -784,6 +796,7 @@ function pvpAttackOrLocal() {
                 miss: wasDodge,
                 damage: baseDamage,
                 burn: burnExtra,
+                edged: true,
                 detail,
             }
         });
@@ -899,6 +912,7 @@ function findMatchPvP() {
 function endPvPSession() {
     stopPvPHeartbeat();
     stopAutoFight();
+    pvpStopBoard();
     pvpSession.matchId = null;
     pvpSession.active = false;
     pvpSession.sessionId = null;
