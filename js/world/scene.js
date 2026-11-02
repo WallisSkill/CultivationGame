@@ -18,6 +18,12 @@ const SCENE_AVATAR_H = 70;
 const SCENE_DECOR_COUNT = 46;
 const SCENE_MAX_DT = 0.05;
 const SCENE_INNER_RING = 0.68;
+const SEAT_NEAR = 70;
+const SEAT_SIT_MS = 450;
+const SEAT_BREATH_MS = 600;
+const SEAT_DRAW_MS = 100;
+const SEAT_TORSO = 0.62;
+const SEAT_LEGS = 0.16;
 
 const sceneState = {
     view: 'scene', locId: null, x: SCENE_W / 2, y: SCENE_H - 150, tx: null, ty: null,
@@ -213,6 +219,54 @@ function drawUnit(ctx, image, x, y, name, color) {
     ctx.fillText(name, x, y - SCENE_AVATAR_H);
 }
 
+/* Ảnh SVG không cắt được theo vùng nên dựng ra canvas rồi mới cắt */
+function seatBuffer(image) {
+    const s = sceneState;
+    s.seatCanvas = s.seatCanvas || Object.assign(document.createElement('canvas'), { width: SCENE_AVATAR_W * 2, height: SCENE_AVATAR_H * 2 });
+    const ctx = s.seatCanvas.getContext('2d');
+    ctx.clearRect(0, 0, s.seatCanvas.width, s.seatCanvas.height);
+    ctx.drawImage(image, 0, 0, s.seatCanvas.width, s.seatCanvas.height);
+    return s.seatCanvas;
+}
+
+/* Ngồi ghế: tựa ghế phía sau, chân gập lại, thân thở nhẹ; progress đi từ đứng sang ngồi */
+function drawSeated(ctx, image, x, y, name, color, progress = 1) {
+    const w = SCENE_AVATAR_W, h = SCENE_AVATAR_H;
+    const breath = Math.sin(performance.now() / SEAT_BREATH_MS) * 1.5;
+    ctx.fillStyle = '#2a1450';
+    ctx.strokeStyle = '#d9c2ff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.rect(x - 26, y - h + 6, 52, h - 12);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(179,136,255,.18)';
+    ctx.beginPath();
+    ctx.arc(x, y - h * 0.5, 34 + breath * 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 26, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    if (image.complete && image.naturalWidth) {
+        const buffer = seatBuffer(image);
+        const sw = buffer.width, sh = buffer.height;
+        const legs = h * (1 - SEAT_TORSO - (1 - SEAT_TORSO - SEAT_LEGS) * progress);
+        const spread = w * (1 + 0.25 * progress);
+        ctx.drawImage(buffer, 0, sh * SEAT_TORSO, sw, sh * (1 - SEAT_TORSO), x - spread / 2, y - legs, spread, legs);
+        ctx.drawImage(buffer, 0, 0, sw, sh * SEAT_TORSO, x - w / 2, y - legs - h * SEAT_TORSO + breath, w, h * SEAT_TORSO);
+    }
+    ctx.fillStyle = '#d9c2ff';
+    ctx.fillRect(x - 30, y - 3, 60, 6);
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#000';
+    ctx.strokeText(name, x, y - h - 4);
+    ctx.fillStyle = color;
+    ctx.fillText(name, x, y - h - 4);
+}
+
 function drawBubble(ctx, x, y, text) {
     ctx.font = '14px sans-serif';
     const w = Math.min(320, ctx.measureText(text).width + 18);
@@ -287,7 +341,8 @@ function sceneBackground(pal) {
 function sceneDrawKey(now) {
     const s = sceneState;
     const others = playersHere().map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';');
-    return [Math.round(s.x), Math.round(s.y), s.nearest?.label, s.locId, state.autoTrain, state.activity?.label, Math.floor(now / 1000), others].join('|');
+    const step = currentLocation().seat ? SEAT_DRAW_MS : 1000;
+    return [Math.round(s.x), Math.round(s.y), s.nearest?.label, s.locId, state.autoTrain, state.activity?.label, Math.floor(now / step), others].join('|');
 }
 
 function drawScene() {
@@ -305,18 +360,26 @@ function drawScene() {
 
     const units = playersHere().filter(p => p.x != null).map(p => {
         const look = p.look || defaultLook();
+        const seat = s.spots.find(spot => spot.seatOf === p.id && Math.hypot(spot.x - p.x, spot.y + 46 - p.y) < SEAT_NEAR);
         return { y: p.y, draw: () => {
-            drawUnit(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: p.name })), p.x, p.y, p.name, '#a6ffd1');
+            const image = sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: p.name }));
+            if (seat) drawSeated(ctx, image, seat.x, seat.y + 10, p.name, '#a6ffd1');
+            else drawUnit(ctx, image, p.x, p.y, p.name, '#a6ffd1');
             if (p.bubble && Date.now() < p.bubbleUntil) drawBubble(ctx, p.x, p.y, p.bubble);
         } };
     });
-    s.spots.filter(spot => spot.seatOf && spot.seatOf !== state.profileId).forEach(spot => {
+    const walking = new Set(playersHere().filter(p => p.x != null).map(p => p.id));
+    s.spots.filter(spot => spot.seatOf && spot.seatOf !== state.profileId && !walking.has(spot.seatOf)).forEach(spot => {
         const look = spot.look || defaultLook();
-        units.push({ y: spot.y, draw: () => drawUnit(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: spot.seatName })), spot.x, spot.y, spot.seatName, '#d9c2ff') });
+        units.push({ y: spot.y, draw: () => drawSeated(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: spot.seatName })), spot.x, spot.y + 10, spot.seatName, '#d9c2ff') });
     });
+    const seated = state.autoTrain && currentLocation().seat ? meditateSpot() : null;
+    s.sitAt = seated ? s.sitAt || performance.now() : 0;
     units.push({ y: s.y, draw: () => {
         const look = playerLook();
-        drawUnit(ctx, sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name })), s.x, s.y, state.name || '', '#ffe9a0');
+        const image = sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name }));
+        if (seated) drawSeated(ctx, image, seated.x, seated.y + 10, state.name || '', '#ffe9a0', Math.min(1, (performance.now() - s.sitAt) / SEAT_SIT_MS));
+        else drawUnit(ctx, image, s.x, s.y, state.name || '', '#ffe9a0');
         if (s.bubble && Date.now() < s.bubble.until) drawBubble(ctx, s.x, s.y, s.bubble.text);
         if (state.autoTrain) {
             ctx.font = '22px serif';

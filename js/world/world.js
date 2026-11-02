@@ -353,7 +353,7 @@ function worldOf(locId) {
     return WORLD_TIERS.find(w => w.id === LOCATIONS[locId].world);
 }
 
-/* Hư Vô Chi Chủ ở một mình một Giới, không xuống được nữa */
+/* Hư Vô Chi Chủ không xuống được nữa, đệ tử chỉ xuống khi có lệnh */
 function hasLeftWorlds() {
     return (state.realmIndex || 0) >= REALM_COUNT - 1 && !huVoOnDuty();
 }
