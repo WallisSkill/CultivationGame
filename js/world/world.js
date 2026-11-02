@@ -241,7 +241,7 @@ function worldTick() {
         worldUiAccum = 0;
         if (state.root?.elements) {
             endDescentIfDue();
-            if (state.questDone.length) advanceMainQuest();
+            if (document.getElementById('start-screen')?.dataset.closed === '1') advanceMainQuest();
             updateTrainingUI();
             renderActivityBar();
             updateMapToken();
