@@ -25,6 +25,7 @@ const SEAT_BREATH_MS = 600;
 const SEAT_DRAW_MS = 100;
 const SEAT_TORSO = 0.62;
 const SEAT_LEGS = 0.16;
+const SEAT_LEG_ROWS = 12;
 
 const sceneState = {
     view: 'scene', locId: null, x: SCENE_W / 2, y: SCENE_H - 150, tx: null, ty: null,
@@ -255,9 +256,15 @@ function drawSeated(ctx, image, x, y, name, color, progress = 1, chair = true) {
         const buffer = seatBuffer(image);
         const sw = buffer.width, sh = buffer.height;
         const legs = h * (1 - SEAT_TORSO - (1 - SEAT_TORSO - SEAT_LEGS) * progress);
-        const spread = w * (1 + 0.25 * progress);
-        ctx.drawImage(buffer, 0, sh * SEAT_TORSO, sw, sh * (1 - SEAT_TORSO), x - spread / 2, y - legs, spread, legs);
-        ctx.drawImage(buffer, 0, 0, sw, sh * SEAT_TORSO, x - w / 2, y - legs - h * SEAT_TORSO + breath, w, h * SEAT_TORSO);
+        const waist = y - legs + breath;
+        const spread = 0.25 * progress;
+        for (let i = 0; i < SEAT_LEG_ROWS; i++) {
+            const part = i / SEAT_LEG_ROWS;
+            const width = w * (1 + spread * (i + 1) / SEAT_LEG_ROWS);
+            const rowH = (y - waist) / SEAT_LEG_ROWS;
+            ctx.drawImage(buffer, 0, sh * (SEAT_TORSO + (1 - SEAT_TORSO) * part), sw, sh * (1 - SEAT_TORSO) / SEAT_LEG_ROWS, x - width / 2, waist + rowH * i, width, rowH + 1);
+        }
+        ctx.drawImage(buffer, 0, 0, sw, sh * SEAT_TORSO, x - w / 2, waist - h * SEAT_TORSO, w, h * SEAT_TORSO + 1);
     }
     if (chair) {
         ctx.fillStyle = '#d9c2ff';

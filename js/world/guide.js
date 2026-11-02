@@ -26,7 +26,7 @@ const GUIDE_SECTIONS = [
         title: '⚔️ Tương quan trong trận',
         items: [
             ['Chênh đại cảnh giới', 'Mỗi cảnh giới cao hơn được +35% sát thương. Mỗi cảnh giới thấp hơn bị -35%, thấp nhất còn 20%. Chỉ số gốc của cảnh trên cũng lớn hơn nhiều, nên vượt cảnh rất khó thắng.'],
-            ['Khắc chế cảnh giới', 'Hơn từ một đại cảnh giới trở lên: kẻ dưới chỉ còn tối đa 1% né tránh và 1% chí mạng, hút máu còn 1%; kẻ trên tăng né tránh, chí mạng, sát thương chí mạng và hút máu theo khoảng cách. Mỗi bậc chênh còn nhân sát thương 1,5 lần. Ở Hư Vô Chí Đạo, mỗi tiểu cảnh giới tính bằng 3 đại cảnh giới.'],
+            ['Khắc chế cảnh giới', 'Hơn từ một đại cảnh giới trở lên: kẻ dưới chỉ còn tối đa 1% né tránh và 1% chí mạng, hút máu còn 1%; kẻ trên tăng né tránh, chí mạng, sát thương chí mạng và hút máu theo khoảng cách. Mỗi bậc chênh còn nhân đôi sát thương, cả khi đấu với người chơi. Ở Hư Vô Chí Đạo, mỗi tiểu cảnh giới tính bằng 3 đại cảnh giới.'],
             ['Chênh tiểu kỳ', 'Chỉ tính khi cùng đại cảnh giới: mỗi tiểu kỳ chênh 15% sát thương.'],
             ['Khác Giới', 'Đánh kẻ ở Giới cao hơn bị giảm mạnh sát thương, đánh kẻ ở Giới thấp hơn được tăng thêm.'],
             ['Ngũ hành', 'Khắc được +20%, bị khắc -20%: Kim khắc Mộc, Mộc khắc Thủy, Thủy khắc Hỏa, Hỏa khắc Kim, Thổ khắc Mộc. Dưới Kim Đan chưa dùng được ngũ hành.'],
@@ -41,7 +41,8 @@ const GUIDE_SECTIONS = [
         items: [
             ['Bế quan', 'Ngồi xuống ở chỗ Bế quan trong khu vực. Linh khí nơi đó càng cao tu vi tăng càng nhanh.'],
             ['Trận Pháp Bảo', 'Pháp bảo đặt lên trận sẽ tự đánh theo thời gian hồi.'],
-            ['Nâng giai pháp bảo', 'Lên giai vẫn giữ nguyên cấp đang có. Hợp nhất cho ngươi tự chọn vật liệu; pháp bảo đang ở trên trận không bị lấy làm vật liệu.'],
+            ['Thành thạo pháp bảo', 'Pháp bảo không nâng cấp bằng linh thạch. Mới nhận thì thành thạo thấp; hạ quái khi đang bày trên trận mới tăng. Thành thạo 100% gây gấp đôi chỉ số so với lúc mới nhận, hồi chiêu cũng nhanh hơn. Giai càng cao càng cần nhiều quái.'],
+            ['Nâng phẩm pháp bảo', 'Lên phẩm vẫn giữ nguyên thành thạo. Hợp nhất cho ngươi tự chọn vật liệu; pháp bảo đang ở trên trận không bị lấy làm vật liệu.'],
             ['Linh ngọc', 'Hai viên cùng loại cùng bậc hợp thành một viên bậc trên. Lên Tiên Cảnh mở Tiên Phẩm, Tiên Đế mở Đế Phẩm, Thánh Nhân mở Thánh Phẩm, Đại Thánh mở Đại Thánh Phẩm. Nút Tối ưu ngọc tháo hết ngọc, hợp nhất phần thừa, khảm viên tốt nhất vào pháp bảo trên trận và bán viên dư.'],
             ['Rèn đồ', 'Lò rèn chỉ rèn tới cảnh giới của nơi đó. Thần lò rèn được mọi cấp trong Giới của nó, vượt cấp tối đa tới cảnh giới đầu của Giới sau.'],
             ['Hồng Mông Tử Khí', 'Đủ 6 món đồ cấp Thánh chính là đủ phần Hồng Mông Tử Khí. Chuẩn Thánh phải thu đủ rồi mới lên được Thánh Nhân.'],

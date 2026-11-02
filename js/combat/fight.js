@@ -207,6 +207,7 @@ function grantBattleRewards(enemy) {
     log(`🏵️ Hạ ${enemy.name}! +${formatNumber(xp)} tu vi, +${formatNumber(gold)} linh thạch.`);
 
     enemyPackMembers(enemy).forEach(grantEnemyMaterial);
+    lbGainMastery(enemyPackMembers(enemy).length);
     if (Math.random() < tier.gearChance) {
         const slot = GEAR_SLOT_IDS[Math.floor(Math.random() * GEAR_SLOT_IDS.length)];
         const quality = enemy.tier === 'Boss' ? 3 : (enemy.tier === 'Thống lĩnh' ? 2 : 1);
@@ -705,7 +706,7 @@ function pvpAttackOrLocal() {
     }
 
     // Enemy dodge (skip) from their elemental effect
-    const wasDodge = enemyBuff.skip;
+    const wasDodge = enemyBuff.skip || Math.random() < edgeDodge(opp, me);
 
     let baseDamage = 0;
     let burnExtra = 0;
@@ -750,6 +751,9 @@ function pvpAttackOrLocal() {
 
         }
 
+    const edge = edgeDamage(me, opp);
+    baseDamage = Math.floor(baseDamage * edge);
+    burnExtra = Math.floor(burnExtra * edge);
     const assist = wasDodge ? 0 : coopPvpAssist(opp);
     const total = wasDodge ? 0 : (baseDamage + burnExtra + assist);
 

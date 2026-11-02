@@ -1506,7 +1506,7 @@ function huVoFallBack() {
 }
 
 function huVoLinhBao() {
-    return makeLinhBao(HU_VO_LB, LB_MAX_GRADE, LB_MAX_LEVEL / 4);
+    return makeLinhBao(HU_VO_LB, LB_MAX_GRADE, LB_MAX_LEVEL);
 }
 
 function huVoFill(kind) {

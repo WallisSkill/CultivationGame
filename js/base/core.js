@@ -1552,9 +1552,6 @@ function renderInventory() {
             const maxGrade = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
             const currentGrade = item.grade || item.tier || 0;
             const atMaxGrade = currentGrade >= maxGrade;
-            const gradeMax = (typeof lbMaxLevelFor === 'function') ? lbMaxLevelFor(currentGrade) : 100;
-            const currentLevel = item.level || 1;
-            const atMaxLevel = currentLevel >= gradeMax;
             const canFuseGrade = !atMaxGrade;
             const sockets = (typeof lbSockets === 'function') ? lbSockets(item) : 0;
             const gemCount = Array.isArray(item.gems) ? item.gems.length : 0;
@@ -1573,9 +1570,6 @@ function renderInventory() {
                         ${onBoard
                         ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
                         : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
-                        ${atMaxGrade && atMaxLevel
-                        ? `<button class="use-btn" disabled style="opacity:.6">✨ Tối cao</button>`
-                        : `<button class="use-btn" onclick="upgradeLinhBao(${realIndex})">🔺 Nâng cấp</button>`}
                         ${canFuseGrade
                         ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
                         : ''}

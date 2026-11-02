@@ -128,7 +128,7 @@ function calcRealmBonusFull(attackerRealmIndex, attackerRealmStage, defenderReal
 
 /* Khắc chế cảnh giới: hơn từ một đại cảnh giới trở lên thì kẻ dưới gần như mất né và chí mạng, kẻ trên tăng mạnh.
    Ở cảnh giới cuối, mỗi tiểu cảnh giới tính bằng REALM_EDGE.finalStage đại cảnh giới. */
-const REALM_EDGE = { finalRealm: 32, finalStage: 3, floor: 0.01, dodgeMax: 0.9, dodgePerGap: 0.25, critPerGap: 0.2, critDmgPerGap: 0.5, leechPerGap: 0.1, damageBase: 1.5 };
+const REALM_EDGE = { finalRealm: 32, finalStage: 3, floor: 0.01, dodgeMax: 0.9, dodgePerGap: 0.25, critPerGap: 0.2, critDmgPerGap: 0.5, leechPerGap: 0.1, damageBase: 2 };
 
 function realmStep(unit) {
     const realm = unit.realmIndex || 0, stage = unit.realmStage || 0;

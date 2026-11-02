@@ -522,46 +522,6 @@ function buyLinhBao(idx) {
 }
 if (typeof window !== 'undefined') window.buyLinhBao = buyLinhBao;
 
-/* Upgrade an owned linh bảo: ONLY level up within current grade.
-   To raise grade, you MUST use fuseLinhBao function.
-   Level upgrade: cost increases with level and grade. */
-function upgradeLinhBao(inventoryIndex) {
-    if (window._battleActive) { log('🔒 Đang giao chiến — không thể nâng cấp.'); return; }
-    const it = state.inventory[inventoryIndex];
-    if (!it || it.type !== 'linhbao') return;
-
-    const maxG = (typeof LB_MAX_GRADE !== 'undefined') ? LB_MAX_GRADE : 12;
-    const g = (typeof lbGradeOf === 'function') ? lbGradeOf(it) : (it.grade || 0);
-    const lvl = (typeof lbLevelOf === 'function') ? lbLevelOf(it) : (it.level || 1);
-    const gradeMax = (typeof lbMaxLevelFor === 'function') ? lbMaxLevelFor(g) : 100;
-    const gradeCostMult = (typeof LB_GRADE_COST_MULT !== 'undefined') ? LB_GRADE_COST_MULT[g] || 1 : 1;
-
-    if (lvl >= gradeMax) {
-        // Already at max level for this grade
-        const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
-        log(`🔺 ${it.name} đã đạt ${gName} Lv.${gradeMax} (tối đa). Dùng Hợp nhất để thăng giai!`);
-        return;
-    }
-
-    // level up within the current grade
-    // Cost increases exponentially with grade AND level
-    const levelCostMult = 1 + (lvl - 1) * (0.05 + g * 0.015);
-    const cost = Math.floor(lbShopPrice(it.cost, g) * levelCostMult * gradeCostMult);
-    if (state.gold < cost) { log(`Không đủ linh thạch để tăng cấp (cần ${cost.toLocaleString()}).`); return; }
-    state.gold -= cost;
-    it.level = lvl + 1;
-    const gName = (typeof LB_GRADE_NAMES !== 'undefined') ? LB_GRADE_NAMES[g] : g;
-    log(`🔺 ${it.name} tu luyện tới ${gName} Lv.${it.level}! (−${cost.toLocaleString()} linh thạch)`);
-
-    // Announce milestone levels
-    const milestones = [gradeMax * 0.25, gradeMax * 0.5, gradeMax * 0.75, gradeMax];
-    if (milestones.includes(it.level)) {
-        log(`🌟 ${it.name} đạt cột mốc ${gName} Lv.${it.level}!`);
-    }
-    renderAll();
-}
-if (typeof window !== 'undefined') window.upgradeLinhBao = upgradeLinhBao;
-
 /* Fuse linh bảo to raise grade: requires 2 items of same grade to create 1 of next grade.
    Exponential material cost: 2, 9, 36, 100, 225...
    The first grade (Phàm) needs 2 to fuse, Hoàng needs 9, etc. */
@@ -621,10 +581,10 @@ function renderFusionPick() {
     const list = fusionMaterials(target);
     const rows = list.map(item => {
         const on = _fusionPick.picked.includes(item.uid);
-        return `<button class="look-chip ${on ? 'active' : ''}" onclick="toggleFusionMaterial('${item.uid}')">${item.name} Lv.${lbLevelOf(item)}</button>`;
+        return `<button class="look-chip ${on ? 'active' : ''}" onclick="toggleFusionMaterial('${item.uid}')">${item.name} ${lbMasteryPct(item)}%</button>`;
     }).join('') || '<div class="small">Không có pháp bảo cùng giai ngoài trận.</div>';
     const ready = _fusionPick.picked.length === need && state.gold >= gold;
-    openWorldModal('fusionModal', `🔥 Hợp nhất ${target.name}`, `<div class="small">Thăng lên ${LB_GRADE_NAMES[g + 1]}, giữ nguyên Lv.${lbLevelOf(target)}. Pháp bảo đang trên trận không bị lấy làm vật liệu.</div>
+    openWorldModal('fusionModal', `🔥 Hợp nhất ${target.name}`, `<div class="small">Thăng lên ${LB_GRADE_NAMES[g + 1]}, giữ nguyên thành thạo ${lbMasteryPct(target)}%. Pháp bảo đang trên trận không bị lấy làm vật liệu.</div>
         <div>Đã chọn <b>${_fusionPick.picked.length}/${need}</b> · ${gold.toLocaleString()} linh thạch</div>
         <div class="fusion-picks">${rows}</div>
         <button class="mini-btn" onclick="autoPickFusion()">Chọn cấp thấp nhất</button>
