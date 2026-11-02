@@ -72,6 +72,10 @@ function gainCultivationHours(hours) {
 function checkRealmProgress() {
     let guard = 0;
     while (state.xp >= getNeed() && guard++ < 64) {
+        if (state.huVoDisciple || state.huVoChoice) {
+            state.xp = getNeed();
+            break;
+        }
         if (state.realmStage < 3) {
             state.xp -= getNeed();
             state.realmStage++;

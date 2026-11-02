@@ -96,7 +96,7 @@ const BOSSES = {
     hv_gear: { kind: 'chaos', name: 'Trang Bị Tách Ra', realm: 31, stage: 3, board: 4, scale: 0.8, huVoPiece: 'gear' },
     hv_lb: { kind: 'chaos', name: 'Pháp Bảo Tách Ra', realm: 31, stage: 3, scale: 1, huVoPiece: 'lb' },
     hu_ten: { kind: 'chaos', name: 'Hư Vô Chí Đạo', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoSelf: true },
-    hu_vo: { kind: 'chaos', name: 'Hư Vô Chi Chủ', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoHolder: true },
+    hu_vo: { kind: 'chaos', name: 'Hư Vô Chi Chủ Phân Thân', realm: 31, stage: 3, board: 6, scale: 2, hpMult: 4, huVoHolder: true },
 };
 
 const MAIN_QUESTS = [
@@ -113,7 +113,7 @@ const MAIN_QUESTS = [
     {
         id: 'm02', act: 1, title: 'Sơn Môn Thanh Vân', unlock: 1, needs: [0, 2],
         steps: [
-            { go: 'thanh_van', say: [['to_dao', 'Đệ tử mới à? Khôi lỗi thí luyện không biết nương tay đâu.'], ['lang_phong', 'Một thằng nhà quê cũng đòi nhập môn sao?']] },
+            { go: 'thanh_van', say: [['to_dao', 'Đệ tử mới à? Khôi lỗi thí luyện không biết nương tay đâu.'], ['lang_phong', '{taunt}']] },
             { hunt: { loc: 'thanh_van', name: 'Khôi Lỗi Thí Luyện', n: 3 }, say: [['chuong_mon', 'Từ nay ngươi là ngoại môn đệ tử. Động phủ sau núi linh khí dày gấp đôi dưới chân núi. Hãy bế quan.'], ['to_dao', 'Nhớ nhé: thân thể chỉ là cái nền. Ở cảnh giới này, kẻ có đồ tốt đánh ngã kẻ có tu vi cao.']] }
         ],
         reward: { hours: 6, goldRefs: 15, gear: ['boots', 1] }
@@ -462,7 +462,7 @@ const MAIN_QUESTS = [
         id: 'm38', act: 7, title: 'Người Quét Lá', needs: [31, 2],
         steps: [
             { go: 'chung_dai', say: [['narr', 'Trên Chung Nguyên Đài có một chiếc ghế trống, cạnh ghế dựng một cây chổi cũ. Ngươi nhận ra cây chổi đó.']] },
-            { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. Lá hôm nay nhiều quá, ta quét mãi không xong.'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']] }
+            { go: 'thanh_thuy', say: [['mac', 'Con đến rồi. {chore}'], ['me', 'Chiếc ghế trên đó là của lão.'], ['mac', 'Cũng là của con. Kiếp trước con cũng tự vẽ ra cảnh giới ấy, ngồi xuống rồi thấy cô đơn quá, nên quay về đây quét lá, đợi một đứa trẻ giống mình.'], ['mac', 'Giờ cầm chổi hay ngồi ghế, con là người chọn.']] }
         ],
         reward: { ending: true, hours: 0, goldRefs: 0 }
     },
@@ -478,8 +478,8 @@ const MAIN_QUESTS = [
             { boss: 'cs_6', say: [['hd_thu_cuu', 'Con ta vừa chọn tồn tại, không ai được nuốt nó. Đứng lên đi, chưa xong đâu.']] },
             { boss: 'cs_7', say: [['hd_thu_cuu', 'Hai cha con cũng không cản được. Hỗn Độn thứ mười sẽ không có nữa.']] },
             { boss: 'cs_8', say: [['am_duong', 'Diệt cộng với diệt vẫn chưa đủ diệt ngươi.'], ['thich_thien', 'Vậy thì gọi tất cả.']] },
-            { boss: 'cs_9', say: [['narr', 'Sáu Đạo Giả ngã xuống quanh Đài. Từ bên dưới vang lên một âm thanh ngươi đã nghe từ thuở mười tuổi: tiếng của tất cả mọi người.']] },
-            { boss: 'cs_10', say: [['narr', 'Tất cả chúng sinh dừng lại. Không ai thắng, chỉ còn ngươi ngồi đó.'], ['narr', 'Ngươi nhả các Giới ra, trả lại từng ngọn núi, từng chiếc lá. Ở Thanh Thủy Thôn, lá lại rụng đầy sân.']] }
+            { boss: 'cs_9', say: [['narr', 'Sáu Đạo Giả ngã xuống quanh Đài. Từ bên dưới vang lên một âm thanh ngươi đã nghe từ những ngày đầu: tiếng của tất cả mọi người.']] },
+            { boss: 'cs_10', say: [['narr', 'Tất cả chúng sinh dừng lại. Không ai thắng, chỉ còn ngươi ngồi đó.'], ['narr', 'Ngươi nhả các Giới ra, trả lại từng ngọn núi, từng chiếc lá. {returned}']] }
         ],
         reward: { hours: 0, goldRefs: 0 }
     },
@@ -488,23 +488,25 @@ const MAIN_QUESTS = [
         steps: [
             { go: 'chung_dai', say: [['narr', 'Các Giới đã trở về chỗ cũ, nhưng ngươi vẫn chưa xong. Còn một thứ chưa từng thua ngươi, vì nó chưa từng rời khỏi ngươi.']] },
             { gather: { loc: 'chung_dai', hours: 12, label: 'Dung hợp vạn giới vào một thân' }, say: [['narr', 'Hỗn Độn, Hồng Mông, Chung Nguyên và mọi đạo ngươi từng đi qua tan vào nhau. Khi không còn gì tách biệt, Chung Nguyên Đài biến mất dưới chân ngươi.'], ['narr', 'Trang bị trên người ngươi run lên. Từng món một tách khỏi thân, đứng dậy, quay lại nhìn ngươi.']] },
-            { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ thuở mười tuổi lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
+            { boss: 'hv_gear', say: [['narr', 'Món cuối rơi xuống. Trên người ngươi giờ chỉ còn Hư Vô.'], ['narr', 'Trận pháp của ngươi nứt ra. Từng món pháp bảo đã theo ngươi từ những ngày đầu lần lượt rời ô, và lần đầu tiên chúng chĩa về phía ngươi.']] },
             { boss: 'hv_lb', say: [['narr', 'Trận pháp trống rỗng được lấp đầy bằng Chung Nguyên Chí Cao Chi Lực.'], ['narr', 'Những gì đã rời khỏi ngươi tụ lại quanh một người. Người đó mang lục đạo của con người và một cái tên ngươi biết rõ.'], ['narr', 'Tên của ngươi không còn là của ngươi nữa. Muốn giữ danh Hư Vô Chi Chủ, ngươi phải thắng trận này.']] },
-            { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó đang nhìn xuống ngươi.']] },
-            { boss: 'hu_vo', say: [['narr', 'Không có ai ngã xuống. Người đó chỉ mỉm cười rồi tan đi, và Hư Vô mở ra.'], ['narr', 'Từ đây không còn cảnh giới nào phía trên, không còn con đường nào phía trước. Chỉ còn ngươi, và tất cả những gì ngươi muốn làm.'], ['narr', 'Hư Vô Giới chỉ có một người. Con đường xuống đã biến mất, và ngươi không cần nó nữa.']] }
+            { boss: 'hu_ten', say: [['narr', 'Người mang tên ngươi lùi lại một bước. Nếu trên ngôi Hư Vô còn ai, kẻ đó chỉ gửi xuống một phân thân.']] },
+            { boss: 'hu_vo', say: [['narr', 'Phân thân tan đi. Người thật trên ngôi Hư Vô vẫn chưa nhúc nhích, chỉ nhìn xuống và đợi ngươi chọn.']] }
         ],
         reward: { finalRealm: true, hours: 0, goldRefs: 0 }
     }
 ];
 
+const HU_VO_ENTER_LINES = [['narr', 'Không có ai ngã xuống, và Hư Vô mở ra.'], ['narr', 'Từ đây không còn cảnh giới nào phía trên, không còn con đường nào phía trước.'], ['narr', '{finale}']];
+
 const ENDINGS = [
-    { id: 'ngoi', text: '🪑 Ngồi xuống Chung Nguyên Đài', lines: ['Ngươi ngồi xuống. Vạn đạo im lặng. Ở một ngôi làng nhỏ, một lão già mới xuất hiện và bắt đầu quét lá.', 'Vòng lặp tiếp tục. Lần này, ngươi là người đợi.'] },
-    { id: 'pha', text: '🔨 Đập vỡ Đài, chấm dứt vòng lặp', lines: ['Ngươi đập vỡ Chung Nguyên Đài. Trường Hà tràn bờ, không còn điểm kết nào nữa.', 'Không ai ngồi trên đạo. Không còn mỏ, không còn gặt. Vũ trụ phải tự học cách sống.'] },
-    { id: 've', text: '🏡 Bỏ tất cả, về Thanh Thủy Thôn', lines: ['Ngươi đặt gậy xuống, đi bộ về nhà. Mất đúng ba năm.', 'Tô Thanh Dao đứng ở cổng Thanh Vân, tóc đã bạc: "Thư của đệ đâu?"', 'Ngươi cầm chổi, quét sạch sân. Mặt trời mọc đúng như Bàn Cổ mong đợi.'] }
+    { id: 'ngoi', text: '🪑 Ngồi xuống Chung Nguyên Đài', lines: ['Ngươi ngồi xuống. Vạn đạo im lặng. {endSit}', 'Vòng lặp tiếp tục. Lần này, ngươi là người đợi.'] },
+    { id: 'pha', text: '🔨 Đập vỡ Đài, chấm dứt vòng lặp', lines: ['Ngươi đập vỡ Chung Nguyên Đài. Trường Hà tràn bờ, không còn điểm kết nào nữa.', 'Không ai ngồi trên đạo. Không còn mỏ, không còn gặt. Vũ trụ phải tự học cách sống.', '{endBreak}'] },
+    { id: 've', text: '{endHomeChoice}', lines: ['{endHome}', 'Tô Thanh Dao đứng ở cổng Thanh Vân, tóc đã bạc: "Thư của đệ đâu?"', '{endHomeLast}'] }
 ];
 
 const SIDE_QUESTS = [
-    { id: 's_thuoc', loc: 'thanh_thuy', npc: 'thuy_ba', title: 'Thảo Dược Cho Làng', needs: [1, 0], steps: [{ gather: { loc: 'vu_moc_lam', hours: 2, label: 'Hái linh thảo' } }, { go: 'thanh_thuy', say: [['thuy_ba', 'Con vẫn nhớ đường về. Cầm lấy, gói bánh và chút bạc của làng.']] }], reward: { hours: 4, goldRefs: 8 } },
+    { id: 's_thuoc', loc: 'thanh_thuy', npc: 'thuy_ba', title: 'Thảo Dược Cho Làng', needs: [1, 0], steps: [{ gather: { loc: 'vu_moc_lam', hours: 2, label: 'Hái linh thảo' } }, { go: 'thanh_thuy', say: [['thuy_ba', 'Làng này còn có người nhớ tới. Cầm lấy, gói bánh và chút bạc của làng.']] }], reward: { hours: 4, goldRefs: 8 } },
     { id: 's_khoi', loc: 'thanh_van', npc: 'to_dao', title: 'Luyện Kiếm Cùng Sư Tỷ', needs: [1, 0], steps: [{ hunt: { loc: 'thanh_van', name: 'Khôi Lỗi Thí Luyện', n: 5 }, say: [['to_dao', 'Khá hơn rồi. Cái này ta giữ từ hồi Trúc Cơ, cho đệ.']] }], reward: { hours: 8, goldRefs: 10, gear: ['amulet', 1] } },
     { id: 's_bang', loc: 'bang_phong', npc: 'han_bang', title: 'Băng Hồn Không Yên', needs: [5, 0], steps: [{ hunt: { loc: 'bang_phong', name: 'Băng Hồn', n: 6 }, say: [['han_bang', 'Họ từng là đệ tử của ta. Cảm ơn ngươi đã tiễn họ.']] }], reward: { hours: 12, goldRefs: 20, gear: ['boots', 2] } },
     { id: 's_thu', loc: 'van_tien', npc: 'van_nguyet', title: 'Thư Về Phàm Giới', needs: [10, 0], steps: [{ gather: { loc: 'thien_ha', hours: 4, label: 'Tìm khe truyền âm' }, say: [['to_dao', '(Giọng nói vọng từ rất xa) Đệ còn sống là được rồi. Thanh Vân vẫn còn lửa.']] }], reward: { hours: 16, goldRefs: 30, statBless: 0.02 } },
@@ -522,9 +524,9 @@ function raceOf() {
     return RACES[state.race] || RACES.nhan;
 }
 
-/* Xuất thân: nơi bắt đầu, hệ tu đầu tiên và chương mở đầu riêng; tất cả hội tụ tại Thanh Vân Tông */
+/* Xuất thân: nơi bắt đầu, hệ tu đầu tiên và chương mở đầu riêng; tất cả hội tụ tại Thanh Vân Tông, kết thì mỗi nơi mỗi khác */
 const ORIGINS = {
-    thuy: { name: 'Đứa trẻ Thanh Thủy Thôn', loc: 'thanh_thuy', path: 'phap' },
+    thuy: { name: 'Đứa trẻ Thanh Thủy Thôn', loc: 'thanh_thuy', path: 'phap', title: MAIN_QUESTS[0].title, steps: MAIN_QUESTS[0].steps },
     kim: {
         name: 'Kiếm đồng giữ mộ', loc: 'kiem_trung', path: 'kiem', title: 'Kẻ Lau Kiếm',
         boss: { id: 'kiem_no_truong', name: 'Kiếm Nô Trưởng', look: NPC_LOOK('m', 4, '#c9c9d6', '#55524a', { weapon: 'sword', weaponColor: '#b8c0c8' }) },
@@ -603,5 +605,180 @@ Object.assign(BOSSES.lang_phong_2, { path: 'ma' });
 Object.assign(BOSSES.nam_mon, { adds: { name: 'Thiên Binh', kind: 'human', n: 3 } });
 Object.assign(BOSSES.tien_de, { path: 'kiem', adds: { name: 'Kim Giáp Tiên Tướng', kind: 'human', n: 2 } });
 Object.assign(BOSSES.than_dinh_ve, { adds: { name: 'Thiên Phạt Sứ', kind: 'golem', n: 2 } });
+
+/* Chuyện riêng của mỗi xuất thân: mở đầu, ký ức suốt đường và các kết. text thay cho {khóa} trong lời thoại */
+const ORIGIN_MAC_STEADY = ['mac', 'Tay vững hơn hôm qua. Chổi của ta cũng vậy, quét mãi mới vững.'];
+
+const ORIGIN_STORY = {
+    thuy: {
+        outro: [['narr', 'Ngươi đắp mộ cho những người hàng xóm, tay còn dính tro. Lão Mặc vẫn quét lá trước đình, như thể đêm qua chưa từng có lửa.'], ['mac', 'Lá rụng thì quét. Người mất thì chôn. Còn sống thì đi.'], ['thuy_ba', 'Trên núi Thanh Vân có người dạy đạo. Con đi đi, đừng ngoảnh lại.']],
+        first: { title: 'Vết Tro Trên Tay', steps: [{ go: 'thanh_thuy', say: [['thuy_ba', 'Con ngủ được không? Ta thấy con ngồi bên mộ cả đêm.'], ['me', 'Bà ơi, tu tiên là gì?'], ['thuy_ba', 'Là đi thật xa để không ai bắt nạt được mình nữa. Chỉ có điều, đi xa rồi thì khó về.']] }, { hunt: { loc: 'thanh_thuy', name: 'Sói Đói', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Một thằng nhà quê cũng đòi nhập môn sao?',
+            behind: 'khói Thanh Thủy còn chưa tan',
+            vow: 'Nếu đủ mạnh, đêm đó đã khác.',
+            rain: 'ấm như nước suối Thanh Thủy',
+            farewell: 'Trước khi đi, ngươi về Thanh Thủy lần cuối. Mái đình cũ đã được lợp lại, chổi của Lão Mặc dựng ở góc, không thấy người đâu.',
+            wind: 'Thanh Thủy',
+            windLine: 'Một ngọn gió thổi qua suối.',
+            vision: 'một ngôi làng, một sân lá, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Thanh Thủy Thôn, ánh lửa và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá hôm nay nhiều quá, ta quét mãi không xong.',
+            returned: 'Ở Thanh Thủy Thôn, lá lại rụng đầy sân.',
+            finale: 'Ở Thanh Thủy Thôn, suối chảy chậm lại một nhịp rồi thôi. Không ai biết vì sao.',
+            endSit: 'Ở Thanh Thủy Thôn, một lão già mới xuất hiện và bắt đầu quét lá.',
+            endBreak: 'Ở Thanh Thủy Thôn, người ta dựng lại mái đình mà không cần ai nhắc.',
+            endHomeChoice: '🏡 Bỏ tất cả, về Thanh Thủy Thôn',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Thanh Thủy Thôn. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi cầm chổi, quét sạch sân. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    kim: {
+        outro: [['narr', 'Ngươi cắm lại từng thanh kiếm đổ, tay rớm máu vì rỉ sét. Lão Mặc đang quét lá giữa ba ngàn ngôi mộ, như thể đêm qua không có gì thức dậy.'], ['mac', 'Kiếm gãy thì chôn. Người còn sống thì đi.'], ['kiem_lao', 'Mộ này có ta giữ. Đi đi, đừng để mình thành thanh thứ ba ngàn lẻ một.']],
+        first: { title: 'Rỉ Sét Trên Tay', steps: [{ go: 'kiem_trung', say: [['kiem_lao', 'Không ngủ à? Ngươi lau thanh kiếm đó cả đêm rồi.'], ['me', 'Lão ơi, người từng cầm nó đã đi đâu?'], ['kiem_lao', 'Đi thật xa, rồi về nằm ở đây. Ai cầm kiếm cũng đi cùng một đường.']] }, { hunt: { loc: 'kiem_trung', name: 'Kiếm Hồn', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Đứa giữ mộ cũng đòi nhập môn sao? Người ngươi còn mùi rỉ sét.',
+            behind: 'ba ngàn thanh kiếm đã khuất sau chân trời',
+            vow: 'Nếu đủ mạnh, ta đã không phải lau kiếm cho người chết.',
+            rain: 'lạnh và sạch như nước lau kiếm',
+            farewell: 'Trước khi đi, ngươi về Kiếm Trủng lần cuối. Mọi thanh kiếm vẫn sáng, có người đã lau thay ngươi. Chổi của Lão Mặc dựng cạnh một ngôi mộ, không thấy người đâu.',
+            wind: 'Kiếm Minh',
+            windLine: 'Một ngọn gió thổi qua lưỡi kiếm.',
+            vision: 'một nghĩa địa kiếm, một sân lá, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Kiếm Trủng, ba ngàn lưỡi kiếm và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá rụng trên mộ kiếm nhiều quá, ta quét mãi không xong.',
+            returned: 'Ở Kiếm Trủng, ba ngàn thanh kiếm lại nằm yên dưới lá.',
+            finale: 'Ở Kiếm Trủng, ba ngàn thanh kiếm cùng rung lên một lần rồi im hẳn.',
+            endSit: 'Ở Kiếm Trủng, một lão già mới xuất hiện và bắt đầu quét lá giữa các ngôi mộ.',
+            endBreak: 'Ở Kiếm Trủng, ba ngàn thanh kiếm tự rút khỏi mộ và đi tìm chủ mới.',
+            endHomeChoice: '🗡️ Bỏ tất cả, về Kiếm Trủng',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Kiếm Trủng. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi nhặt tấm giẻ cũ, lau thanh kiếm đầu tiên. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    moc: {
+        outro: [['narr', 'Ngươi chôn mẹ sói dưới gốc thông, móng tay còn dính máu hổ. Lão Mặc đang quét lá trên đường mòn, như thể núi này chưa từng có tiếng gầm.'], ['mac', 'Lá rụng thì quét. Thú chết thì chôn. Còn sống thì đi.'], ['narr', 'Bầy sói đứng trên mỏm đá nhìn ngươi xuống núi. Không con nào tru.']],
+        first: { title: 'Dấu Răng Trên Tay', steps: [{ go: 'van_thu', say: [['narr', 'Ngươi ngủ cạnh ổ sói trống. Bầy vẫn chừa phần thịt cho ngươi, nhưng không còn ai liếm vết thương.'], ['me', 'Lão ơi, tu tiên là gì?'], ['mac', 'Là đi thật xa khỏi tiếng gầm. Chỉ có điều, đi xa rồi thì khó về.']] }, { hunt: { loc: 'van_thu', name: 'Hổ Yêu', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Đứa này biết nói không đấy? Trông như vừa bò ra từ hang thú.',
+            behind: 'tiếng sói tru còn vọng theo',
+            vow: 'Nếu đủ mạnh, mẹ đã trở về.',
+            rain: 'ấm như hơi thở trong ổ sói',
+            farewell: 'Trước khi đi, ngươi về Vạn Thú Sơn lần cuối. Bầy sói đã đổi đầu đàn, con nào cũng dừng lại ngửi tay ngươi. Chổi của Lão Mặc dựng ở gốc thông, không thấy người đâu.',
+            wind: 'Tiếng Tru',
+            windLine: 'Một ngọn gió mang mùi rừng.',
+            vision: 'một ngọn núi, một ổ sói trống, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Vạn Thú Sơn, hai con mắt sói và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá trên núi này nhiều quá, ta quét mãi không xong.',
+            returned: 'Trên Vạn Thú Sơn, bầy sói lại tru vào trăng.',
+            finale: 'Trên Vạn Thú Sơn, cả bầy sói ngẩng đầu tru một tiếng, không con nào biết vì sao.',
+            endSit: 'Trên Vạn Thú Sơn, một lão già mới xuất hiện và bắt đầu quét lá trên đường mòn.',
+            endBreak: 'Trên Vạn Thú Sơn, lần đầu tiên không có con thú nào phải sợ trời.',
+            endHomeChoice: '🐺 Bỏ tất cả, về Vạn Thú Sơn',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Vạn Thú Sơn. Mất đúng ba năm.',
+            endHomeLast: 'Bầy sói nhận ra mùi của ngươi. Ngươi nằm xuống gốc thông cạnh mộ mẹ. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    hoa: {
+        outro: [['narr', 'Ngươi mở xiềng cho những đứa còn thở, tay còn dính máu của chính mình. Lão Mặc đang quét lá ngoài tường giáo, như thể đêm qua không có ai gào.'], ['mac', 'Xiềng đứt thì vứt. Người mất thì chôn. Còn sống thì đi.'], ['narr', 'Vết kim trên tay ngươi không bao giờ lành nữa. Ngươi kéo tay áo xuống và đi.']],
+        first: { title: 'Vết Kim Trên Tay', steps: [{ go: 'huyet_sat', say: [['narr', 'Ngươi nấp trong hang đá sau núi giáo, máu vẫn nóng trong mạch.'], ['me', 'Lão ơi, tu tiên là gì?'], ['mac', 'Là đi thật xa để không ai trích máu mình nữa. Chỉ có điều, đi xa rồi thì khó về.']] }, { hunt: { loc: 'huyet_sat', name: 'Huyết Nô Vệ', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Mặt trắng như xác thế kia, ngươi chui từ xó nào ra vậy?',
+            behind: 'mùi máu vẫn chưa rửa hết khỏi tay áo',
+            vow: 'Nếu đủ mạnh, những đứa kia đã ra cùng ta.',
+            rain: 'ấm như máu ngươi từng bị trích đi',
+            farewell: 'Trước khi đi, ngươi về Huyết Sát Giáo lần cuối. Giáo đã đổi chủ, hầm giam vẫn còn mùi cũ. Chổi của Lão Mặc dựng ngoài tường, không thấy người đâu.',
+            wind: 'Đứt Xiềng',
+            windLine: 'Một ngọn gió không có xiềng.',
+            vision: 'một hầm đá, một sợi xiềng đứt, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Huyết Sát Giáo, sợi xiềng đứt và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá rụng ngoài tường giáo nhiều quá, ta quét mãi không xong.',
+            returned: 'Ở Huyết Sát Giáo, hầm giam không còn ai, chỉ có lá bay vào.',
+            finale: 'Ở Huyết Sát Giáo, mọi sợi xiềng cũ cùng gỉ nát trong một đêm.',
+            endSit: 'Ngoài tường Huyết Sát Giáo, một lão già mới xuất hiện và bắt đầu quét lá.',
+            endBreak: 'Ở Huyết Sát Giáo, hầm giam mở toang, không ai còn nhớ số của mình nữa.',
+            endHomeChoice: '🩸 Bỏ tất cả, về Huyết Sát Giáo',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Huyết Sát Giáo. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi đập bỏ hầm giam, trồng một cái cây trên nền đá rồi cầm chổi quét sân. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    yeu: {
+        outro: [['narr', 'Ngươi đứng hai chân trên xác Lang Vương, lần đầu thấy móng vuốt của mình xa lạ. Lão Mặc đang quét lá trên đường mòn, như thể thú biết nghĩ là chuyện thường.'], ['mac', 'Lông rụng thì quét. Bầy cũ thì thôi. Còn sống thì đi.'], ['narr', 'Ngươi tập nói tên mình bằng giọng người, rồi xuống núi.']],
+        first: { title: 'Cái Tên Đầu Tiên', steps: [{ go: 'van_thu', say: [['narr', 'Ngươi ngồi trước vũng nước, tập gọi cái tên {name}. Tiếng phát ra vẫn là tiếng gầm.'], ['me', 'Lão ơi, vì sao chỉ mình ta nhớ được?'], ['mac', 'Vì có kẻ nhớ thì mới có kẻ phải đi. Chỉ có điều, đi xa rồi thì khó về.']] }, { hunt: { loc: 'van_thu', name: 'Yêu Lang', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Mùi gì thế này? Ngươi có chắc mình là người không?',
+            behind: 'bầy cũ đã không còn nhận ra ngươi',
+            vow: 'Nếu ta nghĩ được sớm hơn, bầy đã không phải sợ ta.',
+            rain: 'ấm như bộ lông ngươi đã bỏ lại',
+            farewell: 'Trước khi đi, ngươi về Vạn Thú Sơn lần cuối. Bầy sói lùi lại, không con nào dám ngửi tay ngươi. Chổi của Lão Mặc dựng ở gốc thông, không thấy người đâu.',
+            wind: 'Trăng Tròn',
+            windLine: 'Một ngọn gió thổi đêm trăng tròn.',
+            vision: 'một vũng nước, một đêm trăng, một con thú đang chờ',
+            memory: 'Mặt hồ hiện lên Vạn Thú Sơn, trăng tròn và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá trên núi này nhiều quá, ta quét mãi không xong.',
+            returned: 'Trên Vạn Thú Sơn, lá lại rụng lên những dấu chân không còn ai nhận ra.',
+            finale: 'Trên Vạn Thú Sơn, một con thú non bỗng ngẩng đầu và nhớ được một cái tên.',
+            endSit: 'Trên Vạn Thú Sơn, một con thú già đứng dậy bằng hai chân và bắt đầu quét lá.',
+            endBreak: 'Trên Vạn Thú Sơn, mọi con thú thức dậy biết nói, và chúng có rất nhiều điều để nói với con người.',
+            endHomeChoice: '🐾 Bỏ tất cả, về Vạn Thú Sơn',
+            endHome: 'Ngươi bỏ hình người, đi bốn chân về Vạn Thú Sơn. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi nằm xuống cạnh vũng nước năm xưa, không cần cái tên nào nữa. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    tho: {
+        outro: [['narr', 'Ngươi đào suốt đêm, chỉ lôi lên được mũ và cuốc của cha. Lão Mặc đang quét lá ở cửa hầm, như thể hầm chưa từng sập.'], ['mac', 'Đá sập thì đào. Người mất thì chôn. Còn sống thì đi.'], ['narr', 'Ngươi buộc cây cuốc lên vai và rời mỏ.']],
+        first: { title: 'Bụi Đá Trên Tay', steps: [{ go: 'thiet_cot', say: [['narr', 'Cửa hầm đã chèn gỗ. Ngươi ngồi đó cả đêm, nghe tiếng đá lăn ở dưới.'], ['me', 'Lão ơi, tu tiên là gì?'], ['mac', 'Là đào thật sâu vào chính mình. Chỉ có điều, đào sâu rồi thì khó lên.']] }, { hunt: { loc: 'thiet_cot', name: 'Quặng Khôi', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Một đứa vác đá cũng đòi nhập môn sao? Phủi bụi trước khi vào.',
+            behind: 'cây cuốc của cha vẫn buộc trên vai',
+            vow: 'Nếu đủ mạnh, ta đã nâng được tảng đá đó.',
+            rain: 'ấm như bát cháo cuối ca ở cửa hầm',
+            farewell: 'Trước khi đi, ngươi về Thiết Cốt Môn lần cuối. Cửa hầm cũ đã mọc cỏ, có người dựng lại cột chống. Chổi của Lão Mặc tựa vào đó, không thấy người đâu.',
+            wind: 'Cửa Hầm',
+            windLine: 'Một ngọn gió thổi vào cửa hầm.',
+            vision: 'một cửa hầm, một cây cuốc, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Thiết Cốt Môn, bụi đá và một bàn tay nhỏ cầm chổi.',
+            chore: 'Lá rụng lấp cả cửa hầm, ta quét mãi không xong.',
+            returned: 'Ở Thiết Cốt Môn, ca đào sáng lại bắt đầu.',
+            finale: 'Ở Thiết Cốt Môn, căn hầm sập năm xưa tự mở ra, trống rỗng và sáng.',
+            endSit: 'Ở cửa hầm Thiết Cốt Môn, một lão già mới xuất hiện và bắt đầu quét lá.',
+            endBreak: 'Ở Thiết Cốt Môn, thợ mỏ vứt cuốc và lần đầu làm việc cho chính mình.',
+            endHomeChoice: '⛏️ Bỏ tất cả, về Thiết Cốt Môn',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Thiết Cốt Môn. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi cầm lại cây cuốc của cha, dọn sạch cửa hầm. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    },
+    phap: {
+        outro: [['narr', 'Thẩm Giáo Tập ngồi giữa sân thi, pháp bào rách một vạt. Ba mươi người hầu quỳ xuống chúc mừng, và ngươi nhận ra không ai trong họ dám nhìn ngươi.'], ['mac', 'Thắng thì quét sân. Thua cũng quét. Muốn biết mình là ai thì đi.'], ['narr', 'Ngươi để lại họ của mình trên bàn thi và đi một mình.']],
+        first: { title: 'Mực Trên Tay', steps: [{ go: 'huyen_phap', say: [['narr', 'Phủ cử người đến đón ngươi về. Ngươi cho họ về tay không.'], ['me', 'Lão ơi, tu tiên là gì?'], ['mac', 'Là đi thật xa để không ai biết họ của mình. Chỉ có điều, đi xa rồi thì khó về.']] }, { hunt: { loc: 'huyen_phap', name: 'Thí Pháp Khôi Lỗi', n: 2 }, say: [ORIGIN_MAC_STEADY] }] },
+        text: {
+            taunt: 'Con nhà ai lạc đường thế? Ở đây không có người bưng trà đâu.',
+            behind: 'cái họ của ngươi đã ở lại dưới chân núi',
+            vow: 'Lần này không ai nhường ta nữa.',
+            rain: 'ấm như chén trà chưa ai dám uống cùng ngươi',
+            farewell: 'Trước khi đi, ngươi về Huyền Pháp Các lần cuối. Bàn thi cũ vẫn giữ tên ngươi ở hàng đầu. Chổi của Lão Mặc dựng giữa sân, không thấy người đâu.',
+            wind: 'Không Họ',
+            windLine: 'Một ngọn gió không mang họ của ai.',
+            vision: 'một sân thi, một chiếc bàn trống, một đứa trẻ đang chờ',
+            memory: 'Mặt hồ hiện lên Huyền Pháp Các, ba mươi người cúi đầu và một bàn tay nhỏ cầm chổi.',
+            chore: 'Sân này ba mươi năm rồi mà lá vẫn nhiều, ta quét mãi không xong.',
+            returned: 'Ở Huyền Pháp Các, sân thi lại đầy học trò mới.',
+            finale: 'Ở Huyền Pháp Các, tên ngươi trên bàn thi tự phai đi, không còn ai để hơn.',
+            endSit: 'Giữa sân Huyền Pháp Các, một lão già mới xuất hiện và bắt đầu quét lá.',
+            endBreak: 'Ở Huyền Pháp Các, người hầu và học trò ngồi chung một bàn.',
+            endHomeChoice: '🔮 Bỏ tất cả, về Huyền Pháp Các',
+            endHome: 'Ngươi đặt gậy xuống, đi bộ về Huyền Pháp Các. Mất đúng ba năm.',
+            endHomeLast: 'Ngươi xin chân quét sân và không ai nhận ra ngươi. Với ngươi, đó là phần thưởng. Mặt trời mọc đúng như Bàn Cổ mong đợi.'
+        }
+    }
+};
+
+function originStory() {
+    return ORIGIN_STORY[state.origin] || ORIGIN_STORY.thuy;
+}
+
+function storyText(text) {
+    return text.replace(/\{(\w+)\}/g, (token, key) => key === 'name' ? state.name : originStory().text[key] ?? token);
+}
 
 const QUEST_INDEX = [...MAIN_QUESTS, ...SIDE_QUESTS].reduce((m, q) => (m[q.id] = q, m), {});

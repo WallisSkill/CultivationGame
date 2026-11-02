@@ -91,6 +91,7 @@ function initWorldState() {
     state.origin = state.origin || 'thuy';
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
     applyOriginQuest();
+    restoreHuVoQuests();
     state.activity = state.activity || null;
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
@@ -352,7 +353,7 @@ function worldOf(locId) {
 
 /* Hư Vô Chi Chủ ở một mình một Giới, không xuống được nữa */
 function hasLeftWorlds() {
-    return (state.realmIndex || 0) >= REALM_COUNT - 1;
+    return (state.realmIndex || 0) >= REALM_COUNT - 1 && !state.huVoDisciple;
 }
 
 function worldUnlocked(worldId) {
@@ -1169,10 +1170,13 @@ function applyStartingOrigin() {
 
 function applyOriginQuest() {
     const origin = ORIGINS[state.origin];
-    if (!origin.steps) return;
-    const quest = MAIN_QUESTS[0];
+    const quest = QUEST_INDEX.m01;
     quest.title = origin.title;
     quest.steps = origin.steps;
+    quest.outro = originStory().outro;
+    Object.assign(QUEST_INDEX.mc0_1, originStory().first);
+    [QUEST_INDEX.mc0_2.steps[0], QUEST_INDEX.m38.steps.find(step => step.talk === 'mac')].forEach(step => { step.loc = origin.loc; });
+    if (!LOCATION_NPCS[origin.loc].includes('mac')) LOCATION_NPCS[origin.loc].unshift('mac');
 }
 
 function setDaoPath(path) {
@@ -1356,9 +1360,14 @@ function enterFinalRealm() {
     state.realmStage = STAGES.length - 1;
     state.xp = 0;
     state.huVoEarned = true;
+    delete state.huVoChoice;
+    delete state.huVoDisciple;
+    state.huVoDuels = 0;
+    huVoGrowth(state.realmStage);
     takeHuVoName();
     moveToHuVoWorld();
-    log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Endgame.`);
+    log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Hoàn thành Đại Kết Cục.`);
+    playDialogue(HU_VO_ENTER_LINES);
     reportHuVoWin();
 }
 
@@ -1410,7 +1419,8 @@ function grantQuestReward(q) {
         log(`🌌 Mở đường tới ${w.name}!`);
     }
     if (r.ending) queueEndingChoice();
-    if (r.finalRealm) enterFinalRealm();
+    if (r.finalRealm) huVoHolder() ? offerHuVoChoice() : enterFinalRealm();
+    if (r.huVoOrder) reportHuVoOrder(r.huVoOrder);
 }
 
 function queueEndingChoice() {
@@ -1559,7 +1569,9 @@ function reportHuVoWin() {
 function handleHuVoThrone(msg) {
     huVoThrone = msg.throne || null;
     if (huVoThrone?.id === state.profileId) state.huVoPending = false;
-    else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1)) reportHuVoWin();
+    else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1 && !state.huVoDisciple)) reportHuVoWin();
+    (huVoThrone?.seeds || []).forEach(registerHuVoQuest);
+    if (state.huVoDisciple && huVoThrone && !huVoThrone.disciples?.[state.profileId]) joinHuVoThrone();
     if (msg.news && huVoThrone) {
         log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
         showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);
@@ -1567,19 +1579,19 @@ function handleHuVoThrone(msg) {
     renderAll();
 }
 
-/* Người giữ ngôi là boss cuối, giữ nguyên chỉ số và trận pháp lúc họ thắng */
+/* Trận cuối chỉ là phân thân của người giữ ngôi; muốn lấy ngôi phải khiêu chiến người thật */
 function applyHuVoHolder(enemy, holder) {
-    enemy.name = holder.name;
+    enemy.name = bossName(enemy.bossId);
     enemy.look = holder.look || enemy.look;
-    enemy.str = holder.atk;
-    enemy.def = holder.def;
-    enemy.hp = enemy.maxHp = holder.hp;
+    enemy.str = holder.atk * HU_VO_CLONE_SHARE;
+    enemy.def = holder.def * HU_VO_CLONE_SHARE;
+    enemy.hp = enemy.maxHp = holder.hp * HU_VO_CLONE_SHARE;
     enemy.shownRealm = REALM_COUNT - 1;
     enemy.elements = holder.elements;
     enemy.path = holder.path;
     enemy.boardDefs = Array.from({ length: getEffectiveBoardSlots() }, huVoLinhBao).map(lbDuelDef);
     enemy.duel = true;
-    log(`🌌 ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, đang đợi ngươi.`);
+    log(`🌌 Phân thân của ${holder.name}, Hư Vô Chi Chủ đời thứ ${holder.reign}, chặn đường ngươi.`);
 }
 
 /* Trận cuối đánh với chính cái tên của người chơi, thắng mới thành Hư Vô Chi Chủ */
@@ -1592,7 +1604,7 @@ function takeHuVoName() {
 function bossName(id) {
     const b = BOSSES[id];
     if (b.huVoSelf) return state.huVoName || state.name;
-    if (b.huVoHolder) return huVoHolder()?.name || b.name;
+    if (b.huVoHolder) return huVoHolder() ? `${huVoHolder().name} · Phân Thân` : b.name;
     const npc = typeof b.npc === 'string' ? NPCS[b.npc] : b.npc;
     return huVoPiece(id)?.name || npc?.name || b.name;
 }
@@ -1639,6 +1651,7 @@ function clearBossStep(bossId) {
 
 /* Thắng PvP bằng một trận Thống lĩnh ở cảnh giới thấp hơn trong hai bên */
 function grantPvpWinReward() {
+    reportHuVoDuelWin();
     const realm = Math.min(state.realmIndex || 0, state.currentEnemy?.realmIndex ?? Infinity);
     const tier = ENEMY_TIERS['Thống lĩnh'];
     const gold = goldRef(realm) * tier.goldMult;
@@ -1768,8 +1781,10 @@ function renderQuestPanel() {
         const blocker = q && QUEST_INDEX[mainQuestBlocker(q)];
         if (q) cards.unshift(`<div class="quest-card" data-quest="${q.id}"><div class="small">${ACTS[q.act - 1].name}</div><b>${q.title}</b>
             <div class="small">${blocker && needsMet(q) ? `Trước hết hãy xong "${blocker.title}": gặp ${NPCS[questGiver(blocker)].name} tại ${LOCATIONS[blocker.loc].name}.` : `Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.`}</div>${questRewardHTML(q)}</div>`);
-        else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>${state.realmIndex === REALM_COUNT - 1 ? `🌌 Endgame: ${REALMS[state.realmIndex]}${huVoThrone ? ` · Hư Vô Chi Chủ: ${huVoThrone.name}` : ''}` : `Đã kết thúc: ${ENDINGS.find(e => e.id === state.endingId).text}`}</b></div>`);
+        else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>${state.realmIndex === REALM_COUNT - 1 ? `🌌 Đại Kết Cục${huVoThrone ? ` · Hư Vô Chi Chủ: ${huVoThrone.name}` : ''}` : `Đã kết thúc: ${storyText(ENDINGS.find(e => e.id === state.endingId).text)}`}</b></div>`);
     }
+    const huVoPanel = huVoPanelHTML();
+    if (huVoPanel) cards.unshift(huVoPanel);
     if (descentActive()) {
         cards.push(`<div class="quest-card"><div class="small">Tinh Không Thạch</div><b>Còn ${Math.ceil((state.descentUntil - Date.now()) / 60000)} phút ở Giới dưới</b></div>`);
     }
@@ -1806,7 +1821,7 @@ function nextDialogue() {
     if (!line) { layer.classList.remove('open'); return; }
     if (line.ending) { layer.classList.remove('open'); showEndingChoice(); return; }
     const sp = speakerOf(line.who);
-    const text = line.text.replaceAll('{name}', state.name);
+    const text = storyText(line.text);
     layer.innerHTML = `<div class="dialogue-box" onclick="nextDialogue()">
         ${sp.svg ? `<div class="dialogue-portrait">${sp.svg}</div>` : ''}
         <div class="dialogue-text">
@@ -1820,7 +1835,7 @@ function nextDialogue() {
 function showEndingChoice() {
     showDialog({
         message: 'Chung Nguyên Đài trống. Ngươi làm gì?',
-        buttons: ENDINGS.map(e => ({ text: e.text, value: e.id, variant: 'primary' }))
+        buttons: ENDINGS.map(e => ({ text: storyText(e.text), value: e.id, variant: 'primary' }))
     }).then(choice => {
         const ending = ENDINGS.find(e => e.id === choice) || ENDINGS[0];
         state.endingId = ending.id;
@@ -1854,7 +1869,7 @@ function gearTipHTML(slot) {
 }
 
 function speechText(line) {
-    const text = line[1].replaceAll('{name}', state.name);
+    const text = storyText(line[1]);
     return line[0] === 'narr' || line[0] === 'me' ? text : `${NPCS[line[0]]?.name || line[0]}: ${text}`;
 }
 

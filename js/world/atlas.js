@@ -9,7 +9,7 @@ const E = (name, kind) => ({ name, kind });
 
 const LOCATIONS = {
     /* ---- Phàm Giới ---- */
-    thanh_thuy: { world: 'pham', name: 'Thanh Thủy Thôn', icon: '🏡', x: 120, y: 430, type: 'town', qi: 0.9, minR: 0, maxR: 1, links: ['hac_phong', 'thanh_van'], services: ['shop'], desc: 'Làng nhỏ ven suối, nơi ngươi lớn lên.', enemies: [E('Sói Đói', 'beast')] },
+    thanh_thuy: { world: 'pham', name: 'Thanh Thủy Thôn', icon: '🏡', x: 120, y: 430, type: 'town', qi: 0.9, minR: 0, maxR: 1, links: ['hac_phong', 'thanh_van'], services: ['shop'], desc: 'Làng nhỏ ven suối, chỉ có ruộng và một lão già quét lá.', enemies: [E('Sói Đói', 'beast')] },
     hac_phong: { world: 'pham', name: 'Hắc Phong Trại', icon: '🏴', x: 90, y: 230, type: 'wild', qi: 0.9, minR: 0, maxR: 1, maxS: 1, links: ['thanh_thuy', 'vu_moc_lam'], desc: 'Sơn trại của bọn thổ phỉ tu tà pháp.', enemies: [E('Thổ Phỉ', 'human'), E('Hắc Lang', 'beast')] },
     thanh_van: { world: 'pham', name: 'Thanh Vân Tông', icon: '⛩️', x: 330, y: 330, type: 'sect', qi: 1.25, minR: 0, maxR: 2, links: ['thanh_thuy', 'van_long', 'vu_moc_lam'], services: ['shop', 'forge', 'board'], desc: 'Đại tông chính đạo. Động phủ đệ tử có linh khí dày đặc.', enemies: [E('Khôi Lỗi Thí Luyện', 'golem')] },
     vu_moc_lam: { world: 'pham', name: 'Vạn Mộc Lâm', icon: '🌲', x: 300, y: 120, type: 'wild', qi: 1.05, minR: 1, maxR: 3, links: ['hac_phong', 'thanh_van', 'xich_diem'], desc: 'Rừng nguyên sinh đầy yêu thú và linh thảo.', enemies: [E('Thanh Lân Mãng', 'dragon'), E('Mộc Yêu', 'golem'), E('Yêu Lang', 'beast')] },

@@ -13,7 +13,7 @@ vm.createContext(ctx);
 });
 vm.runInContext(`
 var INFO = {
-  ORIGINS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS, LB_GRADE_UNLOCK_REALM
 };`, ctx);
 const G = ctx.INFO;
@@ -46,6 +46,17 @@ for (const [id, o] of Object.entries(G.ORIGINS)) {
     if (!(G.LOCATIONS[o.loc].services || []).includes('shop')) fail.push(`origin ${id}: không có cửa hàng`);
     (o.steps || []).forEach(s => {
         if (s.boss && !G.BOSSES[s.boss]) fail.push(`origin ${id}: boss ${s.boss}`);
+        if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
+    });
+}
+const storyTokens = JSON.stringify([G.MAIN_QUESTS, G.ENDINGS]).match(/\{\w+\}/g).map(t => t.slice(1, -1)).filter(t => t !== 'name');
+for (const id of Object.keys(G.ORIGINS)) {
+    const story = G.ORIGIN_STORY[id];
+    if (!story) { fail.push(`origin ${id}: thiếu ORIGIN_STORY`); continue; }
+    storyTokens.forEach(t => { if (!story.text[t]) fail.push(`origin ${id}: thiếu lời {${t}}`); });
+    [...story.outro, ...story.first.steps.flatMap(s => s.say || [])].forEach(([who]) => { if (who !== 'me' && !G.NPCS[who]) fail.push(`origin ${id}: speaker ${who}`); });
+    story.first.steps.forEach(s => {
+        if ((s.go || s.loc || s.hunt.loc) !== G.ORIGINS[id].loc) fail.push(`origin ${id}: chương đầu ở ngoài quê`);
         if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
     });
 }
