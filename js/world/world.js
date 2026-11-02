@@ -92,6 +92,7 @@ function initWorldState() {
     state.daoPath = state.daoPath || ORIGINS[state.origin].path;
     applyOriginQuest();
     restoreHuVoQuests();
+    state.ringTale = state.ringTale ?? state.realmIndex ?? 0;
     state.activity = state.activity || null;
     state.testSpeed = isGameAdmin() ? state.testSpeed || 1 : 1;
     state.lastSeen = state.lastSeen || Date.now();
@@ -1302,6 +1303,7 @@ function endDescentIfDue() {
 }
 
 function onRealmChanged() {
+    playRingTales();
     ascendToWorld();
     advanceMainQuest();
 }
@@ -1368,6 +1370,7 @@ function enterFinalRealm() {
     moveToHuVoWorld();
     log(`🌌 Bước vào ${REALMS[state.realmIndex]}. Hoàn thành Đại Kết Cục.`);
     playDialogue(HU_VO_ENTER_LINES);
+    playRingTales();
     reportHuVoWin();
 }
 
@@ -1934,7 +1937,7 @@ function npcReports(key) {
 function openNpcTalk(key) {
     const offers = npcOffers(key).map(q => `<button class="mini-btn" onclick="acceptFromNpc('${q.id}')">${q.hidden ? '🌑' : '❓'} ${q.title}${questRewardHTML(q)}</button>`).join('');
     const reports = npcReports(key).map(rt => `<button class="mini-btn" onclick="reportToNpc('${rt.id}')">📜 Báo lại: ${QUEST_INDEX[rt.id].title}</button>`).join('');
-    openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>
+    openWorldModal('npcModal', `💬 ${NPCS[key].name}`, `<div class="small">${NPCS[key].title || ''}</div>${npcRealmRemarkHTML(key)}
         <div class="npc-options">${reports}${offers}${npcStoryButton(key)}${saintDuelButton(key)}${luanDaoButton(key)}<button class="mini-btn" onclick="talkAboutArea('${key}')">🗨️ Hỏi về nơi này</button></div>`);
 }
 

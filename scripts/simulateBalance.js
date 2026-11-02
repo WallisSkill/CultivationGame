@@ -8,12 +8,12 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`
 var INFO = {
-  ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  RING_TALES, ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS, LB_GRADE_UNLOCK_REALM
 };`, ctx);
 const G = ctx.INFO;
@@ -60,6 +60,7 @@ for (const id of Object.keys(G.ORIGINS)) {
         if (s.hunt && !G.LOCATIONS[s.hunt.loc].enemies.some(e => e.name === s.hunt.name)) fail.push(`origin ${id}: ${s.hunt.name}`);
     });
 }
+Object.entries(G.RING_TALES).forEach(([mark, lines]) => lines.forEach(([who]) => { if (who !== 'me' && who !== 'narr' && !G.NPCS[who]) fail.push(`vòng ${mark}: speaker ${who}`); }));
 const ABSOLUTE = ['hondon', 'hongmong', 'chungnguyen'];
 const WORLDS_WITHOUT_LIFE = [...ABSOLUTE, 'huvo'];
 function reachable(start, realm) {

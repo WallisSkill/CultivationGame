@@ -193,9 +193,106 @@ function robeMotifLayer(motif, color) {
     return ROBE_MOTIF_SPOTS.map(([x, y, k]) => `<path transform="translate(${x} ${y}) scale(${k})" d="${shape}" fill="${color}" fill-opacity=".28" stroke="${color}" stroke-width=".7"/>`).join('');
 }
 
+/* Vòng sau lưng: Phàm trắng 1-9 vòng, Tiên xanh biển 1-10 vòng, Thánh vàng 1-3 vòng, cảnh giới Thiên thêm hoa văn, rồi 5 tím, 7 đỏ, 9 trắng, 10 đen */
+const BACK_RING_FULL = 21;
+const BACK_RING_LAST = 28;
+const BACK_RING_MORTAL = 8;
+const BACK_RING_IMMORTAL = 18;
+const BACK_RING_EMPEROR = 15;
+const BACK_RING_GOLD = '#fff0b8';
+const BACK_RING_EDGE = '#ffd76a';
+const BACK_RING_VOID_EDGE = '#fff4c8';
+const BACK_RING_C = [60, 38];
+const BACK_RING_R = [23, 32, 41];
+
+function backRingStyle(realm) {
+    const span = n => Array.from({ length: n }, (_, i) => 20 + i * (n >= 9 ? 3.6 : 4.6));
+    if (realm <= BACK_RING_MORTAL) return { name: 'trắng', color: '#ffffff', radii: span(realm + 1) };
+    if (realm <= BACK_RING_IMMORTAL) return { name: 'xanh biển', color: '#2f9dff', edge: '#bfe3ff', radii: span(realm - BACK_RING_MORTAL) };
+    if (realm <= BACK_RING_LAST) return { name: 'vàng', color: BACK_RING_GOLD, radii: BACK_RING_R.slice(0, Math.min(realm, BACK_RING_FULL) - BACK_RING_IMMORTAL) };
+    if (realm === 29) return { name: 'tím', color: '#a855f7', edge: '#e3c8ff', radii: span(5), motifs: 3 };
+    if (realm === 30) return { name: 'đỏ sắc vàng', color: '#d9202e', edge: BACK_RING_EDGE, radii: span(7), motifs: 5 };
+    if (realm === 31) return { name: 'trắng sắc vàng', color: '#ffffff', edge: BACK_RING_EDGE, radii: span(9), motifs: 7 };
+    return { name: 'đen sắc vàng trắng', color: '#050308', edge: BACK_RING_VOID_EDGE, radii: span(10), motifs: 7, thick: 2.1 };
+}
+
+function ringDots(r, n, c) {
+    return ringSpokes(n, () => `<circle cx="${BACK_RING_C[0]}" cy="${BACK_RING_C[1] - r}" r="1.1" fill="${c}"/>`);
+}
+
+function ringTeeth(r, n, c, tall = 3.4) {
+    const [cx, cy] = BACK_RING_C;
+    return ringSpokes(n, () => `<path d="M${cx - 1} ${cy - r} L${cx} ${cy - r - tall} L${cx + 1} ${cy - r} Z" fill="${c}"/>`);
+}
+
+function ringDash(r, c) {
+    return `<circle cx="${BACK_RING_C[0]}" cy="${BACK_RING_C[1]}" r="${r}" fill="none" stroke="${c}" stroke-width=".9" stroke-dasharray="1.2 2.4"/>`;
+}
+
+function ringLowDetail(realm, style) {
+    const r = style.radii[style.radii.length - 1];
+    const c = style.edge || style.color;
+    if (realm <= BACK_RING_MORTAL) return realm ? ringDots(r, 2 + realm, c) : '';
+    const dots = ringDots(r, 6 + (realm - BACK_RING_MORTAL - 1) * 2, c);
+    if (realm < BACK_RING_EMPEROR) return dots;
+    return dots + ringTeeth(r, 12 + (realm - BACK_RING_EMPEROR) * 4, c) + (realm >= BACK_RING_EMPEROR + 1 ? ringDash(r - 3, c) : '') + (realm >= BACK_RING_EMPEROR + 2 ? ringDash(r + 6, c) : '');
+}
+
+function ringStar(r, k) {
+    return `<path transform="translate(${BACK_RING_C[0]} ${BACK_RING_C[1] - r}) scale(${k})" d="M0 -2.6 L.5 -.5 L2.6 0 L.5 .5 L0 2.6 L-.5 .5 L-2.6 0 L-.5 -.5 Z" fill="#ffffff"/>`;
+}
+
+function ringSquares(angles, c) {
+    const [cx, cy] = BACK_RING_C;
+    return angles.map(a => `<rect transform="rotate(${a} ${cx} ${cy})" x="${cx - 26}" y="${cy - 26}" width="52" height="52" fill="none" stroke="${c}" stroke-width=".5"/>`).join('');
+}
+
+function ringHighDetail(realm, style, stage) {
+    const c = style.edge;
+    const rows = style.radii.map((r, i) => [ringDots(r, 8 + i * 2, c), ringTeeth(r, 10 + i * 2, c, 2.4), ringDash(r + 1.8, c)][i % 3]).join('');
+    const [cx, cy] = BACK_RING_C;
+    const extra = realm < 32 ? '' : HU_VO_RING_STAGES.slice(0, stage + 1).map(draw => draw(c)).join('');
+    return rows + BACK_RING_MOTIFS.slice(0, style.motifs).map(draw => draw(cx, cy, c)).join('') + extra;
+}
+
+function ringSpokes(n, draw) {
+    return Array.from({ length: n }, (_, i) => `<g transform="rotate(${i * 360 / n} ${BACK_RING_C[0]} ${BACK_RING_C[1]})">${draw(i)}</g>`).join('');
+}
+
+const BACK_RING_MOTIFS = [
+    (cx, cy, c) => ringSpokes(8, () => `<circle cx="${cx}" cy="${cy - BACK_RING_R[2]}" r="1.7" fill="${c}"/>`),
+    (cx, cy, c) => ringSpokes(12, () => `<path d="M${cx - 1.4} ${cy - BACK_RING_R[1]} L${cx} ${cy - BACK_RING_R[1] - 4.6} L${cx + 1.4} ${cy - BACK_RING_R[1]} Z" fill="${c}"/>`),
+    (cx, cy, c) => ringSpokes(16, i => `<path d="M${cx - 1} ${cy - BACK_RING_R[2] - 1} L${cx} ${cy - BACK_RING_R[2] - (i % 2 ? 5 : 9)} L${cx + 1} ${cy - BACK_RING_R[2] - 1} Z" fill="${c}"/>`),
+    (cx, cy, c) => ringSpokes(8, () => `<path d="M${cx} ${cy - BACK_RING_R[0]} Q${cx - 4} ${cy - 27} ${cx} ${cy - BACK_RING_R[1]} Q${cx + 4} ${cy - 27} ${cx} ${cy - BACK_RING_R[0]} Z" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width=".5"/>`),
+    (cx, cy, c) => `<circle cx="${cx}" cy="${cy}" r="36.5" fill="none" stroke="${c}" stroke-width="1.4" stroke-dasharray="1.4 3.2"/>`,
+    (cx, cy, c) => [0, 60].map(a => `<path transform="rotate(${a} ${cx} ${cy})" d="M${cx} ${cy - BACK_RING_R[1]} L${cx + 27.7} ${cy + 16} L${cx - 27.7} ${cy + 16} Z" fill="none" stroke="${c}" stroke-width=".6"/>`).join(''),
+    (cx, cy, c) => `<circle cx="${cx}" cy="${cy}" r="47" fill="none" stroke="${c}" stroke-width=".5" opacity=".7"/>` + ringSpokes(6, () => `<path transform="translate(${cx} ${cy - 47}) scale(1.5)" d="M0 -2.6 L.5 -.5 L2.6 0 L.5 .5 L0 2.6 L-.5 .5 L-2.6 0 L-.5 -.5 Z" fill="#ffffff"/>`)
+];
+
+/* Vòng Hư Vô: mỗi tiểu cảnh giới cộng thêm một lớp chi tiết, từ Sơ Kỳ tới Đại Viên Mãn */
+const HU_VO_RING_STAGES = [
+    c => ringSquares([0, 45], c),
+    c => ringSpokes(12, i => ringStar(54, i % 2 ? 0.8 : 1.3)) + ringDash(55, c),
+    c => ringSquares([22.5, 67.5], c) + ringTeeth(46, 24, c, 5) + ringDots(14, 12, '#ffffff'),
+    c => ringSpokes(36, () => `<path d="M${BACK_RING_C[0]} ${BACK_RING_C[1] - 16} V${BACK_RING_C[1] - 52}" stroke="${c}" stroke-width=".3" opacity=".75"/>`) + ringSpokes(8, () => ringStar(49, 2.1)) + ringTeeth(16, 16, '#ffffff', 2.6)
+        + `<circle cx="${BACK_RING_C[0]}" cy="${BACK_RING_C[1]}" r="55.5" fill="none" stroke="${c}" stroke-width="1"/>`
+];
+
+function backRingLayer(realm, stage = 0) {
+    const style = backRingStyle(realm);
+    const [cx, cy] = BACK_RING_C;
+    const circles = style.radii.map((r, i) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${style.color}" stroke-width="${style.thick || 1.5 - Math.min(i, 2) * 0.25}"/>${style.edge ? `<circle cx="${cx}" cy="${cy}" r="${r + (style.thick || 1.4) / 2}" fill="none" stroke="${style.edge}" stroke-width=".35"/>` : ''}`).join('');
+    const detail = realm <= BACK_RING_IMMORTAL ? ringLowDetail(realm, style) : realm <= BACK_RING_LAST
+        ? BACK_RING_MOTIFS.slice(0, Math.max(0, realm - BACK_RING_FULL)).map(draw => draw(cx, cy, style.color)).join('')
+        : ringHighDetail(realm, style, stage);
+    const disc = realm === 32 ? `<circle cx="${cx}" cy="${cy}" r="56" fill="#050308" opacity=".82"/>` : '';
+    return `<g opacity=".92">${disc}${circles}${detail}</g>`;
+}
+
 /* Bộ đồ Hư Vô: nền vũ trụ tím đen viền ánh trăng; mỗi món một hình riêng, Đạo Quan lớn dần theo tiểu cảnh giới */
 const HU_VO_VOID = '#1c0b3a';
 const HU_VO_GLOW = '#d9c2ff';
+const HU_VO_GOLD = '#fff4c8';
 const HU_VO_STARS = [[45, 104, 1], [38, 128, 1.3], [52, 138, 0.8], [75, 104, 1.1], [83, 126, 0.9], [70, 140, 1.3], [33, 142, 0.8], [87, 141, 1], [48, 70, 0.8], [72, 70, 0.8]];
 const HU_VO_CROWN_PEAKS = [1, 3, 5, 7];
 const HU_VO_CROWN_HEIGHT = [7, 11, 15, 21];
@@ -227,10 +324,18 @@ function huVoCrownLayer(color, stage) {
         const top = 9 - tall * (1 - off * 0.55);
         return `<path d="M${x - 2} 12 L${x} ${top} L${x + 2} 12 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".6"/>${stage >= 2 ? `<circle cx="${x}" cy="${top}" r=".9" fill="#ffffff"/>` : ''}`;
     }).join('');
-    return `<g>${peaks}
+    const tassels = stage ? [46, 74].map(x => `<path d="M${x} 13 L${x} ${17 + stage * 5}" stroke="${color}" stroke-width=".5"/><circle cx="${x}" cy="${17 + stage * 5}" r="${0.8 + stage * 0.2}" fill="#ffffff"/><circle cx="${x}" cy="${14 + stage * 2.5}" r=".6" fill="${HU_VO_GOLD}"/>`).join('') : '';
+    const flanges = stage ? [[49, -1], [71, 1]].map(([x, dir]) => `<path d="M${x} 11 Q${x + dir * 7} ${8 - stage} ${x + dir * (6 + stage * 2)} ${3 - stage} Q${x + dir * 5} 8 ${x} 13.4 Z" fill="${HU_VO_VOID}" stroke="${HU_VO_GOLD}" stroke-width=".5"/>`).join('') : '';
+    const inner = stage >= 2 ? [52, 56, 64, 68].map(x => `<path d="M${x - 1} 11 L${x} ${6 - stage * 2} L${x + 1} 11 Z" fill="${HU_VO_GOLD}"/>`).join('') : '';
+    const beads = Array.from({ length: 5 + stage * 2 }, (_, i) => {
+        const t = (i + 1) / (6 + stage * 2);
+        return `<circle cx="${50 + t * 20}" cy="${11.4 - Math.sin(t * Math.PI) * 4.6}" r=".45" fill="${HU_VO_GOLD}"/>`;
+    }).join('');
+    return `<g>${flanges}${inner}${peaks}${tassels}
         <path d="M48.6 13.6 Q60 7.6 71.4 13.6 L70.4 9.8 Q60 4.4 49.6 9.8 Z" fill="${HU_VO_VOID}" stroke="${color}" stroke-width=".7"/>
-        <path d="M50 11 Q60 6.2 70 11" stroke="${color}" stroke-width=".5" fill="none" opacity=".8"/>
-        <circle cx="60" cy="8.8" r="${1.5 + stage * 0.45}" fill="${color}" stroke="#ffffff" stroke-width=".5"/>
+        <path d="M50 11 Q60 6.2 70 11" stroke="${color}" stroke-width=".5" fill="none" opacity=".8"/>${beads}
+        <path d="M60 ${8.8 - 3 - stage} L${61.8 + stage * 0.5} 8.8 L60 ${8.8 + 3 + stage * 0.4} L${58.2 - stage * 0.5} 8.8 Z" fill="${color}" stroke="${HU_VO_GOLD}" stroke-width=".5"/>
+        <circle cx="60" cy="8.8" r="${0.7 + stage * 0.2}" fill="#ffffff"/>
     </g>`;
 }
 
@@ -292,13 +397,15 @@ function humanoidSvg(look, opts = {}) {
     const L = 60 - sh, R = 60 + sh;
     const inkLine = `stroke="${INK}" stroke-width=".55" stroke-linejoin="round"`;
     const gear = l.huVoGear;
-    const tall = l.crown === 'huvo' || gear?.armor;
-    const view = tall ? (opts.bust ? '17 -14 86 115' : '-5 -14 130 174') : (opts.bust ? '22 0 76 101' : '0 0 120 160');
+    const ringed = l.ringRealm != null;
+    const tall = l.crown === 'huvo' || gear?.armor || ringed;
+    const view = tall ? (opts.bust ? '14 -18 92 121' : '-5 -18 130 178') : (opts.bust ? '22 0 76 101' : '0 0 120 160');
     return `<svg class="avatar ${opts.cls || ''}" viewBox="${view}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${opts.title || 'nhân vật'}">
         ${robeDefs(l, id)}
         ${auraLayer(l.aura, id)}
         ${gear?.armor ? huVoWingLayer(trim) : wingLayer(l.wing)}
         ${l.crown === 'huvo' ? huVoHaloLayer(l.crownColor || trim, l.crownStage) : ''}
+        ${ringed ? backRingLayer(l.ringRealm, l.ringStage) : ''}
         <ellipse cx="60" cy="153" rx="34" ry="4" fill="#000" opacity=".28"/>
         ${ribbonLayer(l.aura)}
         ${hairBack(l)}
@@ -416,7 +523,8 @@ function playerLook() {
         look.crown = (helm.reqRealm || 0) >= 16 ? 'halo' : 'guan';
         look.crownColor = GEAR_QUALITIES[helm.quality || 0].color;
     }
-    if ((state.realmIndex || 0) >= 20) look.crown = 'wheel';
+    look.ringRealm = state.realmIndex || 0;
+    look.ringStage = look.ringRealm === REALM_COUNT - 1 ? state.realmStage || 0 : 0;
     if ((state.realmIndex || 0) >= 9) look.wing = shadeColor(look.aura || '#ffffff', 0.2);
     if (armor?.huVo) Object.assign(look, { robe: HU_VO_VOID, trim: HU_VO_GLOW, sash: '#0d0520', motif: 'huvo' });
     if (boots?.huVo) look.boots = '#120726';
@@ -424,7 +532,7 @@ function playerLook() {
     if (helm?.huVo) {
         look.crown = 'huvo';
         look.crownColor = HU_VO_GLOW;
-        look.crownStage = (state.realmIndex || 0) === REALM_COUNT - 1 ? state.realmStage || 0 : 0;
+        look.crownStage = look.ringStage;
     }
     const ring = (typeof equippedInSlot === 'function') ? equippedInSlot('ring') : null;
     if ([armor, weapon, helm, boots, amulet, ring].some(it => it?.huVo)) {
@@ -439,7 +547,7 @@ function playerAvatarSvg(bust = false) {
 
 function enemyAvatarSvg(enemy) {
     if (enemy.isPvP) return humanoidSvg(enemy.look || defaultLook(), { title: enemy.name });
-    if (enemy.look) return humanoidSvg(enemy.look, { title: enemy.name });
+    if (enemy.look) return humanoidSvg({ ringRealm: enemy.shownRealm ?? enemy.realmIndex, ringStage: enemy.realmStage, ...enemy.look }, { title: enemy.name });
     if (enemy.kind && MONSTER_DRAW[enemy.kind]) return monsterSvg(enemy.kind, enemy.realmIndex || 0, enemy.name);
     const pal = worldTierOfRealm(enemy.realmIndex || 0).palette;
     return humanoidSvg({ robe: pal[1], trim: pal[2], hair: '#1b1b22', hairStyle: 4, weapon: 'sword' }, { title: enemy.name });

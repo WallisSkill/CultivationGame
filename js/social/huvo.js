@@ -48,6 +48,7 @@ function becomeHuVoDisciple(stage) {
     joinHuVoThrone();
     log(`🌌 Ngươi thành Hư Vô Đạo Giả, kẹt mãi ở ${REALMS[state.realmIndex]} ${STAGES[stage]}.`);
     playDialogue(HU_VO_ENTER_LINES);
+    playRingTales();
     renderAll();
 }
 

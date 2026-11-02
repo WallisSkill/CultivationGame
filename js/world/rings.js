@@ -1,0 +1,127 @@
+/* ===========================================================
+   VÒNG SAU LƯNG TRONG CỐT TRUYỆN
+   - NPC_REALM: cảnh giới NPC để hiện vòng; Lão Mặc không có vòng nào nhìn thấy được.
+   - RING_TALES: cảnh truyện khi người chơi đạt mốc vòng.
+   - Lời phán xét: NPC so cảnh giới của mình, của người chơi và của kẻ dưới người chơi.
+=========================================================== */
+const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 21, nu_oa: 21, chuan_de: 21, tiep_dan: 21, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, tien_lai: 9 };
+const NPC_NO_RING = ['mac'];
+const RING_NEAR = 2;
+
+function storyRealmOf(key) {
+    if (NPC_REALM[key] != null) return NPC_REALM[key];
+    const fought = Object.values(BOSSES).filter(b => b.npc === key).map(b => b.shownRealm ?? b.realm);
+    if (fought.length) return Math.max(...fought);
+    if (/Đạo Giả/.test(NPCS[key].title || '')) return OVERSEER_REALM;
+    const met = MAIN_QUESTS.find(q => q.steps.some(step => step.say?.some(line => line[0] === key)));
+    return met ? met.needs[0] : null;
+}
+
+Object.keys(NPCS).filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
+    const realm = storyRealmOf(key);
+    if (realm == null) return;
+    NPCS[key].daoRealm = realm;
+    NPCS[key].storyNpc = true;
+});
+Object.values(LOCATIONS).forEach(loc => {
+    [residentKey(loc.id), ...LOCATION_NPCS[loc.id]].filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
+        if (NPCS[key] && NPCS[key].daoRealm == null) NPCS[key].daoRealm = loc.maxR;
+    });
+});
+Object.values(NPCS).forEach(npc => {
+    if (npc.daoRealm == null || !npc.look) return;
+    npc.look.ringRealm = npc.daoRealm;
+    if (npc.look.crown === 'wheel') delete npc.look.crown;
+});
+
+const RING_NUMBERS = { 1: 'một', 2: 'hai', 3: 'ba', 4: 'bốn', 5: 'năm', 6: 'sáu', 7: 'bảy', 8: 'tám', 9: 'chín', 10: 'mười' };
+
+function ringName(realm) {
+    const style = backRingStyle(realm);
+    const detail = realm >= 22 && realm <= 28 ? ' đầy hoa văn' : '';
+    return `${RING_NUMBERS[style.radii.length]} vòng ${style.name}${detail}`;
+}
+
+const RING_TALES = {
+    1: [['narr', 'Sáng nay trên vách động phủ, bóng lưng ngươi có thêm vòng trắng thứ hai, như vòng tuổi trên gốc cây. Phàm nhân không thấy. Tu sĩ nào cũng thấy.'], ['mac', 'Hai vòng à? Mỗi bước lên lại thêm một vòng, ai đi đường này cũng thế. Đừng đếm sớm.']],
+    9: [['narr', 'Chín vòng trắng tan đi, chỉ còn một vòng màu nước biển. Ngươi lại bắt đầu đếm từ một. Giám Binh ở Phi Thăng Trì liếc lưng ngươi rồi mới nhìn mặt ngươi, và ghi một dòng vào sổ.'], ['tien_lai', 'Ở đây người ta đọc vòng trước khi đọc tên. Vòng là thứ dễ đếm nhất của một con người.']],
+    15: [['narr', 'Bảy vòng xanh mọc thêm răng và chấm sao. Thiên binh quỳ xuống, nhưng đầu họ cúi về phía lưng ngươi chứ không phải mặt ngươi.'], ['me', 'Họ quỳ trước cái vòng.'], ['narr', 'Không ai trả lời. Ở Tiên Giới, đó là câu trả lời.']],
+    19: [['narr', 'Mười vòng xanh vỡ ra và liền lại thành một vòng vàng. Ngươi tưởng đó là phần thưởng, cho tới khi nhận ra nó không ngừng quay dù ngươi đứng yên.'], ['thai_thanh', 'Một vòng vàng nặng hơn mười vòng xanh. Lúc mới có ta cũng soi gương cả ngày.']],
+    20: [['narr', 'Vòng vàng thứ hai mọc ra bên ngoài vòng đầu. Tiếng chuông Tu Di vang lên đúng lúc, như thể có ai đó vừa đánh dấu.']],
+    21: [['thai_thanh', 'Ba vòng. Sáu chúng ta dừng ở đây, và đã dạy cả Thánh Giới rằng không có vòng vàng thứ tư.'], ['me', 'Có không?'], ['thai_thanh', 'Câu đó hỏi xong thì đừng để ai nghe thấy.']],
+    22: [['narr', 'Ngươi chờ vòng vàng thứ tư. Nó không đến. Thay vào đó, trên vòng ngoài hiện lên tám hạt sáng, xếp đều như ai đó vừa chấm mực.'], ['van_kiep', 'Đừng ngạc nhiên. Từ đây trời không thêm vòng cho ngươi, chỉ thêm chữ.']],
+    25: [['narr', 'Hoa văn trên lưng ngươi đã dày tới mức có thể đọc. Ngươi soi xuống mặt nước và đọc thử: đó là những nét chép lại mọi trận ngươi từng đánh.']],
+    28: [['narr', 'Sáu ngôi sao đi vào quỹ đạo quanh ba vòng vàng. Ngươi tạo ra một thế giới, và cư dân đầu tiên của nó ngước lên thấy vòng của ngươi trên trời, gọi đó là mặt trời.']],
+    29: [['narr', 'Ba vòng vàng tan ra thành năm vòng tím. Hóa ra trên ba vòng vàng vẫn còn đường, chỉ là Lục Thánh chưa từng đứng đủ cao để thấy.'], ['vong_ky', 'Năm vòng. Ở Hỗn Độn Hải ai cũng có năm vòng, nên ở đây chẳng ai nhìn lưng ai cả. Thoải mái chứ?']],
+    30: [['narr', 'Bảy vòng đỏ viền vàng. Màu ấy không phải màu lửa. Ngươi nhận ra nó khi nhớ lại lần đầu thấy máu của chính mình.'], ['hd_thu_cuu', 'Hồng Mông không vẽ gì mới. Nó chỉ trả lại màu cho những thứ ngươi đã quên.']],
+    31: [['narr', 'Chín vòng trắng viền vàng. Đứng trên Chung Nguyên Đài nhìn xuống, ngươi thấy một cái sân nhỏ rất xa, trên đó có những vệt chổi tròn. Chín vệt, trùng khít với lưng ngươi.'], ['me', 'Từ đầu tới cuối, đây là vết chổi.'], ['mac', '(Tiếng chổi vọng từ rất xa) Lá rụng theo vòng thì quét theo vòng thôi.']],
+    32: [['narr', 'Vòng thứ mười mọc ra màu đen. Nó không có trong sân của ai, không có trong sổ của ai. Lần đầu tiên, có một vòng không do ai vẽ cho ngươi.']]
+};
+
+function playRingTales() {
+    const realm = state.realmIndex || 0;
+    const due = Object.keys(RING_TALES).map(Number).filter(mark => mark > state.ringTale && mark <= realm);
+    state.ringTale = Math.max(state.ringTale, realm);
+    due.forEach(mark => playDialogue(RING_TALES[mark]));
+}
+
+const RING_JUDGE = {
+    hidden: ['Ta không thấy vòng nào sau lưng ông ấy. Có lẽ vì thế mà ông ấy nhìn ai cũng như nhìn lá rụng.'],
+    far_above: [
+        'Với ta, {me} vẫn còn non lắm. Đừng để {ring} làm ngươi tưởng mình đã đi được xa.',
+        'Ta đã đi qua {me} từ lâu. Ngày đó ta cũng tưởng {ring} là nhiều.',
+        'Kẻ {below} ngước nhìn ngươi, ngươi ngước nhìn ta. Con đường này chỉ có thế.'
+    ],
+    above: [
+        '{me}? Sắp đuổi kịp ta rồi đấy, nhưng {ring} của ngươi còn chưa vững.',
+        'Ngươi bước nhanh hơn bọn {below} nhiều. Chậm lại một chút, ngã từ {me} đau lắm.',
+        'Ta thấy {ring}, và ta thấy cả chỗ ngươi còn thiếu. Về luyện thêm đi.'
+    ],
+    equal: [
+        'Cùng là {me}, ta không gọi ngươi là tiền bối đâu. {Ring} của ta cũng chẳng kém.',
+        'Đồng cảnh giới mới dám nói thật: bọn {below} đều tưởng {me} là hết đường.',
+        'Lần sau gặp lại, xem vòng của ai đậm hơn.'
+    ],
+    below: [
+        'Ta còn ở {npc} mà ngươi đã mang {ring}. Xin lỗi, ta nhìn hơi lâu.',
+        'Ngươi đã là {me} rồi sao? Đám {npc} như ta chỉ mong được thấy một lần.',
+        'Có câu nói người {me} không thèm nói chuyện với người {npc}. Ngươi thì khác.'
+    ],
+    surpassed: [
+        'Ngươi đã vượt qua ta. Ta không quỳ đâu, ta chỉ nhìn {ring} rồi nhớ lại lúc ngươi còn ở {below}.',
+        'Từ {npc} nhìn lên {me} là một quãng rất xa. Đừng quên ai đã đứng ở đây trước ngươi.',
+        'Mang {ring} mà còn ghé qua chỗ ta, ngươi muốn được khen hay muốn được mắng?'
+    ],
+    far_below: [
+        'Ta... ta chưa từng thấy {ring} ở khoảng cách gần thế này. Người ở {npc} như ta nên quỳ hay nên chạy?',
+        'Người trong vùng bảo sau lưng ngươi là {ring}. Ta chỉ thấy chói mắt.',
+        'Ngươi đứng ở đây làm cả {npc} như ta quên thở. {Me} thật sự có tồn tại à?'
+    ]
+};
+
+function ringRelation(npcRealm, realm) {
+    const gap = npcRealm - realm;
+    if (gap > RING_NEAR) return 'far_above';
+    if (gap > 0) return 'above';
+    if (gap === 0) return 'equal';
+    return gap >= -RING_NEAR ? 'below' : 'far_below';
+}
+
+function capitalize(text) {
+    return text[0].toUpperCase() + text.slice(1);
+}
+
+function npcRealmRemarkHTML(key) {
+    const npc = NPCS[key];
+    const realm = state.realmIndex || 0;
+    if (npc.daoRealm == null) {
+        if (!NPC_NO_RING.includes(key)) return '';
+        return `<div class="small">🔘 Không nhìn thấu cảnh giới</div><div class="small"><i>${RING_JUDGE.hidden[0]}</i></div>`;
+    }
+    const relation = ringRelation(npc.daoRealm, realm);
+    const lines = RING_JUDGE[npc.storyNpc && npc.daoRealm < realm ? 'surpassed' : relation];
+    const ring = ringName(realm);
+    const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[npc.daoRealm], ring, Ring: capitalize(ring), Me: REALMS[realm] };
+    const line = lines[(NPC_SEED(key) + realm) % lines.length].replace(/\{(\w+)\}/g, (_, word) => words[word]);
+    return `<div class="small">🔘 ${REALMS[npc.daoRealm]} · ${ringName(npc.daoRealm)}</div><div class="small"><i>“${line}”</i></div>`;
+}
