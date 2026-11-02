@@ -3,7 +3,8 @@
     - Phải thắng lần lượt các đệ tử, đánh với chỉ số lúc họ nhập môn. Thua một người, hoặc đầu hàng trước khi thắng hết: Sơ Kỳ.
     - Thắng hết rồi đầu hàng: Hậu Kỳ. Khiêu chiến Chủ mà thua: Trung Kỳ.
     - Khiêu chiến là PvP thật với Chủ đang online, tối đa HU_VO_MAX_DUELS lần thua.
-    - Đệ tử mất tên, chỉ được xuống Giới dưới để truyền lời và giao việc. Bậc trên sai bậc dưới.
+    - Đệ tử mất tên, ở Hư Vô Cung, chỉ rời đi khi được giao việc. Bậc trên sai bậc dưới.
+    - Tối đa HU_VO_SEATS ghế đệ tử. Hết ghế, người thắng đệ tử đẩy họ xuống Chung Nguyên viên mãn để thế chỗ; họ giữ đồ và chờ thách đấu lại.
     - Việc hiện cho mọi người, người nhận đầu tiên hoặc người được chỉ định. Chủ xóa được mọi việc đã giao.
     - Máy chủ giữ đệ tử, lệnh và cơ duyên; bên thắng báo kết quả, bên rời mạng tính là thua.
 =========================== */
@@ -11,7 +12,10 @@ const HU_VO_MAX_DUELS = 5;
 const HU_VO_CLONE_SHARE = 0.2;
 const HU_VO_SEED_HOURS = 1;
 const HU_VO_DISCIPLE_NAME = 'Hư Vô Đạo Giả';
-const HU_VO_DISCIPLE_WORLD = 'chungnguyen';
+const HU_VO_SEATS = 12;
+const HU_VO_SEAT_ROWS = [330, 480, 630];
+const HU_VO_SEAT_COLUMNS = [-370, -190, 190, 370];
+const HU_VO_THRONE_Y = 150;
 const HU_VO_ORDER_REWARD = { hours: 4, goldRefs: 20, treasure: true };
 const HU_VO_REWARD_LEVELS = [{ label: 'Thưởng nhỏ', hours: 1, goldRefs: 5 }, { label: 'Thưởng vừa', hours: 4, goldRefs: 20, treasure: true }, { label: 'Thưởng lớn', hours: 12, goldRefs: 60, treasure: true }];
 const HU_VO_WORKS = { word: '💬 Truyền lời', hunt: '⚔️ Diệt quái', gather: '🌿 Thu thập', boss: '🌑 Cơ duyên ẩn' };
@@ -50,6 +54,7 @@ function becomeHuVoDisciple(stage) {
     state.xp = 0;
     huVoGrowth(stage);
     takeHuVoName(HU_VO_DISCIPLE_NAME);
+    moveToHuVoWorld('Chỉ khi được giao việc mới được rời đi.');
     registerProfile();
     joinHuVoThrone();
     log(`🌌 Ngươi mất tên, thành ${HU_VO_DISCIPLE_NAME}, kẹt mãi ở ${REALMS[state.realmIndex]} ${STAGES[stage]}.`);
@@ -61,14 +66,47 @@ function becomeHuVoDisciple(stage) {
 function joinHuVoThrone() {
     recalculateStats();
     wsSend({
-        type: 'huvo_join', token: profileToken(), name: state.name, look: playerLook(),
+        type: 'huvo_join', token: profileToken(), name: state.name, look: playerLook(), replace: huVoReplaceId(),
         atk: state.totalPower, def: state.totalDef, hp: state.totalMaxHp,
         elements: state.root?.elements || [], path: state.daoPath || null
     });
 }
 
+function huVoSeatsFull() {
+    return Object.keys(huVoThrone?.disciples || {}).length >= HU_VO_SEATS;
+}
+
+/* Hết ghế thì đẩy đệ tử yếu nhất trong số đã thắng */
+function huVoReplaceId() {
+    const beaten = (state.huVoBeaten || []).filter(id => huVoThrone?.disciples?.[id]);
+    return beaten.sort((a, b) => (huVoThrone.disciples[a].stage || 0) - (huVoThrone.disciples[b].stage || 0))[0] || null;
+}
+
+function huVoCanSit() {
+    return !huVoSeatsFull() || !!huVoReplaceId();
+}
+
+function demoteHuVoDisciple() {
+    delete state.huVoDisciple;
+    state.realmIndex = REALM_COUNT - 2;
+    state.realmStage = STAGES.length - 1;
+    state.xp = 0;
+    state.huVoDuels = 0;
+    state.huVoBeaten = [];
+    state.huVoChoice = true;
+    state.activity = null;
+    state.name = state.huVoName || state.name;
+    delete state.huVoName;
+    state.location = 'chung_dai';
+    recalculateStats();
+    registerProfile();
+    log(`🌌 Ngươi bị đẩy khỏi ghế, về lại ${REALMS[state.realmIndex]} ${STAGES[state.realmStage]}. Đồ Hư Vô vẫn giữ, chỉ còn chờ thách đấu lại.`);
+    showToast('🌌 Ngươi đã mất ghế đệ tử.', 'warn');
+    checkArrival();
+}
+
 function acceptHuVoDefeat() {
-    if (!state.huVoChoice) return;
+    if (!state.huVoChoice || !huVoCanSit()) return;
     becomeHuVoDisciple(huVoSurrenderStage());
 }
 
@@ -95,7 +133,8 @@ function beatHuVoDisciple(id) {
 
 function loseToHuVoDisciple() {
     log('💀 Ngươi thua đệ tử của Chủ.');
-    becomeHuVoDisciple(0);
+    if (huVoCanSit()) becomeHuVoDisciple(0);
+    else log('🪑 Không còn ghế cho kẻ thua. Luyện thêm rồi thách đấu lại.');
 }
 
 function challengeHuVo() {
@@ -143,6 +182,7 @@ function handleHuVoMessage(msg) {
     if (msg.type === 'huvo_duel_end') finishHuVoDuel(msg);
     if (msg.type === 'huvo_duel_fail') showToast(HU_VO_DUEL_FAIL[msg.reason] || 'Không khiêu chiến được.', 'warn');
     if (msg.type === 'huvo_claim') claimedHuVoSeed(msg);
+    if (msg.type === 'huvo_full' && state.huVoDisciple) demoteHuVoDisciple();
     if (msg.type === 'huvo_report') log(`📜 ${sectEscape(msg.name)} đã xong việc: ${sectEscape(msg.title)}.`);
 }
 
@@ -199,7 +239,7 @@ function registerHuVoQuest(def) {
 
 function restoreHuVoQuests() {
     Object.values(state.huVoQuests || {}).forEach(registerHuVoQuest);
-    setTimeout(syncHuVoSeeds);
+    setTimeout(() => { syncHuVoSeeds(); huVoGoHome(); });
 }
 
 function huVoSeedOf(q) {
@@ -217,6 +257,7 @@ function huVoSeedOpen(q) {
 function removeHuVoQuest(id, message) {
     if (state.questActive.some(rt => rt.id === id)) log(message);
     state.questActive = state.questActive.filter(rt => rt.id !== id);
+    if (state.activity?.questId === id) state.activity = null;
     SIDE_QUESTS.splice(0, SIDE_QUESTS.length, ...SIDE_QUESTS.filter(q => q.id !== id));
     delete QUEST_INDEX[id];
     delete state.huVoQuests[id];
@@ -241,9 +282,36 @@ function claimedHuVoSeed(msg) {
     else showToast('Đã có người nhận việc này trước ngươi.', 'warn');
 }
 
+function huVoDuty() {
+    return state.huVoDisciple ? state.questActive.filter(rt => rt.id.startsWith('hvo_')) : [];
+}
+
+function huVoOnDuty() {
+    return huVoDuty().length > 0;
+}
+
 function huVoMayGo(locId) {
-    if (!state.huVoDisciple || LOCATIONS[locId].world === HU_VO_DISCIPLE_WORLD) return true;
-    return state.questActive.some(rt => rt.id.startsWith('hvo_') && QUEST_INDEX[rt.id]?.loc === locId);
+    if (!state.huVoDisciple || LOCATIONS[locId].world === HU_VO_WORLD) return true;
+    return huVoDuty().some(rt => QUEST_INDEX[rt.id]?.loc === locId);
+}
+
+/* Hư Vô Cung không có đường đi: có lệnh thì xuống thẳng tới nơi, xong việc tự về */
+function huVoDescend(locId) {
+    if (!state.huVoDisciple || currentLocation().world !== HU_VO_WORLD) return false;
+    state.autoTrain = false;
+    state.location = locId;
+    log(`⬇️ Ngươi rời ${LOCATIONS[HU_VO_HOME].name}, xuống ${LOCATIONS[locId].name}.`);
+    checkArrival();
+    renderAll();
+    return true;
+}
+
+function huVoGoHome() {
+    if (!state.huVoDisciple || huVoOnDuty() || window._battleActive || currentLocation().world === HU_VO_WORLD) return;
+    state.activity = null;
+    moveToHuVoWorld('Xong việc, ngồi lại chờ lệnh.');
+    checkArrival();
+    renderAll();
 }
 
 function handleHuVoOrders(msg) {
@@ -258,21 +326,39 @@ function handleHuVoOrders(msg) {
             else if (!state.questActive.some(rt => rt.id === id)) acceptSideQuest(id);
         });
     }
-    if (state.questDone) renderAll();
+    if (!state.questDone) return;
+    huVoGoHome();
+    renderAll();
 }
 
 function reportHuVoOrder(id) {
     wsSend({ type: 'huvo_order_done', id });
+    setTimeout(huVoGoHome);
+}
+
+/* ---------- Hư Vô Cung: ghế Chủ trên đầu, mỗi đệ tử thêm một ghế ---------- */
+function huVoHallSpots(seat) {
+    const centre = SCENE_W / 2;
+    const throne = { x: centre, y: HU_VO_THRONE_Y };
+    const holder = !huVoThrone || isHuVoHolder();
+    const spots = [holder ? { ...seat, ...throne } : { ...throne, icon: '👑', label: 'Hư Vô Tọa', action: () => {}, seatOf: huVoThrone.id, seatName: huVoThrone.name, look: huVoThrone.look }];
+    Object.entries(huVoThrone?.disciples || {}).slice(0, HU_VO_SEATS).forEach(([id, d], i) => {
+        const place = { x: centre + HU_VO_SEAT_COLUMNS[i % HU_VO_SEAT_COLUMNS.length], y: HU_VO_SEAT_ROWS[Math.floor(i / HU_VO_SEAT_COLUMNS.length)], seatOf: id };
+        spots.push(id === state.profileId ? { ...seat, ...place, label: state.autoTrain ? seat.label : `Ngồi ghế ${i + 1}` } : { ...place, icon: '🪑', label: `Ghế ${i + 1} · ${STAGES[d.stage || 0]}`, action: () => {}, seatName: d.name, look: d.look });
+    });
+    if (!spots.some(spot => spot.id === 'meditate')) spots.push({ ...seat, ...sceneSeatSpot() });
+    huVoDuty().forEach((rt, i) => spots.push({ icon: '⬇️', label: `Xuống: ${QUEST_INDEX[rt.id].title}`, action: () => questAction(rt.id), x: centre + 200 * (i - 1), y: SCENE_H - 60 }));
+    return spots;
 }
 
 /* ---------- giao diện ---------- */
 function huVoPanelHTML() {
     if (state.huVoChoice && huVoHolder()) {
         const next = huVoNextDisciple();
-        const surrender = `<button class="mini-btn" onclick="acceptHuVoDefeat()">🏳️ Đầu hàng (${STAGES[huVoSurrenderStage()]})</button>`;
+        const surrender = huVoCanSit() ? `<button class="mini-btn" onclick="acceptHuVoDefeat()">🏳️ Đầu hàng (${STAGES[huVoSurrenderStage()]})</button>` : '';
         if (next) {
             return `<div class="quest-card main"><div class="small">Ngôi Hư Vô</div><b>${sectEscape(next.name)} chặn đường</b>
-                <div class="small">Thắng hết đệ tử mới tới được Chủ. Thua một trận thành Hư Vô Đạo Giả Sơ Kỳ.</div>
+                <div class="small">${huVoSeatsFull() ? `Đã hết ${HU_VO_SEATS} ghế. Thắng đệ tử rồi dừng thì đẩy họ xuống để thế chỗ; chưa thắng ai mà thua thì không có ghế.` : 'Thắng hết đệ tử mới tới được Chủ. Thua một trận thành Hư Vô Đạo Giả Sơ Kỳ.'}</div>
                 <button class="mini-btn" onclick="fightHuVoDisciple()">⚔️ Đấu đệ tử</button>${surrender}</div>`;
         }
         const left = HU_VO_MAX_DUELS - (state.huVoDuels || 0);
@@ -282,11 +368,11 @@ function huVoPanelHTML() {
     }
     if (state.huVoDisciple) {
         const order = huVoCommandable().length ? '<button class="mini-btn" onclick="openHuVoOrders()">📜 Giao việc</button>' : '';
-        return `<div class="quest-card main"><div class="small">Hư Vô Đạo Giả · ${STAGES[state.realmStage]}</div><b>Đệ tử của ${sectEscape(huVoThrone?.name || 'Hư Vô Chi Chủ')}</b>${order}</div>`;
+        return `<div class="quest-card main"><div class="small">Hư Vô Đạo Giả · ${STAGES[state.realmStage]}</div><b>Đệ tử của ${sectEscape(huVoThrone?.name || 'Hư Vô Chi Chủ')}</b><div class="small">Ở ${LOCATIONS[HU_VO_HOME].name}, chỉ rời đi khi được giao việc.</div>${order}</div>`;
     }
     if (isHuVoHolder()) {
         const count = Object.keys(huVoThrone.disciples || {}).length;
-        return `<div class="quest-card main"><div class="small">Hư Vô Chi Chủ · ${count} đệ tử</div><b>${(huVoThrone.seeds || []).length} cơ duyên đang gieo ở Giới dưới</b>
+        return `<div class="quest-card main"><div class="small">Hư Vô Chi Chủ · ${count}/${HU_VO_SEATS} ghế đệ tử</div><b>${(huVoThrone.seeds || []).length} cơ duyên đang gieo ở Giới dưới</b>
             <button class="mini-btn" onclick="openHuVoOrders()">📜 Giao việc</button></div>`;
     }
     if (huVoHolder() && state.realmIndex === REALM_COUNT - 1 && (state.huVoDuels || 0) < HU_VO_MAX_DUELS) {

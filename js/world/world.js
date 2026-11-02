@@ -355,7 +355,7 @@ function worldOf(locId) {
 
 /* Hư Vô Chi Chủ ở một mình một Giới, không xuống được nữa */
 function hasLeftWorlds() {
-    return (state.realmIndex || 0) >= REALM_COUNT - 1 && !state.huVoDisciple;
+    return (state.realmIndex || 0) >= REALM_COUNT - 1 && !huVoOnDuty();
 }
 
 function worldUnlocked(worldId) {
@@ -544,7 +544,8 @@ function carriedTravel(id, seconds, carrier) {
 function travelTo(id) {
     if (!requireFree()) return;
     if (id === state.location) return;
-    if (!huVoMayGo(id)) { showToast('Đệ tử của Chủ chỉ được xuống Giới dưới khi có việc tại nơi đó.', 'warn'); return; }
+    if (!huVoMayGo(id)) { showToast('Đệ tử của Chủ chỉ rời Hư Vô Cung khi được giao việc tại nơi đó.', 'warn'); return; }
+    if (huVoDescend(id)) return;
     const route = findPath(state.location, id);
     if (!route) { showToast('Chưa có đường tới đó.', 'warn'); return; }
     beginRoute(id, route);
@@ -1351,11 +1352,11 @@ function growHuVoBoard() {
     return true;
 }
 
-function moveToHuVoWorld() {
+function moveToHuVoWorld(note = 'Từ đây không xuống Giới dưới được nữa.') {
     state.flags['world_' + HU_VO_WORLD] = true;
     state.location = HU_VO_HOME;
     mapViewWorld = null;
-    log(`🏯 Ngươi dọn về ${LOCATIONS[HU_VO_HOME].name}. Từ đây không xuống Giới dưới được nữa.`);
+    log(`🏯 Ngươi dọn về ${LOCATIONS[HU_VO_HOME].name}. ${note}`);
 }
 
 /* Cảnh giới cuối không đi bằng tu vi: thắng Hư Vô Chí Đạo là bước vào, trò chơi sang endgame */
@@ -1578,7 +1579,8 @@ function handleHuVoThrone(msg) {
     else if (state.huVoPending || (!huVoThrone && state.realmIndex === REALM_COUNT - 1 && !state.huVoDisciple)) reportHuVoWin();
     syncHuVoSeeds();
     const seat = huVoThrone?.disciples?.[state.profileId];
-    if (state.huVoDisciple && huVoThrone && (!seat?.atk || seat.stage !== state.realmStage || seat.name !== state.name)) joinHuVoThrone();
+    if (state.huVoDisciple && huVoThrone?.exiled?.[state.profileId]) demoteHuVoDisciple();
+    else if (state.huVoDisciple && huVoThrone && (!seat?.atk || seat.stage !== state.realmStage || seat.name !== state.name)) joinHuVoThrone();
     if (msg.news && huVoThrone) {
         log(`🌌 ${huVoThrone.name} đã thắng trận cuối, trở thành Hư Vô Chi Chủ đời thứ ${huVoThrone.reign}.`);
         showToast(`🌌 Hư Vô Chi Chủ mới: ${huVoThrone.name}`);

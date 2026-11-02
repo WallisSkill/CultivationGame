@@ -33,7 +33,7 @@ function sceneSpots(loc) {
     const add = (icon, label, action, available = true, id = null) => { if (available) spots.push({ icon, label, action, id }); };
     const huntable = (loc.enemies || []).length > 0;
     add(loc.seat ? '🪑' : '🧘', state.autoTrain ? 'Đứng dậy' : loc.seat ? `Ngồi ${loc.seat}` : 'Ngồi bế quan', () => toggleMeditate(), true, 'meditate');
-    if (loc.seatOnly) return [{ ...spots[0], ...sceneSeatSpot() }];
+    if (loc.seatOnly) return huVoHallSpots(spots[0]);
     add('🏆', 'Thiên Kiêu Bảng', () => openTianjiaoBoard());
     add('🗡️', 'Săn quái', () => startHunt(), huntable);
     add('🧭', 'Thám hiểm', () => startExplore());
@@ -91,6 +91,7 @@ function standUp() {
 
 function sceneDecor(locId, spots) {
     const out = [];
+    if (LOCATIONS[locId].seatOnly) return out;
     let v = hashText(locId) + 11;
     const rand = () => (v = (v * 16807) % 2147483647) / 2147483647;
     for (let i = 0; i < SCENE_DECOR_COUNT; i++) {
@@ -308,6 +309,10 @@ function drawScene() {
             drawUnit(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: p.name })), p.x, p.y, p.name, '#a6ffd1');
             if (p.bubble && Date.now() < p.bubbleUntil) drawBubble(ctx, p.x, p.y, p.bubble);
         } };
+    });
+    s.spots.filter(spot => spot.seatOf && spot.seatOf !== state.profileId).forEach(spot => {
+        const look = spot.look || defaultLook();
+        units.push({ y: spot.y, draw: () => drawUnit(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: spot.seatName })), spot.x, spot.y, spot.seatName, '#d9c2ff') });
     });
     units.push({ y: s.y, draw: () => {
         const look = playerLook();
