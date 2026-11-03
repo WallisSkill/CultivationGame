@@ -2,11 +2,10 @@
    VÒNG SAU LƯNG TRONG CỐT TRUYỆN
    - NPC_REALM: cảnh giới NPC để hiện vòng; Lão Mặc không có vòng nào nhìn thấy được.
    - RING_TALES: cảnh truyện khi người chơi đạt mốc vòng.
-   - Lời phán xét: NPC so cảnh giới của mình, của người chơi và của kẻ dưới người chơi.
+   - Lời phán xét: mỗi NPC nói bằng giọng riêng trong voices.js, theo việc mình cao hơn, ngang hay đã bị người chơi vượt.
 =========================================================== */
-const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 21, nu_oa: 21, chuan_de: 21, tiep_dan: 21, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, tien_lai: 9 };
+const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 21, nu_oa: 21, chuan_de: 21, tiep_dan: 21, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, chuong_mon: 6, tien_lai: 9 };
 const NPC_NO_RING = ['mac'];
-const RING_NEAR = 2;
 
 function storyRealmOf(key) {
     if (NPC_REALM[key] != null) return NPC_REALM[key];
@@ -66,45 +65,12 @@ function playRingTales() {
 }
 
 const RING_JUDGE = {
-    hidden: ['Ta không thấy vòng nào sau lưng ông ấy. Có lẽ vì thế mà ông ấy nhìn ai cũng như nhìn lá rụng.'],
-    far_above: [
-        'Với ta, {me} vẫn còn non lắm. Đừng để {ring} làm ngươi tưởng mình đã đi được xa.',
-        'Ta đã đi qua {me} từ lâu. Ngày đó ta cũng tưởng {ring} là nhiều.',
-        'Kẻ {below} ngước nhìn ngươi, ngươi ngước nhìn ta. Con đường này chỉ có thế.'
-    ],
-    above: [
-        '{me}? Sắp đuổi kịp ta rồi đấy, nhưng {ring} của ngươi còn chưa vững.',
-        'Ngươi bước nhanh hơn bọn {below} nhiều. Chậm lại một chút, ngã từ {me} đau lắm.',
-        'Ta thấy {ring}, và ta thấy cả chỗ ngươi còn thiếu. Về luyện thêm đi.'
-    ],
-    equal: [
-        'Cùng là {me}, ta không gọi ngươi là tiền bối đâu. {Ring} của ta cũng chẳng kém.',
-        'Đồng cảnh giới mới dám nói thật: bọn {below} đều tưởng {me} là hết đường.',
-        'Lần sau gặp lại, xem vòng của ai đậm hơn.'
-    ],
-    below: [
-        'Ta còn ở {npc} mà ngươi đã mang {ring}. Xin lỗi, ta nhìn hơi lâu.',
-        'Ngươi đã là {me} rồi sao? Đám {npc} như ta chỉ mong được thấy một lần.',
-        'Có câu nói người {me} không thèm nói chuyện với người {npc}. Ngươi thì khác.'
-    ],
-    surpassed: [
-        'Ngươi đã vượt qua ta. Ta không quỳ đâu, ta chỉ nhìn {ring} rồi nhớ lại lúc ngươi còn ở {below}.',
-        'Từ {npc} nhìn lên {me} là một quãng rất xa. Đừng quên ai đã đứng ở đây trước ngươi.',
-        'Mang {ring} mà còn ghé qua chỗ ta, ngươi muốn được khen hay muốn được mắng?'
-    ],
-    far_below: [
-        'Ta... ta chưa từng thấy {ring} ở khoảng cách gần thế này. Người ở {npc} như ta nên quỳ hay nên chạy?',
-        'Người trong vùng bảo sau lưng ngươi là {ring}. Ta chỉ thấy chói mắt.',
-        'Ngươi đứng ở đây làm cả {npc} như ta quên thở. {Me} thật sự có tồn tại à?'
-    ]
+    hidden: ['Ta không thấy vòng nào sau lưng ông ấy. Có lẽ vì thế mà ông ấy nhìn ai cũng như nhìn lá rụng.']
 };
 
-function ringRelation(npcRealm, realm) {
-    const gap = npcRealm - realm;
-    if (gap > RING_NEAR) return 'far_above';
-    if (gap > 0) return 'above';
-    if (gap === 0) return 'equal';
-    return gap >= -RING_NEAR ? 'below' : 'far_below';
+function ringBucket(npc, realm) {
+    if (npc.daoRealm > realm) return 'up';
+    return npc.daoRealm === realm ? 'even' : 'down';
 }
 
 function capitalize(text) {
@@ -118,10 +84,9 @@ function npcRealmRemarkHTML(key) {
         if (!NPC_NO_RING.includes(key)) return '';
         return `<div class="small">🔘 Không nhìn thấu cảnh giới</div><div class="small"><i>${RING_JUDGE.hidden[0]}</i></div>`;
     }
-    const relation = ringRelation(npc.daoRealm, realm);
-    const lines = RING_JUDGE[npc.storyNpc && npc.daoRealm < realm ? 'surpassed' : relation];
+    const lines = npcVoice(key)[ringBucket(npc, realm)];
     const ring = ringName(realm);
-    const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[npc.daoRealm], ring, Ring: capitalize(ring), Me: REALMS[realm] };
-    const line = lines[(NPC_SEED(key) + realm) % lines.length].replace(/\{(\w+)\}/g, (_, word) => words[word]);
+    const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[npc.daoRealm], ring, Ring: capitalize(ring), Me: REALMS[realm], loc: currentLocation().name };
+    const line = voiceText(lines[(NPC_SEED(key) + realm) % lines.length], words);
     return `<div class="small">🔘 ${REALMS[npc.daoRealm]} · ${ringName(npc.daoRealm)}</div><div class="small"><i>“${line}”</i></div>`;
 }

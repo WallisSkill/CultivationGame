@@ -340,14 +340,8 @@ const RESIDENT_SURNAMES = ['Lâm', 'Trần', 'Vân', 'Thẩm', 'Mộ', 'Tần', 
 const RESIDENT_GIVEN = ['Đại Thúc', 'Lão Nhân', 'Nương Tử', 'Tiểu Ca', 'Bà Bà', 'Đạo Hữu', 'Tán Nhân', 'Khách'];
 const RESIDENT_ROLES = { town: 'Dân trong thành', sect: 'Đệ tử trông sân', wild: 'Kẻ quen đường', dungeon: 'Người sống sót', gate: 'Người giữ cửa' };
 const RESIDENT_COLORS = ['#55524a', '#3f6f9e', '#8c6a3a', '#6b4a8f', '#3e7d5a', '#8c3a3a'];
-const RESIDENT_AREA_LINES = {
-    town: 'Ở đây tin đồn chạy nhanh hơn ngựa, nhưng người hỏi đúng chuyện thì không nhiều.',
-    sect: 'Quy củ ở đây nghiêm, đừng để người trên trông thấy ta nói nhiều.',
-    wild: 'Đi đường này phải biết lúc nào nên dừng. Kẻ không biết đều nằm lại cả.',
-    dungeon: 'Ta còn đứng đây là vì biết chỗ nào không được bước vào.',
-    gate: 'Kẻ qua cổng này ai cũng vội. Chẳng mấy người quay lại kể chuyện bên kia.'
-};
-const SMITH_NAMES = ['Lão Thiết', 'Hỏa Thủ', 'Kim Chùy', 'Đoàn Lão', 'Lô Sư'];
+const SMITH_NAMES = ['Lão Thiết', 'Hỏa Thủ', 'Kim Chùy', 'Đoàn Lão', 'Lô Sư', 'Mặc Chùy', 'Thạch Bà', 'Ân Lão Đầu', 'Viêm Thúc', 'Tôn Tam Chùy', 'Cổ Dã Tử', 'Lục Đe'];
+let smithCount = 0;
 
 function residentKey(locId) {
     return `dan_${locId}`;
@@ -374,17 +368,18 @@ Object.values(LOCATIONS).forEach(loc => {
     };
     if ((loc.services || []).includes('forge') && !named.some(key => /thợ/i.test(NPCS[key].title || ''))) {
         const key = `ren_${loc.id}`;
-        NPCS[key] = { name: freeDaoGia[1]?.name || SMITH_NAMES[seed % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
+        NPCS[key] = { name: freeDaoGia[1]?.name || SMITH_NAMES[smithCount++ % SMITH_NAMES.length], title: `Thợ ${forgeGradeOf(loc).name} ${loc.name}`, look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) };
         named.push(key);
     }
     LOCATION_NPCS[loc.id] = EMPTY_WORLDS.includes(loc.world) ? [] : [...named, residentKey(loc.id)];
 });
 
-/* Người đã chết trong cốt truyện không còn đứng ở địa điểm */
-const NPC_DIES_IN = { tien_de: 'm17' };
+/* Người đã chết hay đã bỏ đi trong cốt truyện không còn đứng ở địa điểm, trừ khi nhiệm vụ đang cần gặp */
+const NPC_DIES_IN = { tien_de: 'm17', chuong_mon: 'm06', lang_phong: 'm06' };
 
 function npcGone(key) {
-    return state.questDone.includes(NPC_DIES_IN[key]);
+    if (!state.questDone.includes(NPC_DIES_IN[key])) return false;
+    return !state.questActive.some(rt => questStep(rt)?.talk === key);
 }
 
 function locationSmith(loc) {

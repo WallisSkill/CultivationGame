@@ -61,6 +61,7 @@ function openRankedModal() {
 const RANKED_PAIR_LIMIT = 3;
 
 function openRankedBoard() {
+    guideDone('pvp');
     wsSend({ type: 'ranked_get' });
     openRankedModal();
 }

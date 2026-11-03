@@ -241,7 +241,7 @@ function worldTick() {
         worldUiAccum = 0;
         if (state.root?.elements) {
             endDescentIfDue();
-            if (document.getElementById('start-screen')?.dataset.closed === '1') advanceMainQuest();
+            if (document.getElementById('start-screen')?.dataset.closed === '1') { advanceMainQuest(); advanceGuides(); }
             updateTrainingUI();
             renderActivityBar();
             updateMapToken();
@@ -444,6 +444,7 @@ function teleportTo(id) {
     if (!requireFree() || !canTeleport(id)) return;
     state.location = id;
     log(`⚡ Dịch chuyển tới ${LOCATIONS[id].name}.`);
+    guideDone('teleport');
     checkArrival();
 }
 
@@ -840,6 +841,7 @@ function openHuntRange() {
 function setHuntPackMin(n) {
     if (n > 1) state.huntPackMin = n;
     else delete state.huntPackMin;
+    guideDone('hunt_range');
     openHuntRange();
     renderAll();
 }
@@ -849,6 +851,7 @@ function setHuntRange(low, high) {
     state.huntRange = state.huntRange || {};
     if (low === enemyRealmRange(loc)[0] && high === enemyRealmRange(loc)[1]) delete state.huntRange[loc.id];
     else state.huntRange[loc.id] = [low, high];
+    guideDone('hunt_range');
     openHuntRange();
     renderAll();
 }
@@ -960,6 +963,7 @@ function accrueChaosStone(sec) {
 
 function openForge() {
     if (!selfForging() && !hasService('forge')) { showToast(`${currentLocation().name} không có lò rèn.`, 'warn'); return; }
+    guideDone('forge');
     const loc = forgeSite();
     const grade = forgeGradeOf(loc);
     const realm = forgeRealmAt(loc, state.realmIndex);
@@ -1456,6 +1460,7 @@ function questAction(id) {
     const rt = state.questActive.find(x => x.id === id);
     if (!rt) return;
     const step = questStep(rt);
+    if (step.task) return step.act?.();
     if (step.go) return travelTo(step.go);
     if (step.talk) return state.location === step.loc ? openNpcTalk(step.talk) : travelTo(step.loc);
     if (step.hunt) {
@@ -1728,6 +1733,7 @@ function onEnemyDefeated(enemy) {
             if (state.bounty.done >= state.bounty.need) finishBounty();
         }
     });
+    guideKills(killed);
     if (state.autoHunt) setTimeout(() => { if (state.autoHunt && !isBusy()) startHunt(); }, 800);
 }
 
@@ -1757,6 +1763,7 @@ function questStepText(rt) {
     if (step.hunt) return `Diệt ${step.hunt.name} tại ${LOCATIONS[step.hunt.loc].name} (${rt.n}/${step.hunt.n})`;
     if (step.gather) return `${step.gather.label} tại ${LOCATIONS[step.gather.loc].name} (${formatRealDuration(hastedSeconds(gatherSeconds(step)))})`;
     if (step.boss) return `Khiêu chiến ${bossName(step.boss)}`;
+    if (step.task) return `${guideLabel(step)}${(step.n || 1) > 1 ? ` (${rt.n}/${step.n})` : ''}`;
     return '';
 }
 
@@ -1791,6 +1798,7 @@ function questRewardHTML(q) {
 function questActionLabel(rt) {
     const step = questStep(rt);
     if (step.boss) return 'Khiêu chiến';
+    if (step.task) return 'Làm ngay';
     const loc = step.go || step.hunt?.loc || step.gather?.loc || step.loc;
     if (loc && loc !== state.location) return 'Đi ngay';
     if (step.talk) return 'Nói chuyện';
@@ -1803,12 +1811,13 @@ function renderQuestPanel() {
     const cards = state.questActive.map(rt => {
         const q = QUEST_INDEX[rt.id];
         const main = rt.id[0] === 'm';
+        const guide = !!q.guide;
         return `<div class="quest-card ${main ? 'main' : ''}" data-quest="${rt.id}">
-            <div class="small">${main ? ACTS[q.act - 1].name : 'Nhiệm vụ phụ'}${q.unlock != null ? ` · mở khóa ${REALMS[q.unlock]}` : ''}</div>
+            <div class="small">${main ? ACTS[q.act - 1].name : guide ? '🧭 Chỉ dẫn chức năng' : 'Nhiệm vụ phụ'}${q.unlock != null ? ` · mở khóa ${REALMS[q.unlock]}` : ''}</div>
             <b>${q.title}</b>
             <div class="small">${questStepText(rt)}</div>
             ${questRewardHTML(q)}
-            <button class="mini-btn" onclick="questAction('${rt.id}')">${questActionLabel(rt)}</button>
+            <button class="mini-btn" onclick="questAction('${rt.id}')">${questActionLabel(rt)}</button>${guide ? `<button class="mini-btn" onclick="skipGuide('${rt.id}')">Bỏ qua</button>` : ''}
         </div>`;
     });
     if (!mainQuestRuntime()) {
@@ -1913,7 +1922,7 @@ function questTipHTML(id) {
     const rt = state.questActive.find(x => x.id === id);
     const done = state.questDone.includes(id);
     const reached = done ? q.steps.length : rt?.step || 0;
-    const giver = id[0] === 'm' ? ACTS[q.act - 1].name : `${NPCS[questGiver(q)].name} · ${LOCATIONS[q.loc].name}`;
+    const giver = id[0] === 'm' ? ACTS[q.act - 1].name : q.guide ? 'Chỉ dẫn chức năng' : `${NPCS[questGiver(q)].name} · ${LOCATIONS[q.loc].name}`;
     const why = (q.intro || []).map(speechText).join('<br>') || (id[0] === 'm' ? ruledStory(ACTS[q.act - 1]).desc : 'Việc của người trong vùng, phải tới hỏi mới rõ.');
     const steps = q.steps.map((step, i) => {
         if (i < reached) return `<div>✔ ${(ruledStory(step).say || []).map(speechText).join(' ') || 'Đã xong.'}</div>`;
@@ -2073,9 +2082,9 @@ function talkAboutArea(key) {
     closeNpcTalk();
     const loc = currentLocation();
     const lines = [[key, `${loc.name}? ${loc.desc}`]];
-    if ((loc.enemies || []).length) lines.push([key, `Quanh đây toàn kẻ từ ${REALMS[enemyRealmRange(loc)[0]]} tới ${REALMS[enemyRealmRange(loc)[1]]}, liệu sức mà đi.`]);
+    if ((loc.enemies || []).length) lines.push([key, npcEnemyRangeLine(key, REALMS[enemyRealmRange(loc)[0]], REALMS[enemyRealmRange(loc)[1]])]);
     if (key === locationSmith(loc)) lines.push([key, `${forgeGradeOf(loc).name} này rèn được tới ${REALMS[forgeCapAt(loc)]}.`]);
-    else lines.push([key, RESIDENT_AREA_LINES[loc.type] || 'Ta cũng chỉ biết có vậy.']);
+    else lines.push([key, npcAreaLine(key, loc)]);
     playDialogue(lines);
 }
 

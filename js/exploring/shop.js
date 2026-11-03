@@ -638,6 +638,7 @@ function confirmFusion() {
     else if (it.grade === 12) log(`🏆 Chung Nguyên Pháp — đỉnh cao tuyệt đối!`);
 
     if (it.grade >= maxG) log(`🏆 ${it.name} đã đạt cảnh giới tối cao tuyệt đối!`);
+    guideDone('fuse');
 
     document.getElementById('fusionModal').style.display = 'none';
     renderAll();

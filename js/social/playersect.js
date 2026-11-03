@@ -88,6 +88,7 @@ function canFoundSect() {
 function openFoundSect() {
     const blocked = canFoundSect();
     if (blocked) { showToast(blocked, 'warn'); return; }
+    guideDone('sect');
     const cost = goldRef(state.realmIndex) * SECT_FOUND_COST;
     openWorldModal('foundSectModal', '⛩️ Khai tông lập phái', `
         <div class="small">Sơn môn đặt tại ${currentLocation().name}, không dời được. Giá ${formatNumber(cost)} linh thạch.</div>

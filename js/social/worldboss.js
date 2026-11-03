@@ -128,6 +128,7 @@ function worldBossModalHTML() {
 }
 
 function openWorldBoss() {
+    guideDone('world_boss');
     wsSend({ type: 'boss_get' });
     openWorldModal('worldBossModal', '🐉 Boss Thế Giới', worldBossModalHTML());
 }

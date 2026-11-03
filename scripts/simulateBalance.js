@@ -8,12 +8,12 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/world/voices.js', 'js/world/guides.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`
 var INFO = {
-  RING_TALES, ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  RING_TALES, NPC_VOICES, RESIDENT_VOICES, ENEMY_RANGE_LINES, ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS, LB_GRADE_UNLOCK_REALM
 };`, ctx);
 const G = ctx.INFO;
@@ -233,6 +233,22 @@ for (let r = 1; r < 29; r++) {
     const up = G.computeDamage(lo.atk * lo.lb, el, 3, r - 1, 0, hi.def, el, 3, r, 0).final;
     if (down * hi.hp <= GANG_HITS * up * lo.hp) fail.push(`realm ${r}: 10 người cảnh dưới vẫn hạ được 1 người`);
 }
+
+/* ---- giọng riêng của NPC ---- */
+const VOICE_TOKENS = ['me', 'npc', 'below', 'ring', 'Ring', 'Me', 'loc', 'low', 'high'];
+const voiceTokens = text => [...text.matchAll(/\{(\w+)\}/g)].map(m => m[1]).filter(t => !VOICE_TOKENS.includes(t));
+const checkVoice = (who, v) => {
+    ['up', 'even', 'down'].forEach(b => { if (!v[b]?.length) fail.push(`giọng ${who}: thiếu ${b}`); });
+    [...v.up, ...v.even, ...v.down, ...(typeof v.area === 'string' ? [v.area] : Object.values(v.area || {}))].forEach(t => voiceTokens(t).forEach(x => fail.push(`giọng ${who}: khóa lạ {${x}}`)));
+    if (!v.area) fail.push(`giọng ${who}: thiếu area`);
+};
+Object.entries(G.NPC_VOICES).forEach(([k, v]) => { if (!G.NPCS[k]) fail.push(`giọng ${k}: không có NPC`); checkVoice(k, v); });
+G.RESIDENT_VOICES.forEach((v, i) => checkVoice(`cư dân ${i}`, v));
+const NPC_TYPES = ['town', 'sect', 'wild', 'dungeon', 'gate'];
+G.RESIDENT_VOICES.forEach((v, i) => NPC_TYPES.forEach(t => { if (!v.area[t]) fail.push(`giọng cư dân ${i}: thiếu area ${t}`); }));
+Object.values(G.LOCATION_NPCS).flat().filter(k => !k.startsWith('dan_') && !k.startsWith('ren_') && k !== 'mac').forEach(k => {
+    if (!G.NPC_VOICES[k]) fail.push(`NPC ${k} chưa có giọng riêng`);
+});
 
 if (fail.length) {
     console.log('\nLỖI:\n' + [...new Set(fail)].join('\n'));

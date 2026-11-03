@@ -882,6 +882,7 @@ window.stopAutoTrainingHard = stopAutoTrainingHard;
 })();
 
 function findMatchPvP() {
+    guideDone('pvp');
     if (state.realmIndex < 1) { log('❌ Cần đạt ít nhất Cảnh giới Trúc Cơ để giao lưu với các đạo hữu.'); showToast('Cần Trúc Cơ để vào đấu trường.', 'warn'); return; }
     if (state.currentEnemy) { log('Đang chiến đấu, không thể tìm đối thủ PvP.'); return; }
     connectMatchWS().then(ok => {
