@@ -336,7 +336,7 @@ const FORGE_GRADES = [
     { name: 'Lò rèn', topChance: 0.15, overChance: 0, overRealms: 0 },
     { name: 'Danh lò', topChance: 0.30, overChance: 0.10, overRealms: 1 },
     { name: 'Thần lò', topChance: 0.50, overChance: 0.20, overRealms: 2, wholeWorld: true },
-    { name: 'Tự rèn', topChance: 0.50, overChance: 0, overRealms: 0, wholeWorld: true, godWorld: 'chungnguyen', godChance: 0.25 }
+    { name: 'Tự rèn', topChance: 0.50, overChance: 0, overRealms: 0, wholeWorld: true, godWorlds: ['chungnguyen', 'huvo'], godChance: 0.25 }
 ];
 
 /* Từ Hỗn Độn Đạo Giả trở lên đồ là chính bản thân: ở đâu cũng tự rèn được, chỉ tốn nguyên liệu của Giới mình */
@@ -368,9 +368,13 @@ function serviceRealmAt(loc, realm) {
     return Math.min(realm, loc.maxR);
 }
 
+function forgeGodChance(grade, worldId) {
+    return (grade.godWorlds || []).includes(worldId) ? grade.godChance : 0;
+}
+
 function makeForgedGear(realm, slot, gradeIndex = 0, chosenSubs = null) {
     const grade = FORGE_GRADES[gradeIndex];
-    const god = grade.godWorld === worldTierOfRealm(realm).id && Math.random() < grade.godChance;
+    const god = Math.random() < forgeGodChance(grade, worldTierOfRealm(realm).id);
     const quality = god ? 4 : Math.random() < grade.topChance ? 3 : 2;
     const over = Math.random() < grade.overChance ? 1 + Math.floor(Math.random() * grade.overRealms) : 0;
     const gearRealm = Math.min(REALM_COUNT - 1, worldTierOfRealm(realm).to + 1, realm + over);
