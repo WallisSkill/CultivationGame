@@ -94,6 +94,13 @@ function rollQuestRealm(loc) {
     return { realmIndex, realmStage };
 }
 
+/* Lệnh Thiên Đình chỉ chen vào bầy khi cấp của nó nằm trong khoảng săn đã chọn, và không vượt người chơi lúc đang săn cho nhiệm vụ */
+function courtOrderFits(order, loc, wanted) {
+    const chosen = state.huntRange?.[loc.id];
+    if (chosen && (order.realm < chosen[0] || order.realm > chosen[1])) return false;
+    return !wanted || order.realm * STAGES.length + (order.stage || 0) <= (state.realmIndex || 0) * STAGES.length + (state.realmStage || 0);
+}
+
 function spawnEnemyPack(makeUnit, count) {
     const members = Array.from({ length: count }, () => makeUnit());
     members.forEach(unit => applyPackScale(unit, count));
@@ -109,7 +116,7 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     const pool = loc.enemies || [];
     if (!pool.length) { log(`${loc.name} yên bình, không có gì để săn.`); return; }
     const wanted = (state.questActive || []).map(rt => questStep(rt)?.hunt).find(h => h && h.loc === loc.id);
-    const order = (state.courtOrders || []).find(o => o.loc === loc.id);
+    const order = (state.courtOrders || []).find(o => o.loc === loc.id && courtOrderFits(o, loc, wanted));
     const makeUnit = () => {
         if (order && (!wanted || Math.random() < 0.5)) {
             const target = pool.find(e => e.name === order.name);
