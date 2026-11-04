@@ -74,7 +74,7 @@ function initWorldState() {
     state.renown = state.renown || { ...state.mastery };
     syncStorySect();
     state.questDone = state.questDone || [];
-    state.questActive = state.questActive || [];
+    state.questActive = (state.questActive || []).filter(rt => QUEST_INDEX[rt.id]);
     state.forgeQueue = state.forgeQueue || [];
     state.hired = state.hired || 0;
     migrateCourtOrders();
@@ -283,7 +283,7 @@ function hastedSeconds(seconds) {
 
 function startActivity(activity) {
     standUp();
-    const seconds = activity.type === 'travel' ? activity.seconds : hastedSeconds(activity.seconds);
+    const seconds = activity.type === 'travel' || activity.type === 'trial' ? activity.seconds : hastedSeconds(activity.seconds);
     state.activity = { ...activity, total: seconds, remaining: seconds, seconds };
     renderAll();
 }
@@ -319,6 +319,9 @@ function finishActivity() {
             break;
         case 'gather':
             completeGather(a.questId);
+            break;
+        case 'trial':
+            finishTrial(a);
             break;
         default:
             log(`✅ ${a.label} xong.`);
@@ -380,7 +383,16 @@ function absoluteLegSeconds(to) {
 function canEnterLocation(id) {
     const loc = LOCATIONS[id];
     if (hasLeftWorlds()) return loc.world === HU_VO_WORLD;
-    return ABSOLUTE_WORLDS.includes(loc.world) || (state.realmIndex || 0) >= loc.minR;
+    return ABSOLUTE_WORLDS.includes(loc.world) || ((state.realmIndex || 0) >= loc.minR && storyAreaOpen(id));
+}
+
+function storyAreaOpen(id) {
+    const lock = STORY_AREA_UNLOCK[id];
+    return !lock || (state.questDone || []).includes(lock);
+}
+
+function storyAreaLockText(id) {
+    return `Cốt truyện chưa tới đây: mở sau nhiệm vụ "${QUEST_INDEX[STORY_AREA_UNLOCK[id]].title}".`;
 }
 
 /* Lên Giới cao rồi không được xuống thêm, trừ người đứng đầu Thiên Hạ Bảng của Giới đang ở.
@@ -406,8 +418,16 @@ function descentActive() {
     return (state.descentUntil || 0) > Date.now();
 }
 
+/* Nhiệm vụ chính đang dẫn xuống Giới dưới thì được xuống đúng Giới đó */
+function storyDescent(toWorld) {
+    const rt = mainQuestRuntime();
+    const step = rt && questStep(rt);
+    return !!step && stepLocations(step).some(id => LOCATIONS[id]?.world === toWorld);
+}
+
 function descentBlocked(toWorld) {
     if ((state.realmIndex || 0) >= OVERSEER_REALM) return false;
+    if (storyDescent(toWorld)) return false;
     const home = realmWorld();
     const floor = Math.min(gioiIndex(home), gioiIndex(currentLocation().world));
     return gioiIndex(toWorld) < floor && !holdsWorldTop(home) && !descentActive();
@@ -668,7 +688,7 @@ function openAtlasBook() {
         const known = sites.filter(l => state.intel.includes(l.id));
         const rows = known.map(l => `<div class="guide-row"><b>${l.icon} ${l.name}</b><span>${intelEntries(l).join(' · ')}</span></div>`).join('');
         const left = sites.length - known.length;
-        return `<div class="market-head">${tier.name} (${known.length}/${sites.length})</div>${rows}${left ? `<div class="small">Còn ${left} nơi chưa rõ: tới tận nơi, hoặc nhận việc Dò La ở ${INTEL_SOURCE_NAMES[tier.id]}.</div>` : ''}`;
+        return `<div class="market-head">${tier.name} (${known.length}/${sites.length})</div>${rows}${left ? `<div class="small">Còn ${left} nơi chưa rõ: tới tận nơi, hoặc nhận việc Dò La ở ${INTEL_SOURCE_NAMES[tier.id]}, mỗi nơi một người biết một tin.</div>` : ''}`;
     }).join('');
     openWorldModal('atlasBookModal', '📖 Địa Chí', worlds);
 }
@@ -782,7 +802,7 @@ function renderMapDestination() {
     const route = findPath(state.location, mapSelected);
     if (!canEnterLocation(mapSelected)) {
         return `<div class="map-dest"><div><b>${loc.icon} ${loc.name}</b>
-            <div class="small">🔒 Cần đạt ${REALMS[loc.minR]} mới có thể đặt chân tới.</div></div></div>`;
+            <div class="small">🔒 ${(state.realmIndex || 0) < loc.minR ? `Cần đạt ${REALMS[loc.minR]} mới có thể đặt chân tới.` : storyAreaLockText(loc.id)}</div></div></div>`;
     }
     const teleport = canTeleport(mapSelected)
         ? `<button class="primary" onclick="teleportTo('${loc.id}')">⚡ Dịch chuyển</button>`
@@ -1100,7 +1120,7 @@ function openBountyBoard() {
 function acceptBounty() {
     const board = document.getElementById('bountyModal');
     if (board) board.style.display = 'none';
-    const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && l.minR <= state.realmIndex && l.maxR >= state.realmIndex - 1);
+    const pool = Object.values(LOCATIONS).filter(l => l.world === currentLocation().world && (l.enemies || []).length && canEnterLocation(l.id) && l.maxR >= state.realmIndex - 1);
     if (!pool.length) { showToast('Cõi này không có sinh linh nào để treo thưởng.', 'warn'); return; }
     const loc = pool[Math.floor(Math.random() * pool.length)];
     const pick = loc.enemies[Math.floor(Math.random() * loc.enemies.length)];
@@ -1121,7 +1141,33 @@ function finishBounty() {
 
 /* ---------- nhiệm vụ ---------- */
 function questStep(rt) {
-    return ruledStory(QUEST_INDEX[rt.id].steps[rt.step]);
+    return ruledStory(questStepsFor(QUEST_INDEX[rt.id], rt.b)[rt.step]);
+}
+
+function branchMatches(when) {
+    const elements = state.root?.elements || [];
+    const rank = state.root?.rank || 0;
+    if (!when) return true;
+    if (when.el && !elements.includes(when.el)) return false;
+    if (when.els && !when.els.some(e => elements.includes(e))) return false;
+    if (when.rankMin != null && rank < when.rankMin) return false;
+    if (when.rankMax != null && rank > when.rankMax) return false;
+    if (when.hybrid != null && (elements.length > 1) !== when.hybrid) return false;
+    return true;
+}
+
+function pickBranch(q) {
+    return Object.keys(q.branches || {}).find(key => branchMatches(q.branches[key].when)) || null;
+}
+
+function questIntro(q, key) {
+    return (key && q.branches?.[key]?.intro) || q.intro;
+}
+
+function startQuestRuntime(q) {
+    const rt = { id: q.id, step: 0, n: 0, b: pickBranch(q) };
+    state.questActive.push(rt);
+    return rt;
 }
 
 /* Đã có Hư Vô Chi Chủ thì các cảnh giới có sẵn: truyện dùng phần ruled, nghe Đạo Giả kể thay vì tự sáng tạo */
@@ -1146,6 +1192,7 @@ function questOpen(q) {
     if (state.questDone.includes(q.id) || state.questActive.some(rt => rt.id === q.id)) return false;
     if (!needsMet(q) || questExpired(q) || !endingAllows(q) || !huVoSeedOpen(q)) return false;
     if (q.realmOnly != null && state.realmIndex !== q.realmOnly) return false;
+    if (q.id[0] !== 'm' && !questLocations(q, pickBranch(q)).every(storyAreaOpen)) return false;
     return [q.after, q.afterMain].every(id => !id || state.questDone.includes(id));
 }
 
@@ -1254,9 +1301,9 @@ function advanceMainQuest() {
     if (mainQuestRuntime()) return;
     const q = nextMainQuest();
     if (!q || !needsMet(q) || mainQuestBlocker(q)) return;
-    state.questActive.push({ id: q.id, step: 0, n: 0 });
-    log(`📖 ${ACTS[q.act - 1].name} — Nhiệm vụ mới: ${q.title}`);
-    if (q.intro) playDialogue(q.intro);
+    const rt = startQuestRuntime(q);
+    log(`📖 ${ACTS[q.act - 1].name} — Nhiệm vụ mới: ${q.title}${rt.b && q.branches[rt.b].tag ? ` (${q.branches[rt.b].tag})` : ''}`);
+    if (questIntro(q, rt.b)) playDialogue(questIntro(q, rt.b));
     questsOnLocation();
 }
 
@@ -1342,7 +1389,7 @@ function completeStep(rt) {
     rt.step++;
     rt.n = 0;
     if (step.say) playDialogue(step.say);
-    if (rt.step >= q.steps.length) {
+    if (rt.step >= questStepsFor(q, rt.b).length) {
         state.questActive = state.questActive.filter(x => x !== rt);
         state.questDone.push(q.id);
         if (q.outro) playDialogue(q.outro);
@@ -1745,9 +1792,9 @@ function onScriptedLoss(enemy) {
 }
 
 function acceptSideQuest(id) {
-    state.questActive.push({ id, step: 0, n: 0 });
+    const rt = startQuestRuntime(QUEST_INDEX[id]);
     log(`📜 Nhận nhiệm vụ phụ: ${QUEST_INDEX[id].title}`);
-    if (QUEST_INDEX[id].intro) playDialogue(QUEST_INDEX[id].intro);
+    if (questIntro(QUEST_INDEX[id], rt.b)) playDialogue(questIntro(QUEST_INDEX[id], rt.b));
     questsOnLocation();
     renderAll();
 }
@@ -1813,7 +1860,7 @@ function renderQuestPanel() {
         const main = rt.id[0] === 'm';
         const guide = !!q.guide;
         return `<div class="quest-card ${main ? 'main' : ''}" data-quest="${rt.id}">
-            <div class="small">${main ? ACTS[q.act - 1].name : guide ? '🧭 Chỉ dẫn chức năng' : 'Nhiệm vụ phụ'}${q.unlock != null ? ` · mở khóa ${REALMS[q.unlock]}` : ''}</div>
+            <div class="small">${main ? ACTS[q.act - 1].name : guide ? '🧭 Chỉ dẫn chức năng' : 'Nhiệm vụ phụ'}${q.unlock != null ? ` · mở khóa ${REALMS[q.unlock]}` : ''}${rt.b && q.branches[rt.b].tag ? ` · ${q.branches[rt.b].tag}` : ''}</div>
             <b>${q.title}</b>
             <div class="small">${questStepText(rt)}</div>
             ${questRewardHTML(q)}
@@ -1827,6 +1874,8 @@ function renderQuestPanel() {
             <div class="small">${blocker && needsMet(q) ? `Trước hết hãy xong "${blocker.title}": gặp ${NPCS[questGiver(blocker)].name} tại ${LOCATIONS[blocker.loc].name}.` : `Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]} — hãy bế quan.`}</div>${questRewardHTML(q)}</div>`);
         else if (state.endingId) cards.unshift(`<div class="quest-card main"><b>${state.realmIndex === REALM_COUNT - 1 ? `🌌 Đại Kết Cục${huVoThrone ? ` · Hư Vô Chi Chủ: ${huVoThrone.name}` : ''}` : `Đã kết thúc: ${storyText(ENDINGS.find(e => e.id === state.endingId).text)}`}</b></div>`);
     }
+    const trialCard = trialCardHTML();
+    if (trialCard) cards.unshift(trialCard);
     const huVoPanel = huVoPanelHTML();
     if (huVoPanel) cards.unshift(huVoPanel);
     if (descentActive()) {
@@ -1921,10 +1970,11 @@ function questTipHTML(id) {
     const q = QUEST_INDEX[id];
     const rt = state.questActive.find(x => x.id === id);
     const done = state.questDone.includes(id);
-    const reached = done ? q.steps.length : rt?.step || 0;
+    const key = rt ? rt.b : pickBranch(q);
+    const reached = done ? questStepsFor(q, key).length : rt?.step || 0;
     const giver = id[0] === 'm' ? ACTS[q.act - 1].name : q.guide ? 'Chỉ dẫn chức năng' : `${NPCS[questGiver(q)].name} · ${LOCATIONS[q.loc].name}`;
-    const why = (q.intro || []).map(speechText).join('<br>') || (id[0] === 'm' ? ruledStory(ACTS[q.act - 1]).desc : 'Việc của người trong vùng, phải tới hỏi mới rõ.');
-    const steps = q.steps.map((step, i) => {
+    const why = (questIntro(q, key) || []).map(speechText).join('<br>') || (id[0] === 'm' ? ruledStory(ACTS[q.act - 1]).desc : 'Việc của người trong vùng, phải tới hỏi mới rõ.');
+    const steps = questStepsFor(q, key).map((step, i) => {
         if (i < reached) return `<div>✔ ${(ruledStory(step).say || []).map(speechText).join(' ') || 'Đã xong.'}</div>`;
         if (rt && i === rt.step) return `<div>▶ ${questStepText(rt)}</div>`;
         return '<div>• ???</div>';

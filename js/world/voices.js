@@ -55,6 +55,48 @@ const NPC_VOICES = {
         down: ['Ngươi đã cao hơn ta. Đừng quên ai cho ngươi chỗ ngủ ngày mới lên.', 'Thiên Đình sẽ mời ngươi về. Đi hay không là việc của ngươi, nhưng đừng mang quân về đây.'],
         area: 'Tán Tiên sống ở rìa mọi thứ: rìa thành, rìa luật, rìa trời. Rìa thì gió mạnh, nhưng thoáng.'
     },
+    yeu_ha_chu: {
+        up: ['{me} mà đòi qua Yêu Hà? Nước ở đây cuốn trôi cả tiên cốt đấy.', 'Lặn sâu vào, đừng để giám binh thấy bóng. Ngươi còn yếu lắm.'],
+        even: ['Ngang ta rồi. Lần sau ngươi giữ bến, ta đi ngủ.', 'Nước sông đã quen mùi ngươi. Nó không cuốn ngươi nữa đâu.'],
+        down: ['Kẻ ta giấu dưới đáy sông ngày nào giờ đã cao hơn ta. Sông cũng thấy tự hào.', 'Đi xa rồi thì nhớ đường về Yêu Hà. Nước không quên ai.'],
+        area: 'Yêu Hà chảy ngược với mọi con sông khác của Tiên Giới, như yêu tộc vậy.'
+    },
+    dau_no: {
+        up: ['{me}? Trên đài của ta, kẻ như ngươi trụ không quá một hiệp.', 'Muốn đánh thì đánh, đừng đứng đó ngắm cơ bắp ta.'],
+        even: ['Ngang sức. Lên đài đi, lâu rồi ta chưa đổ mồ hôi.', 'Ngươi đánh như người cầm cuốc. Ta thích thế.'],
+        down: ['Ngươi mạnh hơn ta rồi. Ở Bát Hoang, như thế là ngươi có quyền ngồi ghế giữa.', 'Đánh với ngươi giờ chỉ để học. Ta không ngại học.'],
+        area: 'Bát Hoang không có luật, chỉ có đài. Ai còn đứng thì người đó nói.'
+    },
+    hac_chu: {
+        up: ['{me} thì chưa đủ tiền mua cả một câu hỏi của ta.', 'Đừng sờ vào hàng. Hàng ở đây có thứ cắn người.'],
+        even: ['Ngang nhau rồi thì ta tính giá ngang. Hiếm lắm đấy.', 'Ngươi có thứ ta cần, ta có thứ ngươi cần. Chợ đen chỉ có vậy.'],
+        down: ['Cao hơn ta rồi mà vẫn ghé Hắc Thị. Hay là ngươi nhớ ta?', 'Kẻ mạnh mua hàng ở đây thì ta tăng giá. Đùa đấy, với ngươi thì không.'],
+        area: 'Hắc Thị chỉ họp khi đèn âm thắp. Đèn tắt thì đừng có ở lại.'
+    },
+    hang_nga: {
+        up: ['{me}... lạnh ở đây sẽ làm ngươi run. Đứng gần cây quế cho ấm.', 'Ít ai lên tới cung trăng khi còn yếu như vậy. Ngươi lạc đường à?'],
+        even: ['Ngồi đi. Lâu lắm rồi mới có người ngồi ngang hàng với ta dưới gốc quế.', 'Ngươi kể chuyện dưới kia đi. Ta chỉ nghe được tiếng chày giã thuốc.'],
+        down: ['Ngươi đã sáng hơn mặt trăng. Đừng quên một đêm lạnh ở đây.', 'Người mạnh như ngươi hiếm khi quay lại thăm kẻ cô đơn. Cảm ơn.'],
+        area: 'Quảng Hàn Cung chỉ có một cây quế, một con thỏ và rất nhiều thời gian.'
+    },
+    ho_hau: {
+        up: ['{me}? Ta cười một tiếng là ngươi lạc ba ngày.', 'Đừng nhìn vào mắt ta lâu quá, đứa nhỏ.'],
+        even: ['Ngang ta rồi à? Thế thì ta phải nói thật với ngươi, phiền thật.', 'Hồ tộc không bao giờ đi đầu. Nhưng đi cạnh ngươi thì được.'],
+        down: ['Ngươi đã vượt Hồ Hậu. Ở Thanh Khâu, đó là lý do để mở tiệc ba tháng.', 'Ảo trận của ta giờ chỉ làm ngươi buồn cười thôi nhỉ.'],
+        area: 'Đường ở Thanh Khâu đổi theo tiếng cười. Ai không biết cười thì không bao giờ đi tới.'
+    },
+    yeu_hoang: {
+        up: ['{me} mà dám đứng thẳng trong điện của Yêu Hoàng?', 'Quỳ không phải vì ta mạnh. Quỳ vì nền điện này lát bằng xương những kẻ không quỳ.'],
+        even: ['Ngang ta. Thiên Đế cũng chỉ ngang ta. Ngươi hiểu nghĩa câu đó chứ?', 'Kẻ ngang hàng thì được uống rượu của ta. Ngồi.'],
+        down: ['Ngươi đã cao hơn Yêu Hoàng. Yêu tộc sẽ hát về ngươi, dù ngươi là người.', 'Ta không cúi đầu với ai. Nhưng với ngươi, ta rót rượu trước.'],
+        area: 'Yêu Hoàng Điện không có cửa sau. Vào thì vào bằng cửa trước, ra thì tùy sức.'
+    },
+    con_bang: {
+        up: ['{me}... Ta ngủ một giấc dài hơn cả kiếp của ngươi.', 'Đừng khuấy nước. Ta đang mơ thấy lúc thiên địa còn chưa chia.'],
+        even: ['Ngang ta rồi à? Biển Bắc Minh lâu lắm mới có khách đáng mở mắt.', 'Ngươi muốn bay hay muốn lặn? Ta làm được cả hai, nhưng lười.'],
+        down: ['Ngươi bay cao hơn cánh ta. Kẻ cuối cùng làm được vậy là Đạo Tổ.', 'Đi đi. Ta sẽ ngủ tiếp, giờ ta biết có người canh trời thay ta.'],
+        area: 'Bắc Minh có cá, tên là Côn. Lớn không biết mấy ngàn dặm. Hóa thành chim, tên là Bằng.'
+    },
     dao_tri_mau: {
         up: ['{me}? Ở Dao Trì, đó là cảnh giới của người hầu rót rượu.', 'Ngươi đứng xa ra một chút. Hơi phàm còn bám trên áo.'],
         even: ['Cùng cảnh giới. Vậy ngươi được ngồi, nhưng chỉ ở mép bàn.', 'Ta không quen có người nhìn thẳng mình. Ngươi là người đầu tiên trong trăm năm.'],
@@ -216,6 +258,12 @@ const NPC_VOICES = {
         even: ['Cùng cảnh giới, ta tính giá người quen.', 'Ngang hàng thì ta nói thẳng: hàng tốt nhất ta để dưới quầy.'],
         down: ['Khách quý! Ngươi cần gì, Kim Nương này tìm được hết, chỉ trừ lương tâm.', 'Vượt ta rồi mà còn ghé thương hội. Ngươi muốn mua hay muốn bán?'],
         area: 'Vân Long Thành là chỗ hàng hóa đi qua. Hàng gì đi qua đây, ta đều biết ai mua, ai trả tiền.'
+    },
+    kim_si_cong: {
+        up: ['{me}? Vách này gió to, cảnh giới đó đứng không vững đâu. Bám chặt vào.', 'Lông Kim Sí cháy nóng hơn cả địa hỏa. Đừng chạm vào lò khi ta chưa bảo.'],
+        even: ['Ngang ta rồi à. Vậy lần tới ngươi trèo lên tổ lấy lông, ta giữ lửa.', 'Cùng cảnh giới, ta tính công như người trong nghề.'],
+        down: ['Ngươi vượt ta rồi mà vẫn chịu trèo lên tận vách này. Lò ta không phụ người như thế.', 'Kẻ mạnh hơn ta còn tới xin lửa, vậy là lò này đặt xa cũng đáng.'],
+        area: 'Kim Bằng Nhai là vách tổ của Kim Sí Đại Bằng. Đường lên xa, nên Thần lò ở đây chưa từng tắt vì quá đông khách.'
     },
     hoa_cong: {
         up: ['{me}? HA! Đứng gần lò của ta là cháy da đấy!', 'Lửa Xích Diệm nuốt cả sắt Nguyên Anh. Ngươi muốn thử à?'],

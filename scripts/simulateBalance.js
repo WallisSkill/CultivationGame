@@ -8,12 +8,12 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/storyscenes.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/world/voices.js', 'js/world/guides.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/tienarc.js', 'js/world/storyscenes.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/world/voices.js', 'js/world/guides.js', 'js/world/trials.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`
 var INFO = {
-  RING_TALES, NPC_VOICES, RESIDENT_VOICES, ENEMY_RANGE_LINES, ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
+  questAllSteps, RING_TALES, BREAKTHROUGH_TRIALS, STORY_AREA_UNLOCK, NPC_VOICES, RESIDENT_VOICES, ENEMY_RANGE_LINES, ORIGINS, ORIGIN_STORY, ENDINGS, LOCATION_NPCS, FREE_SERVICE_LOCATIONS, LOCATIONS, QUEST_INDEX, MAIN_QUESTS, SIDE_QUESTS, BOSSES, NPCS, WORLD_TIERS, GEAR_SLOT_IDS, LB_GRADE_POWER,
   refStats, baseStatsFor, makeGearItem, enemyStatsFor, maxLinhBaoGradeForRealm, realmShare, computeDamage, GEAR_SUBS, GEAR_SUB_ROLL, GEAR_QUALITIES, gearSubFloor, GATE_TIERS, GATE_QUESTS, LB_GRADE_UNLOCK_REALM
 };`, ctx);
 const G = ctx.INFO;
@@ -249,6 +249,46 @@ G.RESIDENT_VOICES.forEach((v, i) => NPC_TYPES.forEach(t => { if (!v.area[t]) fai
 Object.values(G.LOCATION_NPCS).flat().filter(k => !k.startsWith('dan_') && !k.startsWith('ren_') && k !== 'mac').forEach(k => {
     if (!G.NPC_VOICES[k]) fail.push(`NPC ${k} chưa có giọng riêng`);
 });
+const STORY_ORDER = G.MAIN_QUESTS.map(q => q.id);
+function storyReachable(world, realm, doneUpTo) {
+    const entry = Object.values(G.LOCATIONS).find(l => l.world === world && l.gate && G.WORLD_TIERS.findIndex(t => t.id === G.LOCATIONS[l.gate.to].world) < G.WORLD_TIERS.findIndex(t => t.id === world));
+    const open = id => G.LOCATIONS[id].world === world && G.LOCATIONS[id].minR <= realm && (!G.STORY_AREA_UNLOCK[id] || STORY_ORDER.indexOf(G.STORY_AREA_UNLOCK[id]) <= doneUpTo);
+    const seen = new Set([entry.id]);
+    const queue = [entry.id];
+    while (queue.length) G.LOCATIONS[queue.shift()].links.filter(id => open(id) && !seen.has(id)).forEach(id => { seen.add(id); queue.push(id); });
+    return seen;
+}
+G.MAIN_QUESTS.forEach((q, i) => {
+    const world = G.WORLD_TIERS.find(t => t.from <= q.needs[0] && q.needs[0] <= t.to)?.id;
+    if (!G.WORLD_TIERS.find(t => t.id === world)?.release) return;
+    const reach = storyReachable(world, q.needs[0], i - 1);
+    G.questAllSteps(q).flatMap(s => [s.go, s.loc, s.hunt?.loc, s.gather?.loc]).filter(id => id && G.LOCATIONS[id]?.world === world).forEach(id => {
+        if (!reach.has(id)) fail.push(`${q.id}: cốt truyện dẫn tới ${id} nhưng khu vực còn khóa`);
+    });
+});
+const gioiOf = w => G.WORLD_TIERS.findIndex(t => t.id === (w === 'thien' ? 'thanh' : w));
+G.MAIN_QUESTS.forEach(q => {
+    const home = G.WORLD_TIERS.find(t => t.from <= q.needs[0] && q.needs[0] <= t.to)?.id;
+    if (q.needs[0] >= 29) return;
+    (q.needsSide || []).map(id => G.QUEST_INDEX[id]).forEach(s => {
+        if (gioiOf(G.LOCATIONS[s.loc].world) < gioiOf(home)) fail.push(`${q.id}: chờ ${s.id} ở Giới dưới mà không có lối xuống`);
+    });
+});
+const TRIAL_EFFECTS = ['lightning', 'fire', 'vortex', 'glow', 'ripple', 'snow', 'starfall', 'pillar', 'rings', 'chaos'];
+for (let r = 1; r < G.WORLD_TIERS[G.WORLD_TIERS.length - 1].from; r++) {
+    const t = G.BREAKTHROUGH_TRIALS[r];
+    if (!t) { fail.push(`độ kiếp ${r}: thiếu`); continue; }
+    const loc = G.LOCATIONS[t.loc];
+    if (!loc) fail.push(`độ kiếp ${r}: nơi ${t.loc}`);
+    else if (loc.minR > r - 1) fail.push(`độ kiếp ${r}: ${t.loc} cần cảnh giới ${loc.minR}`);
+    if (!TRIAL_EFFECTS.includes(t.effect)) fail.push(`độ kiếp ${r}: hiệu ứng ${t.effect}`);
+    if (!(t.minutes > 0) || !t.start || !t.done) fail.push(`độ kiếp ${r}: thiếu phút hoặc thoại`);
+    const tier = loc && G.WORLD_TIERS.find(w => w.id === loc.world);
+    if (tier?.release) {
+        const doneUpTo = G.MAIN_QUESTS.findIndex(q => q.unlock === r);
+        if (!storyReachable(loc.world, r - 1, doneUpTo).has(t.loc)) fail.push(`độ kiếp ${r}: ${t.loc} còn khóa theo cốt truyện`);
+    }
+}
 
 if (fail.length) {
     console.log('\nLỖI:\n' + [...new Set(fail)].join('\n'));

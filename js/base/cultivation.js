@@ -99,7 +99,17 @@ function checkRealmProgress() {
             }
             break;
         }
-        attemptMajorBreakthrough();
+        const trial = (typeof trialFor === 'function') ? trialFor(state.realmIndex + 1) : null;
+        if (trial && state.trialDone !== state.realmIndex + 1) {
+            state.xp = getNeed();
+            if (state.bottleneckNotice !== `trial${state.realmIndex + 1}`) {
+                state.bottleneckNotice = `trial${state.realmIndex + 1}`;
+                log(`⚡ Tu vi viên mãn. ${trialText({ ...trial, realm: state.realmIndex + 1 })}.`);
+                renderAll();
+            }
+            break;
+        }
+        attemptMajorBreakthrough(!!trial);
         if (typeof onRealmChanged === 'function') onRealmChanged();
         renderAll();
         if (state.xp >= getNeed() * 0.99) break;
@@ -189,6 +199,7 @@ function attemptMajorBreakthrough(isForce = false) {
     state.realmIndex = Math.min(REALMS.length - 1, prevRealm + 1);
     state.realmStage = 0;
     state.bottleneckNotice = null;
+    state.trialDone = null;
 
     const gain = calculateMajorGain({ prevRealm, newRealm: state.realmIndex, rootRank: state.root?.rank || 0 });
     applyBaseGain(gain);

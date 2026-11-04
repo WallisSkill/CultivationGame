@@ -73,6 +73,7 @@ const GUIDE_QUESTS = [
     },
     {
         id: 'hd_thien_dinh', title: 'Chỉ dẫn: Lệnh Thiên Đình', needs: [9, 1],
+        when: () => Object.values(LOCATIONS).some(l => l.world === 'tien' && (l.services || []).includes('board') && canEnterLocation(l.id)),
         intro: [['narr', 'Ở Tiên Giới, Thiên Đình Điện giao lệnh diệt quái đúng tên, đúng cảnh giới. Đăng ký Tiên Vị rồi nhận cùng lúc tối đa 5 lệnh.'],
             ['narr', 'Lệnh càng cao càng khó mà công lao càng lớn. Từ Huyền Tiên, ở đâu trong Giới cũng mở được Thiên Đình Điện.']],
         steps: [{ task: 'court', label: 'Nhận một lệnh ở Thiên Đình Điện', check: () => (state.courtOrders || []).length > 0, act: () => setWorldView('scene') }]
@@ -113,7 +114,7 @@ function checkGuideStep() {
 
 function advanceGuides() {
     if (guideRuntime()) return checkGuideStep();
-    const q = GUIDE_QUESTS.find(g => !state.questDone.includes(g.id) && needsMet(g));
+    const q = GUIDE_QUESTS.find(g => !state.questDone.includes(g.id) && needsMet(g) && (!g.when || g.when()));
     if (!q) return;
     state.questActive.push({ id: q.id, step: 0, n: 0 });
     log(`🧭 ${q.title}`);

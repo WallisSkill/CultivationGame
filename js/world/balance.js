@@ -30,7 +30,7 @@ const AGE_TRAVEL_YEARS_PER_MINUTE = 0.1;
 
 const WORLD_TIERS = [
     { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
-    { id: 'tien', name: 'Tiên Giới', from: 9, to: 18, mapW: 1500, mapH: 840, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
+    { id: 'tien', name: 'Tiên Giới', from: 9, to: 18, release: 'm11', mapW: 1500, mapH: 840, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
     { id: 'thanh', name: 'Thánh Giới', from: 19, to: 22, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
     { id: 'thien', name: 'Thiên Ma Ngoại Vực', from: 23, to: 28, palette: ['#22123f', '#46238a', '#c7a1ff'] },
     { id: 'hondon', name: 'Hỗn Độn Hải', from: 29, to: 29, palette: ['#06242b', '#0f5661', '#5fe6e6'] },

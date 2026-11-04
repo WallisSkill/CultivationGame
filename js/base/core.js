@@ -716,6 +716,9 @@ function updateTrainingUI() {
         if (state.realmStage === 3 && state.xp >= need && typeof getBreakthroughGate === 'function' && getBreakthroughGate(state.realmIndex + 1)) {
             const gateTitle = getBreakthroughGate(state.realmIndex + 1).title;
             writeHtml(predEl, `<span class="xp-gate">🚧 Bình cảnh: ${gateTitle}</span><span class="xp-gate-full">🚧 Bình cảnh: ${gateTitle}</span>`);
+        } else if (typeof pendingTrial === 'function' && pendingTrial()) {
+            const trialLine = trialText(pendingTrial());
+            writeHtml(predEl, `<span class="xp-gate">⚡ Độ kiếp: ${LOCATIONS[pendingTrial().loc].name}</span><span class="xp-gate-full">⚡ ${trialLine}</span>`);
         } else if (pred) {
             let html = '';
             if (pred.small) {

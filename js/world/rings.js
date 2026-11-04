@@ -12,7 +12,7 @@ function storyRealmOf(key) {
     const fought = Object.values(BOSSES).filter(b => b.npc === key).map(b => b.shownRealm ?? b.realm);
     if (fought.length) return Math.max(...fought);
     if (/Đạo Giả/.test(NPCS[key].title || '')) return OVERSEER_REALM;
-    const met = MAIN_QUESTS.find(q => q.steps.some(step => step.say?.some(line => line[0] === key)));
+    const met = MAIN_QUESTS.find(q => questAllSteps(q).some(step => step.say?.some(line => line[0] === key)));
     return met ? met.needs[0] : null;
 }
 

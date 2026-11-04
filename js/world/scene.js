@@ -59,8 +59,10 @@ function sceneSpots(loc) {
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect' || (loc.type === 'town' && NO_MONSTER_WORLDS.includes(loc.world)));
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), (loc.type === 'town' || loc.type === 'sect') && !NO_MONSTER_WORLDS.includes(loc.world));
-    LOCATION_NPCS[loc.id].filter(key => !npcGone(key)).forEach(key => add(npcOffers(key).length || npcReports(key).length ? '❗' : '💬', NPCS[key].name, () => openNpcTalk(key)));
+    LOCATION_NPCS[loc.id].filter(key => !npcGone(key)).forEach(key => spots.push({ npc: key, label: NPCS[key].name, action: () => openNpcTalk(key), mark: npcOffers(key).length + npcReports(key).length > 0 }));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
+    const trial = pendingTrial();
+    add('⚡', `Độ kiếp: ${trial && REALMS[trial.realm]}`, () => startTrial(), !!trial && trial.loc === loc.id && !trialActive());
     const radiusX = SCENE_W / 2 - 170, radiusY = SCENE_H / 2 - 140;
     spots.forEach((spot, i) => {
         const angle = Math.PI * (1.08 + 0.84 * (spots.length > 1 ? i / (spots.length - 1) : 0.5));
@@ -279,6 +281,32 @@ function drawSeated(ctx, image, x, y, name, color, progress = 1, chair = true) {
     ctx.fillText(name, x, y - h - 4);
 }
 
+/* NPC đứng trong cảnh bằng hình nhân vật; có việc giao hay chờ báo lại thì treo dấu chấm than trên đầu */
+const SCENE_NPC_FOOT = 22;
+
+function drawNpc(ctx, spot) {
+    const npc = NPCS[spot.npc];
+    const image = sceneImage(`npc:${spot.npc}`, humanoidSvg(npc.look || defaultLook(), { title: npc.name }));
+    const y = spot.y + SCENE_NPC_FOOT;
+    drawUnit(ctx, image, spot.x, y, npc.name, spot.mark ? '#ffe066' : '#e8e8e8');
+    if (!spot.mark) return;
+    ctx.font = 'bold 30px serif';
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#3a2600';
+    ctx.strokeText('!', spot.x, y - SCENE_AVATAR_H - 20);
+    ctx.fillStyle = '#ffd400';
+    ctx.fillText('!', spot.x, y - SCENE_AVATAR_H - 20);
+}
+
+function drawNpcHighlight(ctx, spot) {
+    ctx.strokeStyle = '#ffe9a0';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(spot.x, spot.y + SCENE_NPC_FOOT, 30, 11, 0, 0, Math.PI * 2);
+    ctx.stroke();
+}
+
 function drawBubble(ctx, x, y, text) {
     ctx.font = '14px sans-serif';
     const w = Math.min(320, ctx.measureText(text).width + 18);
@@ -345,7 +373,7 @@ function sceneBackground(pal) {
         ctx.fill();
         ctx.globalAlpha = 1;
     });
-    s.spots.forEach(spot => drawSpot(ctx, spot, pal, false));
+    s.spots.filter(spot => !spot.npc).forEach(spot => drawSpot(ctx, spot, pal, false));
     return s.bg;
 }
 
@@ -354,7 +382,8 @@ function sceneDrawKey(now) {
     const s = sceneState;
     const others = playersHere().map(p => `${Math.round(p.x)},${Math.round(p.y)}`).join(';');
     const step = currentLocation().seat ? SEAT_DRAW_MS : 1000;
-    return [Math.round(s.x), Math.round(s.y), s.nearest?.label, s.locId, state.autoTrain, state.activity?.label, Math.floor(now / step), others].join('|');
+    const trial = trialActive() ? Math.floor(now / SCENE_DRAW_MS) : '';
+    return [Math.round(s.x), Math.round(s.y), s.nearest?.label, s.locId, state.autoTrain, state.activity?.label, Math.floor(now / step), others, trial].join('|');
 }
 
 function drawScene() {
@@ -368,7 +397,8 @@ function drawScene() {
     ctx.translate(-camX, -camY);
 
     ctx.drawImage(sceneBackground(pal), 0, 0);
-    if (s.nearest) drawSpot(ctx, s.nearest, pal, true);
+    if (s.nearest?.npc) drawNpcHighlight(ctx, s.nearest);
+    else if (s.nearest) drawSpot(ctx, s.nearest, pal, true);
 
     const units = playersHere().filter(p => p.x != null).map(p => {
         const look = p.look || defaultLook();
@@ -383,16 +413,19 @@ function drawScene() {
             if (p.bubble && Date.now() < p.bubbleUntil) drawBubble(ctx, p.x, p.y, p.bubble);
         } };
     });
+    s.spots.filter(spot => spot.npc).forEach(spot => units.push({ y: spot.y + SCENE_NPC_FOOT, draw: () => drawNpc(ctx, spot) }));
     const walking = new Set(playersHere().filter(p => p.x != null).map(p => p.id));
     s.spots.filter(spot => spot.seatOf && spot.seatOf !== state.profileId && !walking.has(spot.seatOf)).forEach(spot => {
         const look = spot.look || defaultLook();
         units.push({ y: spot.y, draw: () => drawSeated(ctx, sceneImage(`p:${JSON.stringify(look)}`, humanoidSvg(look, { title: spot.seatName })), spot.x, spot.y + 10, spot.seatName, '#d9c2ff') });
     });
-    const seated = state.autoTrain ? meditateSpot() : null;
+    const trial = trialActive();
+    const seated = state.autoTrain || trial ? meditateSpot() : null;
     s.sitAt = seated ? s.sitAt || performance.now() : 0;
     units.push({ y: s.y, draw: () => {
         const look = playerLook();
         const image = sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name }));
+        if (trial) drawTrialEffect(ctx, seated.x, seated.y + 10, trialFor(trial.realm).effect, trialFor(trial.realm).color, performance.now());
         if (seated) drawSeated(ctx, image, seated.x, seated.y + 10, state.name || '', '#ffe9a0', Math.min(1, (performance.now() - s.sitAt) / SEAT_SIT_MS), !!currentLocation().seat);
         else drawUnit(ctx, image, s.x, s.y, state.name || '', '#ffe9a0');
         if (s.bubble && Date.now() < s.bubble.until) drawBubble(ctx, s.x, s.y, s.bubble.text);
@@ -415,6 +448,7 @@ function drawScene() {
         ctx.fillStyle = '#ffe9a0';
         ctx.fillText(text, sceneViewW / 2, sceneViewH - 24);
     }
+    if (trial) drawTrialProgress(ctx, trial, sceneViewW, sceneViewH);
     if (state.activity?.type === 'travel') {
         ctx.fillStyle = 'rgba(0,0,0,.6)';
         ctx.fillRect(0, 0, sceneViewW, sceneViewH);

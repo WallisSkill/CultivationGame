@@ -39,6 +39,7 @@ Object.entries(MAIN_SCENES).forEach(([id, scene]) => Object.assign(QUEST_INDEX[i
 Object.assign(NPCS, {
     lo_tuong: { name: 'Thạch Lão', title: 'Thợ rèn Thanh Vân', look: NPC_LOOK('m', 5, '#c9c9d6', '#55524a', { beard: true }) },
     thuong_hoi: { name: 'Kim Nương', title: 'Chủ thương hội Vân Long', look: NPC_LOOK('f', 2, '#7a1f2b', '#b5832e', { weapon: 'fan', weaponColor: '#ffc14d' }) },
+    kim_si_cong: { name: 'Kim Sí Lão Tượng', title: 'Thần thợ Kim Bằng Nhai', look: NPC_LOOK('m', 2, '#8a6a1f', '#ffd76a', { beard: true, weapon: 'staff', weaponColor: '#ffcf40' }) },
     hoa_cong: { name: 'Hỏa Công', title: 'Thần thợ Xích Diệm', look: NPC_LOOK('m', 4, '#7a1f2b', '#8c3a3a', { beard: true, weapon: 'staff', weaponColor: '#ff8a4c' }) },
     dai_su: { name: 'Lôi Đài Sư', title: 'Thợ giữ Phi Thăng Đài', look: NPC_LOOK('m', 0, '#c9c9d6', '#3f6f9e', { weapon: 'staff', weaponColor: '#7fd4ff' }) },
     kiem_lao: { name: 'Vô Phong Lão', title: 'Giữ mộ Kiếm Trủng', look: NPC_LOOK('m', 1, '#c9c9d6', '#2b2b35', { weapon: 'sword', weaponColor: '#b8c0c8' }) },
@@ -104,8 +105,13 @@ const REGION_QUESTS = [
     },
     {
         loc: 'dao_tri', npc: 'dao_tri_mau', title: 'Hộ Vệ Thử Lòng', needs: [11, 0],
-        intro: [['dao_tri_mau', 'Thần lò Dao Trì đun bằng nước ao. Vượt qua hộ vệ của ta, ngươi mới được chạm vào lửa.']],
-        steps: [{ hunt: { loc: 'dao_tri', name: 'Dao Trì Hộ Vệ', n: 5 }, say: [['dao_tri_mau', 'Ao đã nhận ngươi. Thần lò từ nay mở cửa.']] }]
+        intro: [['dao_tri_mau', 'Lò Dao Trì đun bằng nước ao, rèn được thứ ngươi xứng đáng và hơn một chút. Vượt qua hộ vệ của ta, ngươi mới được chạm vào lửa.']],
+        steps: [{ hunt: { loc: 'dao_tri', name: 'Dao Trì Hộ Vệ', n: 5 }, say: [['dao_tri_mau', 'Ao đã nhận ngươi. Danh lò Dao Trì từ nay mở cửa.']] }]
+    },
+    {
+        loc: 'kim_bang', npc: 'kim_si_cong', title: 'Lông Vàng Nhóm Lửa', needs: [13, 0],
+        intro: [['kim_si_cong', 'Lò trên vách này nhóm bằng lông Kim Sí Bằng, lửa của nó nung chảy được cả tiên kim. Bầy chim non hung hăng lắm, dẹp bớt rồi mang lông về.'], ['me', 'Sao lại đặt lò tận nơi này?'], ['kim_si_cong', 'Lò gần thì ai cũng tới. Thần lò mà ai cũng tới thì còn gì là thần.']],
+        steps: [{ hunt: { loc: 'kim_bang', name: 'Kim Sí Bằng', n: 5 }, say: [['kim_si_cong', 'Lửa vàng lên rồi. Thần lò Kim Bằng nhận ngươi làm khách.']] }]
     },
     {
         loc: 'thanh_thi', npc: 'narr', title: 'Lệnh Bài Tử Tiêu Thị', needs: [19, 0],
@@ -264,27 +270,63 @@ function intelDirection(tier, loc) {
     return v || h ? `phía ${[h, v].filter(Boolean).join(' ')}` : 'vùng giữa';
 }
 
-function intelQuest(tier, source, loc, label, hours, after) {
+/* Mỗi tin một người kể ở một nơi khác nhau: lò thường nghe ở gần cổng Giới, lò càng lớn càng phải đi xa mới có người biết */
+const INTEL_LINES = [
+    (s, label, where) => `Khách lữ hành ở ${s.name} rỉ tai nhau về một ${label} nằm ở ${where}. Muốn biết chính xác thì phải chịu khó nghe ngóng.`,
+    (s, label, where) => `Ta từng thấy khói của một ${label} bốc lên ở ${where}, nhưng đường tới thì quên mất rồi. Ở lại ${s.name} hỏi thêm người qua lại xem.`,
+    (s, label, where) => `Người ở ${s.name} hay nhắc tới một ${label} ở ${where}. Họ không kể không công đâu, ngồi lại mà nghe.`,
+    (s, label, where) => `Có kẻ say rượu ở ${s.name} khoe từng tới một ${label} ở ${where}. Chờ hắn tỉnh rồi hỏi cho rõ.`,
+    (s, label, where) => `Một ${label} ở ${where}? Đám già ở ${s.name} biết đường, nhưng phải ngồi uống với họ mấy tuần trà mới chịu nói.`
+];
+
+function intelQuest(tier, source, loc, label, hours, after, i) {
+    const key = residentKey(source.id);
     return {
-        id: `intel_${loc.id}`, loc: source.id, npc: 'narr', title: `Dò La: ${label}`, needs: [tier.from, 0], after, reward: { hours: 0.5, goldRefs: 2, intel: loc.id },
-        intro: [['narr', `Khách lữ hành ở ${source.name} rỉ tai nhau về một ${label} nằm ở ${intelDirection(tier, loc)} ${tier.name}. Muốn biết chính xác thì phải chịu khó nghe ngóng.`]],
-        steps: [{ gather: { loc: source.id, hours, label: 'Dò la tin tức' }, say: [['narr', `Tìm ra rồi: ${label} ở ${loc.name}. Ngươi ghi vào Địa Chí.`]] }]
+        id: `intel_${loc.id}`, loc: source.id, npc: 'narr', title: `Dò La: ${label}`, needs: [Math.max(tier.from, source.minR), 0], after, reward: { hours: 0.5, goldRefs: 2, intel: loc.id },
+        intro: [[key, INTEL_LINES[(tier.from + i) % INTEL_LINES.length](source, label, `${intelDirection(tier, loc)} ${tier.name}`)]],
+        steps: [{ gather: { loc: source.id, hours, label: 'Dò la tin tức' }, say: [[key, `Tìm ra rồi: ${label} ở ${loc.name}. Ngươi ghi vào Địa Chí.`]] }]
     };
+}
+
+function intelHops(start) {
+    const hops = { [start.id]: 0 };
+    const queue = [start.id];
+    while (queue.length) {
+        const at = queue.shift();
+        LOCATIONS[at].links.filter(id => LOCATIONS[id].world === start.world && hops[id] == null).forEach(id => { hops[id] = hops[at] + 1; queue.push(id); });
+    }
+    return hops;
 }
 
 const INTEL_QUESTS = WORLD_TIERS.flatMap(tier => {
     const sites = Object.values(LOCATIONS).filter(l => l.world === tier.id);
-    const source = sites.reduce((best, l) => l.minR < best.minR ? l : best);
+    const start = sites.reduce((best, l) => l.minR < best.minR ? l : best);
+    const hops = intelHops(start);
     const forges = sites.filter(l => (l.services || []).includes('forge')).sort((a, b) => (a.forgeGrade || 0) - (b.forgeGrade || 0));
+    const forgeEntry = l => ({ loc: l, label: forgeGradeOf(l).name + (l.blackMarket ? ' và Chợ Đen' : ''), hours: INTEL_FORGE_HOURS[l.forgeGrade || 0] });
     const chain = [
-        ...forges.map(l => ({ loc: l, label: forgeGradeOf(l).name + (l.blackMarket ? ' và Chợ Đen' : ''), hours: INTEL_FORGE_HOURS[l.forgeGrade || 0] })),
-        ...sites.filter(l => l.blackMarket && !forges.includes(l)).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS }))
+        ...forges.filter(l => !forgeGradeOf(l).wholeWorld).map(forgeEntry),
+        ...sites.filter(l => l.blackMarket && !forges.includes(l)).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS })),
+        ...forges.filter(l => forgeGradeOf(l).wholeWorld).map(forgeEntry)
     ];
-    return chain.map((entry, i) => intelQuest(tier, source, entry.loc, entry.label, entry.hours, i ? `intel_${chain[i - 1].loc.id}` : null));
+    const used = new Set();
+    return chain.map((entry, i) => {
+        const pool = sites.filter(l => l !== entry.loc && !l.seatOnly && hops[l.id] != null && l.minR <= entry.loc.minR)
+            .sort((a, b) => hops[a.id] - hops[b.id] || a.minR - b.minR || a.id.localeCompare(b.id));
+        const free = pool.filter(l => !used.has(l.id));
+        const list = free.length ? free : pool;
+        const source = list[chain.length > 1 ? Math.round(i * (list.length - 1) / (chain.length - 1)) : 0];
+        used.add(source.id);
+        return intelQuest(tier, source, entry.loc, entry.label, entry.hours, i ? `intel_${chain[i - 1].loc.id}` : null, i);
+    });
 });
 SIDE_QUESTS.push(...INTEL_QUESTS);
 INTEL_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
-const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => (names[LOCATIONS[q.loc].world] = LOCATIONS[q.loc].name, names), {});
+const INTEL_SOURCE_NAMES = INTEL_QUESTS.reduce((names, q) => {
+    const world = LOCATIONS[q.loc].world;
+    names[world] = names[world] ? `${names[world]}, ${LOCATIONS[q.loc].name}` : LOCATIONS[q.loc].name;
+    return names;
+}, {});
 
 /* Mỗi cảnh giới mốc có ba nhiệm vụ phụ nối nhau ở cảnh giới cuối trước mốc, mở dần từ Sơ Kỳ tới Đại Viên Mãn, cộng lại đủ sáu món */
 const GATE_QUEST_HUNT = 6;
@@ -358,7 +400,7 @@ const LOCATION_NPCS = {};
 Object.values(LOCATIONS).forEach(loc => {
     const seed = NPC_SEED(loc.id);
     const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];
-    const storySpeakers = MAIN_QUESTS.flatMap(q => q.steps).filter(step => step.go === loc.id).map(speakerOfStep);
+    const storySpeakers = MAIN_QUESTS.flatMap(questAllSteps).filter(step => step.go === loc.id).map(speakerOfStep);
     const freeDaoGia = loc.world === 'hondon'
         ? HONDON_DAO_GIA.map((_, i) => HONDON_DAO_GIA[(seed + i) % HONDON_DAO_GIA.length]).filter(key => !named.includes(key) && !storySpeakers.includes(key)).map(key => NPCS[key])
         : [];
@@ -391,11 +433,20 @@ function questGiver(q) {
 }
 
 /* Về đến nơi chưa đủ: bước đi tới có người để gặp thì phải nói chuyện với người đó; nhân vật chính xuất hiện ngay tại nơi của hồi truyện */
+/* Nhánh theo linh căn: mỗi nhánh có when và steps riêng, có thể có intro, tag; không nhánh nào khớp thì đi steps chung */
+function questAllSteps(q) {
+    return [...(q.steps || []), ...Object.values(q.branches || {}).flatMap(b => b.steps || [])];
+}
+
+function questStepsFor(q, key) {
+    return key && q.branches?.[key] ? q.branches[key].steps : q.steps || [];
+}
+
 function speakerOfStep(step) {
     return step.say?.find(line => !['narr', 'me'].includes(line[0]))?.[0];
 }
 
-SIDE_QUESTS.forEach(q => (q.steps || []).forEach(step => {
+SIDE_QUESTS.forEach(q => questAllSteps(q).forEach(step => {
     if (!step.go) return;
     const speaker = speakerOfStep(step);
     step.talk = LOCATION_NPCS[step.go]?.includes(speaker) ? speaker : residentKey(step.go);
@@ -403,7 +454,7 @@ SIDE_QUESTS.forEach(q => (q.steps || []).forEach(step => {
     delete step.go;
 }));
 
-MAIN_QUESTS.forEach(q => q.steps.forEach(step => {
+MAIN_QUESTS.forEach(q => questAllSteps(q).forEach(step => {
     if (step.ruled?.talk && !LOCATION_NPCS[step.ruled.loc].includes(step.ruled.talk)) LOCATION_NPCS[step.ruled.loc].unshift(step.ruled.talk);
     const speaker = speakerOfStep(step);
     if (!step.go || !speaker) return;
@@ -435,9 +486,36 @@ function treasureBoss(loc, id, realm) {
     BOSSES[id] = { npc: { name: HIDDEN_FOES[seed % HIDDEN_FOES.length], look: { ...npcLookFromSeed(seed), aura: '#c58bff' } }, realm, stage: 2, scale: HIDDEN_BOSS_SCALE, board: 5 };
 }
 
+/* Khu vực theo cốt truyện: Giới có release thì trước nhiệm vụ đó chỉ đi được những nơi cốt truyện đã dẫn tới.
+   Nơi cốt truyện dẫn tới sau đó mở khi xong nhiệm vụ chính ngay trước lần đầu được nhắc; nơi cốt truyện không nhắc mở khi xong release */
+function stepLocations(step) {
+    return [step.go, step.loc, step.hunt?.loc, step.gather?.loc].filter(Boolean);
+}
+
+function questLocations(q, key) {
+    const steps = key === undefined ? questAllSteps(q) : questStepsFor(q, key);
+    return [q.loc, ...steps.flatMap(stepLocations), q.reward?.intel, q.reward?.opens].filter(id => id && LOCATIONS[id]);
+}
+
+const STORY_AREA_UNLOCK = {};
+WORLD_TIERS.filter(tier => tier.release).forEach(tier => {
+    const releaseAt = MAIN_QUESTS.findIndex(q => q.id === tier.release);
+    Object.values(LOCATIONS).filter(loc => loc.world === tier.id).forEach(loc => {
+        const first = MAIN_QUESTS.findIndex(q => questAllSteps(q).some(step => stepLocations(step).includes(loc.id)));
+        if (first >= 0 && first <= releaseAt) return;
+        STORY_AREA_UNLOCK[loc.id] = first > releaseAt ? MAIN_QUESTS[first - 1].id : tier.release;
+    });
+});
+
+function storyAreaQuestIndex(locId) {
+    const lock = STORY_AREA_UNLOCK[locId];
+    return lock ? MAIN_QUESTS.findIndex(q => q.id === lock) : -1;
+}
+
 const HIDDEN_QUESTS = Object.values(LOCATIONS).filter(loc => (loc.enemies || []).length && NPC_SEED(loc.id) % HIDDEN_QUEST_RATE === 0).map(loc => {
     const seed = NPC_SEED(loc.id);
-    const realm = loc.minR + seed % (loc.maxR - loc.minR + 1);
+    const opensAt = storyAreaQuestIndex(loc.id);
+    const realm = Math.max(loc.minR + seed % (loc.maxR - loc.minR + 1), opensAt >= 0 ? MAIN_QUESTS[opensAt].needs[0] : 0);
     const key = residentKey(loc.id);
     const id = `an_${loc.id}`;
     treasureBoss(loc, id, realm);
@@ -473,8 +551,10 @@ const needsBefore = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
     const before = MAIN_QUESTS.filter(m => needsBefore(m.needs, q.needs)).pop();
     if (before) q.afterMain = before.id;
 });
+REGION_QUESTS.filter(q => !MAIN_GATE_LOCATIONS.includes(q.loc) && forgeGradeOf(LOCATIONS[q.loc]).wholeWorld && QUEST_INDEX[`intel_${q.loc}`]).forEach(q => { q.after = `intel_${q.loc}`; });
 REGION_QUESTS.filter(q => MAIN_GATE_LOCATIONS.includes(q.loc)).forEach(q => {
     const world = LOCATIONS[q.loc].world;
-    const gated = MAIN_QUESTS.find(m => needsBefore(q.needs, m.needs) && worldTierOfRealm(m.needs[0]).id === world);
+    const opensAt = storyAreaQuestIndex(q.loc);
+    const gated = MAIN_QUESTS.find((m, i) => needsBefore(q.needs, m.needs) && i > opensAt + 1 && worldTierOfRealm(m.needs[0]).id === world);
     if (gated) gated.needsSide = [...(gated.needsSide || []), q.id];
 });

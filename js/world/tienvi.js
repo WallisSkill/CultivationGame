@@ -71,7 +71,7 @@ function courtBoard() {
 const LOCATION_BOSS_REALMS = {};
 MAIN_QUESTS.forEach(q => {
     let site = null;
-    q.steps.forEach(step => {
+    questAllSteps(q).forEach(step => {
         site = step.go || step.loc || site;
         if (step.boss && site) LOCATION_BOSS_REALMS[site] = Math.max(LOCATION_BOSS_REALMS[site] || 0, BOSSES[step.boss].realm);
     });
@@ -117,7 +117,7 @@ function courtOffers() {
     const active = state.courtOrders.map(order => order.loc);
     const offers = (state.courtOffers || []).filter(o => o.realm != null && LOCATIONS[o.loc].world === world && !active.includes(o.loc));
     if (offers.length) return state.courtOffers = offers;
-    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && l.minR <= state.realmIndex && !active.includes(l.id));
+    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && canEnterLocation(l.id) && !active.includes(l.id));
     state.courtOffers = pool.sort(() => Math.random() - 0.5).slice(0, COURT_OFFERS)
         .map(l => ({ loc: l.id, name: l.enemies[Math.floor(Math.random() * l.enemies.length)].name, ...courtRollRank(l) }));
     return state.courtOffers;
