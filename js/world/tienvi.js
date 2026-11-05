@@ -102,9 +102,20 @@ function courtRewardText(loc, realm) {
     return `+${formatNumber(courtMeritReward(loc, realm))} công lao · +${formatNumber(courtGoldReward(loc, realm))} linh thạch · +${formatNumber(courtRenownReward())} điểm thiên kiêu`;
 }
 
+function courtLocFits(loc) {
+    return loc.minR <= (state.realmIndex || 0);
+}
+
+function courtRankFits(order) {
+    const mine = (state.realmIndex || 0) * STAGES.length + (state.realmStage || 0);
+    return order.realm != null && order.realm * STAGES.length + (order.stage || 0) <= mine;
+}
+
 function courtRollRank(loc) {
-    const realm = loc.minR + Math.floor(Math.random() * (loc.maxR - loc.minR + 1));
-    const stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : 3;
+    const top = Math.max(loc.minR, Math.min(loc.maxR, state.realmIndex || 0));
+    const realm = loc.minR + Math.floor(Math.random() * (top - loc.minR + 1));
+    let stageCap = realm === loc.maxR && loc.maxS != null ? loc.maxS : STAGES.length - 1;
+    if (realm === (state.realmIndex || 0)) stageCap = Math.min(stageCap, state.realmStage || 0);
     return { realm, stage: Math.floor(Math.random() * (stageCap + 1)) };
 }
 
@@ -115,9 +126,9 @@ function courtRankText(order) {
 function courtOffers() {
     const world = currentLocation().world;
     const active = state.courtOrders.map(order => order.loc);
-    const offers = (state.courtOffers || []).filter(o => o.realm != null && LOCATIONS[o.loc].world === world && !active.includes(o.loc));
+    const offers = (state.courtOffers || []).filter(o => courtRankFits(o) && LOCATIONS[o.loc].world === world && !active.includes(o.loc));
     if (offers.length) return state.courtOffers = offers;
-    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && canEnterLocation(l.id) && !active.includes(l.id));
+    const pool = Object.values(LOCATIONS).filter(l => l.world === world && (l.enemies || []).length && courtLocFits(l) && canEnterLocation(l.id) && !active.includes(l.id));
     state.courtOffers = pool.sort(() => Math.random() - 0.5).slice(0, COURT_OFFERS)
         .map(l => ({ loc: l.id, name: l.enemies[Math.floor(Math.random() * l.enemies.length)].name, ...courtRollRank(l) }));
     return state.courtOffers;
@@ -127,7 +138,8 @@ function migrateCourtOrders() {
     state.courtOrders = state.courtOrders || [];
     if (state.court) state.courtOrders.push(state.court);
     delete state.court;
-    state.courtOrders.filter(order => order.realm == null).forEach(order => Object.assign(order, courtRollRank(LOCATIONS[order.loc])));
+    state.courtOrders = state.courtOrders.filter(order => courtLocFits(LOCATIONS[order.loc]));
+    state.courtOrders.filter(order => !courtRankFits(order)).forEach(order => Object.assign(order, courtRollRank(LOCATIONS[order.loc])));
 }
 
 function registerTienVi() {
