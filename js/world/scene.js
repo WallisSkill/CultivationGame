@@ -47,6 +47,8 @@ function sceneSpots(loc) {
     add('🧭', 'Thám hiểm', () => startExplore());
     add('🏪', 'Cửa hàng', () => openServiceShop(), hasService('shop'));
     add('🔨', forgeGradeOf(loc).name, () => openForge(), hasService('forge'));
+    const locked = lockedServices(loc);
+    add('🔒', locked.map(name => serviceLabel(loc, name)).join(', '), () => openLockedService(), locked.length > 0);
     add('📜', 'Bảng treo thưởng', () => openBountyBoard(), hasService('board') && !state.bounty);
     add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
     add('🕯️', 'Chợ Đen', () => openBlackMarket(), !!loc.blackMarket);
