@@ -22,10 +22,19 @@ Object.keys(NPCS).filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
     NPCS[key].daoRealm = realm;
     NPCS[key].storyNpc = true;
 });
+const NPC_WORLDS = {};
 Object.values(LOCATIONS).forEach(loc => {
     [residentKey(loc.id), ...LOCATION_NPCS[loc.id]].filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
-        if (NPCS[key] && NPCS[key].daoRealm == null) NPCS[key].daoRealm = loc.maxR;
+        if (!NPCS[key]) return;
+        (NPC_WORLDS[key] = NPC_WORLDS[key] || new Set()).add(loc.world);
+        if (NPCS[key].daoRealm == null) NPCS[key].daoRealm = loc.enemyMax ?? loc.maxR;
     });
+});
+/* Thánh Giới chỉ Lục Thánh thành Thánh: người chỉ sống ở đó dừng ở trần quái của Giới */
+Object.entries(NPC_WORLDS).forEach(([key, worlds]) => {
+    if (NPC_REALM[key] != null || worlds.size !== 1) return;
+    const cap = Object.values(LOCATIONS).find(loc => worlds.has(loc.world) && loc.enemyMax != null)?.enemyMax;
+    if (cap != null && NPCS[key].daoRealm > cap) NPCS[key].daoRealm = cap;
 });
 Object.values(NPCS).forEach(npc => {
     if (npc.daoRealm == null || !npc.look) return;
