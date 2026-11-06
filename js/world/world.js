@@ -907,17 +907,29 @@ function lockedServices(loc) {
     return (loc.services || []).filter(name => name === 'forge' || SERVICE_LABELS[name]);
 }
 
+function questGiverText(q) {
+    return `${NPCS[questGiver(q)].name} tại ${LOCATIONS[q.loc].name}`;
+}
+
+function questBlockReasons(q, seen = new Set()) {
+    if (seen.has(q.id)) return [];
+    seen.add(q.id);
+    if (state.questActive.some(rt => rt.id === q.id)) return [`Đang làm "${q.title}". Xong việc rồi báo lại ${questGiverText(q)}.`];
+    const reasons = [];
+    if (!needsMet(q)) reasons.push(`"${q.title}" cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]}.`);
+    [q.afterMain, q.after].filter(id => id && !state.questDone.includes(id)).forEach(id => {
+        const need = QUEST_INDEX[id];
+        if (id[0] === 'm') reasons.push(`Cần xong nhiệm vụ chính "${need.title}".`);
+        else reasons.push(...questBlockReasons(need, seen));
+    });
+    if (!reasons.length) reasons.push(`Gặp ${questGiverText(q)} nhận việc "${q.title}".`);
+    return reasons;
+}
+
 function serviceLockReasons(loc) {
     const q = QUEST_INDEX[`open_${loc.id}`];
-    const giver = `${NPCS[questGiver(q)].name} tại ${loc.name}`;
-    if (state.questActive.some(rt => rt.id === q.id)) return [`Đang làm "${q.title}". Xong việc rồi báo lại ${giver}.`];
-    const reasons = [];
-    if (!needsMet(q)) reasons.push(`Cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]}.`);
-    [q.after, q.afterMain].filter(id => id && !state.questDone.includes(id)).forEach(id => {
-        const need = QUEST_INDEX[id];
-        reasons.push(id[0] === 'm' ? `Cần xong nhiệm vụ chính "${need.title}".` : `Cần xong "${need.title}" ở ${LOCATIONS[need.loc].name}.`);
-    });
-    reasons.push(reasons.length ? `Khi đủ điều kiện, gặp ${giver} nhận việc "${q.title}".` : `Gặp ${giver} nhận việc "${q.title}".`);
+    const reasons = questBlockReasons(q);
+    if (!reasons[reasons.length - 1].includes(`"${q.title}"`)) reasons.push(`Sau đó gặp ${questGiverText(q)} nhận việc "${q.title}".`);
     return reasons;
 }
 
