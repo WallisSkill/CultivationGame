@@ -158,12 +158,10 @@ Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am
 
 Object.keys(LOCATIONS).forEach(id => { LOCATIONS[id].id = id; });
 
-/* Thánh Giới: ngoài Lục Thánh không có đối thủ, quái dừng ở cấp Thánh Nhân; cõi tự sáng tạo không có sinh linh */
-const SAINT_ENEMY_MAX = 19;
-const OPENED_ENEMY_MAX = 20;
-const OPENED_REALM = 21;
+/* Thánh Giới: ngoài Lục Thánh không ai thành Thánh, quái và boss dừng ở Chuẩn Thánh; cõi tự sáng tạo không có sinh linh */
+const SAINT_ENEMY_MAX = 18;
 Object.values(LOCATIONS).forEach(loc => {
-    if (loc.world === 'thanh') loc.enemyMax = loc.minR >= OPENED_REALM ? OPENED_ENEMY_MAX : SAINT_ENEMY_MAX;
+    if (loc.world === 'thanh') loc.enemyMax = SAINT_ENEMY_MAX;
     if (NO_MONSTER_WORLDS.includes(loc.world)) loc.enemies = [];
     if (NO_MONSTER_WORLDS.includes(loc.world)) {
         loc.services = [];

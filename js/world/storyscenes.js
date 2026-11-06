@@ -483,7 +483,7 @@ function treasureSteps(loc, key, bossId, thanks) {
 
 function treasureBoss(loc, id, realm) {
     const seed = NPC_SEED(id);
-    BOSSES[id] = { npc: { name: HIDDEN_FOES[seed % HIDDEN_FOES.length], look: { ...npcLookFromSeed(seed), aura: '#c58bff' } }, realm, stage: 2, scale: HIDDEN_BOSS_SCALE, board: 5 };
+    BOSSES[id] = { npc: { name: HIDDEN_FOES[seed % HIDDEN_FOES.length], look: { ...npcLookFromSeed(seed), aura: '#c58bff' } }, realm: Math.min(realm, loc.enemyMax ?? realm), stage: 2, scale: HIDDEN_BOSS_SCALE, board: 5 };
 }
 
 /* Khu vực theo cốt truyện: Giới có release thì trước nhiệm vụ đó chỉ đi được những nơi cốt truyện đã dẫn tới.
