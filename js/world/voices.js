@@ -141,7 +141,7 @@ const NPC_VOICES = {
     },
     chuan_de: {
         up: ['Hữu duyên, hữu duyên! {me} mà tới được Cực Lạc thì đúng là có duyên với Tây Phương.', 'Ở lại với bần đạo đi, Tây Phương nghèo nhưng thiếu người lắm.'],
-        even: ['Cùng cảnh giới à? Bần đạo vốn chẳng mạnh nhất, nên không ngại nói thật.', 'Ngang hàng thì càng có duyên. Ngươi có muốn mang về Tây Phương một món bảo bối không?'],
+        even: ['Cùng cảnh giới à? Bần đạo vốn yếu nhất trong sáu vị, nên không ngại nói thật.', 'Ngang hàng thì càng có duyên. Ngươi có muốn mang về Tây Phương một món bảo bối không?'],
         down: ['Thí chủ đã vượt bần đạo. Thôi, coi như Tây Phương lại lỡ một mối duyên.', 'Thí chủ mạnh rồi thì nhớ Cực Lạc còn nghèo. Ghé qua, không xin gì đâu, thật đấy.'],
         area: 'Cực Lạc nghe thì sướng, ở rồi mới biết đất cằn. Bần đạo trồng sen ở đây ba mươi vạn năm mới nở một đóa.'
     },

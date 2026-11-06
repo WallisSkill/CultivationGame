@@ -62,16 +62,16 @@ const BOSSES = {
     doc_cong: { npc: { name: 'Đốc Công Trương Tiên', look: NPC_LOOK('m', 4, '#1b1b22', '#b5832e', { weapon: 'spear', weaponColor: '#ffc14d' }) }, realm: 9, stage: 2 },
     thien_tuong: { npc: { name: 'Phi Thăng Giám Sát Sứ', look: NPC_LOOK('m', 0, '#1b1b22', '#dbe8f7', { weapon: 'sword', weaponColor: '#9fd3ff', crown: 'guan' }) }, realm: 10, stage: 2 },
     tinh_giao: { kind: 'dragon', name: 'Thiên Hà Giao Vương', realm: 11, stage: 2 },
-    kiem_khi: { npc: 'thong_thien', realm: 21, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
+    kiem_khi: { npc: 'thong_thien', realm: 20, stage: 2, scale: 3, scriptedLoss: true, board: 5 },
     cu_linh: { kind: 'golem', name: 'Cự Linh Thần Tướng', realm: 12, stage: 2 },
     than_ha: { npc: { name: 'Thiên Bồng Nguyên Soái', look: NPC_LOOK('m', 4, '#1b1b22', '#2f5f9e', { weapon: 'spear', weaponColor: '#9fd3ff' }) }, realm: 13, stage: 2 },
     nam_mon: { npc: { name: 'Tăng Trưởng Thiên Vương', look: NPC_LOOK('m', 0, '#1b1b22', '#8c3a3a', { weapon: 'spear', weaponColor: '#ffd479', crown: 'guan' }) }, realm: 14, stage: 2, board: 4 },
     tien_de: { npc: 'tien_de', realm: 15, stage: 2, board: 5, scale: 1.1 },
-    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 21, stage: 2, scale: 4, scriptedLoss: true, board: 5 },
+    nguyen_thuy_phan: { npc: 'nguyen_thuy', realm: 21, stage: 1, scale: 4, scriptedLoss: true, board: 5 },
     thai_thanh: { npc: 'thai_thanh', realm: 19, stage: 2, scale: 0.7, board: 5, elements: SAINT_ELEMENTS },
-    nguyen_thuy: { npc: 'nguyen_thuy', realm: 21, stage: 2, scale: 0.6, board: 5, elements: SAINT_ELEMENTS },
-    thong_thien: { npc: 'thong_thien', realm: 21, stage: 2, scale: 0.9, board: 5, elements: SAINT_ELEMENTS },
-    chuan_tiep: { npc: 'chuan_de', realm: 21, stage: 1, scale: 0.85, board: 5, elements: SAINT_ELEMENTS },
+    nguyen_thuy: { npc: 'nguyen_thuy', realm: 21, stage: 1, scale: 0.6, board: 5, elements: SAINT_ELEMENTS },
+    thong_thien: { npc: 'thong_thien', realm: 20, stage: 2, scale: 0.9, board: 5, elements: SAINT_ELEMENTS },
+    chuan_tiep: { npc: 'chuan_de', realm: 19, stage: 2, scale: 0.85, board: 5, elements: SAINT_ELEMENTS },
     thien_ma_chu: { kind: 'chaos', name: 'Ngoại Vực Thiên Ma Chủ', realm: 23, stage: 2, board: 5 },
     khoi_loi: { kind: 'golem', name: 'Thiên Đạo Chấp Hành Thể', realm: 23, stage: 2, board: 4 },
     nghiep_long: { kind: 'dragon', name: 'Vạn Kiếp Nghiệp Long', realm: 24, stage: 2, board: 4 },
@@ -309,7 +309,7 @@ const MAIN_QUESTS = [
     {
         id: 'm21', act: 3, title: 'Mở Rộng Thánh Giới', needs: [21, 0],
         steps: [
-            { go: 'oa_hoang', say: [['nu_oa', 'Con đã là Đại Thánh, ngang hàng thật sự với sáu chúng ta. Thánh Giới chật rồi, tiên nhân dưới kia cũng không còn đường đi lên.'], ['me', 'Vậy thì mở rộng nó ra.'], ['nu_oa', 'Mở ra thì sẽ có thêm nhiều Thánh Nhân. Thánh không còn là thứ hiếm nữa, con chịu được không?']] },
+            { go: 'oa_hoang', say: [['nu_oa', 'Con đã là Đại Thánh, cao hơn cả ta. Trong sáu chúng ta chỉ Thái Thanh và Nguyên Thủy đứng ở tầng này. Thánh Giới chật rồi, Chuẩn Thánh dưới kia cả đời không có chỗ đứng.'], ['me', 'Vậy thì mở rộng nó ra.'], ['nu_oa', 'Mở ra thì họ có chỗ đứng chờ. Nhưng ghế Thánh vẫn chỉ có sáu, và ghế thứ bảy là của con. Con chịu được cái nhìn của những người đứng chờ không?']] },
             { gather: { loc: 'tu_tieu', hours: 8, label: 'Đẩy bờ Thánh Giới ra xa' }, say: [['narr', 'Vách Thánh Giới lùi ra ba ngàn dặm. Dưới Tiên Giới, những người đứng ở Chuẩn Thánh cả đời ngẩng đầu lên.']] }
         ],
         reward: { hours: 36, goldRefs: 300, statBless: 0.05 }
@@ -317,8 +317,8 @@ const MAIN_QUESTS = [
     {
         id: 'm22', act: 3, title: 'Kiếm Hẹn', unlock: 22, needs: [21, 2],
         steps: [
-            { go: 'bich_du', say: [['thong_thien', 'Lớn nhanh thật. Lần này ta dùng gần hết sức, đừng khóc.']] },
-            { boss: 'thong_thien', say: [['thong_thien', 'Đã lắm! Viên mãn Đại Thánh rồi, ta nói được cho ngươi nghe. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Bọn ta là Đại Đạo Thánh Nhân. Trên bọn ta là cảnh giới Thiên, tên thật của nó là Đại Đạo Chí Thượng. Người dưới không biết, ai nghe qua cũng tưởng Chí Thượng chỉ là Thánh mạnh hơn một chút.'], ['me', 'Thật ra thì sao?'], ['thong_thien', 'Một người trong số họ thở ra, cả sáu chúng ta phải cúi đầu. Muốn bước vào thì mua đủ đồ cấp Thiên ở Tử Tiêu Thị đi.']] }
+            { go: 'bich_du', say: [['thong_thien', 'Lớn nhanh thật, đã cao hơn ta rồi. Lần này ta dùng hết sức, đừng khóc.']] },
+            { boss: 'thong_thien', say: [['thong_thien', 'Đã lắm! Ta chỉ đứng ở Chí Thánh Hậu Kỳ, trong sáu người chỉ Thái Thanh và Nguyên Thủy tới được Đại Thánh. Ngươi qua ta rồi, ta nói được cho ngươi nghe. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Bọn ta là Đại Đạo Thánh Nhân. Trên bọn ta là cảnh giới Thiên, tên thật của nó là Đại Đạo Chí Thượng. Người dưới không biết, ai nghe qua cũng tưởng Chí Thượng chỉ là Thánh mạnh hơn một chút.'], ['me', 'Thật ra thì sao?'], ['thong_thien', 'Một người trong số họ thở ra, cả sáu chúng ta phải cúi đầu. Muốn bước vào thì mua đủ đồ cấp Thiên ở Tử Tiêu Thị đi.']] }
         ],
         reward: { hours: 48, goldRefs: 350, gear: ['weapon', 4], relic: 'Tru Tiên Kiếm' }
     },

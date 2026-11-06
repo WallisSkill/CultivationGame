@@ -4,7 +4,8 @@
    - RING_TALES: cảnh truyện khi người chơi đạt mốc vòng.
    - Lời phán xét: mỗi NPC nói bằng giọng riêng trong voices.js, theo việc mình cao hơn, ngang hay đã bị người chơi vượt.
 =========================================================== */
-const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 21, nu_oa: 21, chuan_de: 21, tiep_dan: 21, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, chuong_mon: 6, tien_lai: 9 };
+const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 20, nu_oa: 20, tiep_dan: 19, chuan_de: 19, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, chuong_mon: 6, tien_lai: 9 };
+const NPC_STAGE = { thai_thanh: 3, nguyen_thuy: 1, thong_thien: 2, nu_oa: 0, tiep_dan: 2, chuan_de: 0 };
 const NPC_NO_RING = ['mac'];
 
 function storyRealmOf(key) {
@@ -20,6 +21,7 @@ Object.keys(NPCS).filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
     const realm = storyRealmOf(key);
     if (realm == null) return;
     NPCS[key].daoRealm = realm;
+    if (NPC_STAGE[key] != null) NPCS[key].daoStage = NPC_STAGE[key];
     NPCS[key].storyNpc = true;
 });
 const NPC_WORLDS = {};
@@ -56,7 +58,7 @@ const RING_TALES = {
     15: [['narr', 'Bảy vòng xanh mọc thêm răng và chấm sao. Thiên binh quỳ xuống, nhưng đầu họ cúi về phía lưng ngươi chứ không phải mặt ngươi.'], ['me', 'Họ quỳ trước cái vòng.'], ['narr', 'Không ai trả lời. Ở Tiên Giới, đó là câu trả lời.']],
     19: [['narr', 'Mười vòng xanh vỡ ra và liền lại thành một vòng vàng. Ngươi tưởng đó là phần thưởng, cho tới khi nhận ra nó không ngừng quay dù ngươi đứng yên.'], ['thai_thanh', 'Một vòng vàng nặng hơn mười vòng xanh. Lúc mới có ta cũng soi gương cả ngày.']],
     20: [['narr', 'Vòng vàng thứ hai mọc ra bên ngoài vòng đầu. Tiếng chuông Tu Di vang lên đúng lúc, như thể có ai đó vừa đánh dấu.']],
-    21: [['thai_thanh', 'Ba vòng. Sáu chúng ta dừng ở đây, và đã dạy cả Thánh Giới rằng không có vòng vàng thứ tư.'], ['me', 'Có không?'], ['thai_thanh', 'Câu đó hỏi xong thì đừng để ai nghe thấy.']],
+    21: [['thai_thanh', 'Ba vòng. Trong sáu chúng ta chỉ ta và Nguyên Thủy đứng tới đây, và cả hai đã dạy Thánh Giới rằng không có vòng vàng thứ tư.'], ['me', 'Có không?'], ['thai_thanh', 'Câu đó hỏi xong thì đừng để ai nghe thấy.']],
     22: [['narr', 'Ngươi chờ vòng vàng thứ tư. Nó không đến. Thay vào đó, trên vòng ngoài hiện lên tám hạt sáng, xếp đều như ai đó vừa chấm mực.'], ['van_kiep', 'Đừng ngạc nhiên. Từ đây trời không thêm vòng cho ngươi, chỉ thêm chữ.']],
     25: [['narr', 'Hoa văn trên lưng ngươi đã dày tới mức có thể đọc. Ngươi soi xuống mặt nước và đọc thử: đó là những nét chép lại mọi trận ngươi từng đánh.']],
     28: [['narr', 'Sáu ngôi sao đi vào quỹ đạo quanh ba vòng vàng. Ngươi tạo ra một thế giới, và cư dân đầu tiên của nó ngước lên thấy vòng của ngươi trên trời, gọi đó là mặt trời.']],
@@ -77,9 +79,11 @@ const RING_JUDGE = {
     hidden: ['Ta không thấy vòng nào sau lưng ông ấy. Có lẽ vì thế mà ông ấy nhìn ai cũng như nhìn lá rụng.']
 };
 
-function ringBucket(npc, realm) {
-    if (npc.daoRealm > realm) return 'up';
-    return npc.daoRealm === realm ? 'even' : 'down';
+function ringBucket(npc, realm, stage = 0) {
+    const theirs = npc.daoRealm * STAGES.length + (npc.daoStage ?? 0);
+    const mine = realm * STAGES.length + (npc.daoStage != null ? stage : 0);
+    if (theirs > mine) return 'up';
+    return theirs === mine ? 'even' : 'down';
 }
 
 function capitalize(text) {
@@ -93,9 +97,9 @@ function npcRealmRemarkHTML(key) {
         if (!NPC_NO_RING.includes(key)) return '';
         return `<div class="small">🔘 Không nhìn thấu cảnh giới</div><div class="small"><i>${RING_JUDGE.hidden[0]}</i></div>`;
     }
-    const lines = npcVoice(key)[ringBucket(npc, realm)];
+    const lines = npcVoice(key)[ringBucket(npc, realm, state.realmStage || 0)];
     const ring = ringName(realm);
     const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[npc.daoRealm], ring, Ring: capitalize(ring), Me: REALMS[realm], loc: currentLocation().name };
     const line = voiceText(lines[(NPC_SEED(key) + realm) % lines.length], words);
-    return `<div class="small">🔘 ${REALMS[npc.daoRealm]} · ${ringName(npc.daoRealm)}</div><div class="small"><i>“${line}”</i></div>`;
+    return `<div class="small">🔘 ${REALMS[npc.daoRealm]}${npc.daoStage != null ? ` ${STAGES[npc.daoStage]}` : ''} · ${ringName(npc.daoRealm)}</div><div class="small"><i>“${line}”</i></div>`;
 }
