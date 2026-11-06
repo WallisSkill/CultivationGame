@@ -428,6 +428,7 @@ function drawScene() {
         const look = playerLook();
         const image = sceneImage(`me:${JSON.stringify(look)}`, humanoidSvg(look, { title: state.name }));
         if (trial) drawTrialEffect(ctx, seated.x, seated.y + 10, trialFor(trial.realm).effect, trialFor(trial.realm).color, performance.now());
+        else if (seated && tichDietActive()) drawTichDiet(ctx, seated.x, seated.y + 10, performance.now());
         if (seated) drawSeated(ctx, image, seated.x, seated.y + 10, state.name || '', '#ffe9a0', Math.min(1, (performance.now() - s.sitAt) / SEAT_SIT_MS), !!currentLocation().seat);
         else drawUnit(ctx, image, s.x, s.y, state.name || '', '#ffe9a0');
         if (s.bubble && Date.now() < s.bubble.until) drawBubble(ctx, s.x, s.y, s.bubble.text);

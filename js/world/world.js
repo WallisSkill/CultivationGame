@@ -221,6 +221,7 @@ function advanceWorld(sec) {
             const use = Math.min(left, a.remaining);
             a.remaining -= use;
             left -= use;
+            if (a.type === 'trial' && !trialStrike(a, use)) break;
             if (a.remaining <= 0) finishActivity();
         }
         if (window._battleActive) return;

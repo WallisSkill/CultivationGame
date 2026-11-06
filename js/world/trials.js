@@ -38,6 +38,9 @@ const BREAKTHROUGH_TRIALS = {
     31: { loc: 'chua_te', minutes: 30, effect: 'pillar', color: '#fff7d6', start: 'Trên Chúa Tể Tọa, cột sáng trắng vàng nối từ khởi nguyên tới tận cùng, xuyên qua thân ngươi.', done: 'Khởi nguyên và tận cùng gặp nhau trong ngươi. Chung Nguyên Chí Cao đã thành.' }
 };
 
+const TRIAL_BOLT_SECONDS = 5;
+const TRIAL_DAMAGE_SHARE = 0.7;
+
 function trialFor(realm) {
     return BREAKTHROUGH_TRIALS[realm] || null;
 }
@@ -77,6 +80,54 @@ function startTrial() {
     playDialogue([['narr', trial.start]]);
 }
 
+/* Kiếp đánh như một kẻ địch: mốc là người viên mãn mặc đủ đồ Bảo phẩm cùng cảnh giới, chịu hết kiếp còn khoảng 30% máu */
+function trialExpected(realm) {
+    const body = refStats(realm, 3);
+    const share = realmShare(realmProgress(realm, 3));
+    const gear = gearBudget(realm);
+    return { hp: body.hp * share + gear.hp, def: body.def * share + gear.def };
+}
+
+function trialBolts(trial) {
+    return Math.floor(trial.minutes * 60 / TRIAL_BOLT_SECONDS);
+}
+
+function trialBoltAtk(trial) {
+    const expected = trialExpected(trial.realm - 1);
+    const c = expected.hp * TRIAL_DAMAGE_SHARE / trialBolts(trial);
+    return (c + Math.sqrt(c * c + 4 * c * expected.def)) / 2;
+}
+
+function trialBoltDamage(trial) {
+    const atk = trialBoltAtk(trial);
+    const def = state.totalDef || state.defense || 0;
+    return Math.max(1, Math.floor(atk * atk / (atk + def)));
+}
+
+function trialStrike(a, seconds) {
+    const trial = { ...trialFor(a.realm), realm: a.realm };
+    a.boltClock = (a.boltClock || 0) + seconds;
+    while (a.boltClock >= TRIAL_BOLT_SECONDS) {
+        a.boltClock -= TRIAL_BOLT_SECONDS;
+        state.hp -= trialBoltDamage(trial);
+        if (state.hp <= 0) {
+            failTrial(a);
+            return false;
+        }
+    }
+    return true;
+}
+
+function failTrial(a) {
+    state.hp = 1;
+    state.activity = null;
+    const text = `Lôi kiếp ${REALMS[a.realm]} đánh ngươi ngã gục giữa chừng. Thân này chưa đủ cứng để chịu trời phạt: hồi máu, rèn đồ cho xứng rồi chịu lại từ đầu.`;
+    log(`💥 ${text}`);
+    showToast(`Độ kiếp ${REALMS[a.realm]} thất bại`, 'warn');
+    playDialogue([['narr', text]]);
+    renderAll();
+}
+
 function finishTrial(a) {
     const trial = trialFor(a.realm);
     state.trialDone = a.realm;
@@ -90,8 +141,12 @@ function trialCardHTML() {
     if (!trial) return '';
     const here = state.location === trial.loc;
     const busy = trialActive();
+    const hit = trialBoltDamage(trial);
+    const total = hit * trialBolts(trial);
+    const weak = total >= (state.hp || 0);
     return `<div class="quest-card main"><div class="small">⚡ Độ kiếp</div><b>${REALMS[trial.realm]}</b>
         <div class="small">${trialText(trial)}.${busy ? ' Đang chịu kiếp, đứng dậy là phải chịu lại từ đầu.' : ''}</div>
+        <div class="small">${trialBolts(trial)} đạo lôi, mỗi đạo trừ ${formatNumber(hit)} máu, tổng ${formatNumber(total)} / máu hiện có ${formatNumber(Math.floor(state.hp || 0))}.${weak ? ' <b style="color:#ff7a7a">Không đủ máu chịu hết kiếp: rèn đồ, hồi máu trước.</b>' : ''}</div>
         ${busy ? '' : `<button class="mini-btn" onclick="startTrial()">${here ? 'Độ kiếp' : 'Đi ngay'}</button>`}</div>`;
 }
 
@@ -121,29 +176,8 @@ function drawTrialEffect(ctx, x, y, effect, color, t) {
     };
     switch (effect) {
         case 'lightning': {
-            const bolt = Math.floor(t / 420);
-            const age = (t % 420) / 420;
             glow(70, 0.25);
-            if (age < 0.45) {
-                const bx = x + (trialRand(bolt) - 0.5) * 50;
-                ctx.globalAlpha = 1 - age / 0.45;
-                ctx.lineWidth = 4;
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 18;
-                ctx.beginPath();
-                let px = bx, py = y - 340;
-                ctx.moveTo(px, py);
-                for (let i = 1; i <= 8; i++) {
-                    py = y - 340 + i * (340 - SCENE_AVATAR_H * 0.3) / 8;
-                    px = (i === 8 ? x : bx + (trialRand(bolt * 9 + i) - 0.5) * 60);
-                    ctx.lineTo(px, py);
-                }
-                ctx.stroke();
-                ctx.lineWidth = 1.5;
-                ctx.strokeStyle = '#fff';
-                ctx.stroke();
-                glow(110, 0.5 * (1 - age / 0.45));
-            }
+            drawTrialBolt(ctx, x, y, color, t, 420, 0, glow);
             break;
         }
         case 'fire': {
@@ -271,6 +305,84 @@ function drawTrialEffect(ctx, x, y, effect, color, t) {
             break;
         }
     }
+    if (effect !== 'lightning') drawTrialBolt(ctx, x, y, color, t, 1100, 0, glow);
+    ctx.restore();
+}
+
+function drawTrialBolt(ctx, x, y, color, t, period, seed, glow, spread = 50, top = 340, width = 4) {
+    const bolt = Math.floor(t / period);
+    const age = (t % period) / period;
+    if (age >= 0.45) return;
+    const bx = x + (trialRand(bolt + seed) - 0.5) * spread;
+    ctx.save();
+    ctx.globalAlpha = 1 - age / 0.45;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    let px = bx, py = y - top;
+    ctx.moveTo(px, py);
+    for (let i = 1; i <= 8; i++) {
+        py = y - top + i * (top - SCENE_AVATAR_H * 0.3) / 8;
+        px = i === 8 ? x : bx + (trialRand((bolt + seed) * 9 + i) - 0.5) * 60;
+        ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.lineWidth = Math.max(1, width * 0.4);
+    ctx.strokeStyle = '#fff';
+    ctx.stroke();
+    ctx.restore();
+    if (glow) glow(110, 0.5 * (1 - age / 0.45));
+}
+
+/* Hư Vô Chí Đạo ngồi đâu Đại Đạo Tịch Diệt giáng xuống đó; linh căn càng cao kiếp càng dữ, chỉ là cảnh, không trừ máu */
+function tichDietActive() {
+    return (state.realmIndex || 0) >= REALMS.length - 1;
+}
+
+function tichDietLevel() {
+    const rank = (state.root?.rank || 0) / (ROOT_RANKS.length - 1);
+    const pure = 1 / Math.max(1, state.root?.elements?.length || 1);
+    return 0.4 + rank * 0.8 + pure * 0.3;
+}
+
+function drawTichDiet(ctx, x, y, t) {
+    const level = tichDietLevel();
+    const cy = y - SCENE_AVATAR_H * 0.5;
+    const r = 120 + level * 90;
+    ctx.save();
+    const hole = ctx.createRadialGradient(x, cy, 0, x, cy, r);
+    hole.addColorStop(0, 'rgba(0,0,0,0.85)');
+    hole.addColorStop(0.55, 'rgba(20,0,40,0.5)');
+    hole.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = hole;
+    ctx.beginPath();
+    ctx.arc(x, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    for (let i = 0; i < Math.round(3 + level * 5); i++) {
+        const p = ((t / 2200) + trialRand(i + 40)) % 1;
+        ctx.globalAlpha = 1 - p;
+        ctx.strokeStyle = i % 2 ? '#ffffff' : '#b98cff';
+        ctx.beginPath();
+        ctx.ellipse(x, cy, r * (1 - p) + 10, (r * (1 - p) + 10) * 0.4, t / 4000 + i, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+    for (let i = 0; i < Math.round(30 + level * 50); i++) {
+        const p = ((t / 3000) + trialRand(i * 3 + 7)) % 1;
+        const a = trialRand(i * 11) * Math.PI * 2;
+        const d = (1 - p) * r * 1.6;
+        ctx.globalAlpha = p;
+        ctx.fillStyle = i % 3 ? '#e8e0ff' : '#000';
+        ctx.fillRect(x + Math.cos(a) * d, cy + Math.sin(a) * d * 0.6, 3, 3);
+    }
+    ctx.globalAlpha = 1;
+    const bolts = Math.round(2 + level * 4);
+    for (let i = 0; i < bolts; i++) {
+        drawTrialBolt(ctx, x, y, ['#ffffff', '#c77dff', '#000000', '#ff4d6d', '#7ad7ff'][i % 5], t + i * 137, 520 + i * 90, i * 31, null, 120 + level * 160, 420, 3 + level * 3);
+    }
     ctx.restore();
 }
 
@@ -287,4 +399,4 @@ function drawTrialProgress(ctx, a, w, h) {
     ctx.fillText(`${a.label} · ${Math.floor(pct * 100)}%`, w / 2, 35);
 }
 
-if (typeof window !== 'undefined') Object.assign(window, { startTrial, pendingTrial, trialFor });
+if (typeof window !== 'undefined') Object.assign(window, { startTrial, pendingTrial, trialFor, drawTichDiet });
