@@ -260,7 +260,7 @@ const YEU_QUESTS = [
 SIDE_QUESTS.push(...YEU_QUESTS);
 YEU_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 
-/* Dò la tin tức: mỗi Giới một chuỗi, biết lò thường trước rồi mới lần ra Danh lò, Thần lò và Chợ Đen */
+/* Dò la tin tức: mỗi Giới một chuỗi, nơi tới được sớm thì dò trước; cùng cảnh giới thì lò thường trước rồi tới Chợ Đen, Thần lò */
 const INTEL_FORGE_HOURS = [1, 2, 4];
 const INTEL_MARKET_HOURS = 3;
 
@@ -308,7 +308,7 @@ const INTEL_QUESTS = WORLD_TIERS.flatMap(tier => {
         ...forges.filter(l => !forgeGradeOf(l).wholeWorld).map(forgeEntry),
         ...sites.filter(l => l.blackMarket && !forges.includes(l)).map(l => ({ loc: l, label: 'Chợ Đen', hours: INTEL_MARKET_HOURS })),
         ...forges.filter(l => forgeGradeOf(l).wholeWorld).map(forgeEntry)
-    ];
+    ].map((entry, order) => ({ ...entry, order })).sort((a, b) => a.loc.minR - b.loc.minR || a.order - b.order);
     const used = new Set();
     return chain.map((entry, i) => {
         const pool = sites.filter(l => l !== entry.loc && !l.seatOnly && hops[l.id] != null && l.minR <= entry.loc.minR)

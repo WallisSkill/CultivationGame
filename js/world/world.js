@@ -917,6 +917,7 @@ function questBlockReasons(q, seen = new Set()) {
     if (state.questActive.some(rt => rt.id === q.id)) return [`Đang làm "${q.title}". Xong việc rồi báo lại ${questGiverText(q)}.`];
     const reasons = [];
     if (!needsMet(q)) reasons.push(`"${q.title}" cần đạt ${REALMS[q.needs[0]]} ${STAGES[q.needs[1]]}.`);
+    [...new Set(questLocations(q, pickBranch(q)))].filter(id => !storyAreaOpen(id)).forEach(id => reasons.push(`${LOCATIONS[id].name}: ${storyAreaLockText(id)}`));
     [q.afterMain, q.after].filter(id => id && !state.questDone.includes(id)).forEach(id => {
         const need = QUEST_INDEX[id];
         if (id[0] === 'm') reasons.push(`Cần xong nhiệm vụ chính "${need.title}".`);
