@@ -435,14 +435,14 @@ const HH_MA_THAN_QUESTS = [
         win: [['la_hau', 'Hồng Quân thắng ta vì có Thiên Đạo đứng sau. Ngươi thắng ta mà không có ai sau lưng. Ta sẽ chờ xem ngươi gặp Hồng Quân thì ai cúi đầu.']]
     },
     {
-        id: 'hh_ma_ban_co', loc: 'khai_thien', npc: 'ban_co', needs: [28, 1], boss: 'hh_ban_co', place: 'khai_thien',
+        id: 'hh_ma_ban_co', loc: 'khai_thien', npc: 'ban_co', needs: [28, 1], after: 'bc_khai_thien', boss: 'hh_ban_co', place: 'khai_thien',
         intro: [['narr', 'Giữa Khai Thiên Hoang Nguyên có một quả núi hình người nằm nghiêng, tay ôm một tảng đá như cán rìu. Không ai nhớ nó có từ bao giờ.']],
         sense: 'Ngồi bên quả núi hình người nghe nó thở',
         reveal: [['narr', 'Núi thở một hơi, mất ba ngày. Ngươi nhận ra quả núi là người, tảng đá là rìu.'], ['ban_co', 'Ta bổ trời, thân hóa thành núi sông, mắt thành nhật nguyệt. Ba ngàn Ma Thần chết theo. Nhưng một phần của ta không chịu tan, trôi ra ngoài trời ta bổ.'], ['me', 'Tam Thanh, Tổ Vu, đều sinh từ ngài.'], ['ban_co', 'Nguyên thần thành Tam Thanh, máu thành Tổ Vu. Còn ta nằm đây, chờ xem con cháu đánh nhau xong chưa.']],
         win: [['ban_co', 'Đứa nhỏ cầm được một nhát rìu của ta. Đi đi, lên chỗ Đạo Tổ ngồi. Bảo hắn Bàn Cổ còn thở.']]
     }
 ].map(q => ({
-    id: q.id, loc: q.loc, npc: q.npc, needs: q.needs, intro: q.intro,
+    id: q.id, loc: q.loc, npc: q.npc, needs: q.needs, after: q.after, intro: q.intro,
     title: `Người Lạ Ở ${LOCATIONS[q.loc].name}`,
     steps: [
         { gather: { loc: q.place, hours: 3, label: q.sense }, say: q.reveal },
@@ -576,7 +576,75 @@ const LUC_THANH_QUESTS = [
 ];
 LUC_THANH_QUESTS.forEach(q => { QUEST_INDEX[q.gate].needsSide = [...(QUEST_INDEX[q.gate].needsSide || []), q.id]; });
 
-const HH_QUESTS = [...LUC_NGUYEN_QUESTS, ...TAM_GIOI_QUESTS, ...HH_SIDE_QUESTS, ...AM_GIOI_QUESTS, ...LUC_THANH_QUESTS, ...HH_MA_THAN_QUESTS];
+/* ---------- Cội Nguồn Bàn Cổ: lần theo thân thể người khai thiên qua mọi Giới ---------- */
+const BAN_CO_QUESTS = [
+    {
+        id: 'bc_mau', loc: 'ban_co_dien', npc: 'de_giang', title: 'Cội Nguồn · Máu', needs: [12, 0],
+        intro: [['de_giang', 'Ngươi thờ tượng này mà không biết thờ ai. Mười hai Tổ Vu bọn ta sinh từ tinh huyết của người đó.'], ['me', 'Người đó là ai?'], ['de_giang', 'Kẻ đầu tiên cầm rìu. Muốn biết thì để máu ngươi nói chuyện với máu ông ấy.']],
+        steps: [
+            { hunt: { loc: 'ban_co_dien', name: 'Vu Binh', n: 4 }, say: [['de_giang', 'Vu Binh đánh bằng máu Bàn Cổ còn sót trong thân. Ngươi thắng được, nghĩa là máu ngươi đủ nóng để nghe.']] },
+            { gather: { loc: 'ban_co_dien', hours: 2, label: 'Áp tay lên tượng Bàn Cổ nghe mạch đập' }, say: [['narr', 'Tượng đá lạnh. Rồi rất lâu sau, dưới lòng bàn tay ngươi có một nhịp, chậm như một năm mới đập một lần.'], ['de_giang', 'Ngươi cũng nghe thấy. Ông ấy chưa chết hẳn. Thân thể hóa thành trời đất, nên đi khắp trời đất mà tìm.'], ['hau_nghe', 'Bắt đầu từ đôi mắt. Ta từng bắn rơi chín cái, chỉ chừa một. Lên Tiên Giới mà hỏi người ở cung trăng.']] }
+        ],
+        reward: { hours: 5, goldRefs: 25 }
+    },
+    {
+        id: 'bc_mat', loc: 'quang_han', npc: 'hang_nga', title: 'Cội Nguồn · Đôi Mắt', needs: [13, 0], after: 'bc_mau',
+        intro: [['hang_nga', 'Hậu Nghệ bảo ngươi tới à. Ông ấy vẫn không dám tự lên đây.'], ['me', 'Mặt trăng là mắt của Bàn Cổ?'], ['hang_nga', 'Mắt phải. Mắt trái thành mặt trời. Ta sống trong một con mắt đã nhắm, nên ở đây không bao giờ có ngày.']],
+        steps: [
+            { gather: { loc: 'quang_han', hours: 2, label: 'Nhìn xuống Tam Giới qua ánh trăng' }, say: [['narr', 'Từ Quảng Hàn nhìn xuống, núi sông dưới kia xếp thành hình một người nằm ngửa.'], ['hang_nga', 'Ngươi thấy rồi. Mỗi đêm con mắt này vẫn nhìn cái thân của chính nó.']] },
+            { hunt: { loc: 'phu_tang', name: 'Kim Ô Non', n: 3 }, say: [['narr', 'Kim Ô non sinh từ lửa của con mắt trái. Lông chúng còn nóng hơi ấm của một ánh nhìn rất cũ.'], ['hang_nga', 'Một mắt nhìn ban ngày, một mắt nhìn ban đêm. Người khai thiên chưa từng thôi trông chừng thế giới của mình.']] }
+        ],
+        reward: { hours: 6, goldRefs: 30 }
+    },
+    {
+        id: 'bc_toc', loc: 'thien_ha', npc: 'van_nguyet', title: 'Cội Nguồn · Tóc Và Sông', needs: [14, 0], after: 'bc_mat',
+        intro: [['van_nguyet', 'Ngươi hỏi vì sao Thiên Hà có nhiều sao vậy. Mỗi vì là một sợi tóc. Ông ấy tóc dài lắm.'], ['me', 'Còn máu?'], ['van_nguyet', 'Máu thành sông. Có con sông dưới Phàm Giới vẫn chưa chịu trong.']],
+        steps: [
+            { hunt: { loc: 'thien_ha', name: 'Tinh Hồn', n: 4 }, say: [['van_nguyet', 'Tinh Hồn là những sợi tóc rối. Gỡ chúng ra, sao lại sáng.']] },
+            { gather: { loc: 'luu_sa', hours: 2, label: 'Múc nước Lưu Sa Hà soi dưới ánh sao' }, say: [['narr', 'Dưới ánh sao, nước Lưu Sa đỏ sẫm như máu đã khô một nửa.'], ['sa_tang', 'Ta ở dưới sông này lâu rồi, biết nó mặn. Hóa ra là máu.'], ['van_nguyet', 'Mắt, tóc, máu, xương đều còn đây. Chỉ thiếu cái phần biết nghĩ. Phần đó ở Thánh Giới.']] }
+        ],
+        reward: { hours: 6, goldRefs: 30 }
+    },
+    {
+        id: 'bc_nguyen_than', loc: 'bat_canh', npc: 'thai_thanh', title: 'Cội Nguồn · Nguyên Thần', needs: [20, 0], after: 'bc_toc',
+        intro: [['thai_thanh', 'Ngươi đi khắp thân thể của ông ấy rồi tới đây hỏi phần còn lại.'], ['me', 'Nguyên thần Bàn Cổ thành Tam Thanh.'], ['thai_thanh', 'Phải. Ba anh em ta là một ý nghĩ của ông ấy bị tách làm ba. Vì vậy ta không cãi nhau với hai em được lâu.']],
+        steps: [
+            { gather: { loc: 'bat_canh', hours: 3, label: 'Ngồi cùng Thái Thanh nhớ lại ý nghĩ đầu tiên' }, say: [['thai_thanh', 'Ý nghĩ đó là "Để yên". Ta giữ phần đó.'], ['narr', 'Lò Bát Quái tắt lửa một khắc. Rồi tự cháy lại, không ai nhóm.']] },
+            { go: 'ngoc_hu', say: [['nguyen_thuy', 'Phần của ta là "Phải có thứ tự". Nên ta lập Xiển Giáo, chép thiên mệnh, chia trên dưới.']] },
+            { go: 'bich_du', say: [['thong_thien', 'Còn ta là "Ai cũng được". Vạn tiên lai triều, chim muông cũng nhận. Ghép ba câu lại mới ra Bàn Cổ.']] }
+        ],
+        reward: { hours: 8, goldRefs: 45 }
+    },
+    {
+        id: 'bc_riu', loc: 'bich_du', npc: 'thong_thien', title: 'Cội Nguồn · Cây Rìu', needs: [20, 2], after: 'bc_nguyen_than',
+        intro: [['thong_thien', 'Ngươi hỏi cây rìu khai thiên đâu. Nó vỡ làm ba sau nhát bổ đầu tiên.'], ['me', 'Ba mảnh đó ở đâu?'], ['thong_thien', 'Một mảnh trên tay ta, một mảnh trên tay mỗi sư huynh.']],
+        steps: [
+            { hunt: { loc: 'bich_du', name: 'Tru Tiên Kiếm Linh', n: 4 }, say: [['thong_thien', 'Lưỡi rìu thành Tru Tiên Tứ Kiếm. Kiếm linh vẫn nhớ mình từng bổ cả trời, nên ngông.']] },
+            { go: 'tu_tieu', say: [['nguyen_thuy', 'Cán rìu thành Bàn Cổ Phiên của ta.'], ['thai_thanh', 'Cái sức để bổ thành Thái Cực Đồ, nằm ở chỗ ta.'], ['thong_thien', 'Ba anh em ta cầm ba mảnh của một cây rìu, còn người cầm rìu thì chưa ai tìm.'], ['thai_thanh', 'Ngoài màn trời, ở chỗ nhát bổ đầu tiên rơi xuống. Lên Ngoại Vực đi.']] }
+        ],
+        reward: { hours: 8, goldRefs: 50 }
+    },
+    {
+        id: 'bc_ma_than', loc: 'vo_cuong', npc: 'ly_khach', title: 'Cội Nguồn · Ba Ngàn Ma Thần', needs: [24, 0], after: 'bc_riu',
+        intro: [['ly_khach', 'Muốn tới chỗ nhát bổ đầu tiên thì phải đi qua những kẻ chết vì nó.'], ['me', 'Ai chết?'], ['ly_khach', 'Ba ngàn Hỗn Độn Ma Thần. Trời mở ra thì chỗ của chúng không còn.']],
+        steps: [
+            { hunt: { loc: 'tinh_mo', name: 'Tinh Hài', n: 4 }, say: [['narr', 'Tinh Hài là xương Ma Thần đông cứng giữa trời sao. Trên mỗi bộ còn vết một nhát chém thẳng.'], ['ly_khach', 'Cùng một nhát. Ba ngàn kẻ chết bởi một nhát.']] },
+            { gather: { loc: 'van_gioi', hours: 3, label: 'Nhặt mảnh vỡ của trời cũ ở Vạn Giới Phế Tích' }, say: [['narr', 'Mảnh vỡ nào cũng nhẵn một mặt, như bị thứ gì sắc tới mức không cần dùng sức cắt qua.'], ['ly_khach', 'Đi theo vết cắt là tới Khai Thiên Hoang Nguyên.']] }
+        ],
+        reward: { hours: 10, goldRefs: 55 }
+    },
+    {
+        id: 'bc_khai_thien', loc: 'khai_thien', npc: 'ly_khach', title: 'Cội Nguồn · Nhát Bổ Đầu Tiên', needs: [25, 2], after: 'bc_ma_than',
+        intro: [['ly_khach', 'Đây rồi. Đất ở đây vẫn còn rách theo đường rìu, lửa ở đây vẫn lạnh vì chưa ai dạy nó nóng.']],
+        steps: [
+            { hunt: { loc: 'khai_thien', name: 'Quy Tắc Thể', n: 4 }, say: [['ly_khach', 'Quy Tắc Thể là luật chưa thành hình, rơi ra lúc trời đất tách nhau. Chúng không biết mình là gì.']] },
+            { gather: { loc: 'khai_thien', hours: 4, label: 'Đi dọc vết rìu đầu tiên tới cuối' }, say: [['narr', 'Vết rìu dài hơn ba ngày đường. Ở cuối không có gì, chỉ có một quả núi hình người nằm nghiêng, tay ôm một tảng đá.'], ['ly_khach', 'Mắt, tóc, máu, nguyên thần, rìu đều ở ngoài kia. Vậy cái phần nằm đây là gì?'], ['me', 'Phần không chịu tan.'], ['ly_khach', 'Ngồi xuống với nó đi. Có khi nó thở.']] }
+        ],
+        reward: { hours: 10, goldRefs: 60 }
+    }
+];
+
+const HH_QUESTS = [...LUC_NGUYEN_QUESTS, ...TAM_GIOI_QUESTS, ...HH_SIDE_QUESTS, ...AM_GIOI_QUESTS, ...LUC_THANH_QUESTS, ...BAN_CO_QUESTS, ...HH_MA_THAN_QUESTS];
 HH_QUESTS.filter(q => !LUC_THANH_QUESTS.includes(q)).forEach(q => { q.crossWorld = true; });
 SIDE_QUESTS.push(...HH_QUESTS);
 HH_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
