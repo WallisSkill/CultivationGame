@@ -1079,6 +1079,7 @@ function showStatDetails() {
                     <div>${raceOf().icon} Chủng tộc: <span style="color:#fff">${raceOf().name}</span> · ${raceOf().desc}</div>
                     <div>${path.icon} Hệ tu: <span style="color:#fff">${path.name}</span> (hành ${path.hanh}) · ${path.desc}</div>
                     <div>🏛️ Tiên vị: <span style="color:#fff">${tienViName()}</span>${tienViRegistered() ? ` · ${formatNumber(state.merit)} công lao` : ''}</div>
+                    ${typeof congDucStatHTML === 'function' ? congDucStatHTML() : ''}
                     <div>⛩️ Tông môn: <span style="color:#fff">${sectEscape(sectName() || 'chưa có')}</span></div>
                     <div>🌱 Căn cơ: <span style="color:#fff">${100 - (state.flaw || 0)}%</span></div>
                 </div>

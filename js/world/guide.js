@@ -71,6 +71,7 @@ const GUIDE_SECTIONS = [
             ['Thiên Kiêu Bảng', 'Xếp hạng theo từng nơi, điểm có từ việc diệt quái ở nơi đó.'],
             ['Chỉ số phụ', 'Đồ từ Địa Tiên trở lên có thêm dòng ngẫu nhiên: chí mạng, sát thương chí mạng, né tránh, hút máu, may mắn. Phẩm càng cao càng nhiều dòng. Cùng một loại, đồ cảnh giới cao hơn hoặc phẩm cao hơn luôn có giá trị cao hơn, kể cả khi ra thấp nhất. Xem tổng ở Chi tiết chỉ số. Chí mạng, né tránh và hút máu từ đồ có tác dụng trong trận thường, chưa áp dụng cho Đấu trường xếp hạng.'],
             ['Tiên vị', 'Từ Tiên Giới phải báo danh ở Thiên Đình Điện và làm lệnh để có công lao. Thiếu tiên vị thì không đột phá tiếp được. Cao nhất là Đế Quân, ứng với Tiên Đế.'],
+            ['Công Đức Lệnh', 'Lên Thánh Giới, gặp Nguyên Thủy Thiên Tôn ở Ngọc Hư Cung nhận lệnh. Mỗi lệnh xuống Tiên Giới diệt quái, cho tu vi và công đức. Lên Chí Thánh cần 100, Đại Thánh 250, Chuẩn Thiên 450 công đức. Xem số công đức trong Chi tiết chỉ số.'],
             ['Lệnh Thiên Đình', 'Nhận cùng lúc tối đa 5 lệnh. Mỗi lệnh ghi rõ tên và cảnh giới quái; săn ở đúng nơi đó sẽ gặp đúng quái ấy, không theo Chọn cấp săn, và chỉ quái đúng cảnh giới mới được tính. Quái cảnh giới càng cao thì lệnh càng khó và công lao càng lớn; cảnh giới cao nhất của Giới là Tử Lệnh. Từ Huyền Tiên, ở đâu cũng mở được Thiên Đình Điện để nhận lệnh của Giới đang đứng.']
         ]
     }

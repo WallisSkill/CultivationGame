@@ -130,6 +130,15 @@ function openCongDuc() {
         <div class="small" style="margin-top:10px"><b>Mốc công đức</b></div>${needs}`);
 }
 
+function congDucStatHTML() {
+    if (!congDucRegistered() && (state.realmIndex || 0) < SAINT_REALM) return '';
+    if (!congDucRegistered()) return `<div>📜 Công đức: <span style="color:#fff">chưa nhận Công Đức Lệnh</span> · gặp ${NPCS[CONG_DUC_GIVER].name} ở ${LOCATIONS[CONG_DUC_HALL].name}</div>`;
+    const next = congDucNextNeed();
+    const goal = next ? ` / ${formatNumber(next.need)} để lên ${REALMS[next.realm]}` : '';
+    const short = next && state.congDuc < next.need ? ` <span style="color:#ff9a9a">(thiếu ${formatNumber(next.need - state.congDuc)})</span>` : '';
+    return `<div>📜 Công đức: <span style="color:#fff">${formatNumber(state.congDuc)}</span>${goal}${short} · ${state.cdOrders.length}/${CONG_DUC_MAX_ORDERS} lệnh đang làm</div>`;
+}
+
 function congDucCardsHTML() {
     return (state.cdOrders || []).map(c => `<div class="quest-card"><div class="small">Công Đức Lệnh · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div><div class="small">🎁 ${congDucRewardText(LOCATIONS[c.loc], c.realm)}</div>
         ${state.location === c.loc ? '' : `<button class="mini-btn" onclick="travelTo('${c.loc}')">Đi ngay</button>`}</div>`).join('');
