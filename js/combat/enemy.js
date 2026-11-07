@@ -116,7 +116,7 @@ function spawnEnemyWithRules(huntedSeconds = 0, count = 1) {
     const pool = loc.enemies || [];
     if (!pool.length) { log(`${loc.name} yên bình, không có gì để săn.`); return; }
     const wanted = (state.questActive || []).map(rt => questStep(rt)?.hunt).find(h => h && h.loc === loc.id);
-    const order = (state.courtOrders || []).find(o => o.loc === loc.id && courtOrderFits(o, loc, wanted));
+    const order = [...(state.courtOrders || []), ...(state.cdOrders || [])].find(o => o.loc === loc.id && courtOrderFits(o, loc, wanted));
     const makeUnit = () => {
         if (order && (!wanted || Math.random() < 0.5)) {
             const target = pool.find(e => e.name === order.name);

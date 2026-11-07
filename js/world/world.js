@@ -78,6 +78,7 @@ function initWorldState() {
     state.forgeQueue = state.forgeQueue || [];
     state.hired = state.hired || 0;
     migrateCourtOrders();
+    migrateCongDuc();
     state.inventory.forEach(it => {
         if (it.slot && (it.reqRealm || 0) >= GEAR_SUB_REALM && !it.subs) it.subs = rollGearSubs(it.reqRealm, it.quality || 0);
     });
@@ -428,7 +429,7 @@ function storyDescent(toWorld) {
 
 function descentBlocked(toWorld) {
     if ((state.realmIndex || 0) >= OVERSEER_REALM) return false;
-    if (storyDescent(toWorld)) return false;
+    if (storyDescent(toWorld) || congDucDescent(toWorld)) return false;
     const home = realmWorld();
     const floor = Math.min(gioiIndex(home), gioiIndex(currentLocation().world));
     return gioiIndex(toWorld) < floor && !holdsWorldTop(home) && !descentActive();
@@ -1268,7 +1269,7 @@ function gearGate(realm) {
 
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm);
+    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm) || congDucGate(realm);
 }
 
 function pickOrigin() {
@@ -1361,7 +1362,7 @@ function worldEntry(worldId) {
 function moveUpToRealmWorld() {
     if ((state.realmIndex || 0) >= OVERSEER_REALM) return null;
     const home = realmWorld();
-    if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive()) return null;
+    if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive() || congDucDescent(currentLocation().world)) return null;
     const entry = worldEntry(home);
     if (!entry) return null;
     state.activity = null;
@@ -1525,6 +1526,7 @@ function grantQuestReward(q) {
         learnIntel(r.intel);
         log(`📖 Địa Chí ghi thêm: ${LOCATIONS[r.intel].name}.`);
     }
+    if (r.congDuc) registerCongDuc();
     if (r.opens) {
         state.flags[`open_${r.opens}`] = true;
         log(`🔓 ${LOCATIONS[r.opens].name} đã mở dịch vụ cho ngươi.`);
@@ -1821,6 +1823,7 @@ function onEnemyDefeated(enemy) {
             }
         });
         noteCourtKill(unit);
+        noteCongDucKill(unit);
         if (state.bounty && state.bounty.name === unit.name && state.bounty.loc === state.location) {
             state.bounty.done++;
             if (state.bounty.done >= state.bounty.need) finishBounty();
@@ -1877,6 +1880,7 @@ function questRewardText(q) {
     if (r.statBless) parts.push(`chỉ số bản thể +${Math.round(r.statBless * 100)}%`);
     if (r.intel) parts.push('thêm tin vào Địa Chí');
     if (r.opens) parts.push(`mở dịch vụ ${LOCATIONS[r.opens].name}`);
+    if (r.congDuc) parts.push('nhận Công Đức Lệnh');
     if (r.flag) parts.push(`mở đường tới ${WORLD_TIERS.find(x => 'world_' + x.id === r.flag).name}`);
     if (r.ending) parts.push('kết thúc cốt truyện');
     if (r.finalRealm) parts.push(`bước vào ${REALMS[REALM_COUNT - 1]}`);
@@ -1931,6 +1935,7 @@ function renderQuestPanel() {
     (state.courtOrders || []).forEach(c => {
         cards.push(`<div class="quest-card"><div class="small">Lệnh Thiên Đình · ${courtGrade(LOCATIONS[c.loc], c.realm).name}</div><b>${c.name}</b><div class="small">${courtRankText(c)} · ${LOCATIONS[c.loc].name} (${c.done}/${c.need})</div><div class="small">🎁 ${courtRewardText(LOCATIONS[c.loc], c.realm)}</div></div>`);
     });
+    cards.push(congDucCardsHTML());
     if (state.bounty) {
         const b = state.bounty;
         cards.push(`<div class="quest-card"><div class="small">Treo thưởng</div><b>${b.name}</b><div class="small">${LOCATIONS[b.loc].name} (${b.done}/${b.need})</div><div class="small">🎁 ${bountyRewardText()}</div></div>`);

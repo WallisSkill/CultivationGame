@@ -51,6 +51,7 @@ function sceneSpots(loc) {
     add('🔒', locked.map(name => serviceLabel(loc, name)).join(', '), () => openLockedService(), locked.length > 0);
     add('📜', 'Bảng treo thưởng', () => openBountyBoard(), hasService('board') && !state.bounty);
     add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
+    add('📜', 'Công Đức Lệnh', () => openCongDuc(), loc.id === CONG_DUC_HALL && congDucRegistered());
     add('🕯️', 'Chợ Đen', () => openBlackMarket(), !!loc.blackMarket);
     add('🌌', 'Dùng Tinh Không Thạch', () => useStarStone(), canUseStarStone());
     add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop') && guardsAllowed());
