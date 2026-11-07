@@ -62,7 +62,7 @@ const GUIDE_QUESTS = [
     {
         id: 'hd_nang_pham', title: 'Chỉ dẫn: Nâng Phẩm Pháp Bảo', needs: [3, 0],
         intro: [['narr', 'Từ Nguyên Anh, pháp bảo lên được phẩm mới. Hợp nhất một món với vài pháp bảo cùng giai nằm ngoài trận và một ít linh thạch, nó thăng một giai.'],
-            ['narr', 'Lên phẩm vẫn giữ nguyên thành thạo, nên hãy nâng món ngươi đã dùng lâu nhất.']],
+            ['narr', 'Chỉ món đã thành thạo 100% mới nâng được, và mỗi lần lên phẩm thành thạo giảm 75%. Hãy nâng món ngươi đã dùng lâu nhất.']],
         steps: [{ task: 'fuse', label: 'Hợp nhất một pháp bảo lên phẩm mới (tab Túi đồ)', act: () => setSideTab('bag') }]
     },
     {

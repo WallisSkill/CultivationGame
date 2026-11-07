@@ -187,12 +187,6 @@ const NPC_VOICES = {
         down: ['Ngươi vượt ta rồi! Tiền tài thì ta vẫn hơn, ngươi đừng buồn.', 'Lên cao rồi nhớ Tiệt Giáo nghèo đệ tử chứ không nghèo tình.'],
         area: 'Chỗ ta thì vàng nhiều hơn đá. Nhưng đi tiếp xuống núi, đá lại nhiều hơn người.'
     },
-    bich_tieu: {
-        up: ['{me} mà đòi vào miếu Nương Nương? Lau giày đi đã.', 'Đứng đó. Ta đếm xem ngươi mấy vòng, rồi tính có cho vào không.'],
-        even: ['Ngang ta à? Hừ, may cho ngươi là hôm nay ta vui.', 'Cùng cảnh giới thì ta khỏi cầm kéo. Vào thắp hương đi.'],
-        down: ['Ngươi vượt ta rồi, đừng có cười. Nương Nương vẫn bắt ngươi cởi giày.', 'Được rồi được rồi, ngươi giỏi. Đừng kể với hai tỷ của ta.'],
-        area: 'Miếu Nữ Oa ở Tiên Giới chỉ có ta giữ. Ai muốn gặp Nương Nương thật thì phải lên Oa Hoàng Cung.'
-    },
     di_lac: {
         up: ['Ha ha ha, {me}! Bụng ta còn to hơn tu vi của ngươi.', 'Cười một cái đi. Ở Tây Phương, mặt nhăn là không lên được đâu.'],
         even: ['Cùng cảnh giới, vậy cùng cười. Ha ha!', 'Ngang hàng thì ăn chung một trái đào, ta ăn phần to.'],
@@ -396,5 +390,7 @@ function npcAreaLine(key, loc) {
 function npcEnemyRangeLine(key, low, high) {
     return voiceText(ENEMY_RANGE_LINES[NPC_SEED(key) % ENEMY_RANGE_LINES.length], { low, high });
 }
+
+Object.assign(NPC_VOICES, HH_VOICES);
 
 if (typeof window !== 'undefined') Object.assign(window, { npcVoice, npcAreaLine, npcEnemyRangeLine });

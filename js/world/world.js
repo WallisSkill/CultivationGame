@@ -422,9 +422,8 @@ function descentActive() {
 
 /* Nhiệm vụ chính đang dẫn xuống Giới dưới thì được xuống đúng Giới đó */
 function storyDescent(toWorld) {
-    const rt = mainQuestRuntime();
-    const step = rt && questStep(rt);
-    return !!step && stepLocations(step).some(id => LOCATIONS[id]?.world === toWorld);
+    const runs = [mainQuestRuntime(), ...state.questActive.filter(rt => QUEST_INDEX[rt.id]?.crossWorld)].filter(Boolean);
+    return runs.some(rt => { const step = questStep(rt); return !!step && stepLocations(step).some(id => LOCATIONS[id]?.world === toWorld); });
 }
 
 function descentBlocked(toWorld) {
@@ -1269,7 +1268,7 @@ function gearGate(realm) {
 
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm) || boardGate(realm);
+    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm) || tamGioiGate(realm) || boardGate(realm);
 }
 
 function pickOrigin() {
@@ -1362,7 +1361,7 @@ function worldEntry(worldId) {
 function moveUpToRealmWorld() {
     if ((state.realmIndex || 0) >= OVERSEER_REALM) return null;
     const home = realmWorld();
-    if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive() || congDucDescent(currentLocation().world)) return null;
+    if (worldIndex(currentLocation().world) >= worldIndex(home) || holdsWorldTop(home) || descentActive() || congDucDescent(currentLocation().world) || storyDescent(currentLocation().world)) return null;
     const entry = worldEntry(home);
     if (!entry) return null;
     state.activity = null;

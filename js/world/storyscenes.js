@@ -399,7 +399,7 @@ const HONDON_DAO_GIA = ['hd_thu_cuu', 'hd_vo_thuc', 'am_duong', 'thich_thien', '
 const LOCATION_NPCS = {};
 Object.values(LOCATIONS).forEach(loc => {
     const seed = NPC_SEED(loc.id);
-    const named = [...new Set(SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc))];
+    const named = [...new Set([...SIDE_QUESTS.filter(q => q.loc === loc.id && q.npc !== 'narr').map(q => q.npc), ...(HH_HOMES[loc.id] || [])])];
     const storySpeakers = MAIN_QUESTS.flatMap(questAllSteps).filter(step => step.go === loc.id).map(speakerOfStep);
     const freeDaoGia = loc.world === 'hondon'
         ? HONDON_DAO_GIA.map((_, i) => HONDON_DAO_GIA[(seed + i) % HONDON_DAO_GIA.length]).filter(key => !named.includes(key) && !storySpeakers.includes(key)).map(key => NPCS[key])

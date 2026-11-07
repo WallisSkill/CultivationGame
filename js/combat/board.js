@@ -42,6 +42,7 @@ const LB_MASTERY_POWER = 1;
 const LB_MASTERY_KILLS_BASE = 100;
 const LB_MASTERY_KILLS_GRADE = 50;
 const LB_MASTERY_LOG_STEP = 25;
+const LB_FUSE_MASTERY_LOSS = 0.75;
 const LB_OLD_GRADE_MAX_LEVEL = [10, 20, 35, 50, 70, 100, 150, 220, 320, 450, 620, 850, 1200];
 // Upgrade cost multiplier increases exponentially for higher grades
 const LB_GRADE_COST_MULT = [1, 1.2, 1.5, 2, 2.8, 4, 6, 9, 14, 22, 35, 55, 90];
@@ -243,6 +244,8 @@ function lbGainMastery(kills) {
         if (mark > Math.floor(before / LB_MASTERY_LOG_STEP)) log(`🌟 ${lb.name} đạt thành thạo ${mark * LB_MASTERY_LOG_STEP}%.`);
     });
 }
+function lbFuseReady(item) { return lbLevelOf(item) >= LB_MAX_LEVEL; }
+function lbMasteryAfterFuse(item) { return Math.max(1, lbLevelOf(item) * (1 - LB_FUSE_MASTERY_LOSS)); }
 function lbIsMaxed(item) { return lbGradeOf(item) >= LB_MAX_GRADE && lbLevelOf(item) >= LB_MAX_LEVEL; }
 
 // combat power multiplier from grade + level (kẻ địch dùng flatPower, đã tính sẵn trong HP của chúng)

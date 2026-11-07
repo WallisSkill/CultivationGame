@@ -1079,6 +1079,7 @@ function showStatDetails() {
                     <div>${raceOf().icon} Chủng tộc: <span style="color:#fff">${raceOf().name}</span> · ${raceOf().desc}</div>
                     <div>${path.icon} Hệ tu: <span style="color:#fff">${path.name}</span> (hành ${path.hanh}) · ${path.desc}</div>
                     <div>🏛️ Tiên vị: <span style="color:#fff">${tienViName()}</span>${tienViRegistered() ? ` · ${formatNumber(state.merit)} công lao` : ''}</div>
+                    ${typeof lucNguyenStatHTML === 'function' ? lucNguyenStatHTML() : ''}
                     ${typeof congDucStatHTML === 'function' ? congDucStatHTML() : ''}
                     <div>⛩️ Tông môn: <span style="color:#fff">${sectEscape(sectName() || 'chưa có')}</span></div>
                     <div>🌱 Căn cơ: <span style="color:#fff">${100 - (state.flaw || 0)}%</span></div>
@@ -1575,7 +1576,9 @@ function renderInventory() {
                         ? `<button class="equip-btn" onclick="removeFromBoard(${Array.isArray(state.board) ? state.board.indexOf(item.uid) : -1})">🧤 Đang bày trận</button>`
                         : `<button class="equip-btn" onclick="placeOnBoard(${realIndex})">⚜️ Đặt lên trận</button>`}
                         ${canFuseGrade
-                        ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
+                        ? (lbFuseReady(item)
+                            ? `<button class="equip-btn" onclick="fuseLinhBao(${realIndex})">🔥 Hợp nhất</button>`
+                            : `<button class="equip-btn" disabled title="Cần thành thạo 100%">🔥 Hợp nhất (${lbMasteryPct(item)}/100%)</button>`)
                         : ''}
                         ${gemCount > 0 ? `<button class="use-btn" onclick="detachGems('${item.uid}')">⛏️ Tháo ngọc</button>` : ''}
                         <button class="discard-btn" onclick="discardItem(${realIndex})">🗑️ Vứt</button>

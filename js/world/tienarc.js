@@ -596,7 +596,7 @@ extendQuest('mc17_0', {
 
 extendQuest('mc17_1', {
     after: [
-        { go: 'oa_giao', say: [['bich_tieu', 'Lạ lắm. Đêm qua trong miếu mọc thêm một pho tượng đất, không ai nặn.'], ['me', 'Tượng ai?'], ['bich_tieu', 'Tượng ngươi. Cầm cuốc. Nương Nương chắc đã nhìn thấy ngươi rồi.']] },
+        { go: 'oa_giao', say: [['thai_van', 'Lạ lắm. Đêm qua trong miếu mọc thêm một pho tượng đất, không ai nặn.'], ['me', 'Tượng ai?'], ['thai_van', 'Tượng ngươi. Cầm cuốc. Nương Nương chắc đã nhìn thấy ngươi rồi.']] },
         { go: 'tay_giao', say: [['di_lac', 'Lần trước ngươi nói khổ có ích cho kẻ thu thuế. Ta nghĩ mãi.'], ['me', 'Rồi sao?'], ['di_lac', 'Rồi ta thôi thu thuế hương hỏa ở Tu Di Sơn. Hai vị giáo chủ chưa biết. Đừng kể.']] }
     ],
     branches: {

@@ -136,7 +136,7 @@ const SECT_ERRANDS = [
     { go: 'nhan_giao', say: [['thai_bach', 'Tiên Quan mới phải đích thân đưa thiếp tới các giáo phái của Thánh Nhân. Lục Thánh ở trên, nhưng người của họ ở dưới này.'], ['huyen_do', 'Chưởng giáo ở Thủ Dương Sơn không làm gì cả, đó là giáo lý. Thiếp để đấy, ngươi về đi.']] },
     { go: 'xien_giao', say: [['quang_thanh', 'Tên ngươi không có trong sổ thiên mệnh Xiển Giáo chép.'], ['me', 'Vậy ta là ai?'], ['quang_thanh', 'Là lỗi chính tả. Sư phụ không thích lỗi chính tả.']] },
     { go: 'tiet_giao', say: [['trieu_minh', 'Tiệt Giáo không nhận thiếp. Rút kiếm trước đã.']] }, { hunt: { loc: 'tiet_giao', name: 'Tiệt Giáo Ngoại Môn', n: 3 }, say: [['trieu_minh', 'Khá. Thông Thiên sư phụ sẽ thích ngươi, đó không phải chuyện may đâu.']] },
-    { go: 'oa_giao', say: [['bich_tieu', 'Mỗi pho tượng ở đây là một giống loài. Nương Nương vẫn đến thăm chúng.'], ['me', 'Có tượng của ta không?'], ['bich_tieu', 'Không. Lạ thật, ai cũng có.']] },
+    { go: 'oa_giao', say: [['thai_van', 'Mỗi pho tượng ở đây là một giống loài. Nương Nương vẫn đến thăm chúng.'], ['me', 'Có tượng của ta không?'], ['thai_van', 'Không. Lạ thật, ai cũng có.']] },
     { go: 'tay_giao', say: [['di_lac', 'Tây Phương giáo dạy chịu khổ. Ngươi từng dưới mỏ, ngươi nói xem khổ có ích gì?'], ['me', 'Có ích cho kẻ thu thuế.'], ['di_lac', 'Ha. Câu đó đừng nói trước mặt hai vị giáo chủ.']] }
 ];
 
@@ -241,7 +241,7 @@ const NPC_STORIES = {
     huyen_do: [{ from: 14, lines: ['Nhân Giáo dạy người ta làm người trước khi thành tiên. Khó hơn thành tiên nhiều.', ['me', 'Pháp sư thành chưa?'], 'Một nửa. Còn nửa kia cũng đang tu.'] }],
     quang_thanh: [{ from: 14, lines: ['Ta đã chép thiên mệnh tám ngàn năm, chưa từng sai một chữ.', ['me', 'Có từng chép sai ý không?'], 'Chữ của sư phụ, ý của sư phụ. Câu hỏi của ngươi sẽ khiến ta bị phạt.'] }],
     trieu_minh: [{ from: 14, lines: ['Hữu giáo vô loại, đệ tử Tiệt Giáo ai cũng từng là kẻ không ai cần.', ['me', 'Ngài thì sao?'], 'Ta từng là một con hổ đói. Sư phụ cho ăn, không hỏi vì sao hổ biết nói.'] }],
-    bich_tieu: [{ from: 14, lines: ['Ta lau bụi cho các tượng. Mỗi ngày một ngàn pho.', ['me', 'Bao giờ xong?'], 'Không bao giờ, Nương Nương vẫn nặn thêm.'] }],
+    thai_van: [{ from: 14, lines: ['Ta lau bụi cho các tượng. Mỗi ngày một ngàn pho.', ['me', 'Bao giờ xong?'], 'Không bao giờ, Nương Nương vẫn nặn thêm.'] }],
     di_lac: [{ from: 14, lines: ['Ta luôn cười, vì Tiếp Dẫn đã khóc phần của ta rồi.', ['me', 'Thật à?'], 'Không. Ta cười vì nếu không cười thì ta cũng khóc.'] }],
     thai_so: [{ from: 23, lines: ['Sáu đứa đó không biết ta còn ở đây, chúng tưởng ta chỉ là một Thánh Nhân mạnh hơn chút đã đi xa.', ['me', 'Lão là Đại Đạo Chí Thượng?'], 'Tên đó chỉ nghe được ở đây thôi. Dưới kia có nói cũng không ai nhớ.'] }],
     huyen_mau: [{ from: 24, lines: ['Ta sinh ra cái gì đều bị nó quên.', ['me', 'Nữ Oa vẫn nhớ người.'], 'Vậy sao? Nó vẫn hỏi người khác đã ăn gì chưa à. Đứa ngốc.'] }],

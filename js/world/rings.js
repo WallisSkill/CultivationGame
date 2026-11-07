@@ -10,6 +10,7 @@ const NPC_NO_RING = ['mac'];
 
 function storyRealmOf(key) {
     if (NPC_REALM[key] != null) return NPC_REALM[key];
+    if (HH_RANKS[key]) return HH_RANKS[key][0];
     const fought = Object.values(BOSSES).filter(b => b.npc === key).map(b => b.shownRealm ?? b.realm);
     if (fought.length) return Math.max(...fought);
     if (/Đạo Giả/.test(NPCS[key].title || '')) return OVERSEER_REALM;
@@ -22,6 +23,7 @@ Object.keys(NPCS).filter(key => !NPC_NO_RING.includes(key)).forEach(key => {
     if (realm == null) return;
     NPCS[key].daoRealm = realm;
     if (NPC_STAGE[key] != null) NPCS[key].daoStage = NPC_STAGE[key];
+    else if (HH_RANKS[key]?.[1] != null) NPCS[key].daoStage = HH_RANKS[key][1];
     NPCS[key].storyNpc = true;
 });
 const NPC_WORLDS = {};
@@ -34,7 +36,7 @@ Object.values(LOCATIONS).forEach(loc => {
 });
 /* Thánh Giới chỉ Lục Thánh thành Thánh: người chỉ sống ở đó dừng ở trần quái của Giới */
 Object.entries(NPC_WORLDS).forEach(([key, worlds]) => {
-    if (NPC_REALM[key] != null || worlds.size !== 1) return;
+    if (NPC_REALM[key] != null || HH_RANKS[key] || worlds.size !== 1) return;
     const cap = Object.values(LOCATIONS).find(loc => worlds.has(loc.world) && loc.enemyMax != null)?.enemyMax;
     if (cap != null && NPCS[key].daoRealm > cap) NPCS[key].daoRealm = cap;
 });
@@ -88,12 +90,17 @@ const NPC_TRUE_RANK = { tien_de: { realm: 18, stage: 3, from: SAINT_REVEAL_REALM
 function npcShownRealm(npc, key) {
     const truth = NPC_TRUE_RANK[key];
     if (truth && (state.realmIndex || 0) >= truth.from) return { realm: truth.realm, stage: truth.stage };
+    const hit = [...(HH_RANK_STEPS[key] || [])].reverse().find(s => s.quest ? state.questDone.includes(s.quest) : (state.realmIndex || 0) >= s.at);
+    if (hit) return { realm: hit.realm, stage: hit.stage ?? null };
+    const mask = HH_DISGUISE[key];
+    if (mask && !hhRevealed(mask)) return { realm: mask.realm, stage: null };
     if (NPC_STAGE[key] != null && (state.realmIndex || 0) < SAINT_REVEAL_REALM) return { realm: SAINT_REALM, stage: null };
     return { realm: npc.daoRealm, stage: npc.daoStage ?? null };
 }
 
 function syncHiddenSaints() {
-    [...Object.keys(NPC_STAGE), ...Object.keys(NPC_TRUE_RANK)].forEach(key => {
+    syncDisguises();
+    [...Object.keys(NPC_STAGE), ...Object.keys(NPC_TRUE_RANK), ...Object.keys(HH_RANK_STEPS), ...Object.keys(HH_DISGUISE)].forEach(key => {
         if (NPCS[key]?.look) NPCS[key].look.ringRealm = npcShownRealm(NPCS[key], key).realm;
     });
 }

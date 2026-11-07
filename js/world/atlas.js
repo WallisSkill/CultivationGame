@@ -80,6 +80,13 @@ const DAO_SITES = {
 
     tru_tien: { world: 'tien', path: 'kiem', name: 'Tru Tiên Đài', icon: '🗡️', x: 410, y: 280, qi: 1.25, minR: 9, maxR: 18, links: ['van_tien', 'thien_ha'], desc: 'Đài chém tiên, kiếm khí nghìn năm chưa tắt.', enemies: [E('Tiên Kiếm Linh', 'spirit')] },
     bat_hoang: { world: 'tien', path: 'the', name: 'Bát Hoang Đấu Trường', icon: '💪', x: 130, y: 470, qi: 1.2, minR: 9, maxR: 18, links: ['phi_thang_tri', 'van_tien'], desc: 'Tiên nô thoát xích luyện thân bằng đòn của nhau.', enemies: [E('Đấu Nô', 'human'), E('Tiên Cương Khôi', 'golem')] },
+    am_gioi: { world: 'tien', name: 'Âm Giới · Lục Đạo Luân Hồi', icon: '🕯️', x: 900, y: 570, type: 'wild', qi: 1.2, minR: 11, maxR: 18, links: ['u_minh', 'hoa_long_tri'], desc: 'Dưới đáy Tam Giới, sáu cánh cửa luân hồi quay không ngừng. Hậu Thổ Nương Nương ngồi ở giữa.', enemies: [E('Âm Hồn Lạc Lối', 'spirit'), E('Quỷ Sai Nại Hà', 'human')] },
+    hoa_qua: { world: 'tien', name: 'Hoa Quả Sơn', icon: '🐒', x: 110, y: 790, type: 'wild', qi: 1.15, minR: 10, maxR: 18, links: ['yeu_quan', 'thap_van_son'], desc: 'Núi đầy đào và khỉ, sau thác nước là Thủy Liêm Động. Hòn đá nứt năm xưa vẫn nằm trên đỉnh.', enemies: [E('Hầu Yêu', 'beast'), E('Hỗn Thế Ma Vương', 'demon')] },
+    ngu_hanh: { world: 'tien', name: 'Ngũ Hành Sơn', icon: '⛰️', x: 960, y: 790, type: 'wild', qi: 1.2, minR: 12, maxR: 18, links: ['thanh_khau', 'hoa_long_tri'], desc: 'Năm ngọn núi như năm ngón tay, lá bùa trên đỉnh đã bị gỡ.', enemies: [E('Sơn Thần Áp Trận', 'golem')] },
+    ngu_trang: { world: 'tien', name: 'Ngũ Trang Quán', icon: '🍑', x: 470, y: 790, type: 'sect', qi: 1.25, minR: 11, maxR: 18, links: ['thap_van_son', 'yeu_do'], desc: 'Đạo quán của Trấn Nguyên Tử, giữa sân là cây Nhân Sâm ba ngàn năm mới ra hoa.', enemies: [E('Địa Mạch Linh', 'spirit'), E('Đạo Đồng Thủ Quán', 'human')] },
+    ban_co_dien: { world: 'tien', name: 'Bàn Cổ Điện', icon: '🗿', x: 250, y: 570, type: 'sect', qi: 1.25, minR: 12, maxR: 18, links: ['bat_hoang', 'hac_thi'], desc: 'Điện thờ cuối cùng của Vu tộc, tượng Bàn Cổ cao tới hư không.', enemies: [E('Vu Binh', 'human'), E('Ôn Thần', 'demon')] },
+    yeu_dinh: { world: 'tien', name: 'Yêu Đình Cố Đô', icon: '☀️', x: 1430, y: 120, type: 'wild', qi: 1.3, minR: 14, maxR: 18, links: ['bac_minh', 'tiet_giao'], desc: 'Nền đá ba mươi ba tầng trời của Yêu Đình sau Vu Yêu đại chiến. Đêm nào cũng nghe tiếng chuông.', enemies: [E('Yêu Đình Tàn Binh', 'demon'), E('Kim Ô Hỏa Linh', 'spirit')] },
+    luu_sa: { world: 'tien', name: 'Lưu Sa Hà', icon: '🏜️', x: 1400, y: 790, type: 'wild', qi: 1.15, minR: 14, maxR: 18, links: ['yeu_hoang_dien', 'oa_giao'], desc: 'Tám trăm dặm cát chảy, lông ngỗng thả xuống cũng chìm.', enemies: [E('Lưu Sa Thủy Quái', 'dragon')] },
     u_minh: { world: 'tien', path: 'ma', name: 'U Minh Ngục', icon: '🩸', x: 770, y: 480, qi: 1.25, minR: 11, maxR: 18, links: ['dao_tri', 'nam_thien_mon'], desc: 'Ngục tối Thiên Đình giam những tiên nhân nhập ma.', enemies: [E('Đọa Tiên', 'demon')] },
     thai_ho: { world: 'tien', path: 'phap', name: 'Thái Hư Thư Các', icon: '🔮', x: 710, y: 90, qi: 1.3, minR: 10, maxR: 18, links: ['thien_ha', 'lang_tieu'], desc: 'Kho pháp quyết của Thiên Đình, cửa khép hờ.', enemies: [E('Thư Linh', 'spirit')] },
     yeu_ha: { world: 'tien', path: 'yeu', name: 'Yêu Hà', icon: '🐾', x: 90, y: 110, qi: 1.2, minR: 9, maxR: 18, links: ['tien_khoang', 'phi_thang_tri'], desc: 'Con sông của yêu tiên không chịu cúi đầu.', enemies: [E('Yêu Tiên', 'beast'), E('Hà Giao', 'dragon')] },
@@ -153,6 +160,10 @@ Object.entries({ ...DAO_SITES, ...REGION_SITES }).forEach(([id, site]) => {
     site.links.filter(other => !LOCATIONS[other].links.includes(id)).forEach(other => LOCATIONS[other].links.push(id));
 });
 Object.entries({ bich_du: 'kiem', bat_canh: 'phap', ma_than_mo: 'ma', dao_gia_am: 'phap', co_thu: 'yeu', thanh_thuy: 'phat', thanh_van: 'tran', van_long: 'dan', hac_phong: 'ho', vu_moc_lam: 'doc', bang_phong: 'long', xich_diem: 'cam', van_tien: 'tran', dao_tri: 'dan', quang_han: 'phat', cuc_lac: 'phat', thanh_khau: 'ho', thap_van_son: 'doc', hoa_long_tri: 'long', kim_bang: 'cam', ngoc_hu: 'tran', da_bao: 'dan', oa_hoang: 'doc', tu_tieu: 'long', loi_trach: 'cam', linh_son: 'ho', vo_cuong: 'dan', khai_thien: 'tran', luan_hoi: 'phat', tinh_mo: 'doc', than_dinh: 'long', hu_nhan: 'ho', van_gioi: 'cam' }).forEach(([id, path]) => { LOCATIONS[id].path = path; });
+
+['am_gioi', 'hoa_qua', 'ngu_hanh', 'ngu_trang', 'ban_co_dien', 'yeu_dinh', 'luu_sa'].forEach(id => {
+    LOCATIONS[id].links.filter(other => !LOCATIONS[other].links.includes(id)).forEach(other => LOCATIONS[other].links.push(id));
+});
 
 ['bo_hondon', 'tu_khi', 'truong_ha'].forEach(id => { LOCATIONS[id].hallAll = true; });
 
