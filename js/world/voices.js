@@ -107,7 +107,7 @@ const NPC_VOICES = {
         up: ['Ngươi còn ở {me}. Trẫm từng ở đó, với một cái cuốc trên vai.', 'Quỳ thì không cần. Đứng thẳng, trẫm muốn xem lưng ngươi có cong không.'],
         even: ['Ngang trẫm. Trong điện này chỉ hai người không phải quỳ, và trẫm không chắc người kia là ai.', 'Cùng cảnh giới thì nói thật đi: ngươi muốn ngai này hay muốn đập nó?'],
         down: ['Ngươi đã vượt trẫm. Ngai vàng này không chịu nổi người như ngươi, nên đừng ngồi.', 'Trẫm cũng từng tưởng lên cao là thoát. Rồi trẫm thấy trời chỉ là cái mỏ lớn hơn.'],
-        area: 'Lăng Tiêu Bảo Điện, chín mươi chín bậc ngọc. Mỗi bậc chôn một người. Trẫm đếm rồi.'
+        area: { lang_tieu: 'Lăng Tiêu Bảo Điện, chín mươi chín bậc ngọc. Mỗi bậc chôn một người. Trẫm đếm rồi.', tu_tieu: 'Tử Tiêu Cung, chỗ Đạo Tổ từng giảng đạo. Tấm bồ đoàn cuối hàng là của trẫm, chưa ai đòi.', town: 'Lăng Tiêu Bảo Điện, chín mươi chín bậc ngọc. Mỗi bậc chôn một người. Trẫm đếm rồi.' }
     },
     da_bao: {
         up: ['{me} hả? Túi tiền ngươi còn nhẹ hơn tu vi. Xem thôi, đừng sờ.', 'Ta bán cho Thánh nhân. Còn ngươi, ta bán cho sau.'],
@@ -389,7 +389,7 @@ function voiceText(text, words) {
 
 function npcAreaLine(key, loc) {
     const area = npcVoice(key).area;
-    const line = typeof area === 'string' ? area : area[loc.type] || area.town;
+    const line = typeof area === 'string' ? area : area[loc.id] || area[loc.type] || area.town;
     return voiceText(line, { loc: loc.name });
 }
 

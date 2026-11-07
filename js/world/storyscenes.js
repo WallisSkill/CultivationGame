@@ -418,10 +418,18 @@ Object.values(LOCATIONS).forEach(loc => {
 
 /* Người đã chết hay đã bỏ đi trong cốt truyện không còn đứng ở địa điểm, trừ khi nhiệm vụ đang cần gặp */
 const NPC_DIES_IN = { tien_de: 'm17', chuong_mon: 'm06', lang_phong: 'm06' };
+/* Kẻ chết ở Lăng Tiêu chỉ là con rối: Hạo Thiên thật ngồi ở Tử Tiêu Cung, chỉ hiện ra sau chương lộ chuyện */
+const NPC_RETURNS = { tien_de: { loc: 'tu_tieu', after: 'mc20_1' } };
 
-function npcGone(key) {
+function npcNeededHere(key, locId) {
+    return state.questActive.some(rt => { const step = questStep(rt); return step?.talk === key && (!locId || step.loc === locId); });
+}
+
+function npcGone(key, locId = null) {
+    const back = NPC_RETURNS[key];
+    if (back && locId === back.loc) return !state.questDone.includes(back.after) && !npcNeededHere(key, locId);
     if (!state.questDone.includes(NPC_DIES_IN[key])) return false;
-    return !state.questActive.some(rt => questStep(rt)?.talk === key);
+    return !npcNeededHere(key, locId);
 }
 
 function locationSmith(loc) {

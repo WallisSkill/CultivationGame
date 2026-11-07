@@ -37,6 +37,7 @@ function sceneSeatSpot() {
 }
 
 function sceneSpots(loc) {
+    syncHiddenSaints();
     const spots = [];
     const add = (icon, label, action, available = true, id = null) => { if (available) spots.push({ icon, label, action, id }); };
     const huntable = (loc.enemies || []).length > 0;
@@ -51,7 +52,7 @@ function sceneSpots(loc) {
     add('🔒', locked.map(name => serviceLabel(loc, name)).join(', '), () => openLockedService(), locked.length > 0);
     add('📜', 'Bảng treo thưởng', () => openBountyBoard(), hasService('board') && !state.bounty);
     add('🏛️', 'Thiên Đình Điện', () => openCourt(), courtOpenHere());
-    add('📜', 'Công Đức Lệnh', () => openCongDuc(), loc.id === CONG_DUC_HALL && congDucRegistered());
+    boardSpots(loc).forEach(board => add(board.icon, board.title, () => openOrderBoard(board.id), true));
     add('🕯️', 'Chợ Đen', () => openBlackMarket(), !!loc.blackMarket);
     add('🌌', 'Dùng Tinh Không Thạch', () => useStarStone(), canUseStarStone());
     add('🤝', `Thuê hộ pháp ${state.hired}/${HIRE_MAX}`, () => hireGuard(), hasService('shop') && guardsAllowed());
@@ -62,7 +63,7 @@ function sceneSpots(loc) {
     add('⚔️', window._findingMatch ? 'Dừng tìm đối thủ' : 'Đấu trường xếp hạng', () => window.findMatchPvP(), loc.type === 'town' || loc.type === 'sect');
     add('📊', 'Bảng PvP', () => openRankedBoard(), loc.type === 'sect' || (loc.type === 'town' && NO_MONSTER_WORLDS.includes(loc.world)));
     add('🐉', 'Boss Thế Giới', () => openWorldBoss(), (loc.type === 'town' || loc.type === 'sect') && !NO_MONSTER_WORLDS.includes(loc.world));
-    LOCATION_NPCS[loc.id].filter(key => !npcGone(key)).forEach(key => spots.push({ npc: key, label: NPCS[key].name, action: () => openNpcTalk(key), mark: npcOffers(key).length + npcReports(key).length > 0 }));
+    LOCATION_NPCS[loc.id].filter(key => !npcGone(key, loc.id)).forEach(key => spots.push({ npc: key, label: NPCS[key].name, action: () => openNpcTalk(key), mark: npcOffers(key).length + npcReports(key).length > 0 }));
     add('❗', 'Nhiệm vụ', () => questAction(mainQuestRuntime()?.id), !!mainQuestRuntime());
     const trial = pendingTrial();
     add('⚡', `Độ kiếp: ${trial && REALMS[trial.realm]}`, () => startTrial(), !!trial && trial.loc === loc.id && !trialActive());
@@ -289,7 +290,7 @@ const SCENE_NPC_FOOT = 22;
 
 function drawNpc(ctx, spot) {
     const npc = NPCS[spot.npc];
-    const image = sceneImage(`npc:${spot.npc}`, humanoidSvg(npc.look || defaultLook(), { title: npc.name }));
+    const image = sceneImage(`npc:${spot.npc}:${npc.look?.ringRealm ?? ''}`, humanoidSvg(npc.look || defaultLook(), { title: npc.name }));
     const y = spot.y + SCENE_NPC_FOOT;
     drawUnit(ctx, image, spot.x, y, npc.name, spot.mark ? '#ffe066' : '#e8e8e8');
     if (!spot.mark) return;

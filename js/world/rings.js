@@ -79,9 +79,29 @@ const RING_JUDGE = {
     hidden: ['Ta không thấy vòng nào sau lưng ông ấy. Có lẽ vì thế mà ông ấy nhìn ai cũng như nhìn lá rụng.']
 };
 
-function ringBucket(npc, realm, stage = 0) {
-    const theirs = npc.daoRealm * STAGES.length + (npc.daoStage ?? 0);
-    const mine = realm * STAGES.length + (npc.daoStage != null ? stage : 0);
+/* Lục Thánh giấu cảnh giới: trước khi người chơi lên Chí Thánh, cả sáu chỉ hiện là Thánh Nhân Cảnh */
+const SAINT_REVEAL_REALM = 20;
+
+/* Cảnh giới thật lộ ra khi người chơi đủ tầm nhìn: Hạo Thiên là Chuẩn Thánh Viên Mãn, không phải Tiên Đế */
+const NPC_TRUE_RANK = { tien_de: { realm: 18, stage: 3, from: SAINT_REVEAL_REALM } };
+
+function npcShownRealm(npc, key) {
+    const truth = NPC_TRUE_RANK[key];
+    if (truth && (state.realmIndex || 0) >= truth.from) return { realm: truth.realm, stage: truth.stage };
+    if (NPC_STAGE[key] != null && (state.realmIndex || 0) < SAINT_REVEAL_REALM) return { realm: SAINT_REALM, stage: null };
+    return { realm: npc.daoRealm, stage: npc.daoStage ?? null };
+}
+
+function syncHiddenSaints() {
+    [...Object.keys(NPC_STAGE), ...Object.keys(NPC_TRUE_RANK)].forEach(key => {
+        if (NPCS[key]?.look) NPCS[key].look.ringRealm = npcShownRealm(NPCS[key], key).realm;
+    });
+}
+
+function ringBucket(npc, realm, stage = 0, key = null) {
+    const shown = npcShownRealm(npc, key);
+    const theirs = shown.realm * STAGES.length + (shown.stage ?? 0);
+    const mine = realm * STAGES.length + (shown.stage != null ? stage : 0);
     if (theirs > mine) return 'up';
     return theirs === mine ? 'even' : 'down';
 }
@@ -97,9 +117,10 @@ function npcRealmRemarkHTML(key) {
         if (!NPC_NO_RING.includes(key)) return '';
         return `<div class="small">🔘 Không nhìn thấu cảnh giới</div><div class="small"><i>${RING_JUDGE.hidden[0]}</i></div>`;
     }
-    const lines = npcVoice(key)[ringBucket(npc, realm, state.realmStage || 0)];
+    const shown = npcShownRealm(npc, key);
+    const lines = npcVoice(key)[ringBucket(npc, realm, state.realmStage || 0, key)];
     const ring = ringName(realm);
-    const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[npc.daoRealm], ring, Ring: capitalize(ring), Me: REALMS[realm], loc: currentLocation().name };
+    const words = { me: REALMS[realm], below: REALMS[Math.max(0, realm - 1)], npc: REALMS[shown.realm], ring, Ring: capitalize(ring), Me: REALMS[realm], loc: currentLocation().name };
     const line = voiceText(lines[(NPC_SEED(key) + realm) % lines.length], words);
-    return `<div class="small">🔘 ${REALMS[npc.daoRealm]}${npc.daoStage != null ? ` ${STAGES[npc.daoStage]}` : ''} · ${ringName(npc.daoRealm)}</div><div class="small"><i>“${line}”</i></div>`;
+    return `<div class="small">🔘 ${REALMS[shown.realm]}${shown.stage != null ? ` ${STAGES[shown.stage]}` : ''} · ${ringName(shown.realm)}</div><div class="small"><i>“${line}”</i></div>`;
 }

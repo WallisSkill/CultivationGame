@@ -1269,7 +1269,7 @@ function gearGate(realm) {
 
 function getBreakthroughGate(realm) {
     const q = MAIN_QUESTS.find(x => x.unlock === realm);
-    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm) || congDucGate(realm);
+    return q && !state.questDone.includes(q.id) ? q : gearGate(realm) || tienViGate(realm) || boardGate(realm);
 }
 
 function pickOrigin() {
@@ -1526,7 +1526,7 @@ function grantQuestReward(q) {
         learnIntel(r.intel);
         log(`📖 Địa Chí ghi thêm: ${LOCATIONS[r.intel].name}.`);
     }
-    if (r.congDuc) registerCongDuc();
+    if (r.orderBoard) registerOrderBoard(r.orderBoard);
     if (r.opens) {
         state.flags[`open_${r.opens}`] = true;
         log(`🔓 ${LOCATIONS[r.opens].name} đã mở dịch vụ cho ngươi.`);
@@ -1880,7 +1880,7 @@ function questRewardText(q) {
     if (r.statBless) parts.push(`chỉ số bản thể +${Math.round(r.statBless * 100)}%`);
     if (r.intel) parts.push('thêm tin vào Địa Chí');
     if (r.opens) parts.push(`mở dịch vụ ${LOCATIONS[r.opens].name}`);
-    if (r.congDuc) parts.push('nhận Công Đức Lệnh');
+    if (r.orderBoard) parts.push(`nhận ${orderBoard(r.orderBoard).title}`);
     if (r.flag) parts.push(`mở đường tới ${WORLD_TIERS.find(x => 'world_' + x.id === r.flag).name}`);
     if (r.ending) parts.push('kết thúc cốt truyện');
     if (r.finalRealm) parts.push(`bước vào ${REALMS[REALM_COUNT - 1]}`);
