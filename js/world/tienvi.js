@@ -85,7 +85,7 @@ function courtGrade(loc, realm) {
 }
 
 function courtMeritReward(loc, realm) {
-    const step = WORLD_TIERS.findIndex(w => w.id === loc.world);
+    const step = REALM_TIERS.findIndex(w => w.id === worldTierOfRealm(loc.maxR).id);
     const base = COURT_MERIT_BASE * Math.pow(2, step) * courtGrade(loc, realm).mult;
     return Math.floor(base * (courtBoard()[0].isMe ? COURT_TOP_MULT : 1));
 }

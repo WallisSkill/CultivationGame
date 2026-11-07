@@ -21,7 +21,11 @@ Object.assign(NPCS, {
     nhien_dang: { name: 'Nhiên Đăng Cổ Phật', title: 'Quá Khứ Phật', look: NPC_LOOK('m', 5, '#c9c9d6', '#d9a520', { beard: true, crown: 'wheel', crownColor: '#ffcf40', weapon: 'staff', weaponColor: '#ffd479' }) },
     quan_am: { name: 'Quan Thế Âm Bồ Tát', title: 'Xưa là Từ Hàng Đạo Nhân', look: NPC_LOOK('f', 3, '#1b1b22', '#e8e4d8', { crown: 'halo', crownColor: '#ffffff', weapon: 'orb', weaponColor: '#bfe3ff' }) },
     tran_nguyen: { name: 'Trấn Nguyên Tử', title: 'Địa Tiên Chi Tổ', look: NPC_LOOK('m', 0, '#c9c9d6', '#8c6a3a', { beard: true, weapon: 'fan', weaponColor: '#d9d4c5' }) },
-    hau_tho: { name: 'Hậu Thổ Nương Nương', title: 'Tổ Vu hóa Luân Hồi', look: NPC_LOOK('f', 3, '#1b1b22', '#55402a', { crown: 'halo', crownColor: '#c9a46a', aura: '#8c6a3a' }) },
+    hau_tho: { name: 'Hậu Thổ Nương Nương', title: 'Thánh Nhân Âm Giới, Tổ Vu hóa Luân Hồi', look: NPC_LOOK('f', 3, '#1b1b22', '#55402a', { crown: 'halo', crownColor: '#c9a46a', aura: '#8c6a3a' }) },
+    manh_ba: { name: 'Mạnh Bà', title: 'Người nấu canh quên', look: NPC_LOOK('f', 0, '#c9c9d6', '#55402a', { weapon: 'staff', weaponColor: '#8a6a4a' }) },
+    diem_vuong: { name: 'Tần Quảng Vương', title: 'Điện thứ nhất Thập Điện Diêm La', look: NPC_LOOK('m', 4, '#1b1b22', '#2b0b12', { beard: true, crown: 'guan', crownColor: '#c9a46a' }) },
+    phan_quan: { name: 'Thôi Phán Quan', title: 'Người giữ Sổ Sinh Tử', look: NPC_LOOK('m', 0, '#1b1b22', '#3a2a1a', { beard: true, weapon: 'fan', weaponColor: '#c9c9d6' }) },
+    minh_ha_to: { name: 'Minh Hà Lão Tổ', title: 'Chủ Huyết Hải, tổ A Tu La', look: NPC_LOOK('m', 2, '#5a0b12', '#2b0b12', { aura: '#a8342a', eyes: '#ff3b3b', weapon: 'sword', weaponColor: '#c23a3a' }) },
     dia_tang: { name: 'Địa Tạng Vương Bồ Tát', title: 'Người giữ cửa Âm Giới', look: NPC_LOOK('m', 5, '#1b1b22', '#8a5a1e', { crown: 'wheel', crownColor: '#ffcf40', weapon: 'staff', weaponColor: '#ffcf40' }) },
     hau_nghe: { name: 'Hậu Nghệ', title: 'Đại Vu bắn mặt trời', look: NPC_LOOK('m', 4, '#1b1b22', '#6b3a2a', { beard: true, weapon: 'spear', weaponColor: '#ff9a3d' }) },
     de_giang: { name: 'Đế Giang', title: 'Tàn hồn Tổ Vu đứng đầu', look: NPC_LOOK('m', 4, '#7a1f2b', '#3a2a1a', { aura: '#c94a2a', eyes: '#ff6b3d' }) },
@@ -50,11 +54,21 @@ const HH_HOMES = {
     luu_sa: ['sa_tang', 'quan_am'],
     tay_giao: ['kim_thien', 'nhien_dang', 'di_lac'],
     ngu_trang: ['tran_nguyen'],
-    am_gioi: ['hau_tho', 'dia_tang'],
+    am_gioi: ['hau_tho'],
+    bat_canh: ['thai_thanh'],
+    ngoc_hu: ['nguyen_thuy'],
+    bich_du: ['thong_thien'],
+    oa_hoang: ['nu_oa'],
+    cuc_lac: ['chuan_de'],
+    thuy_van: ['dia_tang'],
+    manh_ba: ['manh_ba'],
+    thap_dien: ['diem_vuong'],
+    sinh_tu: ['phan_quan'],
+    minh_ha: ['minh_ha_to'],
     ban_co_dien: ['hau_nghe', 'de_giang'],
     quang_han: ['hang_nga'],
     yeu_dinh: ['de_tuan', 'thai_nhat'],
-    linh_son: ['nhu_lai'],
+    linh_son: ['nhu_lai', 'tiep_dan'],
     van_gioi: ['can_khon'],
     luan_hoi: ['am_duong_to'],
     tinh_mo: ['thoi_than'],
@@ -70,7 +84,7 @@ const HH_RANKS = {
     duong_tien: [17, 2], na_tra: [17, 1], ly_tinh: [16, 0], thai_bach: [17, 0], dao_tri_mau: [17, 1],
     ngo_khong: [17, 3], bat_gioi: [15, 2], sa_tang: [14, 2], kim_thien: [17, 3],
     nhien_dang: [18, 3], di_lac: [18, 1], quan_am: [18, 0], nhu_lai: [18, 3],
-    tran_nguyen: [18, 3], hau_tho: [18, 3], dia_tang: [18, 2], hau_nghe: [17, 3], de_giang: [18, 3],
+    tran_nguyen: [18, 3], hau_tho: [19, 1], dia_tang: [18, 2], manh_ba: [16, 0], diem_vuong: [16, 2], phan_quan: [14, 1], minh_ha_to: [18, 3], hau_nghe: [17, 3], de_giang: [18, 3],
     de_tuan: [18, 3], thai_nhat: [18, 3], con_bang: [18, 2],
     can_khon: [26, 3], am_duong_to: [26, 3], thoi_than: [27, 1], duong_mi: [27, 2], la_hau: [27, 3], ban_co: [28, 3]
 };
@@ -99,6 +113,7 @@ function hhRevealed(mask) {
 }
 
 function syncDisguises() {
+    syncAmGioi();
     Object.entries(HH_DISGUISE).forEach(([key, mask]) => {
         const shown = hhRevealed(mask);
         NPCS[key].name = shown ? mask.trueName : mask.name;
@@ -115,6 +130,7 @@ Object.assign(BOSSES, {
     hh_thai_nhat: { npc: 'thai_nhat', realm: 17, stage: 1, board: 5, scale: 1.1 },
     hh_tam_ma_81: { kind: 'demon', name: 'Bát Thập Nhất Nạn', realm: 15, stage: 2, board: 5, adds: { name: 'Yêu Quái Đường Tây', kind: 'beast', n: 3 } },
     hh_sa_tang: { npc: 'sa_tang', realm: 14, stage: 2, board: 5 },
+    hh_minh_ha: { npc: 'minh_ha_to', realm: 17, stage: 2, board: 5, scale: 1.15, adds: { name: 'A Tu La Chiến Sĩ', kind: 'human', n: 2 } },
     hh_vo_thuong: { kind: 'spirit', name: 'Vô Thường Câu Hồn', realm: 17, stage: 2, board: 5, adds: { name: 'Quỷ Sai Nại Hà', kind: 'human', n: 2 } },
     hh_can_khon: { npc: 'can_khon', realm: 23, stage: 2, board: 6, scale: 1.2 },
     hh_am_duong: { npc: 'am_duong_to', realm: 24, stage: 2, board: 6, scale: 1.2 },
@@ -229,7 +245,7 @@ const TAM_GIOI_QUESTS = [
         intro: [['hau_tho', 'Còn một thứ con chưa trải. Lần này ta không cho con mượn kiếp người. Con tự đi qua cửa tử.'], ['me', 'Ta sẽ chết?'], ['hau_tho', 'Một lúc thôi. Đủ để biết.']],
         steps: [
             { boss: 'hh_vo_thuong', say: [['narr', 'Xích Câu Hồn quấn cổ ngươi. Ngươi để yên cho nó kéo, đi qua cầu Nại Hà như mọi hồn khác.']] },
-            { gather: { loc: 'am_gioi', hours: 4, label: 'Đứng trước Vọng Hương Đài nhìn lại đời mình' }, say: [['narr', 'Trên Vọng Hương Đài, ngươi thấy Thanh Thủy Thôn, Lão Mặc quét lá, sư tỷ Tô Thanh Dao, hầm mỏ Vô Quang. Không ai trong đó biết ngươi đang nhìn.'], ['dia_tang', 'Ai đứng ở đây cũng khóc. Ngươi không khóc thì ta lo.']] },
+            { gather: { loc: 'vong_huong', hours: 4, label: 'Đứng trên Vọng Hương Đài nhìn lại đời mình' }, say: [['narr', 'Trên Vọng Hương Đài, ngươi thấy Thanh Thủy Thôn, Lão Mặc quét lá, sư tỷ Tô Thanh Dao, hầm mỏ Vô Quang. Không ai trong đó biết ngươi đang nhìn.'], ['dia_tang', 'Ai đứng ở đây cũng khóc. Ngươi không khóc thì ta lo.']] },
             { go: 'thanh_thuy', say: [['thuy_ba', 'Có ai đó đứng ngoài cửa à? Gió lạnh quá.'], ['narr', 'Ngươi là một hồn ma đứng ở làng cũ. Thủy Bà quàng thêm áo, không nhìn thấy ngươi. Chết là như vậy: mọi thứ vẫn tiếp tục.']] },
             { go: 'am_gioi', say: [['hau_tho', 'Về đi. Sinh, lão, bệnh, tử, con đã đi đủ ở cả ba cõi.'], ['me', 'Giờ ta làm Thánh được chưa?'], ['hau_tho', 'Giờ con mới được phép thử. Thánh mà chưa từng chết thì chỉ là kẻ mạnh ngồi cao.']] }
         ],
@@ -237,10 +253,18 @@ const TAM_GIOI_QUESTS = [
     }
 ].map(q => ({ ...q, crossWorld: true }));
 
+/* Trước khi thành Thánh phải đi hết chuỗi của Hậu Thổ: Tam Giới Sinh Lão Bệnh Tử và mọi việc ở Âm Giới */
+function hauThoChain() {
+    return [...TAM_GIOI_QUESTS, ...AM_GIOI_QUESTS];
+}
+
 function tamGioiGate(realm) {
     if (realm !== SAINT_REALM) return null;
-    const q = TAM_GIOI_QUESTS.find(x => !state.questDone.includes(x.id));
-    return q ? { id: `gate_${q.id}`, title: `Trải đủ Tam Giới Sinh Lão Bệnh Tử: còn "${q.title}" từ ${NPCS[q.npc].name} ở ${LOCATIONS[q.loc].name}` } : null;
+    const chain = hauThoChain();
+    const q = chain.find(x => !state.questDone.includes(x.id));
+    if (!q) return null;
+    const done = chain.length - chain.filter(x => !state.questDone.includes(x.id)).length;
+    return { id: `gate_${q.id}`, title: `Đi hết chuỗi của Hậu Thổ (${done}/${chain.length}): còn "${q.title}" từ ${NPCS[q.npc].name} ở ${LOCATIONS[q.loc].name}` };
 }
 
 /* ---------- Truyện phụ Hồng Hoang ---------- */
@@ -320,7 +344,7 @@ const HH_SIDE_QUESTS = [
         id: 'hh_kts_1', loc: 'tay_giao', npc: 'kim_thien', title: 'Kim Thiền Tử · Chín Kiếp', needs: [15, 2],
         intro: [['kim_thien', 'Ta ngủ gật khi Phật Tổ giảng pháp. Phạt mười kiếp làm người, kiếp nào cũng phải đi lấy kinh.'], ['me', 'Chín kiếp trước thì sao?'], ['kim_thien', 'Chết ở cùng một con sông. Ngươi đi xem giúp ta.']],
         steps: [
-            { gather: { loc: 'am_gioi', hours: 3, label: 'Lật sổ Luân Hồi tìm chín kiếp Kim Thiền' }, say: [['dia_tang', 'Chín dòng, chín cái tên khác nhau, cùng một chữ chết: Lưu Sa Hà.'], ['hau_tho', 'Ta đã tiễn hắn chín lần. Lần nào hắn cũng hỏi đường về phía tây.']] },
+            { gather: { loc: 'sinh_tu', hours: 3, label: 'Lật Sổ Sinh Tử tìm chín kiếp Kim Thiền' }, say: [['dia_tang', 'Chín dòng, chín cái tên khác nhau, cùng một chữ chết: Lưu Sa Hà.'], ['hau_tho', 'Ta đã tiễn hắn chín lần. Lần nào hắn cũng hỏi đường về phía tây.']] },
             { go: 'luu_sa', say: [['sa_tang', 'Chuỗi đầu lâu trên cổ ta à? Chín cái, của chín hòa thượng đi lấy kinh ăn thịt không tan, nổi trên mặt sông.'], ['me', 'Đều là một người.'], ['sa_tang', 'Ta biết. Vì vậy ta mới đeo. Kiếp thứ mười ta sẽ không ăn, ta theo hắn.']] }
         ],
         reward: { hours: 6, goldRefs: 30 }
@@ -366,9 +390,9 @@ const HH_SIDE_QUESTS = [
         reward: { hours: 6, goldRefs: 35 }
     },
     {
-        id: 'hh_dia_tang', loc: 'am_gioi', npc: 'dia_tang', title: 'Địa Ngục Chưa Trống', needs: [12, 0],
+        id: 'hh_dia_tang', loc: 'thuy_van', npc: 'dia_tang', title: 'Địa Ngục Chưa Trống', needs: [13, 0],
         intro: [['dia_tang', 'Ta thề địa ngục chưa trống thì chưa thành Phật. Thề xong mới biết người chết nhiều hơn người được độ.'], ['me', 'Vậy ngài không bao giờ thành Phật?'], ['dia_tang', 'Có lẽ. Nhưng ta không ở đây để thành Phật.']],
-        steps: [{ hunt: { loc: 'am_gioi', name: 'Quỷ Sai Nại Hà', n: 5 }, say: [['dia_tang', 'Bọn quỷ sai ăn tiền đút lót, cho hồn giàu đi tắt. Từ nay cầu Nại Hà xếp hàng như nhau.']] }],
+        steps: [{ hunt: { loc: 'nai_ha', name: 'Quỷ Sai Nại Hà', n: 5 }, say: [['dia_tang', 'Bọn quỷ sai ăn tiền đút lót, cho hồn giàu đi tắt. Từ nay cầu Nại Hà xếp hàng như nhau.']] }],
         reward: { hours: 5, goldRefs: 25 }
     }
 ];
@@ -427,7 +451,133 @@ const HH_MA_THAN_QUESTS = [
     reward: { hours: 12, goldRefs: 70 }
 }));
 
-const HH_QUESTS = [...LUC_NGUYEN_QUESTS, ...TAM_GIOI_QUESTS, ...HH_SIDE_QUESTS, ...HH_MA_THAN_QUESTS];
+/* ---------- Âm Giới: mở từ Thiên Tiên, phải đi khắp mười tám nơi ---------- */
+const AM_GIOI_OPEN_REALM = 11;
+
+function syncAmGioi() {
+    if (state.flags.world_am || (state.realmIndex || 0) < AM_GIOI_OPEN_REALM || !state.flags.world_tien) return;
+    state.flags.world_am = true;
+    log(`🕯️ Quỷ Môn Quan dưới U Minh Ngục đã mở: ${WORLD_TIERS.find(w => w.id === 'am').name} chờ ngươi.`);
+}
+
+const AM_GIOI_QUESTS = [
+    {
+        id: 'am_manh_ba', loc: 'manh_ba', npc: 'manh_ba', title: 'Chén Canh Thứ Một Vạn', needs: [12, 0],
+        intro: [['manh_ba', 'Hôm nay ta nấu chén thứ một vạn ức. Ngạ Quỷ ngoài kia cướp canh, uống vào quên luôn cả cơn đói.'], ['me', 'Thế không tốt sao?'], ['manh_ba', 'Quên đói thì không đi đầu thai. Chúng sẽ ở lại đây mãi.']],
+        steps: [
+            { hunt: { loc: 'manh_ba', name: 'Ngạ Quỷ', n: 5 }, say: [['manh_ba', 'Đuổi được rồi. Đứa nào còn nhớ mình đói thì còn cứu được.']] },
+            { gather: { loc: 'vong_xuyen', hours: 2, label: 'Vớt hồn rơi xuống Vong Xuyên Hà' }, say: [['narr', 'Ngươi kéo lên một hồn già. Ông chỉ nhớ một câu hát ru, hát mãi không dứt.'], ['manh_ba', 'Để ta nấu chén khác cho ông ấy. Chén này không quên câu hát.']] }
+        ],
+        reward: { hours: 5, goldRefs: 25, opens: 'manh_ba' }
+    },
+    {
+        id: 'am_thap_dien', loc: 'thap_dien', npc: 'diem_vuong', title: 'Phán Quan Ăn Vàng Mã', needs: [13, 1],
+        intro: [['diem_vuong', 'Mười điện xử án công bằng, trừ một chỗ: có phán quan nhận vàng mã của người dương gian đốt xuống.'], ['me', 'Vàng mã cũng mua được án?'], ['diem_vuong', 'Ở Phong Đô vàng mã là tiền thật. Đi tra cho ta.']],
+        steps: [
+            { gather: { loc: 'phong_do', hours: 2, label: 'Tra sổ vàng mã ở Phong Đô Quỷ Thành' }, say: [['narr', 'Sổ chợ Phong Đô ghi rõ: hồn nhà giàu mua án nhẹ, hồn nhà nghèo không có ai đốt cho.']] },
+            { hunt: { loc: 'thap_dien', name: 'Phán Quan Âm Ty', n: 4 }, say: [['diem_vuong', 'Từ nay vàng mã đốt xuống đem chia đều cho hồn không ai cúng. Lò rèn Phong Đô cũng mở cho ngươi.']] }
+        ],
+        reward: { hours: 6, goldRefs: 30, opens: 'phong_do' }
+    },
+    {
+        id: 'am_sinh_tu', loc: 'sinh_tu', npc: 'phan_quan', title: 'Trang Sổ Bị Xé', needs: [14, 1],
+        intro: [['phan_quan', 'Năm xưa một con khỉ xông vào đây, lấy bút gạch tên cả họ nhà nó khỏi Sổ Sinh Tử. Trang đó tới giờ vẫn trống.'], ['me', 'Chép lại không được sao?'], ['phan_quan', 'Sổ Linh canh trang trống, ai chạm vào là nó cắn.']],
+        steps: [
+            { hunt: { loc: 'sinh_tu', name: 'Sổ Linh', n: 5 }, say: [['phan_quan', 'Sổ Linh yên rồi. Giờ ngươi chép, ta đọc.']] },
+            { gather: { loc: 'sinh_tu', hours: 3, label: 'Chép lại trang Sổ Sinh Tử' }, say: [['narr', 'Ngươi chép tới tên Tôn Ngộ Không thì ngòi bút khô. Thôi Phán Quan cười, bảo để trống chỗ đó.'], ['phan_quan', 'Có những kẻ không ghi tên vào sổ được. Ngươi xem trang của ngươi đi.'], ['narr', 'Trang của ngươi có tên, nhưng dòng ngày chết bị nhòe như vừa có ai lau.']] }
+        ],
+        reward: { hours: 7, goldRefs: 35 }
+    },
+    {
+        id: 'am_dia_nguc', loc: 'thuy_van', npc: 'dia_tang', title: 'Mười Tám Tầng', needs: [15, 1], after: 'hh_dia_tang',
+        intro: [['dia_tang', 'Đế Thính nghe thấy dưới tầng mười tám có một hồn kêu oan ba ngàn năm. Ngươi xuống với ta.']],
+        steps: [
+            { hunt: { loc: 'dia_nguc', name: 'Tội Hồn', n: 6 }, say: [['narr', 'Tầng nào cũng có người kêu. Tới tầng mười tám, chỉ có một tiếng gõ đều đều vào vách.']] },
+            { gather: { loc: 'vong_huong', hours: 2, label: 'Đưa hồn kêu oan lên Vọng Hương Đài' }, say: [['dia_tang', 'Hắn chỉ muốn nhìn quê một lần. Ba ngàn năm, không ai cho.']] }
+        ],
+        reward: { hours: 7, goldRefs: 35 }
+    },
+    {
+        id: 'am_cuu_u', loc: 'am_gioi', npc: 'hau_tho', title: 'Hàn Hồn Cửu U', needs: [16, 0],
+        intro: [['hau_tho', 'Ở Cửu U có những hồn lạnh tới mức quên cả tên, không vào được Luân Hồi. Con đưa chúng qua Bỉ Ngạn để chúng nhớ lại.']],
+        steps: [
+            { hunt: { loc: 'cuu_u', name: 'Cửu U Hàn Hồn', n: 5 }, say: [['narr', 'Hàn hồn tan thành sương. Trong sương có những cái tên, rất khẽ.']] },
+            { gather: { loc: 'bi_ngan', hours: 2, label: 'Dẫn hồn qua Bỉ Ngạn Hoa Hải' }, say: [['hau_tho', 'Hoa đỏ nhắc chúng nhớ. Nhớ được tên thì Luân Hồi nhận.']] }
+        ],
+        reward: { hours: 8, goldRefs: 40 }
+    },
+    {
+        id: 'am_minh_ha', loc: 'minh_ha', npc: 'minh_ha_to', title: 'Huyết Hải Bất Khô', needs: [17, 0],
+        intro: [['minh_ha_to', 'Huyết Hải không khô thì Minh Hà không chết. Ta sinh ra từ máu, ta dựng A Tu La để có người gọi ta là tổ.'], ['me', 'Ngài muốn gì?'], ['minh_ha_to', 'Bọn A Tu La lại đòi đánh lên trời. Đánh thắng chúng cho ta, rồi đánh với ta.']],
+        steps: [
+            { hunt: { loc: 'tu_la', name: 'A Tu La Chiến Sĩ', n: 6 }, say: [['narr', 'A Tu La đánh tới khi gãy kiếm, rồi cúi đầu. Chúng không ghét trời, chúng chỉ ghét bị quên.']] },
+            { boss: 'hh_minh_ha', say: [['minh_ha_to', 'Nguyên Đồ, A Tỳ không chém được ngươi. Hậu Thổ thành Thánh rồi, ta chỉ còn biển máu. Đi đi, Huyết Hải nhớ mặt ngươi.']] }
+        ],
+        reward: { hours: 10, goldRefs: 55 }
+    },
+    {
+        id: 'am_vo_gian', loc: 'thuy_van', npc: 'dia_tang', title: 'Vô Gián', needs: [17, 2], after: 'am_dia_nguc',
+        intro: [['dia_tang', 'Dưới mười tám tầng còn Vô Gián. Ở đó khổ không có khoảng nghỉ. Ta chưa từng xuống tới đáy.']],
+        steps: [
+            { hunt: { loc: 'vo_gian', name: 'Vô Gián Tội Hồn', n: 6 }, say: [['narr', 'Tới đáy Vô Gián, ngươi gặp một cái bóng ngồi tụng kinh. Đó là Địa Tạng, phần đã ở lại đây từ ngày phát nguyện.']] },
+            { go: 'thuy_van', say: [['dia_tang', 'Ngươi đã gặp phần còn lại của ta. Địa ngục chưa trống, nên nó chưa về.']] }
+        ],
+        reward: { hours: 10, goldRefs: 55 }
+    }
+];
+
+/* ---------- Bái phỏng Lục Thánh: bắt buộc trong mạch chính Thánh Giới ---------- */
+const LUC_THANH_QUESTS = [
+    {
+        id: 'lt_thai_thanh', loc: 'bat_canh', npc: 'thai_thanh', title: 'Lục Thánh · Thái Thanh', needs: [19, 0], gate: 'm19',
+        intro: [['thai_thanh', 'Thánh mới tới Bát Cảnh Cung à. Ngồi đi, ta đang đun lò, chưa rảnh tay.'], ['me', 'Ngài không hỏi ta tới làm gì?'], ['thai_thanh', 'Vô vi. Ngươi tới thì tới, đi thì đi. Ngồi canh lò với ta một lúc.']],
+        steps: [{ gather: { loc: 'bat_canh', hours: 3, label: 'Canh lò Bát Quái cùng Thái Thanh' }, say: [['thai_thanh', 'Lửa không cần ai trông, nó vẫn cháy. Người làm Thánh cũng vậy, đừng cứ đưa tay vào.'], ['narr', 'Ngươi ngồi suốt ba canh giờ. Ông ta chưa nhìn ngươi lấy một lần, mà ngươi biết mình đã bị nhìn thấu.']] }],
+        reward: { hours: 6, goldRefs: 40 }
+    },
+    {
+        id: 'lt_nguyen_thuy', loc: 'ngoc_hu', npc: 'nguyen_thuy', title: 'Lục Thánh · Nguyên Thủy', needs: [19, 1], gate: 'm19', after: 'lt_thai_thanh',
+        intro: [['nguyen_thuy', 'Xiển Giáo dạy theo thiên mệnh. Ngươi là kẻ không có tên trong sổ, nên ta muốn xem ngươi tự viết được gì.']],
+        steps: [
+            { hunt: { loc: 'ngoc_hu', name: 'Xiển Giáo Kim Tiên', n: 4 }, say: [['nguyen_thuy', 'Đệ tử ta thua mà không oán. Đó là thiên mệnh ta chép cho chúng.']] },
+            { gather: { loc: 'ngoc_hu', hours: 3, label: 'Chép một trang thiên mệnh cho chính mình' }, say: [['nguyen_thuy', 'Ngươi viết toàn chữ chưa. Chưa đi, chưa biết, chưa xong. Được, ta không sửa.']] }
+        ],
+        reward: { hours: 6, goldRefs: 40 }
+    },
+    {
+        id: 'lt_thong_thien', loc: 'bich_du', npc: 'thong_thien', title: 'Lục Thánh · Thông Thiên', needs: [20, 0], gate: 'm20',
+        intro: [['thong_thien', 'Tới Bích Du thì phải qua kiếm. Tru Tiên Tứ Kiếm của ta treo ở bốn cửa, mỗi cửa một ý.']],
+        steps: [
+            { hunt: { loc: 'bich_du', name: 'Tru Tiên Kiếm Linh', n: 4 }, say: [['thong_thien', 'Tru, Lục, Hãm, Tuyệt. Ngươi qua đủ bốn cửa. Có biết bốn thanh kiếm này vốn của ai không?'], ['me', 'Của ngài.'], ['thong_thien', 'Không. Sư tôn đưa ta, còn trước sư tôn thì là của một kẻ đã thua. Lên Ngoại Vực rồi ngươi sẽ gặp.']] }
+        ],
+        reward: { hours: 7, goldRefs: 45 }
+    },
+    {
+        id: 'lt_nu_oa', loc: 'oa_hoang', npc: 'nu_oa', title: 'Lục Thánh · Nữ Oa', needs: [20, 1], gate: 'm20', after: 'lt_thong_thien',
+        intro: [['nu_oa', 'Con ăn gì chưa? Ăn rồi thì giúp ta nhặt đá. Năm xưa vá trời ta dùng năm màu, giờ chỗ vá lại mỏng.']],
+        steps: [{ gather: { loc: 'oa_hoang', hours: 4, label: 'Nhặt Ngũ Sắc Thạch vá lại vòm trời' }, say: [['nu_oa', 'Cộng Công đâm đổ Bất Chu Sơn, ta vá. Con người cãi nhau, ta lại vá. Làm mẹ là vá mãi không xong.'], ['narr', 'Viên đá cuối cùng ngươi đặt vào vết nứt có màu thứ sáu. Nữ Oa nhìn rất lâu rồi để yên.']] }],
+        reward: { hours: 7, goldRefs: 45 }
+    },
+    {
+        id: 'lt_chuan_de', loc: 'cuc_lac', npc: 'chuan_de', title: 'Lục Thánh · Chuẩn Đề', needs: [21, 0], gate: 'm22',
+        intro: [['chuan_de', 'Tây Phương nghèo, đất cằn, linh mạch mỏng. Bọn ta phải xin, phải đổi, phải mời người về.'], ['me', 'Kể cả mời một con khỉ đi phá Thiên Đình?'], ['chuan_de', 'Con khỉ tự đi. Ta chỉ dạy nó bay.']],
+        steps: [{ hunt: { loc: 'cuc_lac', name: 'Kim Cương Hộ Pháp', n: 4 }, say: [['chuan_de', 'Kim Cương ở đây không biết đau, cũng không biết vì sao đứng gác. Ngươi đánh xong mà không giận, vậy là hiểu Tây Phương hơn chúng.']] }],
+        reward: { hours: 8, goldRefs: 50 }
+    },
+    {
+        id: 'lt_tiep_dan', loc: 'linh_son', npc: 'tiep_dan', title: 'Lục Thánh · Tiếp Dẫn', needs: [21, 1], gate: 'm22', after: 'lt_chuan_de',
+        intro: [['tiep_dan', 'Ta khóc vì Tây Phương khổ. Ngồi ở Tử Tiêu Cung nghe giảng, ta khóc tới khi Hồng Vân đạo hữu nhường ghế.'], ['me', 'Ngài có thấy nợ ông ấy không?'], ['tiep_dan', 'Mỗi ngày. Món nợ đó là lý do ta vẫn còn khóc.']],
+        steps: [
+            { hunt: { loc: 'linh_son', name: 'La Hán Sa Đọa', n: 3 }, say: [['tiep_dan', 'Họ từng là đệ tử ta. Đói lâu quá thì tu hành cũng hóa thành tham.']] },
+            { gather: { loc: 'linh_son', hours: 3, label: 'Đi cùng Tiếp Dẫn qua đất Tây Phương' }, say: [['tiep_dan', 'Đây là ruộng của dân Tây Phương. Thánh Nhân không cày được, chỉ đứng nhìn họ cày.'], ['narr', 'Ông cúi nhặt một bông lúa lép, cất vào tay áo như một món bảo vật.']] },
+            { go: 'linh_son', say: [['tiep_dan', 'Ngươi đã gặp đủ Lục Thánh. Sáu kẻ ngồi cao nhất mà chẳng ai rảnh tay.'], ['tiep_dan', 'Còn một vị Thánh ở dưới đáy Tam Giới. Bà ấy không ngồi với bọn ta, nhưng ngươi đã gặp rồi.']] }
+        ],
+        reward: { hours: 8, goldRefs: 50 }
+    }
+];
+LUC_THANH_QUESTS.forEach(q => { QUEST_INDEX[q.gate].needsSide = [...(QUEST_INDEX[q.gate].needsSide || []), q.id]; });
+
+const HH_QUESTS = [...LUC_NGUYEN_QUESTS, ...TAM_GIOI_QUESTS, ...HH_SIDE_QUESTS, ...AM_GIOI_QUESTS, ...LUC_THANH_QUESTS, ...HH_MA_THAN_QUESTS];
+HH_QUESTS.filter(q => !LUC_THANH_QUESTS.includes(q)).forEach(q => { q.crossWorld = true; });
 SIDE_QUESTS.push(...HH_QUESTS);
 HH_QUESTS.forEach(q => { QUEST_INDEX[q.id] = q; });
 QUEST_INDEX.m17a.needsSide = [...(QUEST_INDEX.m17a.needsSide || []), ...LUC_NGUYEN_QUESTS.map(q => q.id)];
@@ -437,7 +587,7 @@ Object.assign(QUEST_INDEX.mc16_2, { steps: [{ go: 'dao_tri', say: [['dao_tri_mau
 Object.assign(NPC_STORIES, {
     hau_tho: [
         { from: 10, lines: ['Ta từng là Tổ Vu, mười hai anh em, sinh từ máu Bàn Cổ.', ['me', 'Giờ người là gì?'], 'Giờ ta là cái bánh xe. Người chết lăn vào, người sống lăn ra. Ta không còn thân để đi đâu nữa.'] },
-        { from: 17, lines: ['Thiên Đạo cho ta công đức đủ làm Thánh. Ta không lên Tử Tiêu được.', ['me', 'Vì sao?'], 'Vì nếu ta đứng dậy, Luân Hồi dừng lại. Ghế Thánh để trống thì không ai chết vô ích.'] }
+        { from: 14, lines: ['Ta lấy thân hóa Lục Đạo Luân Hồi, Thiên Đạo trả bằng công đức thành Thánh. Ta là Thánh duy nhất không ngồi ở Tử Tiêu.', ['me', 'Người không lên đó sao?'], 'Ta đứng dậy thì Luân Hồi dừng lại. Thánh của Âm Giới thì ở lại Âm Giới.'] }
     ],
     ngo_khong: [{ from: 11, lines: ['Ngươi biết vì sao ta không nói tên sư phụ không?', ['me', 'Vì đã thề.'], 'Vì ta đoán ra lão là ai. Một vị Thánh ở phương tây, dạy một con khỉ đi phá Thiên Đình, rồi cử đồ đệ mình đi bắt nó. Cờ của Thánh, khỉ là quân.'] }],
     tran_nguyen: [{ from: 12, lines: ['Hồng Vân là bạn ta. Ở Tử Tiêu Cung hắn nhường ghế cho Tiếp Dẫn, Chuẩn Đề.', ['me', 'Rồi sao?'], 'Rồi hắn bị đuổi giết vì luồng tử khí đã nhường đi mà vẫn bị đòi. Ta trồng cây này ở chỗ hắn ngã.'] }],
@@ -448,6 +598,11 @@ Object.assign(NPC_STORIES, {
 });
 
 const HH_VOICES = {
+    tiep_dan: { up: ['{me}. Ta khóc cho ngươi một giọt, vì đường còn dài.'], even: ['Ngang ta rồi. Vậy ngươi khóc thay ta một hôm.'], down: ['Ngươi vượt ta. Ta vẫn khóc, nhưng giờ là khóc mừng.'], area: 'Linh Sơn. Ruộng Tây Phương cằn, chuông thì không bao giờ ngừng.' },
+    manh_ba: { up: ['{me}? Chưa tới lượt ngươi uống canh.'], even: ['Ngang ta. Ngồi xuống, ta múc cho một chén không quên.'], down: ['Ngươi vượt ta rồi. Canh của ta không làm ngươi quên được nữa.'], area: { manh_ba: 'Mạnh Bà Đình. Một chén canh, một đời quên sạch.', town: 'Canh của ta nấu bằng nước Vong Xuyên.' } },
+    diem_vuong: { up: ['{me}. Án của ngươi chưa tới bàn ta.'], even: ['Ngang ta. Thập Điện không xử người ngang hàng.'], down: ['Ngươi vượt ta. Sổ án của ta không có trang cho ngươi.'], area: 'Điện thứ nhất Thập Điện Diêm La. Án ở đây không kháng cáo.' },
+    phan_quan: { up: ['{me}. Tên ngươi ở trang bốn trăm, ta nhớ.'], even: ['Ngang ta. Muốn xem trang của mình không?'], down: ['Ngươi vượt ta. Trang của ngươi tự nhòe rồi.'], area: 'Sinh Tử Bộ Các. Mỗi tờ sổ là một đời, giấy mỏng hơn ngươi tưởng.' },
+    minh_ha_to: { up: ['{me}. Một giọt Huyết Hải cũng đủ nuốt ngươi.'], even: ['Ngang ta. A Tu La sẽ muốn đánh với ngươi.'], down: ['Ngươi vượt ta. Huyết Hải không khô, nhưng ta thôi đòi lên trời.'], area: 'Huyết Hải bất khô, Minh Hà bất tử.' },
     thai_van: { up: ['{me} vào miếu thì cởi giày.'], even: ['Ngang ta thì vào thắp hương đi.'], down: ['Ngươi vượt ta rồi, nhưng Nương Nương vẫn bắt cởi giày.'], area: 'Nữ Oa Miếu ở Tiên Giới chỉ có ta giữ. Muốn gặp Nương Nương thật thì lên Oa Hoàng Cung.' },
     bich_tieu: { up: ['{me} cũng dám bước lên Kim Ngao Đảo à? Gan đấy.'], even: ['Ngang ta. Đừng kể với hai tỷ, họ sẽ bắt ngươi vào trận thử.'], down: ['Ngươi vượt ta rồi. Thôi, ta gọi ngươi là sư huynh vậy.'], area: 'Kim Ngao Đảo, Tiệt Giáo hữu giáo vô loại. Ba tỷ muội ta giữ bờ biển phía đông.' },
     van_tieu: { up: ['{me}, còn xa mới vào được Hoàng Hà Trận.'], even: ['Ngang ta. Trận đồ của ta không nương người ngang hàng.'], down: ['Ngươi vượt ta. Trận nào của ta cũng không nhốt được ngươi nữa.'], area: 'Hỗn Nguyên Kim Đẩu treo trên đầu đảo. Nó từng gọt Tam Hoa của mười hai Kim Tiên.' },

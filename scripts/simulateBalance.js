@@ -271,6 +271,7 @@ G.MAIN_QUESTS.forEach(q => {
     const home = G.WORLD_TIERS.find(t => t.from <= q.needs[0] && q.needs[0] <= t.to)?.id;
     if (q.needs[0] >= 29) return;
     (q.needsSide || []).map(id => G.QUEST_INDEX[id]).forEach(s => {
+        if (s.crossWorld) return;
         if (gioiOf(G.LOCATIONS[s.loc].world) < gioiOf(home)) fail.push(`${q.id}: chờ ${s.id} ở Giới dưới mà không có lối xuống`);
     });
 });

@@ -33,7 +33,7 @@ const TIER_BOOST = [1, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 12.0];
 const TIER_PENALTY = [1, 0.20, 0.15, 0.10, 0.05, 0.02, 0.01, 0.005];
 
 function realmWorldTier(realm) {
-    return WORLD_TIERS.findIndex(w => realm >= w.from && realm <= w.to);
+    return REALM_TIERS.findIndex(w => realm >= w.from && realm <= w.to);
 }
 
 /* Áp chế đẳng cấp: tiên đánh phàm, thánh đánh tiên, hỗn độn đánh thánh... */

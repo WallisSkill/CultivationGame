@@ -82,7 +82,7 @@ const GUIDE_SECTIONS = [
 
 /* Cảnh giới hiện dần theo Giới đã tới; nhiệm vụ ẩn chỉ hiện tên sau khi làm xong */
 function guideRealmSection() {
-    const items = WORLD_TIERS.flatMap(world => {
+    const items = REALM_TIERS.flatMap(world => {
         if (!worldUnlocked(world.id)) return [['🔒 ???', 'Chưa tới Giới này.']];
         return Array.from({ length: world.to - world.from + 1 }, (_, i) => world.from + i).map(realm => {
             const quests = HIDDEN_QUESTS.filter(q => q.realmOnly === realm);

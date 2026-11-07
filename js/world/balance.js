@@ -29,8 +29,9 @@ const AGE_OFFLINE_MAX_SHARE = 0.9;
 const AGE_TRAVEL_YEARS_PER_MINUTE = 0.1;
 
 const WORLD_TIERS = [
-    { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
+    { id: 'pham', name: 'Phàm Giới', from: 0, to: 8, mapW: 1250, mapH: 740, palette: ['#1d3a2c', '#2f5d3f', '#7bb26a'] },
     { id: 'tien', name: 'Tiên Giới', from: 9, to: 18, release: 'm11', mapW: 1500, mapH: 840, palette: ['#1b2f55', '#2f5f9e', '#9fd3ff'] },
+    { id: 'am', name: 'Âm Giới', from: 11, to: 18, side: true, mapW: 1500, mapH: 840, palette: ['#120c16', '#2c1a33', '#c08ae0'] },
     { id: 'thanh', name: 'Thánh Giới', from: 19, to: 22, palette: ['#4a2b12', '#8a5a1e', '#ffd479'] },
     { id: 'thien', name: 'Thiên Ma Ngoại Vực', from: 23, to: 28, palette: ['#22123f', '#46238a', '#c7a1ff'] },
     { id: 'hondon', name: 'Hỗn Độn Hải', from: 29, to: 29, palette: ['#06242b', '#0f5661', '#5fe6e6'] },
@@ -47,8 +48,11 @@ const HU_VO_HOME = 'hu_vo_cung';
 /* Hỗn Độn Hải chỉ có Đạo Giả, không có quái để săn */
 const NO_MONSTER_WORLDS = ['hondon', ...EMPTY_WORLDS];
 
+/* Giới theo cảnh giới; Âm Giới là giới phụ, không thuộc chuỗi cảnh giới */
+const REALM_TIERS = WORLD_TIERS.filter(w => !w.side);
+
 function worldTierOfRealm(realm) {
-    return WORLD_TIERS.find(w => realm >= w.from && realm <= w.to) || WORLD_TIERS[WORLD_TIERS.length - 1];
+    return REALM_TIERS.find(w => realm >= w.from && realm <= w.to) || REALM_TIERS[REALM_TIERS.length - 1];
 }
 
 /* --------- tu vi --------- */
@@ -521,7 +525,7 @@ function formatRealDuration(seconds) {
 
 if (typeof module !== 'undefined') {
     module.exports = {
-        realmRealSeconds, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
+        realmRealSeconds, STAGE_SHARE, REALM_COUNT, WORLD_TIERS, REALM_TIERS, GEAR_SLOT_IDS, GEAR_QUALITIES, ENEMY_TIERS,
         LB_GRADE_POWER, DAO_PATHS, PACK_SCALE, pathDamageMult, pathTeamBond, pathsOfRace, xpNeedFor, baseXpRate, cultivationRate, realmShare, refStats, baseStatsFor, gearBudget,
         makeGearItem, enemyStatsFor, expectedLinhBaoScale, maxLinhBaoGradeForRealm, LB_GRADE_UNLOCK_REALM, goldRef, gearPrice, realmProgress
     };

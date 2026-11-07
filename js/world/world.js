@@ -423,7 +423,9 @@ function descentActive() {
 /* Nhiệm vụ chính đang dẫn xuống Giới dưới thì được xuống đúng Giới đó */
 function storyDescent(toWorld) {
     const runs = [mainQuestRuntime(), ...state.questActive.filter(rt => QUEST_INDEX[rt.id]?.crossWorld)].filter(Boolean);
-    return runs.some(rt => { const step = questStep(rt); return !!step && stepLocations(step).some(id => LOCATIONS[id]?.world === toWorld); });
+    const reaches = worldId => worldId === toWorld || LOCATIONS[worldEntry(worldId)?.gate?.to]?.world === toWorld;
+    if (runs.some(rt => { const step = questStep(rt); return !!step && stepLocations(step).some(id => LOCATIONS[id] && reaches(LOCATIONS[id].world)); })) return true;
+    return SIDE_QUESTS.some(q => q.crossWorld && LOCATIONS[q.loc] && reaches(LOCATIONS[q.loc].world) && questOpen(q));
 }
 
 function descentBlocked(toWorld) {

@@ -5,7 +5,7 @@
    - Lời phán xét: mỗi NPC nói bằng giọng riêng trong voices.js, theo việc mình cao hơn, ngang hay đã bị người chơi vượt.
 =========================================================== */
 const NPC_REALM = { thai_thanh: 21, nguyen_thuy: 21, thong_thien: 20, nu_oa: 20, tiep_dan: 19, chuan_de: 19, thai_so: 28, huyen_mau: 28, kiem_to: 28, van_kiep: 28, to_dao: 3, chuong_mon: 6, tien_lai: 9 };
-const NPC_STAGE = { thai_thanh: 3, nguyen_thuy: 1, thong_thien: 2, nu_oa: 0, tiep_dan: 2, chuan_de: 0 };
+const NPC_STAGE = { thai_thanh: 3, nguyen_thuy: 1, thong_thien: 2, nu_oa: 0, tiep_dan: 2, chuan_de: 0, hau_tho: 1 };
 const NPC_NO_RING = ['mac'];
 
 function storyRealmOf(key) {
