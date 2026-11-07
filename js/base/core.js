@@ -1029,7 +1029,7 @@ function renderTopStats() {
         </div>
 
         <div class="stat"><b>Linh căn</b>
-            <div id="rootTxt">${state.root.elements.map(colorizeElement).join(' ')} (${rootRankDisplay})${state.flaw ? ` · Căn cơ ${100 - state.flaw}%` : ''}</div>
+            <div id="rootTxt">${state.root.elements.map(colorizeElement).join(' ')} (${rootRankDisplay})${state.flaw ? ` · Căn cơ ${100 - state.flaw}%` : ''}</div>${rootCanAdvance() ? `<button class="mini-btn" onclick="advanceRoot()" title="Ngũ hành quy về hệ gốc ${rootBase()}, lên ${ROOT_RANKS[state.root.rank + 1]}">🌟 Tiến giai ${rootBase()} ${ROOT_RANKS[state.root.rank + 1]}</button>` : ''}
         </div>
 
         <div class="stat"><b>Tuổi thọ</b>

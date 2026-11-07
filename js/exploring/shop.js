@@ -194,13 +194,17 @@ function useItem(index) {
         }
     }
     else if (it.type === 'root') {
-        const isHybrid = it.elements.length > 1;
-        state.root = {
-            elements: it.elements.slice(0),
-            rank: it.rank,
-            isHybrid: isHybrid
-        };
-        log(`🌈 Linh căn đổi thành ${it.name}${isHybrid ? ' — Hỗn Nguyên khởi động!' : ''}`);
+        if (rootCanMerge(it)) {
+            const added = mergeRootItem(it);
+            log(`🌿 Dung hợp ${it.name}: linh căn thêm hệ ${added.join(', ')}, thành ${rootLabel(state.root)}.${rootCanAdvance() ? ' Đủ ngũ hành, có thể Tiến giai.' : ''}`);
+        } else if (it.rank === (state.root?.rank || 0) && it.elements.every(el => state.root?.elements?.includes(el))) {
+            log(`⚠️ Linh căn đã có hệ ${it.elements.join(', ')}, không dung hợp thêm được.`);
+            return;
+        } else {
+            const isHybrid = it.elements.length > 1;
+            state.root = { elements: it.elements.slice(0), rank: it.rank, isHybrid, base: it.elements[0] };
+            log(`🌈 Linh căn đổi thành ${it.name}${isHybrid ? ' — Hỗn Nguyên khởi động!' : ''}`);
+        }
         state.inventory.splice(index, 1);
         renderAll();
         return;
@@ -218,6 +222,42 @@ function useItem(index) {
     } else {
         renderInventory(); // chỉ render inventory
     }
+}
+
+/* Linh căn cùng phẩm khác hệ dung hợp vào linh căn đang dùng; đủ ngũ hành thì tiến giai hệ gốc lên một phẩm */
+function rootBase(root = state.root) {
+    return root?.base || root?.elements?.[0];
+}
+
+function rootLabel(root = state.root) {
+    return `${(root?.elements || []).join(' ')} ${ROOT_RANKS[root?.rank || 0]}`;
+}
+
+function rootCanMerge(it) {
+    const root = state.root;
+    return !!root && it.rank === (root.rank || 0) && it.elements.some(el => !root.elements.includes(el));
+}
+
+function mergeRootItem(it) {
+    const root = state.root;
+    const added = it.elements.filter(el => !root.elements.includes(el));
+    const base = rootBase(root);
+    state.root = { ...root, base, elements: [base, ...root.elements.filter(el => el !== base), ...added], isHybrid: true };
+    return added;
+}
+
+function rootCanAdvance() {
+    const root = state.root;
+    return !!root && ELEMENTS.every(el => root.elements.includes(el)) && (root.rank || 0) < ROOT_RANKS.length - 1;
+}
+
+function advanceRoot() {
+    if (!rootCanAdvance()) return;
+    const base = rootBase();
+    const rank = (state.root.rank || 0) + 1;
+    state.root = { elements: [base], rank, isHybrid: false, base };
+    log(`🌟 Ngũ hành quy về một: linh căn tiến giai thành ${base} ${ROOT_RANKS[rank]}.`);
+    renderAll();
 }
 
 let rootCombineSelection = []; // các linh căn đang được chọn để hợp

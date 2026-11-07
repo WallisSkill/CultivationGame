@@ -216,7 +216,7 @@ function grantBattleRewards(enemy) {
         log(`🎁 Rơi trang bị: ${gear.name}!`);
     }
     if (Math.random() < 0.02) {
-        const rank = Math.min(ROOT_RANKS.length - 1, (state.root?.rank || 0) + 1);
+        const rank = state.root?.rank || 0;
         const el = ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
         addItemToInventory({ name: `Mảnh ${el} ${ROOT_RANKS[rank]}`, type: 'root_frag', value: { elements: [el], rank }, desc: 'Dùng 3 mảnh hợp thành linh căn' });
     }
