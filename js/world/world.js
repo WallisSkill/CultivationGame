@@ -23,7 +23,7 @@ const TRAVEL_GATE_PIXELS = 500;
 /* Quãng đường càng xa, thời gian tăng nhanh hơn quãng đường */
 const TRAVEL_DISTANCE_EXPONENT = 1.5;
 /* Dịch chuyển: cần tông môn + cảnh giới tối thiểu của cõi đích */
-const TELEPORT_MIN_REALM = { pham: 2, tien: 12, thanh: 20, thien: 25, hondon: 29, hongmong: 30, chungnguyen: 31, huvo: 32 };
+const TELEPORT_MIN_REALM = { pham: 2, tien: 12, am: 12, thanh: 20, thien: 25, hondon: 29, hongmong: 30, chungnguyen: 31, huvo: 32 };
 /* Cõi cuối: cảnh giới cao hơn cõi thì tới tức thì, thấp hơn thì mất ngàn giờ cho mỗi bậc thiếu */
 const ABSOLUTE_WORLDS = ['hondon', 'hongmong', 'chungnguyen'];
 const INSTANT_LEG_SECONDS = 1;
