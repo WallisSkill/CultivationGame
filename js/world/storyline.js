@@ -9,8 +9,8 @@
 const ACTS = [
     { id: 1, name: 'Hồi I — Phàm Trần', desc: 'Một đứa trẻ mồ côi bước lên đường tu tiên.' },
     { id: 2, name: 'Hồi II — Tiên Lộ Là Mỏ', desc: 'Phi thăng không phải giải thoát: từ tiên nô dưới mỏ tới Tiên Đế, Đại La Kim Tiên rồi Chuẩn Thánh.' },
-    { id: 3, name: 'Hồi III — Thất Thánh', desc: 'Thế gian chỉ có sáu vị Thánh, và ngươi là người thứ bảy. Việc nhiều ở Tiên Giới, thỉnh thoảng lên Thánh Giới nghị chính sự.' },
-    { id: 4, name: 'Hồi IV — Đại Đạo Chí Thượng', desc: 'Các cảnh giới Thiên là cực đạo cảnh. Sau lưng Lục Thánh còn rất nhiều người.' },
+    { id: 3, name: 'Hồi III — Lục Thánh', desc: 'Thế gian chỉ có sáu vị Thánh, và ngươi là người thứ bảy. Việc nhiều ở Tiên Giới, thỉnh thoảng lên Thánh Giới nghị chính sự.' },
+    { id: 4, name: 'Hồi IV — Thiên Cảnh', desc: 'Đại Đạo Chí Thượng chỉ là tên Đại Thánh gọi. Tên thật là Thiên Cảnh, các cảnh giới tu tới cực của Đạo. Sau lưng Lục Thánh còn rất nhiều người.' },
     { id: 5, name: 'Hồi V — Hỗn Độn Đạo Giả', desc: 'Bên ngoài vũ trụ có những kẻ xem vũ trụ như hạt bụi.' },
     { id: 6, name: 'Hồi VI — Hồng Mông', desc: 'Cảnh giới do chính ngươi sáng tạo. Bên trên không có ai, chỉ còn việc xuống nói chuyện với bên dưới.', ruled: { desc: 'Cảnh giới do người đi trước mở ra. Bên trên đã có chủ, ngươi mới chỉ biết tên.' } },
     { id: 7, name: 'Hồi VII — Chung Nguyên', desc: 'Điểm kết. Một chiếc ghế trống.' }
@@ -310,6 +310,7 @@ const MAIN_QUESTS = [
         id: 'm21', act: 3, title: 'Mở Rộng Thánh Giới', needs: [21, 0],
         steps: [
             { go: 'oa_hoang', say: [['nu_oa', 'Con đã là Đại Thánh, cao hơn cả ta. Trong sáu chúng ta chỉ Thái Thanh và Nguyên Thủy đứng ở tầng này. Thánh Giới chật rồi, Chuẩn Thánh dưới kia cả đời không có chỗ đứng.'], ['me', 'Vậy thì mở rộng nó ra.'], ['nu_oa', 'Mở ra thì họ có chỗ đứng chờ. Nhưng ghế Thánh vẫn chỉ có sáu, và ghế thứ bảy là của con. Con chịu được cái nhìn của những người đứng chờ không?']] },
+            { go: 'bat_canh', say: [['thai_thanh', 'Đại Thánh rồi. Giờ ngươi nghe được một cái tên mà Nữ Oa, Thông Thiên cũng chưa nghe: Đại Đạo Chí Thượng.'], ['me', 'Là một cảnh giới Thánh cao hơn?'], ['thai_thanh', 'Dưới Đại Thánh ai cũng tưởng vậy. Nó không phải Thánh mạnh hơn. Viên mãn rồi quay lại hỏi ta, ta nói tên thật.']] },
             { gather: { loc: 'tu_tieu', hours: 8, label: 'Đẩy bờ Thánh Giới ra xa' }, say: [['narr', 'Vách Thánh Giới lùi ra ba ngàn dặm. Dưới Tiên Giới, những người đứng ở Chuẩn Thánh cả đời ngẩng đầu lên.']] }
         ],
         reward: { hours: 36, goldRefs: 300, statBless: 0.05 }
@@ -318,7 +319,8 @@ const MAIN_QUESTS = [
         id: 'm22', act: 3, title: 'Kiếm Hẹn', unlock: 22, needs: [21, 2],
         steps: [
             { go: 'bich_du', say: [['thong_thien', 'Lớn nhanh thật, đã cao hơn ta rồi. Lần này ta dùng hết sức, đừng khóc.']] },
-            { boss: 'thong_thien', say: [['thong_thien', 'Đã lắm! Ta chỉ đứng ở Chí Thánh Hậu Kỳ, trong sáu người chỉ Thái Thanh và Nguyên Thủy tới được Đại Thánh. Ngươi qua ta rồi, ta nói được cho ngươi nghe. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Bọn ta là Đại Đạo Thánh Nhân. Trên bọn ta là cảnh giới Thiên, tên thật của nó là Đại Đạo Chí Thượng. Người dưới không biết, ai nghe qua cũng tưởng Chí Thượng chỉ là Thánh mạnh hơn một chút.'], ['me', 'Thật ra thì sao?'], ['thong_thien', 'Một người trong số họ thở ra, cả sáu chúng ta phải cúi đầu. Muốn bước vào thì mua đủ đồ cấp Thiên ở Tử Tiêu Thị đi.']] }
+            { boss: 'thong_thien', say: [['thong_thien', 'Đã lắm! Ta chỉ đứng ở Chí Thánh Hậu Kỳ, trong sáu người chỉ Thái Thanh và Nguyên Thủy tới được Đại Thánh. Ngươi qua ta rồi, ta nói được cho ngươi nghe. Tru Tiên Kiếm là của ngươi.'], ['thong_thien', 'Ta chưa tới Đại Thánh, nên trên đầu ta là gì ta không biết. Đi hỏi Thái Thanh.']] },
+            { go: 'bat_canh', say: [['thai_thanh', 'Viên mãn rồi thì ta nói hết. Đại Đạo Chí Thượng chỉ là tên Đại Thánh gọi nhau cho đỡ sợ. Tên thật của nó là Thiên Cảnh.'], ['me', 'Chuẩn Thiên là gì?'], ['thai_thanh', 'Bước đầu tiên đặt chân vào Thiên Cảnh. Tới đó ngươi vẫn là Thánh Nhân, chỉ là Thánh Nhân đã thấy trời ở trên đầu mình.'], ['me', 'Còn sau đó?'], ['thai_thanh', 'Một người ở Thiên Cảnh thở ra, cả sáu chúng ta phải cúi đầu. Muốn bước thì mua đủ đồ ở Tử Tiêu Thị đi.']] }
         ],
         reward: { hours: 48, goldRefs: 350, gear: ['weapon', 4], relic: 'Tru Tiên Kiếm' }
     },

@@ -2,13 +2,78 @@
     FULL GAME: DATA / STATE / HELPERS
     =============================== */
 /* --- Data: realms, stages, elements, root ranks --- */
-const REALMS = [
+const REALM_TRUE_NAMES = [
     'Luyện Khí', 'Trúc Cơ', 'Kim Đan', 'Nguyên Anh', 'Hóa Thần', 'Luyện Hư', 'Hợp Thể', 'Độ Kiếp', 'Đại Thừa',
     'Tán Tiên', 'Địa Tiên', 'Thiên Tiên', 'Chân Tiên', 'Huyền Tiên', 'Kim Tiên', 'Tiên Đế', 'Thần Cảnh Lục Nguyên', 'Đại La Kim Tiên', 'Chuẩn Thánh',
     'Thánh Nhân Cảnh', 'Chí Thánh Cảnh', 'Đại Thánh Cảnh', 'Chuẩn Thiên Cảnh',
     'Diệt Thiên Cảnh', 'Khai Thiên Cảnh', 'Toàn Thiên Cảnh', 'Cực Thiên Cảnh', 'Nghịch Thiên Cảnh', 'Sáng Thế Cảnh',
     'Hỗn Độn Đạo Giả', 'Hồng Mông Chúa Tể', 'Chung Nguyên Chí Cao', 'Hư Vô Chí Đạo'
 ];
+/* Tên các cảnh giới Thiên hiện theo tầm hiểu của người chơi: dưới Đại Thánh tưởng là Thánh mạnh hơn, Đại Thánh nghe tên Đại Đạo Chí Thượng, Đại Thánh Đại Viên Mãn mới biết tên thật Thiên Cảnh */
+const THIEN_NAME_FROM = 22;
+const THIEN_NAME_TO = 28;
+const THIEN_KNOW_REALM = 21;
+const THIEN_MASK_NAMES = ['Chí Thượng Thánh Cảnh', 'Đại Đạo Chí Thượng'];
+const THIEN_MASK_SHORT = ['Chí Thượng Thánh', 'Đại Đạo Chí Thượng'];
+const THIEN_TEXT_HINT = /Thiên Cảnh|Sáng Thế Cảnh|Chuẩn Thiên|cảnh giới Thiên|cấp Thiên/;
+
+function realmMaskLevel() {
+    if (typeof state === 'undefined' || !state) return 0;
+    const realm = state.realmIndex || 0;
+    if (realm > THIEN_KNOW_REALM || (realm === THIEN_KNOW_REALM && (state.realmStage || 0) >= STAGES.length - 1)) return 2;
+    return realm === THIEN_KNOW_REALM ? 1 : 0;
+}
+
+function shownRealmName(index) {
+    const level = realmMaskLevel();
+    if (level === 2 || index < THIEN_NAME_FROM || index > THIEN_NAME_TO) return REALM_TRUE_NAMES[index];
+    return THIEN_MASK_NAMES[level];
+}
+
+function maskRealmText(text) {
+    if (typeof text !== 'string' || !THIEN_TEXT_HINT.test(text)) return text;
+    const level = realmMaskLevel();
+    if (level === 2) return text;
+    let out = text;
+    for (let i = THIEN_NAME_FROM; i <= THIEN_NAME_TO; i++) out = out.split(REALM_TRUE_NAMES[i]).join(THIEN_MASK_NAMES[level]);
+    return out.split('Chuẩn Thiên').join(THIEN_MASK_SHORT[level])
+        .replace(/cảnh giới Thiên(?! Phẩm)/g, `cảnh giới ${THIEN_MASK_SHORT[level]}`)
+        .replace(/cấp Thiên(?! Phẩm)/g, `cấp ${THIEN_MASK_SHORT[level]}`);
+}
+
+const REALMS = new Proxy(REALM_TRUE_NAMES, {
+    get(target, key, receiver) {
+        if (typeof key === 'string' && /^\d+$/.test(key)) return shownRealmName(Number(key));
+        return Reflect.get(target, key, receiver);
+    }
+});
+
+function maskRealmNode(node) {
+    if (!node) return;
+    if (node.nodeType === 3) {
+        const next = maskRealmText(node.nodeValue);
+        if (next !== node.nodeValue) node.nodeValue = next;
+        return;
+    }
+    if (node.nodeType !== 1 || !THIEN_TEXT_HINT.test(node.textContent || '')) return;
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    for (let t = walker.nextNode(); t; t = walker.nextNode()) maskRealmNode(t);
+}
+
+function startRealmNameMask() {
+    if (typeof document === 'undefined' || typeof MutationObserver === 'undefined' || !document.body) return;
+    new MutationObserver(list => {
+        if (realmMaskLevel() === 2) return;
+        list.forEach(m => m.type === 'characterData' ? maskRealmNode(m.target) : m.addedNodes.forEach(maskRealmNode));
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    maskRealmNode(document.body);
+}
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startRealmNameMask);
+    else startRealmNameMask();
+}
+
 const HU_VO_PLAYER_NAME = 'Hư Vô Chi Chủ';
 const STAGES = ['Sơ Kỳ', 'Trung Kỳ', 'Hậu Kỳ', 'Đại Viên Mãn'];
 const GAME_VERSION = '1.0.0';
@@ -43,7 +108,7 @@ const COLOR_MAP = {
     'Thánh Nhân Cảnh': '#e53935', 'Chí Thánh Cảnh': '#c62828', 'Đại Thánh Cảnh': '#b71c1c',
     'Chuẩn Thiên Cảnh': '#880e4f', 'Diệt Thiên Cảnh': '#6a1b9a', 'Khai Thiên Cảnh': '#4527a0',
     'Toàn Thiên Cảnh': '#283593', 'Cực Thiên Cảnh': '#1a237e', 'Nghịch Thiên Cảnh': '#d81b60',
-    'Sáng Thế Cảnh': '#ff4081', 'Hỗn Độn Đạo Giả': '#00bcd4', 'Hồng Mông Chúa Tể': '#00e5ff',
+    'Sáng Thế Cảnh': '#ff4081', 'Chí Thượng Thánh Cảnh': '#d84315', 'Đại Đạo Chí Thượng': '#8e24aa', 'Hỗn Độn Đạo Giả': '#00bcd4', 'Hồng Mông Chúa Tể': '#00e5ff',
     'Chung Nguyên Chí Cao': '#ffffff', 'Hư Vô Chí Đạo': '#b388ff',
     'Sơ Kỳ': '#9e9e9e', 'Trung Kỳ': '#4caf50', 'Hậu Kỳ': '#2196f3', 'Đại Viên Mãn': '#ffc107',
     'Phế Phẩm': '#777', 'Hạ Phẩm': '#8d6e63', 'Trung Phẩm': '#00acc1', 'Thượng Phẩm': '#43a047',

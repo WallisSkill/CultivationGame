@@ -243,7 +243,7 @@ const NPC_STORIES = {
     trieu_minh: [{ from: 14, lines: ['Hữu giáo vô loại, đệ tử Tiệt Giáo ai cũng từng là kẻ không ai cần.', ['me', 'Ngài thì sao?'], 'Ta từng là một con hổ đói. Sư phụ cho ăn, không hỏi vì sao hổ biết nói.'] }],
     thai_van: [{ from: 14, lines: ['Ta lau bụi cho các tượng. Mỗi ngày một ngàn pho.', ['me', 'Bao giờ xong?'], 'Không bao giờ, Nương Nương vẫn nặn thêm.'] }],
     di_lac: [{ from: 14, lines: ['Ta luôn cười, vì Tiếp Dẫn đã khóc phần của ta rồi.', ['me', 'Thật à?'], 'Không. Ta cười vì nếu không cười thì ta cũng khóc.'] }],
-    thai_so: [{ from: 23, lines: ['Sáu đứa đó không biết ta còn ở đây, chúng tưởng ta chỉ là một Thánh Nhân mạnh hơn chút đã đi xa.', ['me', 'Lão là Đại Đạo Chí Thượng?'], 'Tên đó chỉ nghe được ở đây thôi. Dưới kia có nói cũng không ai nhớ.'] }],
+    thai_so: [{ from: 23, lines: ['Sáu đứa đó không biết ta còn ở đây, chúng tưởng ta chỉ là một Thánh Nhân mạnh hơn chút đã đi xa.', ['me', 'Lão là Đại Đạo Chí Thượng?'], 'Đó là tên Đại Thánh đặt cho thứ họ chưa thấy. Ở đây chỉ gọi là Thiên Cảnh, và ta chỉ đi trước ngươi vài bước.'] }],
     huyen_mau: [{ from: 24, lines: ['Ta sinh ra cái gì đều bị nó quên.', ['me', 'Nữ Oa vẫn nhớ người.'], 'Vậy sao? Nó vẫn hỏi người khác đã ăn gì chưa à. Đứa ngốc.'] }],
     kiem_to: [{ from: 25, lines: ['Ta chém đứt được mọi thứ, trừ một câu nói của sư phụ.', ['me', 'Câu gì?'], 'Quên rồi, chỉ nhớ là chém không đứt.'] }],
     van_kiep: [{ from: 26, lines: ['Ngươi đã chết ở chỗ này tám lần trong các kiếp trước.', ['me', 'Lần này thì sao?'], 'Lần này ta chưa đếm xong.'] }],
