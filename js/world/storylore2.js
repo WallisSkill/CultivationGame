@@ -574,20 +574,24 @@ function storyLoreStep(quest, selector) {
         hunt: s => s.hunt?.loc === target,
         gather: s => s.gather?.loc === target
     }[kind];
-    const step = match && quest.steps.find(match);
+    const step = match && questAllSteps(quest).find(match);
     if (!step) throw new Error(`STORY_LORE_STEPS: ${quest.id} không có bước ${selector}`);
     return step;
 }
 
-Object.entries(STORY_LORE_STEPS).forEach(([key, bySelector]) => {
-    const quest = QUEST_INDEX[/^\d/.test(key) ? `mc${key.replace('-', '_')}` : key];
-    if (!quest) throw new Error(`STORY_LORE_STEPS: không có nhiệm vụ ${key}`);
-    Object.entries(bySelector).forEach(([selector, lines]) => {
-        lines.forEach(([who]) => {
-            if (who !== 'me' && who !== 'narr' && !NPCS[who]) throw new Error(`STORY_LORE_STEPS: ${key} dùng NPC lạ ${who}`);
+function applyStoryLoreSteps(table, label) {
+    Object.entries(table).forEach(([key, bySelector]) => {
+        const quest = QUEST_INDEX[/^\d/.test(key) ? `mc${key.replace('-', '_')}` : key];
+        if (!quest) throw new Error(`${label}: không có nhiệm vụ ${key}`);
+        Object.entries(bySelector).forEach(([selector, lines]) => {
+            lines.forEach(([who]) => {
+                if (who !== 'me' && who !== 'narr' && !NPCS[who]) throw new Error(`${label}: ${key} dùng NPC lạ ${who}`);
+            });
+            const step = storyLoreStep(quest, selector);
+            step.say = [...(step.say || []), ...lines];
+            if (step.ruled?.say) step.ruled.say = [...step.ruled.say, ...lines];
         });
-        const step = storyLoreStep(quest, selector);
-        step.say = [...(step.say || []), ...lines];
-        if (step.ruled?.say) step.ruled.say = [...step.ruled.say, ...lines];
     });
-});
+}
+
+applyStoryLoreSteps(STORY_LORE_STEPS, 'STORY_LORE_STEPS');

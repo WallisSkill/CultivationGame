@@ -186,38 +186,160 @@ const ROAD_TALES = {
 /* Mỗi tiểu cảnh giới có vài việc riêng, sinh theo nơi cùng tầm cảnh giới. Không chặn đột phá, qua tiểu cảnh là hết hạn */
 const STAGE_QUEST_COUNT = 3;
 const STAGE_HUNT_TITLES = ['Trừ Hại {enemy}', 'Lệnh Truy Sát {enemy}', 'Dấu Vết {enemy}', 'Thử Tay Với {enemy}', 'Vây Quét {enemy}', 'Món Nợ Của {enemy}', 'Tin Đồn Về {enemy}', 'Đêm Săn {enemy}'];
-const STAGE_HUNT_INTROS = ['Dân quanh {loc} đồn rằng {enemy} lại xuất hiện. Không ai dám ra khỏi cửa sau khi tắt nắng.', 'Một tờ cáo thị rách treo trước {loc}: ai diệt được {enemy} thì có thưởng.', 'Trong lúc tĩnh tọa, ngươi ngửi thấy tử khí từ {loc}. Tu vi vừa tăng cũng cần một chỗ để thử.', 'Một tu sĩ bị thương lết tới trước mặt ngươi, chỉ kịp nói ba chữ: "{enemy}... {loc}..."'];
-const STAGE_HUNT_DONES = ['Chiến trường yên lại. Tay ngươi vững hơn lúc đến.', 'Người quanh đây bắt đầu nhớ tên ngươi.', 'Thu dọn xong, ngươi nhận ra đường tu trước mặt rõ hơn một chút.'];
+const STAGE_HUNT_HOOKS = [
+    [['narr', 'Dân quanh {loc} đồn rằng {enemy} lại xuất hiện. Sau khi tắt nắng, không ai dám ra khỏi cửa.']],
+    [['narr', 'Trước {loc} treo một tờ cáo thị rách: ai diệt được {enemy} thì có thưởng.'], ['narr', 'Bên dưới có ba chữ ký đã bị gạch.']],
+    [['narr', 'Một tu sĩ bị thương lết tới trước mặt ngươi, chỉ kịp nói: "{enemy}... {loc}..."']],
+    [['narr', 'Một đứa trẻ níu áo ngươi. Nó nói {enemy} ở {loc} đã ăn mất con dê duy nhất của nhà nó.']],
+    [['narr', 'Một thương đoàn dừng chân, không dám đi tiếp về phía {loc}. {enemy} đã chặn đường ba hôm.']],
+    [['narr', 'Bà cụ bán trà đầu ngõ hạ giọng: "Ở {loc} bây giờ toàn {enemy}. Con trai ta đi hái thuốc, hai ngày chưa về."']],
+    [['narr', 'Một tiều phu vác bó củi chạy ngang qua, vừa chạy vừa ngoái lại. Hỏi ra mới biết {enemy} vừa đuổi hắn ra khỏi {loc}.']],
+    [['narr', 'Trưởng thôn gần {loc} đặt lên bàn một túi bạc lẻ, toàn những đồng mòn vẹt.'], ['narr', '"Cả thôn góp lại đấy. Dẹp giúp bọn {enemy}."']],
+    [['narr', 'Đêm qua có tiếng hú vọng về từ {loc}. Sáng ra, hàng rào nhà ai cũng có vết cào của {enemy}.']],
+    [['narr', 'Một nữ tu đang mài kiếm ven đường ngẩng lên nhìn ngươi.'], ['narr', '"Ta đi {loc} một mình không nổi. {enemy} đông hơn ta tưởng. Ngươi đi thì ta chỉ đường."']]
+];
+const STAGE_HUNT_TALKS = [
+    [['me', 'Chúng ra lúc nào?'], ['narr', '"Chạng vạng. Lúc mắt người kém nhất thì mũi chúng thính nhất."']],
+    [['me', 'Trước đây có ai đi dẹp chưa?'], ['narr', '"Có. Họ về được, nhưng ít hơn lúc đi."']],
+    [['me', 'Chúng đông không?'], ['narr', 'Người kia giơ cả hai bàn tay lên, gập lại, rồi giơ lên lần nữa.']],
+    [['me', 'Sao trước đây không có?'], ['narr', '"Linh khí mỏng đi, thú đói thì mò xuống gần người. Người đói thì mò lên gần thú."']],
+    [['me', 'Thưởng bao nhiêu?'], ['narr', '"Không nhiều. Đủ cho một bữa rượu và một lời cảm ơn thật lòng."']],
+    [['me', 'Chúng có điểm yếu nào không?'], ['narr', '"Có. Chúng chỉ biết lao tới. Người bình tĩnh thì sống."']],
+    [['me', 'Trong đó có con đầu đàn không?'], ['narr', '"Không ai thấy. Nhưng cách chúng đi thành hàng thì chắc là có."']],
+    [['me', 'Cứ để ta.'], ['narr', 'Người kia nhìn ngươi hồi lâu, như cố nhớ mặt ngươi phòng khi phải kể lại với ai đó.']]
+];
+const STAGE_HUNT_CLOSES = [
+    [['narr', 'Ngươi siết lại đai lưng rồi lên đường.']],
+    [['narr', 'Tu vi vừa tăng cũng cần một chỗ để thử. Ngươi đi về phía {loc}.']],
+    [['narr', 'Trước khi đi, ngươi được dúi vào tay một nắm cơm nắm, vẫn còn ấm.']],
+    [['narr', 'Một con chó già lẽo đẽo theo ngươi tới đầu làng rồi ngồi lại, không đi nữa.']],
+    [['narr', 'Bầu trời phía {loc} xám hơn những chỗ khác.']],
+    [['narr', '"Về được thì kể ta nghe," có người nói với theo.']],
+    [['narr', 'Ngươi ghi nhớ con đường, phòng khi phải chạy về.']],
+    [['narr', 'Gió đổi chiều, mang tới mùi tanh. Chúng ở không xa.']]
+];
+const STAGE_HUNT_AFTERS = [
+    [['narr', 'Chiến trường yên lại. Tay ngươi vững hơn lúc đến.']],
+    [['narr', 'Con cuối cùng gục xuống trước mặt ngươi, mắt vẫn mở.']],
+    [['narr', 'Máu {enemy} thấm xuống đất, bốc lên một làn hơi mỏng rồi tan.']],
+    [['narr', 'Ngươi thở dốc, lau kiếm vào vạt áo. Lần sau sẽ nhanh hơn.']],
+    [['narr', 'Trận này dài hơn ngươi tưởng. Khi xong, mặt trời đã nghiêng hẳn.']],
+    [['narr', 'Con đầu đàn ngã xuống, đám còn lại tản vào rừng, không quay lại nữa.']],
+    [['narr', 'Một vết rách trên tay áo nhắc ngươi rằng con thứ ba đã suýt chạm tới cổ.']],
+    [['narr', 'Xong việc. {loc} im ắng tới mức nghe được cả tiếng lá rơi.']]
+];
+const STAGE_HUNT_MOMENTS = [
+    [['narr', 'Trên xác một con có vết thương cũ, như từng bị thứ gì lớn hơn đuổi khỏi chỗ ở.'], ['me', 'Vậy còn thứ đã đuổi chúng thì sao?']],
+    [['narr', 'Một lão nông mang ra bầu rượu nhạt, bảo dành cho người dọn sạch đường, ba năm rồi chưa ai uống.'], ['narr', '"Chờ ba năm thì nó nhạt," lão cười. "Người chờ cũng vậy."']],
+    [['me', 'Các ngươi cũng chỉ đi kiếm ăn.'], ['narr', 'Ngươi chôn chúng ở rìa {loc}. Không ai bảo ngươi làm vậy, cũng không ai thấy.']],
+    [['narr', 'Trong hang chúng có mấy món đồ của người: một chiếc giày, nửa cái nón, một cái trâm gãy.'], ['narr', 'Ngươi gói lại, mang về cho ai còn nhận ra.']],
+    [['narr', 'Đứa trẻ chăn trâu đứng xem từ trên đồi, giờ chạy xuống hỏi ngươi học kiếm ở đâu.'], ['me', 'Ở chỗ không có ai dạy.']],
+    [['narr', 'Một con non trốn dưới gốc cây, run lẩy bẩy. Ngươi nhìn nó một lúc rồi quay đi.']],
+    [['narr', 'Ngươi ngồi xuống điều tức. Linh lực chảy qua kinh mạch êm hơn trước, như dòng suối vừa được khơi.']],
+    [['narr', 'Từ xa, tiếng chuông chiều của ngôi chùa nhỏ vọng lại. Hôm nay người ta sẽ dám thắp đèn muộn hơn.']]
+];
 const STAGE_GATHER_TITLES = ['Ngộ Đạo Tại {loc}', 'Thu Thập Linh Vật {loc}', 'Khảo Sát {loc}', 'Lắng Nghe {loc}', 'Vẽ Bản Đồ {loc}', 'Tìm Di Tích {loc}'];
 const STAGE_GATHER_LABELS = ['Tĩnh tọa ngộ đạo', 'Thu thập linh vật', 'Khảo sát địa mạch', 'Lắng nghe linh khí', 'Ghi chép địa hình', 'Tìm dấu di tích'];
-const STAGE_GATHER_INTROS = ['Linh khí ở {loc} chuyển động theo nhịp lạ. Ở tiểu cảnh này ngươi đã nghe được nó.', 'Một cuốn sổ cũ nhắc tới {loc}, trang cuối bị xé mất.', 'Ngươi muốn hiểu vùng đất này trước khi đi xa hơn. {loc} là nơi nên bắt đầu.'];
-const STAGE_GATHER_DONES = ['Một chút tâm đắc lắng xuống đan điền.', 'Thứ tìm được không lớn, nhưng là của riêng ngươi.', 'Ngươi ghi lại mọi thứ, biết đâu về sau cần tới.'];
+const STAGE_GATHER_HOOKS = [
+    [['narr', 'Linh khí ở {loc} chuyển động theo nhịp lạ. Ở tiểu cảnh này ngươi đã nghe được nó.']],
+    [['narr', 'Một cuốn sổ cũ nhắc tới {loc}, trang cuối bị xé mất.']],
+    [['narr', 'Người dẫn đường của vùng này đã đi xa, để lại tấm bản đồ {loc} mới vẽ một nửa.']],
+    [['narr', 'Có người kể ở {loc} có một khoảng đất cỏ không mọc, lá rơi xuống cũng tự bay đi.']],
+    [['narr', 'Một lão dược nông nhờ ngươi tới {loc} xem giúp mạch đất. Năm nay ruộng thuốc của lão héo nửa.']],
+    [['narr', 'Một học trò thư viện gửi ngươi danh sách những thứ cần ghi chép ở {loc}, chữ viết run run.'], ['narr', '"Thầy ta già rồi, không tự đi được nữa."']],
+    [['narr', 'Đêm rằm, phía {loc} có ánh sáng mờ nhấp nháy như đom đóm, nhưng không phải mùa đom đóm.']],
+    [['narr', 'Trong lúc tĩnh tọa, tâm ngươi cứ hướng về {loc}, như có ai gọi khẽ.']]
+];
+const STAGE_GATHER_TALKS = [
+    [['me', 'Nơi ấy có gì lạ?'], ['narr', '"Từ đời ông bà đã thế. Chưa ai nghĩ tới việc ngồi xuống nghe thử."']],
+    [['me', 'Sao không ai tới xem?'], ['narr', '"Có, nhưng người ta chỉ đi qua. Muốn hiểu thì phải ngồi lại."']],
+    [['me', 'Cần bao lâu?'], ['narr', '"Một canh giờ, hoặc cả đời. Tùy người."']],
+    [['me', 'Có nguy hiểm không?'], ['narr', '"Với người vội vàng thì có."']],
+    [['me', 'Ta nên tìm gì?'], ['narr', '"Thứ gì khác với hôm qua. Ở đó, thứ gì khác là thứ đáng nhớ."']],
+    [['me', 'Người trước đã tìm thấy gì?'], ['narr', '"Hắn không nói. Hắn chỉ cười, rồi đi xa hơn."']]
+];
+const STAGE_GATHER_CLOSES = [
+    [['narr', 'Ngươi gói ít lương khô rồi lên đường.']],
+    [['narr', 'Muốn đi xa hơn thì trước tiên phải hiểu nơi mình đang đứng.']],
+    [['narr', 'Ngươi mang theo bút mực, một tấm vải dầu và chút kiên nhẫn.']],
+    [['narr', 'Đường tới {loc} không xa, nhưng ngươi đi chậm để nhìn cho kỹ.']],
+    [['narr', 'Trời quang. Một ngày tốt để ngồi yên.']],
+    [['narr', 'Ngươi hít một hơi sâu. Lần này không phải để đánh nhau.']]
+];
+const STAGE_GATHER_AFTERS = [
+    [['narr', 'Một chút tâm đắc lắng xuống đan điền.']],
+    [['narr', 'Thứ tìm được không lớn, nhưng là của riêng ngươi.']],
+    [['narr', 'Ngươi ghi lại mọi thứ, biết đâu về sau cần tới.']],
+    [['narr', 'Khi ngươi mở mắt, sương đã tan và chân đã tê.']],
+    [['narr', 'Ngươi đứng dậy, nhẹ hơn lúc ngồi xuống.']],
+    [['narr', 'Tấm bản đồ trong tay ngươi giờ đầy thêm vài nét.']]
+];
+const STAGE_GATHER_MOMENTS = [
+    [['narr', 'Linh khí ở đây không đứng yên. Nó trôi lên rất chậm, như khói hương trong căn nhà không có gió.'], ['me', 'Đi lên đâu?']],
+    [['narr', 'Một con sóc ngồi cạnh ngươi suốt buổi, như cũng đang tu.']],
+    [['narr', 'Dưới lớp rêu là một phiến đá khắc chữ đã mờ. Ngươi chỉ đọc được hai chữ "đã tới".']],
+    [['me', 'Lần sau ta sẽ ngồi lâu hơn.'], ['narr', 'Gió thổi qua, như đáp rằng nơi này không vội.']],
+    [['narr', 'Mạch đất ở đây chạy lệch về một phía. Ruộng thuốc của ai đó sẽ cần được đào lại mương.']],
+    [['narr', 'Ngươi bỏ lại một hòn đá xếp chồng lên những hòn đá người trước để lại. Chồng đá đã cao tới gối.']],
+    [['narr', 'Ở đây yên tới mức ngươi nghe thấy tim mình đập, chậm và đều.']]
+];
+const STAGE_REPORT_OPENS = [
+    [['narr', 'Ngươi quay lại báo tin. Người giao việc gật đầu, dúi vào tay ngươi chút lộ phí.']],
+    [['narr', 'Ngươi về tới nơi khi đèn vừa thắp. Người giao việc đếm lộ phí hai lần rồi mới đưa.']],
+    [['narr', 'Nghe xong, người giao việc thở phào, như vừa đặt xuống một gánh nặng.']],
+    [['narr', 'Người giao việc đã đứng chờ sẵn ở cổng. Nhìn mặt ngươi là đủ hiểu.']],
+    [['narr', 'Tin truyền về trước cả ngươi. Lúc ngươi tới, lộ phí đã gói sẵn.']],
+    [['narr', 'Ngươi kể lại ngắn gọn. Người giao việc nghe hết, không ngắt lời câu nào.']]
+];
+const STAGE_REPORT_REMARKS = [
+    [['narr', '"Đi đường cẩn thận," người đó nói.']],
+    [['me', 'Sợ thiếu à?'], ['narr', '"Sợ thừa. Thừa thì phải ghi sổ, mà ta ghét ghi sổ."']],
+    [['narr', 'Họ mời ngươi ở lại ăn cơm. Ngươi từ chối, họ vẫn gói cho ngươi một nắm.']],
+    [['narr', '"Lần sau có việc, ta biết tìm ai rồi."']],
+    [['narr', 'Một đứa trẻ trốn sau cột nhà nhìn ngươi, rồi chạy vào kể cho cả nhà.']],
+    [['narr', '"Người tu tiên mà chịu làm việc vặt," người đó lắc đầu cười. "Hiếm."']],
+    [['me', 'Không cần nhiều thế.'], ['narr', '"Cầm lấy. Không cầm thì ta mắc nợ, mà ta ghét mắc nợ hơn ghét mất tiền."']],
+    [['narr', 'Người đó rót cho ngươi một chén trà nóng. Hai người ngồi im một lúc, không ai cần nói gì.']]
+];
 
 function stageFill(text, loc, enemy) {
     return text.replace(/\{loc\}/g, loc.name).replace(/\{enemy\}/g, enemy || '');
 }
 
+function stagePick(pool, seed, salt, offset = 0) {
+    let h = Math.imul(seed, 0x9e3779b1) ^ Math.imul(salt + 1, 0x85ebca6b);
+    h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+    h ^= h >>> 16;
+    return pool[((h >>> 0) + offset) % pool.length];
+}
+
+function stageLines(seed, offset, loc, enemy, ...pools) {
+    return pools.flatMap((pool, i) => stagePick(pool, seed, i * 7 + pools.length, offset)).map(([who, text]) => [who, stageFill(text, loc, enemy)]);
+}
+
 function stageQuest(realm, stage, slot) {
     const sites = Object.values(LOCATIONS).filter(l => l.minR <= realm && l.maxR >= realm && (l.enemies || []).length);
     const seed = realm * 31 + stage * 7 + slot * 3;
+    const mix = realm * 1000 + stage * 10;
     const loc = sites[(seed + slot * Math.ceil(sites.length / STAGE_QUEST_COUNT)) % sites.length];
     const id = `st_${realm}_${stage}_${slot}`;
     const base = { id, loc: loc.id, npc: 'narr', needs: [realm, stage], until: [realm, stage], stageQuest: true, reward: { hours: 0.5 + stage * 0.25, goldRefs: 3 + stage } };
-    const report = { go: loc.id, say: [['narr', 'Ngươi quay lại báo tin. Người giao việc gật đầu, dúi vào tay ngươi chút lộ phí.']] };
+    const report = { go: loc.id, say: stageLines(mix, slot, loc, '', STAGE_REPORT_OPENS, STAGE_REPORT_REMARKS) };
     if (slot === 2) {
         return {
             ...base,
-            title: stageFill(STAGE_GATHER_TITLES[seed % STAGE_GATHER_TITLES.length], loc),
-            intro: [['narr', stageFill(STAGE_GATHER_INTROS[seed % STAGE_GATHER_INTROS.length], loc)]],
-            steps: [{ gather: { loc: loc.id, hours: 1, label: STAGE_GATHER_LABELS[seed % STAGE_GATHER_LABELS.length] }, say: [['narr', STAGE_GATHER_DONES[seed % STAGE_GATHER_DONES.length]]] }, report]
+            title: stageFill(stagePick(STAGE_GATHER_TITLES, mix, 1, slot), loc),
+            intro: stageLines(mix, slot, loc, '', STAGE_GATHER_HOOKS, STAGE_GATHER_TALKS, STAGE_GATHER_CLOSES),
+            steps: [{ gather: { loc: loc.id, hours: 1, label: stagePick(STAGE_GATHER_LABELS, mix, 2, slot) }, say: stageLines(mix, slot, loc, '', STAGE_GATHER_AFTERS, STAGE_GATHER_MOMENTS) }, report]
         };
     }
     const enemy = loc.enemies[seed % loc.enemies.length].name;
     return {
         ...base,
-        title: stageFill(STAGE_HUNT_TITLES[seed % STAGE_HUNT_TITLES.length], loc, enemy),
-        intro: [['narr', stageFill(STAGE_HUNT_INTROS[seed % STAGE_HUNT_INTROS.length], loc, enemy)]],
-        steps: [{ hunt: { loc: loc.id, name: enemy, n: 3 + stage }, say: [['narr', STAGE_HUNT_DONES[seed % STAGE_HUNT_DONES.length]]] }, report]
+        title: stageFill(stagePick(STAGE_HUNT_TITLES, mix, 1, slot), loc, enemy),
+        intro: stageLines(mix, slot, loc, enemy, STAGE_HUNT_HOOKS, STAGE_HUNT_TALKS, STAGE_HUNT_CLOSES),
+        steps: [{ hunt: { loc: loc.id, name: enemy, n: 3 + stage }, say: stageLines(mix, slot, loc, enemy, STAGE_HUNT_AFTERS, STAGE_HUNT_MOMENTS) }, report]
     };
 }
 
