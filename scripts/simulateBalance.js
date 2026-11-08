@@ -8,7 +8,7 @@ const root = path.join(__dirname, '..');
 const ctx = { console, Math, Object, Array, JSON, Number, Infinity, performance, state: { name: 'x' }, log() { } };
 ctx.window = ctx;
 vm.createContext(ctx);
-['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/tienarc.js', 'js/world/honghoang.js', 'js/world/storyscenes.js', 'js/world/storylore.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/world/voices.js', 'js/world/guides.js', 'js/world/trials.js', 'js/world/congduc.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
+['js/world/balance.js', 'js/world/atlas.js', 'js/world/storyline.js', 'js/world/storychapters.js', 'js/world/tienarc.js', 'js/world/honghoang.js', 'js/world/storyscenes.js', 'js/world/storylore.js', 'js/world/storylore2.js', 'js/world/storylore3.js', 'js/world/avatar.js', 'js/world/rings.js', 'js/world/voices.js', 'js/world/guides.js', 'js/world/trials.js', 'js/world/congduc.js', 'js/combat/bonus.js', 'js/combat/dmgCalculate.js'].forEach(f => {
     vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8').replace(/\bconst (?=[A-Z_]+\b)/g, 'var '), ctx);
 });
 vm.runInContext(`

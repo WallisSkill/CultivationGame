@@ -10,7 +10,7 @@ const STORY_LORE = {
         ['mac', 'Trên đỉnh Thanh Vân có một cái đài. Người ta bảo bước lên đó là thành tiên.'],
         ['me', 'Lão từng lên chưa?'],
         ['mac', 'Lên rồi thì ai quét lá cho con?'],
-        ['narr', 'Lão cúi xuống nhặt một chiếc lá màu tím, không giống lá của cây nào quanh làng, rồi cất vào túi áo như cất tiền.'],
+        ['narr', 'Lão cúi xuống nhặt một chiếc lá màu tím, không giống lá của cây nào quanh đây, rồi cất vào túi áo như cất tiền.'],
         ['mac', 'Lá này rơi từ rất cao xuống. Bao giờ con biết nó mọc ở đâu thì về kể ta nghe.']
     ],
     '1-0': [
@@ -74,8 +74,8 @@ const STORY_LORE = {
         ['narr', 'Con hạc không chết vì Tuyết Yêu. Trên cổ nó có một vết kiếm rất sạch, sáng như kiếm của một đệ tử trẻ.']
     ],
     '4-2': [
-        ['me', 'Trong thư sư phụ có nhắc tới Thanh Thủy Thôn.'],
-        ['chuong_mon', 'Lúc ta còn là đứa bé, ông lão ở đó đã quét lá. Bây giờ ông ấy vẫn quét. Con nghĩ một người phàm sống được bao lâu?'],
+        ['me', 'Trong thư sư phụ có nhắc tới lão quét lá nơi con lớn lên.'],
+        ['chuong_mon', 'Lúc ta còn là đứa bé, ông lão ấy đã quét lá. Bây giờ ông ấy vẫn quét. Con nghĩ một người phàm sống được bao lâu?'],
         ['me', 'Lão là tu sĩ?'],
         ['chuong_mon', 'Ta chưa từng đo được tu vi của ông ấy, một lần cũng không. Ta chỉ biết ông ấy là người gửi con tới đây.'],
         ['chuong_mon', 'Đốt thư đi. Nếu có ngày con đi đủ xa, hãy về hỏi ông ấy giúp ta: đường xuống nằm ở đâu.']
@@ -117,7 +117,7 @@ const STORY_LORE = {
     '7-0': [
         ['dai_su', 'Có một chuyện, từ trước ta mấy đời giữ đài. Có người từ cột sáng bước xuống, áo trắng, tay cầm chổi.'],
         ['me', 'Người ấy nói gì?'],
-        ['dai_su', 'Không nói gì. Quét sạch đài rồi đi về hướng Thanh Thủy. Sổ ghi đó là ảo giác của người giữ đài, vì đài này chỉ có đường lên.']
+        ['dai_su', 'Không nói gì. Quét sạch đài rồi đi xuống chân núi. Sổ ghi đó là ảo giác của người giữ đài, vì đài này chỉ có đường lên.']
     ],
     '7-1': [
         ['dai_su', 'Lôi kiếp không phải để giết ngươi. Nó để đo xem ngươi nặng bao nhiêu.'],
@@ -144,7 +144,7 @@ const STORY_LORE = {
         ['to_dao', 'Lên rồi, nhớ xem người phi thăng có phải làm việc không. Ai cũng tưởng trên đó chỉ có tiên nhạc.'],
         ['me', 'Nếu không phải thì sao?'],
         ['to_dao', 'Thì đừng làm thay ai cả. Sư phụ từng nói trên đó chỉ có một thứ lớn hơn mọi tiên nhân, là cái ghế. Ai ngồi được thì ngồi rất lâu.'],
-        ['narr', 'Từ phía Thanh Thủy vọng lại tiếng chổi quét lá đều đều, như đang đếm bước chân ngươi.']
+        ['narr', 'Từ dưới chân núi vọng lại tiếng chổi quét lá đều đều, như đang đếm bước chân ngươi.']
     ],
 
     /* ----- Hồi II ----- */
@@ -368,7 +368,7 @@ const STORY_LORE = {
     '22-2': [
         ['to_dao', 'Đệ tìm ra người cầm sổ chưa?'],
         ['me', 'Sắp rồi. Hắn không ở Thiên Đình, cũng không ở Thánh Giới.'],
-        ['to_dao', 'Vậy thì xa thật. À, lão quét lá ở Thanh Thủy hỏi thăm đệ. Lão bảo đệ đi tới đâu rồi cũng sẽ có lúc thấy lại chiếc lá tím.'],
+        ['to_dao', 'Vậy thì xa thật. À, lão quét lá ngày xưa hỏi thăm đệ. Lão bảo đệ đi tới đâu rồi cũng sẽ có lúc thấy lại chiếc lá tím.'],
         ['me', 'Lão biết nó mọc ở đâu?'],
         ['to_dao', 'Lão chỉ cười, bảo đệ còn phải qua mấy lớp trời nữa.']
     ],
@@ -411,7 +411,7 @@ const STORY_LORE = {
     ],
     '25-1': [
         ['narr', 'Một mảnh ký ức: ngươi ngồi trên một chiếc ghế rất cao, dưới chân là sương tím mênh mông, không có ai để nói chuyện.'],
-        ['narr', 'Một mảnh khác: ngươi cầm chổi quét lá trước một ngôi làng có suối, có ruộng, và có một đứa trẻ mười tuổi.']
+        ['narr', 'Một mảnh khác: ngươi cầm chổi quét lá trước nơi ngươi lớn lên, và có một đứa trẻ đang chờ.']
     ],
     '25-2': [
         ['kiem_to', 'Chí Thượng ở đây ai cũng có chung một câu hỏi: ra khỏi Thiên Đạo thì có gì.'],
@@ -484,7 +484,7 @@ const STORY_LORE = {
         ['narr', 'Ngươi hít một hơi. Hồng Mông Tử Khí tràn vào thân, nhiều tới mức cả Thánh Giới cũng không đong hết.']
     ] },
     '30-2': [
-        ['thich_thien', 'Tiếng chổi đó vang từ trên xuống, qua Hồng Mông, qua Hỗn Độn, tới tận một ngôi làng nhỏ trong vũ trụ ngươi. Nó quét đường cho ai đó.'],
+        ['thich_thien', 'Tiếng chổi đó vang từ trên xuống, qua Hồng Mông, qua Hỗn Độn, tới tận nơi ngươi lớn lên. Nó quét đường cho ai đó.'],
         ['me', 'Cho ta?'],
         ['thich_thien', 'Cho kẻ đi sau. Ngươi đã đi sau ai, thì rồi cũng có kẻ đi sau ngươi.']
     ],
